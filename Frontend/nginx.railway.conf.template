@@ -42,11 +42,16 @@ server {
     location ~* \.(?:js|css)$ {
         root /usr/share/nginx/html;
         add_header Cache-Control "public, max-age=31536000, immutable" always;
+        # Este location define su propio add_header y por eso no hereda el HSTS de
+        # location / (regla estandar de nginx) -- hallazgo real de la auditoria
+        # 2026-09-13: los bundles JS/CSS se servian sin HSTS en produccion.
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     }
 
     location ~* \.(?:png|jpg|jpeg|gif|svg|ico|webp|woff2?|ttf|eot)$ {
         root /usr/share/nginx/html;
         add_header Cache-Control "public, max-age=604800" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     }
 
     location /api/v1/ {

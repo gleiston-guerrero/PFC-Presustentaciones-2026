@@ -261,7 +261,23 @@ Corrido con `./mvnw com.github.spotbugs:spotbugs-maven-plugin:4.8.6.4:spotbugs`,
 
 4. La mitigación CSRF se delega al uso de tokens JWT sin cookies (en cabecera `Authorization`) y validación estricta de CORS.
 
-4. **Hallazgo real (auditoría final):** El escáner ZAP y Lighthouse detectaron que la cabecera `Strict-Transport-Security` (HSTS) estaba deshabilitada o ausente. El backend (Spring Security) no la estaba emitiendo debido a que operaba detrás de un proxy inverso (recibiendo peticiones HTTP). Se corrigió habilitando explícitamente `add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;` en los archivos de configuración de Nginx locales (`nginx.conf`) y de producción (`Frontend/nginx.railway.conf.template`), cubriendo tanto el frontend como el bloque proxy `/api/`.
+4. **Hallazgo real, y corrección de esta misma nota (auditoría 2026-09-13):** el backend (Spring Security)
+no emitía la cabecera `Strict-Transport-Security` (HSTS) porque opera detrás de un proxy inverso
+(recibe peticiones HTTP de nginx, nunca ve HTTPS directamente). **Esta entrada afirmaba antes que
+"ZAP y Lighthouse detectaron" el problema — eso no es exacto.** Cruzando la afirmación contra los JSON
+crudos: ZAP no reporta ninguna alerta de HSTS en ninguna de sus dos corridas (`zap-baseline-report.json`,
+`.PREVIOUS.json`); Lighthouse sí tiene el audit `has-hsts`, pero HSTS solo es significativa sobre HTTPS,
+y este entorno se prueba siempre sobre `http://localhost` — por eso el audit sigue reportando
+`"No HSTS header found"` en las corridas vigentes aunque la cabecera ya se agregue, y seguirá así
+mientras no se pruebe sobre HTTPS real. La verificación honesta aquí es directa por cabecera
+(`curl -I`), no por estos dos scanners. Se agregó `add_header Strict-Transport-Security
+"max-age=31536000; includeSubDomains" always;` en los archivos de configuración de Nginx locales
+(`nginx.conf`) y de producción (`Frontend/nginx.railway.conf.template`), en el bloque de contenido
+estático y en el proxy `/api/`. Se encontró y corrigió además un hueco real: los `location` de
+assets estáticos (`\.(?:js|css)$` y de imágenes/fuentes) declaran su propio `add_header` y por eso
+**no heredaban** el HSTS del bloque `location /` (regla estándar de nginx, ya documentada en un
+comentario del propio archivo) — los bundles JS/CSS y las imágenes se servían sin la cabecera. Se
+repitió el `add_header` en esos dos bloques, en ambos archivos de configuración.
 
 ## Escaneo dinámico OWASP ZAP (2026-08-17, re-corrido 2026-08-29)
 
