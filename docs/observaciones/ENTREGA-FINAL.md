@@ -14,7 +14,7 @@
 > como registro de lo que se reportó en su momento; esta nota es la corrección.
 
 1. **Cambios realizados:** Se verificaron y depuraron las métricas de rendimiento, cobertura, y usabilidad. Se agregaron las cabeceras HSTS tanto en el entorno de desarrollo como en los proxies de producción. Se unificaron los nombres de los integrantes en la documentación. Se documentó el ADR-007.
-2. ~~**Problemas encontrados:** El sistema presentaba métricas no comprobables (como un falso SUS de 91.25). HSTS faltaba en Nginx. Un fallo de incompatibilidad de Java 21 con Mockito afecta la corrida de tests local (`Could not initialize plugin: interface org.mockito.plugins.MockMaker`).~~ **Corregido:** no es un problema de Mockito/Java 21 — ver nota de arriba.
+2. ~~**Problemas encontrados:** El sistema presentaba métricas no comprobables (como un falso puntaje SUS, ver `docs/mediciones/sus/SUS-RESULTS.md`). HSTS faltaba en Nginx. Un fallo de incompatibilidad de Java 21 con Mockito afecta la corrida de tests local (`Could not initialize plugin: interface org.mockito.plugins.MockMaker`).~~ **Corregido:** no es un problema de Mockito/Java 21 — ver nota de arriba.
 3. **Problemas corregidos:** Se removieron todas las aseveraciones de SUS. Se implementó `Strict-Transport-Security` en `nginx.conf` y `nginx.railway.conf.template`.
 4. ~~**Tests ejecutados:** 118 tests, de los cuales 116 fallan debido a un error de inicialización del MockMaker por incompatibilidad de entorno (Java 21 vs. Mockito byte-buddy).~~ **Corregido:** con `make test` (que carga `.env`), 559/559 pasan.
 5. ~~**Resultado de Maven:** `BUILD FAILURE` localmente debido a los fallos de Mockito.~~ **Corregido:** `BUILD SUCCESS` con `make test`.
