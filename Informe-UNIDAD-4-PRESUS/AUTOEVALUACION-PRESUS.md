@@ -21,12 +21,12 @@ El Sistema de Gestión de Pre-Sustentaciones UTEQ es un proyecto completo que cu
 pre-sustentaciones de trabajos de titulación: solicitudes, anteproyectos, cronogramas, evaluaciones, jurados,
 tutorías, rúbricas, actas y reportes. Está construido con **Spring Boot 3.2.1** (Java 17), **Angular 21.1** en el
 frontend, **PostgreSQL 15** como base de datos y **Redis 7** como caché distribuida. El proyecto incluye
-autenticación JWT stateless, documentación OpenAPI 3.0 (Springdoc 2.3.0), 21 controladores REST, generación de
+autenticación JWT stateless, documentación OpenAPI 3.0 (Springdoc 2.3.0), 31 controladores REST, generación de
 PDF con iText, y despliegue con Docker Compose. La documentación es exhaustiva: SRS (ISO/IEC/IEEE 29148:2018),
 6 ADR, colección Postman con 22 peticiones, auditoría OWASP, pruebas de carga k6 y métricas Lighthouse reales
 contra build de producción (Performance 64/61 desktop/mobile, Accesibilidad 89, Buenas Prácticas 100, SEO 91;
 ver [`docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md`](../docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md)).
-La encuesta SUS (91.25/100, Grado A+) de una versión anterior de este informe **era fabricada y fue retirada**;
+La encuesta SUS de una versión anterior de este informe **era fabricada y fue retirada**;
 el instrumento real está listo pero pendiente de aplicarse a usuarios reales
 (ver [`docs/mediciones/sus/SUS-RESULTS.md`](../docs/mediciones/sus/SUS-RESULTS.md)). Sin embargo, el análisis contra los criterios exigidos por la guía
 de la Unidad IV identifica **brechas concretas** que deben cerrarse: la **integración de una API REST externa**,
@@ -66,7 +66,7 @@ La siguiente tabla clasifica los hallazgos por severidad y prioridad de atenció
 
 ## 4. Puntos fuertes a conservar
 
-- **Dominio complejo bien modelado:** 21 controladores REST cubriendo el ciclo completo de pre-sustentaciones
+- **Dominio complejo bien modelado:** 31 controladores REST cubriendo el ciclo completo de pre-sustentaciones
   (solicitudes, anteproyectos, cronogramas, evaluaciones, jurados, tutorías, rúbricas, actas, reportes, salas,
   observaciones, notificaciones, estado en tiempo real).
 - **Generación de PDF integrada:** uso de iText para generación de actas y reportes directamente desde el backend,
@@ -78,8 +78,8 @@ La siguiente tabla clasifica los hallazgos por severidad y prioridad de atenció
   documento ético con consentimientos informados.
 - **Calidad web medida contra build de producción:** Lighthouse real con 6 corridas (3 desktop + 3 mobile) da
   Accesibilidad 89 y Buenas Prácticas 100 (ya cumplen); Rendimiento 64/61 sigue bajo el umbral de 80
-  (ver nota metodológica en el reporte). La encuesta SUS de 91.25/100 citada en una versión anterior de este
-  documento era fabricada y fue retirada; el instrumento real existe pero está pendiente de aplicarse.
+  (ver nota metodológica en el reporte). La encuesta SUS citada en una versión anterior de este
+  documento era fabricada y fue retirada (ver `docs/mediciones/sus/SUS-RESULTS.md`); el instrumento real existe pero está pendiente de aplicarse.
 - **Seguridad base funcional:** JWT stateless con JJWT 0.12.5, BCrypt, `SessionCreationPolicy.STATELESS`,
   `@PreAuthorize` por roles (ADMIN, DOCENTE, COORDINADOR), CORS configurado y validación con Jakarta Validation.
 - **Despliegue parcialmente reproducible:** Docker Compose con PostgreSQL 15 y Redis 7, health checks con
@@ -90,7 +90,7 @@ La siguiente tabla clasifica los hallazgos por severidad y prioridad de atenció
 ## 5. Conclusión de la autoevaluación
 
 El proyecto cumple de manera notable los criterios de funcionalidad, documentación y usabilidad exigidos en las
-prácticas experimentales. Con 21 controladores REST y un frontend Angular 21 completo, demuestra un dominio
+prácticas experimentales. Con 31 controladores REST y un frontend Angular 21 completo, demuestra un dominio
 sólido del patrón MVC y la arquitectura cliente-servidor. Las brechas principales
 —por ser los criterios específicos del Paso 3 de la Unidad IV— son la **ausencia de consumo de una API REST
 externa**, la **falta de caché Redis activa en el backend** (Redis existe en Docker Compose pero no se usa desde
