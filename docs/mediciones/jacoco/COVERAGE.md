@@ -1,10 +1,10 @@
 # Cobertura de pruebas (JaCoCo) — datos reales
 
 **Cómo se generó:** `cd backend && ./mvnw clean verify` (JaCoCo corre en la fase `test` vía `jacoco-maven-plugin`, ver `backend/pom.xml`).
-**Reporte crudo archivado (XML + CSV):** [`docs/mediciones/jacoco/2026-09-11-cierre-limpio/`](2026-09-11-cierre-limpio/) — **cifra de cierre vigente**, corrida sobre Postgres/Redis reales en Docker (`cd backend && ./mvnw clean verify -Dmaven.test.failure.ignore=true`, **576 tests / 0 fallos / 0 errores**, 47 clases). [`2026-09-11-controllers-70/`](2026-09-11-controllers-70/), [`2026-09-11-fase1-must/`](2026-09-11-fase1-must/), [`2026-09-06-servicios/`](2026-09-06-servicios/), [`2026-09-05-cierre/`](2026-09-05-cierre/) y `2026-09-05/` son corridas previas; `2026-08-30/`, `2026-08-29/` y `2026-08-17/` se conservan como snapshots históricos. El reporte también se regenera y publica como artefacto en el job `backend` de [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) en cada push.
-**Última actualización:** 2026-09-11 — se corrigió `SolicitudControllerTest`, que llevaba 8 fallos preexistentes (6 `Failures` + 2 `Errors`) por un `NullPointerException` real: la clase nunca mockeaba `PermisoService`, dependencia que `SolicitudController` usa tanto en `@PreAuthorize` como directamente en `validarAccesoSolicitud()`. No era un problema de configuración de CI/Docker (los mismos 8 fallaban igual en aislamiento, con Postgres/Redis reales arriba) — era un mock faltante en el propio test. Se agregó el `@Mock private PermisoService permisoService` y el stub correspondiente (`true`/`false` según si el escenario simula un revisor) en cada uno de los 8 casos afectados; los 2 `UnnecessaryStubbingException` se resolvieron solos, porque antes el flujo nunca llegaba a usar esos stubs.
+**Reporte crudo archivado (XML + CSV):** [`docs/mediciones/jacoco/2026-09-13-cobertura-controladores/`](2026-09-13-cobertura-controladores/) — **cifra de cierre vigente**, corrida con `make test` sobre Postgres/Redis reales en Docker (**657 tests / 0 fallos / 0 errores**, 87 clases). [`2026-09-11-cierre-limpio/`](2026-09-11-cierre-limpio/), [`2026-09-11-controllers-70/`](2026-09-11-controllers-70/), [`2026-09-11-fase1-must/`](2026-09-11-fase1-must/), [`2026-09-06-servicios/`](2026-09-06-servicios/), [`2026-09-05-cierre/`](2026-09-05-cierre/) y `2026-09-05/` son corridas previas; `2026-08-30/`, `2026-08-29/` y `2026-08-17/` se conservan como snapshots históricos. El reporte también se regenera y publica como artefacto en el job `backend` de [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) en cada push.
+**Última actualización:** 2026-09-13 — el docente-director re-corrió la suite de forma independiente sobre el commit `24cf208` y midió `controllers` en 69.57 % líneas / 54.40 % ramas, por debajo del umbral: el cierre del 09-11 (71.05 %/76.47 %) se había erosionado otra vez porque las fases 3-7 de seguridad del SRS v1.0.1 (commits `7daf3cd`/`df2f0e5`) agregaron código de producción sin pruebas propias entre el 11-sep y el cierre del examen — el mismo patrón de "denominador crece más rápido que la cobertura" ya documentado abajo para el 17→29-08. `UsuarioController` (78 líneas) y `BackupController` (40 líneas) eran, de los 31 controladores, los dos con más líneas sin ejercitar y sin ningún test dedicado — se les escribió `UsuarioControllerTest` (23 tests: control de propiedad real vía `esUsuarioActual`/`esUsuarioActualOAdmin`, no solo el permiso `USUARIOS_GESTIONAR`) y `BackupControllerTest` (19 tests: los 17 endpoints del permiso `BACKUPS_GESTIONAR` a nivel de clase). Antes de esto, `SolicitudControllerTest` llevaba 8 fallos preexistentes (6 `Failures` + 2 `Errors`) por un `NullPointerException` real: la clase nunca mockeaba `PermisoService`, dependencia que `SolicitudController` usa tanto en `@PreAuthorize` como directamente en `validarAccesoSolicitud()`. No era un problema de configuración de CI/Docker (los mismos 8 fallaban igual en aislamiento, con Postgres/Redis reales arriba) — era un mock faltante en el propio test. Se agregó el `@Mock private PermisoService permisoService` y el stub correspondiente (`true`/`false` según si el escenario simula un revisor) en cada uno de los 8 casos afectados; los 2 `UnnecessaryStubbingException` se resolvieron solos, porque antes el flujo nunca llegaba a usar esos stubs.
 
-Cifras de esta corrida (576/576 tests, 0 fallos): **70.00 % líneas (3211/4587) y 54.67 % ramas (1031/1886)** sobre el total medido; `controllers` **71.05 % / 76.47 %** (supera el umbral del 70 % en ambas métricas); `services` 70.17 % / 54.38 %; `security` (incluye `security.jwt`, donde vive `JwtTokenProvider`) 68.97 % / 57.14 %.
+Cifras de esta corrida (657/657 tests, 0 fallos): `controllers` **79.01 % líneas (990/1253) / 80.34 % ramas (286/356)** — 9 puntos por encima del umbral del 70 % en ambas métricas, no al filo; `services` 70.22 % / 54.48 %; `security` (incluye `security.jwt`, donde vive `JwtTokenProvider`) 81.55 % / 71.88 %.
 
 ## Alcance de la medición
 
@@ -38,7 +38,7 @@ real —validaciones de negocio, transiciones de estado, control de acceso por r
 de notificación, incluso operaciones reales de archivo con `@TempDir` para `ActaServiceImpl`/
 `TutoriaServiceImpl`— no solo llamadas de delegación.
 
-### Desglose por paquete (cierre 2026-09-11), para el criterio P1 de la guía de la Entrega Final
+### Desglose por paquete (cierre 2026-09-13), para el criterio P1 de la guía de la Entrega Final
 
 La guía pide cobertura ≥70 % (líneas y ramas) "en los módulos de dominio, servicios y controladores" para
 el nivel Excelente de P1, y ≥65 % en dos de tres capas para Satisfactorio. Este proyecto no tiene un
@@ -47,12 +47,12 @@ arriba), así que la comparación más honesta es paquete por paquete tal como e
 
 | Paquete | Líneas | Ramas |
 |---|---|---|
-| `controllers` | **71.05 %** (854/1202) | **76.47 %** (260/340) |
-| `services` | **70.17 %** (2197/3131) | 54.38 % (708/1302) |
-| `security` | 68.97 % (20/29) | 57.14 % (8/14) |
-| `security.jwt` | 70.90 % (95/134) | 61.54 % (32/52) |
+| `controllers` | **79.01 %** (990/1253) | **80.34 %** (286/356) |
+| `services` | **70.22 %** (2245/3197) | 54.48 % (717/1316) |
+| `security` | 81.55 % (84/103) | 71.88 % (23/32) |
+| `security.jwt` | 76.97 % (117/152) | 56.25 % (36/64) |
 | `security.service` | 50.98 % (26/51) | 57.50 % (23/40) |
-| `security.dto` | 90.48 % (19/21) | 0.00 % (0/130) |
+| `security.dto` | 93.10 % (27/29) | 0.00 % (0/188) |
 | `enums` | 0.00 % (0/12) | 0.00 % (0/8) |
 
 **Nota (2026-09-11):** la cifra de `controllers` que citaba este documento (72.00 % / 77.41 %, del cierre
@@ -62,7 +62,19 @@ umbral. Se cerró agregando prueba a los dos únicos controladores sin ninguna (
 `ExternalApiController`) y a tres endpoints sin ejercitar en otros dos (`AuditoriaController#/tablas`,
 `DocenteController#/disponibles` y `#/paginado`). Al corregir después los 8 fallos preexistentes de
 `SolicitudControllerTest` (ver nota de cabecera), ese controlador quedó ejercitado con más profundidad y
-la cifra subió otro poco, a la vigente de arriba; ver [`2026-09-11-cierre-limpio/`](2026-09-11-cierre-limpio/).
+la cifra subió otro poco, a 71.05 %/76.47 % (ver [`2026-09-11-cierre-limpio/`](2026-09-11-cierre-limpio/)).
+
+**Nota (2026-09-13):** esa cifra del 09-11 volvió a bajar del umbral (69.57 %/54.40 % líneas/ramas,
+medido de forma independiente sobre el commit `24cf208`) porque las fases 3-7 de seguridad del SRS
+v1.0.1, agregadas después del cierre del 09-11, sumaron código de producción sin pruebas propias — el
+mismo patrón de denominador creciendo más rápido que la cobertura que ya se había visto entre el 17 y
+el 29 de agosto (ver más abajo). De los 31 controladores, `UsuarioController` (78 líneas sin ejercitar)
+y `BackupController` (40 líneas) eran los que más pesaban sin tener ningún test dedicado — se
+agregaron `UsuarioControllerTest` (23 tests, cubre el control de propiedad real vía
+`esUsuarioActual`/`esUsuarioActualOAdmin`, no solo el permiso `USUARIOS_GESTIONAR`) y
+`BackupControllerTest` (19 tests, los 17 endpoints protegidos por `BACKUPS_GESTIONAR` a nivel de
+clase). Resultado: 79.01 %/80.34 %, con margen real sobre el umbral en vez de al filo — ver
+[`2026-09-13-cobertura-controladores/`](2026-09-13-cobertura-controladores/).
 
 **Lectura honesta:** `controllers` y `services` — las dos capas más grandes y las que concentran la lógica
 de negocio real — superan 70 % en líneas. `controllers` también supera 70 % en ramas; `services` queda en
@@ -134,6 +146,6 @@ Una versión anterior de este documento (y el badge de `README.md`) afirmaba `>6
 
 ## Clases sin cobertura real o con cobertura baja (candidatas para próxima iteración)
 
-`UsuarioController` (7%), `GlobalExceptionHandler` (31%), `AuthController` (32%), y la mayoría de los 29 controladores REST no tienen tests dedicados — la suite actual se concentra en `services/` y `security/`, que es donde vive la lógica de negocio y la superficie de riesgo de seguridad. Los controladores están cubiertos indirectamente por `AuthControllerIntegrationTest` (`@WebMvcTest`), pero no exhaustivamente. (Actualizado 2026-08-29: `EvaluacionServiceImpl.calcularPromedioSp` y `ActaServiceImpl` ya tienen test unitario dedicado — ver `docs/basedatos/CATALOGO-SP.md`.)
+*(Entrada histórica del 2026-08-29, cuando la cobertura global rondaba el 20%; ver la nota de cierre 2026-09-13 arriba para el estado vigente — `UsuarioController` y `BackupController`, los dos que más pesaban aquí, ya tienen test dedicado.)* `UsuarioController` (7%), `GlobalExceptionHandler` (31%), `AuthController` (32%), y la mayoría de los 31 controladores REST no tenían tests dedicados en ese momento — la suite de entonces se concentraba en `services/` y `security/`, que es donde vive la lógica de negocio y la superficie de riesgo de seguridad. Los controladores estaban cubiertos indirectamente por `AuthControllerIntegrationTest` (`@WebMvcTest`), pero no exhaustivamente. (Actualizado 2026-08-29: `EvaluacionServiceImpl.calcularPromedioSp` y `ActaServiceImpl` ya tenían test unitario dedicado — ver `docs/basedatos/CATALOGO-SP.md`.)
 
 El umbral objetivo declarado en la autoevaluación de Unidad IV era ≥60% — sigue sin alcanzarse, pero la trayectoria real (0% → 2.83% → 22.70% en instrucciones) documenta progreso genuino en vez de una cifra estática inventada.
