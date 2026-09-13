@@ -179,8 +179,9 @@ sustituye una revisión manual dirigida del modelo de autorización por recurso.
 
 \textbf{Sin datos reales.} El instrumento SUS \cite{brooke1996} está listo
 (\texttt{docs/mediciones/sus/SUS-RESULTS.md}), pero no se ha aplicado a participantes reales. Una versión
-anterior de este proyecto afirmaba un puntaje de 91.25/100 con 10 evaluadores --- esos datos eran
-fabricados y fueron retirados explícitamente. No se reporta ninguna cifra de usabilidad en este informe
+anterior de este proyecto afirmaba un puntaje de usabilidad con evaluadores inexistentes --- esos datos eran
+fabricados y fueron retirados explícitamente (detalle completo en \texttt{docs/mediciones/sus/SUS-RESULTS.md}).
+No se reporta ninguna cifra de usabilidad en este informe
 porque no existe ninguna medición real que reportar. El protocolo completo (las diez preguntas y la
 fórmula de cálculo) se documenta en el Anexo B (Sección~\ref{anexo:sus}).
 
@@ -205,8 +206,8 @@ Al mismo tiempo se corrigieron 8 fallos preexistentes de \texttt{SolicitudContro
 \texttt{NullPointerException} real por un mock de \texttt{PermisoService} faltante en el propio test, no
 un problema de entorno --- lo que ejercitó ese controlador con más profundidad, llegando en conjunto a
 \textbf{71.05\,\% de líneas (854/1,202) y 76.47\,\% de ramas (260/340)} --- cruza el umbral de 70\,\%
-exigido en líneas \emph{y} en ramas. Los servicios quedan en 70.17\,\% de líneas (2,197/3,131) y
-54.38\,\% de ramas (708/1,302): superan el umbral en líneas pero no en ramas, a diferencia del estado del
+exigido en líneas \emph{y} en ramas. Los servicios quedan en 70.22\,\% de líneas (2,245/3,197) y
+54.48\,\% de ramas (717/1,316): superan el umbral en líneas pero no en ramas, a diferencia del estado del
 06-09. Los servicios se habían cerrado antes con 164 pruebas nuevas en
 8 clases (\texttt{EstudianteService}, \texttt{TutorServiceImpl}, \texttt{RubricaEvaluacionServiceImpl},
 \texttt{JuradoServiceImpl}, \texttt{SolicitudServiceImpl}, \texttt{TutoriaServiceImpl},
@@ -217,6 +218,17 @@ solicitud de otro), la salvaguarda que impide dejar al sistema sin ningún rol c
 la protección de los cuatro roles base, transiciones de estado y control de acceso por rol en la capa de
 servicios, y la generación real de PDF con iText (incluida la del acta digital, verificada con
 \texttt{@TempDir} sobre archivos reales) comprobando la cabecera \texttt{\%PDF-} de la respuesta.
+
+La cifra de controladores del 11-09 volvió a erosionarse por el mismo efecto de denominador: las fases
+3-7 de seguridad del SRS v1.0.1, agregadas después de ese cierre, sumaron código de producción sin
+pruebas propias, bajándola a 69.57\,\%/54.40\,\% (líneas/ramas) --- verificado de forma independiente
+sobre el commit de cierre del plazo. De los 31 controladores, \texttt{UsuarioController} (78 líneas sin
+ejercitar) y \texttt{BackupController} (40 líneas) eran los que más pesaban sin tener ningún test
+dedicado. Se agregaron \texttt{UsuarioControllerTest} (23 pruebas, cubre el control de propiedad real vía
+\texttt{esUsuarioActual}/\texttt{esUsuarioActualOAdmin}, no sólo el permiso \texttt{USUARIOS\_GESTIONAR})
+y \texttt{BackupControllerTest} (19 pruebas, los 17 endpoints protegidos por \texttt{BACKUPS\_GESTIONAR}
+a nivel de clase), llegando a \textbf{79.01\,\% de líneas (990/1,253) y 80.34\,\% de ramas (286/356)} ---
+con margen real sobre el umbral de 70\,\% en vez de al filo.
 
 Una precisión metodológica sobre el alcance de la medición: el \texttt{jacoco-maven-plugin} excluye
 \texttt{config/}, \texttt{entities/} y \texttt{dto/} (ver \texttt{<excludes>} en \texttt{pom.xml}), de
