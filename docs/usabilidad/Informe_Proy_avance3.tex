@@ -81,7 +81,7 @@
 % ---------------------------------------------------------
 \begin{tcolorbox}[colframe=boxred,colback=boxredbg,arc=1mm,boxrule=1pt,title={\bfseries 1. Criterios de Excelencia del Avance 3 (Puntos Clave del Proyecto)}]
 \begin{enumerate}
-    \item \textbf{P1 --- Usabilidad y Experiencia de Usuario:} Interfaz reactiva SPA en Angular 19 con el instrumento \textit{System Usability Scale} (SUS) preparado (\texttt{docs/mediciones/sus/SUS-RESULTS.md}). \textbf{Corrección posterior:} una versión anterior de este documento afirmaba aquí un puntaje de 91.25/100 con 10 evaluadores; esos datos eran fabricados y fueron retirados explícitamente. No hay ninguna cifra de usabilidad real que reportar todavía.
+    \item \textbf{P1 --- Usabilidad y Experiencia de Usuario:} Interfaz reactiva SPA en Angular 19 con el instrumento \textit{System Usability Scale} (SUS) preparado (\texttt{docs/mediciones/sus/SUS-RESULTS.md}). \textbf{Corrección posterior:} una versión anterior de este documento afirmaba aquí un puntaje fabricado con evaluadores inexistentes; esos datos fueron retirados explícitamente (ver \texttt{docs/mediciones/sus/SUS-RESULTS.md}). No hay ninguna cifra de usabilidad real que reportar todavía.
     \item \textbf{P2 --- Resolución Íntegra de Observaciones (OBS-01 a OBS-07):} Migración total de identificadores JPA de UUID a \texttt{Long BIGSERIAL}, encapsulamiento de lógica compleja en procedimientos almacenados PostgreSQL (\texttt{PL/pgSQL}) y esquema híbrido de seguridad JWT + Cookies \textit{HTTP-Only}.
     \item \textbf{P3 --- Requisitos ISO/IEC/IEEE 29148:2018 y OpenAPI 3.0:} Reestructuración completa de la especificación de requisitos SRS, matriz de trazabilidad bi-direccional y documentación interactiva con Swagger UI en el backend.
     \item \textbf{P4 --- Reproducibilidad y Calidad Probada:} Suite de pruebas unitarias con JaCoCo ($>60\%$ cobertura), 3 escenarios de pruebas de carga k6 ($p95 < 200\text{ms}$), auditoría OWASP Top 10 y despliegue automatizado en un solo comando con \texttt{docker compose up -d --build} y \texttt{Makefile}.
@@ -105,13 +105,13 @@ La siguiente matriz documenta la resolución técnica formal de cada una de las 
 \hline
 \rowcolor{headergray}
 \textbf{ID} & \textbf{Ent.} & \textbf{Criterio / Observación} & \textbf{Decisión Técnica Aplicada} & \textbf{Commit} & \textbf{Estado} \\ \hline
-\textbf{OBS-01} & 1A & Incompatibilidad de claves UUID en PostgreSQL JPA. & Migración integral de \texttt{UUID} a \texttt{Long BIGSERIAL} en las 13 entidades JPA y DTOs. & \texttt{6e06438} & \textbf{Resuelto} \\ \hline
-\textbf{OBS-02} & 1A & Ausencia de capa de seguridad JWT en endpoints. & Implementación de Spring Security 6 con \texttt{JwtTokenProvider} y Cookies \textit{HTTP-Only}. & \texttt{d7aeb1a} & \textbf{Resuelto} \\ \hline
-\textbf{OBS-03} & 1B & Consultas complejas ejecutadas en capa de aplicación. & Encapsulamiento en procedimientos almacenados PostgreSQL (\texttt{sp\_calcular\_promedio\_evaluacion}, etc.). & \texttt{a3b89f1} & \textbf{Resuelto} \\ \hline
-\textbf{OBS-04} & 1B & Falta de documentación interactiva API REST. & Integración de \texttt{springdoc-openapi} 3.0 (Swagger UI) con esquema Bearer JWT. & \texttt{b7c12d4} & \textbf{Resuelto} \\ \hline
-\textbf{OBS-05} & 1A & Despliegue con múltiples pasos manuales. & Creación de \texttt{Makefile} unificado con \texttt{make up} y hashes \texttt{sha256} en Docker. & \texttt{c4e56f7} & \textbf{Resuelto} \\ \hline
-\textbf{OBS-06} & 1B & Requisitos desactualizados sin norma internacional. & Reestructuración del SRS bajo norma ISO/IEC/IEEE 29148:2018 y matriz bi-direccional. & \texttt{e8f90a1} & \textbf{Resuelto} \\ \hline
-\textbf{OBS-07} & 1B & Falta de evidencias empíricas de calidad y usabilidad. & Suite JaCoCo ($>60\%$), k6 carga, auditoría OWASP Top 10. Estudio SUS pendiente: el puntaje de 91.25 reportado aquí originalmente era fabricado y fue retirado. & \texttt{f1a23b4} & \textbf{Parcial} \\ \hline
+\textbf{OBS-01} & 1A & Incompatibilidad de claves UUID en PostgreSQL JPA. & Migración integral de \texttt{UUID} a \texttt{Long BIGSERIAL} en las 13 entidades JPA y DTOs. & \textit{No verificable — anterior a \texttt{65403ee}} & \textbf{Resuelto} \\ \hline
+\textbf{OBS-02} & 1A & Ausencia de capa de seguridad JWT en endpoints. & Implementación de Spring Security 6 con \texttt{JwtTokenProvider} y Cookies \textit{HTTP-Only}. & \texttt{bda64ec} & \textbf{Resuelto} \\ \hline
+\textbf{OBS-03} & 1B & Consultas complejas ejecutadas en capa de aplicación. & Encapsulamiento en procedimientos almacenados PostgreSQL (\texttt{sp\_calcular\_promedio\_evaluacion}, etc.). & \texttt{bda64ec} & \textbf{Resuelto} \\ \hline
+\textbf{OBS-04} & 1B & Falta de documentación interactiva API REST. & Integración de \texttt{springdoc-openapi} 3.0 (Swagger UI) con esquema Bearer JWT. & \texttt{bda64ec} & \textbf{Resuelto} \\ \hline
+\textbf{OBS-05} & 1A & Despliegue con múltiples pasos manuales. & Creación de \texttt{Makefile} unificado con \texttt{make up} y hashes \texttt{sha256} en Docker. & \texttt{015fd6d} & \textbf{Resuelto} \\ \hline
+\textbf{OBS-06} & 1B & Requisitos desactualizados sin norma internacional. & Reestructuración del SRS bajo norma ISO/IEC/IEEE 29148:2018 y matriz bi-direccional. & \texttt{015fd6d} & \textbf{Resuelto} \\ \hline
+\textbf{OBS-07} & 1B & Falta de evidencias empíricas de calidad y usabilidad. & Suite JaCoCo ($>60\%$), k6 carga, auditoría OWASP Top 10. Estudio SUS pendiente: una versión anterior de este documento incluía aquí una encuesta SUS fabricada, ya retractada (ver \texttt{docs/mediciones/sus/SUS-RESULTS.md}). & \texttt{015fd6d} & \textbf{Parcial} \\ \hline
 \end{tabular}
 \end{table}
 
@@ -123,7 +123,7 @@ La siguiente matriz documenta la resolución técnica formal de cada una de las 
 \section{Resultados del Cuestionario de Usabilidad SUS (System Usability Scale)}
 
 \begin{tcolorbox}[colframe=boxred,colback=boxredbg,arc=1mm,boxrule=1pt,title={\bfseries Nota de integridad --- dato retirado}]
-Una versión anterior de esta sección presentaba una tabla con 10 evaluadores \textbf{fabricados} (E1--E10) y sus puntajes individuales inventados: nunca existieron esos participantes ni se aplicó el cuestionario. El puntaje 91.25/100 (Grado A+) que este documento reportaba fue retirado explícitamente y no debe citarse como resultado válido en ningún lugar. Esa tabla fue \textbf{eliminada por completo} (2026-09-11), no solo anotada. El instrumento SUS en sí está correctamente construido (ver \texttt{docs/mediciones/sus/SUS-RESULTS.md} y \texttt{scripts/sus-analysis.ipynb}), pero no existe todavía ninguna medición real que reportar ($N=0$).
+Una versión anterior de esta sección presentaba una tabla con 10 evaluadores \textbf{fabricados} (E1--E10) y sus puntajes individuales inventados: nunca existieron esos participantes ni se aplicó el cuestionario. El puntaje que este documento reportaba (ver \texttt{docs/mediciones/sus/SUS-RESULTS.md}) fue retirado explícitamente y no debe citarse como resultado válido en ningún lugar. Esa tabla fue \textbf{eliminada por completo} (2026-09-11), no solo anotada. El instrumento SUS en sí está correctamente construido (ver \texttt{docs/mediciones/sus/SUS-RESULTS.md} y \texttt{scripts/sus-analysis.ipynb}), pero no existe todavía ninguna medición real que reportar ($N=0$).
 \end{tcolorbox}
 
 Para garantizar la usabilidad del sistema, \textbf{se había afirmado} una evaluación formal aplicando la metodología estandarizada de Brooke (1996) con 10 participantes independientes (estudiantes, docentes y profesionales IT); esa afirmación era falsa, ver nota de integridad arriba.

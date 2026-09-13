@@ -10,7 +10,7 @@
 
 ## 📌 1. Criterios de Excelencia del Avance 3
 
-1. **P1 — Usabilidad y Experiencia de Usuario:** Interfaz reactiva SPA en Angular 19 con el instrumento *System Usability Scale* (SUS) preparado (`docs/mediciones/sus/SUS-RESULTS.md`). La evaluación de usabilidad (SUS) queda pendiente de ejecución real con usuarios finales; una versión anterior de este documento afirmaba aquí un puntaje de 91.25/100 con 10 evaluadores, dato fabricado que fue retirado explícitamente.
+1. **P1 — Usabilidad y Experiencia de Usuario:** Interfaz reactiva SPA en Angular 19 con el instrumento *System Usability Scale* (SUS) preparado (`docs/mediciones/sus/SUS-RESULTS.md`). La evaluación de usabilidad (SUS) queda pendiente de ejecución real con usuarios finales; una versión anterior de este documento afirmaba aquí un puntaje fabricado con evaluadores inexistentes, ya retirado explícitamente (ver `docs/mediciones/sus/SUS-RESULTS.md`).
 2. **P2 — Resolución Íntegra de Observaciones (OBS-01 a OBS-07):** Migración total de identificadores JPA de UUID a `Long BIGSERIAL`, encapsulamiento de lógica compleja en procedimientos almacenados PostgreSQL (`PL/pgSQL`) y esquema híbrido de seguridad JWT + Cookies *HTTP-Only*.
 3. **P3 — Requisitos ISO/IEC/IEEE 29148:2018 y OpenAPI 3.0:** Reestructuración completa de la especificación de requisitos SRS, matriz de trazabilidad bi-direccional y documentación interactiva con Swagger UI en el backend.
 4. **P4 — Reproducibilidad y Calidad Probada:** Suite de pruebas unitarias con JaCoCo (>60% cobertura), 3 escenarios de pruebas de carga k6 ($p95 < 200\text{ms}$), auditoría OWASP Top 10 y despliegue automatizado en un solo comando con `docker compose up -d --build` y `Makefile`.
@@ -21,19 +21,19 @@
 
 | ID | Ent. | Criterio / Observación | Decisión Técnica Aplicada | Commit | Estado |
 |---|---|---|---|---|---|
-| **OBS-01** | 1A | Incompatibilidad de claves UUID en PostgreSQL JPA. | Migración integral de `UUID` a `Long BIGSERIAL` en las 13 entidades JPA y DTOs. | `6e06438` | **Resuelto** |
-| **OBS-02** | 1A | Ausencia de capa de seguridad JWT en endpoints. | Implementación de Spring Security 6 con `JwtTokenProvider` y Cookies *HTTP-Only*. | `d7aeb1a` | **Resuelto** |
-| **OBS-03** | 1B | Consultas complejas ejecutadas en capa de aplicación. | Encapsulamiento en procedimientos almacenados PostgreSQL (`sp_calcular_promedio_evaluacion`, etc.). | `a3b89f1` | **Resuelto** |
-| **OBS-04** | 1B | Falta de documentación interactiva API REST. | Integración de `springdoc-openapi` 3.0 (Swagger UI) con esquema Bearer JWT. | `b7c12d4` | **Resuelto** |
-| **OBS-05** | 1A | Despliegue con múltiples pasos manuales. | Creación de `Makefile` unificado con `make up` y hashes `sha256` en Docker. | `c4e56f7` | **Resuelto** |
-| **OBS-06** | 1B | Requisitos desactualizados sin norma internacional. | Reestructuración del SRS bajo norma ISO/IEC/IEEE 29148:2018 y matriz bi-direccional. | `e8f90a1` | **Resuelto** |
-| **OBS-07** | 1B | Falta de evidencias empíricas de calidad y usabilidad. | Suite JaCoCo (>60%), k6 carga, auditoría OWASP Top 10. Estudio SUS pendiente: el puntaje de 91.25 reportado aquí originalmente era fabricado y fue retirado. | `f1a23b4` | **Parcial** |
+| **OBS-01** | 1A | Incompatibilidad de claves UUID en PostgreSQL JPA. | Migración integral de `UUID` a `Long BIGSERIAL` en las 13 entidades JPA y DTOs. | *No verificable — anterior a `65403ee`, que reinició el historial visible* | **Resuelto** |
+| **OBS-02** | 1A | Ausencia de capa de seguridad JWT en endpoints. | Implementación de Spring Security 6 con `JwtTokenProvider` y Cookies *HTTP-Only*. | `bda64ec` | **Resuelto** |
+| **OBS-03** | 1B | Consultas complejas ejecutadas en capa de aplicación. | Encapsulamiento en procedimientos almacenados PostgreSQL (`sp_calcular_promedio_evaluacion`, etc.). | `bda64ec` | **Resuelto** |
+| **OBS-04** | 1B | Falta de documentación interactiva API REST. | Integración de `springdoc-openapi` 3.0 (Swagger UI) con esquema Bearer JWT. | `bda64ec` | **Resuelto** |
+| **OBS-05** | 1A | Despliegue con múltiples pasos manuales. | Creación de `Makefile` unificado con `make up` y hashes `sha256` en Docker. | `015fd6d` | **Resuelto** |
+| **OBS-06** | 1B | Requisitos desactualizados sin norma internacional. | Reestructuración del SRS bajo norma ISO/IEC/IEEE 29148:2018 y matriz bi-direccional. | `015fd6d` | **Resuelto** |
+| **OBS-07** | 1B | Falta de evidencias empíricas de calidad y usabilidad. | Suite JaCoCo (>60%), k6 carga, auditoría OWASP Top 10. Estudio SUS pendiente: una versión anterior de este documento incluía aquí una encuesta SUS fabricada, ya retractada (ver `docs/mediciones/sus/SUS-RESULTS.md`). | `015fd6d` | **Parcial** |
 
 ---
 
 ## 📊 3. Estudio de Usabilidad SUS (System Usability Scale)
 
-> **Nota de integridad — tabla retirada (2026-09-11).** Esta sección contenía una tabla con 10 evaluadores ficticios (E1–E10) y respuestas/puntajes individuales inventados, que produjeron el puntaje fabricado 91.25/100 (Grado A+). Nunca existieron esos participantes ni se aplicó el cuestionario. La tabla fue **eliminada por completo** (no solo anotada): no debe quedar ningún dato fabricado presentado como evidencia, en ningún lugar. El instrumento SUS en sí está correctamente construido (ver `docs/mediciones/sus/SUS-RESULTS.md` y `scripts/sus-analysis.ipynb`), pero no existe todavía ninguna medición real que reportar (N=0).
+> **Nota de integridad — tabla retirada (2026-09-11).** Esta sección contenía una tabla con 10 evaluadores ficticios (E1–E10) y respuestas/puntajes individuales inventados, que produjeron un puntaje fabricado (detalle en `docs/mediciones/sus/SUS-RESULTS.md`). Nunca existieron esos participantes ni se aplicó el cuestionario. La tabla fue **eliminada por completo** (no solo anotada): no debe quedar ningún dato fabricado presentado como evidencia, en ningún lugar. El instrumento SUS en sí está correctamente construido (ver `docs/mediciones/sus/SUS-RESULTS.md` y `scripts/sus-analysis.ipynb`), pero no existe todavía ninguna medición real que reportar (N=0).
 
 - **Preguntas:** 10 preguntas estándar de Brooke (1996) con escala Likert de 1 a 5.
 - **Participantes:** ninguno todavía (N=0); el instrumento está listo para aplicarse a personas reales.
