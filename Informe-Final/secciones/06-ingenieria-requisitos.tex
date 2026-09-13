@@ -16,10 +16,10 @@ el criterio INVEST, con criterios de aceptación expresados en Gherkin
 (\texttt{docs/requisitos/historias/}), y como un caso de uso ``fully dressed'' con la notación de nivel
 de meta de Cockburn y un diagrama de secuencia (\texttt{docs/requisitos/casos-de-uso/}); los requisitos
 sin historia declaran su origen real (migración, ADR, control OWASP, reglamento u observación docente).
-Esta expansión de 15 a 90 requisitos responde a la revisión del docente-director sobre la versión
+Esta expansión de 12 a 90 requisitos responde a la revisión del docente-director sobre la versión
 v1.0.0 --- ver la entrada ``v1.0.1 (2026-09-11)'' de \texttt{docs/requisitos/CHANGELOG-REQ.md} para el
 detalle completo del cambio, observación por observación; la Tabla~\ref{tab:rf-resumen} resume solo los
-15 requisitos funcionales originales por brevedad, y la lista completa de 90 vive en
+12 requisitos funcionales originales por brevedad, y la lista completa de 90 vive en
 \texttt{docs/trazabilidad/matriz.csv}, reproducida íntegramente en el Anexo~\ref{anexo:matriz}.
 
 \begin{table}[H]
@@ -41,12 +41,9 @@ RF-09 & Reportes de defensas & Could & No verificado \\
 RF-10 & Gestión de salas & Should & No verificado \\
 RF-11 & Gestión de usuarios & Must & Verificado (test real) \\
 RF-12 & Carga de anteproyecto & Must & Verificado (test real) \\
-RF-13 & Reportes de resumen & Should & Verificado (test real) \\
-RF-14 & Gestión de actas & Should & Verificado (test real) \\
-RF-15 & Historial-auditoría de actas & Should & Verificado (test real) \\
 \bottomrule
 \end{tabular}
-\caption{The 15 functional requirements, their MoSCoW priority, and their real automated
+\caption{The 12 functional requirements, their MoSCoW priority, and their real automated
 verification status (source: \texttt{docs/trazabilidad/matriz.csv} v1.0.0).}
 \label{tab:rf-resumen}
 \end{table}
@@ -54,7 +51,7 @@ verification status (source: \texttt{docs/trazabilidad/matriz.csv} v1.0.0).}
 \subsection{Calidad de los requisitos: checklist INCOSE}
 
 Se aplicaron las nueve características individuales de calidad de INCOSE \cite{incose2023} (necesario,
-apropiado, no ambiguo, completo, singular, factible, verificable, correcto, conforme) a los 15 RF, y las
+apropiado, no ambiguo, completo, singular, factible, verificable, correcto, conforme) a los 12 RF, y las
 seis características de calidad del conjunto completo (\texttt{docs/checklists/INCOSE-REQUIREMENTS.md}).
 El hallazgo más consistente: ningún requisito usa lenguaje normativo tipo ``shall'' (se usa formato
 Historia de Usuario para los que la tienen, una decisión de estilo consciente, no un descuido). Sobre el
