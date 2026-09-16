@@ -54,7 +54,12 @@ public class EmailService {
         }
     }
 
-    /** Sobrecarga de compatibilidad para llamadas sin remitente (usa valor genérico) */
+    /**
+     * Sobrecarga de compatibilidad para llamadas sin remitente (usa valor genérico).
+     *
+     * @param destinatario email del destinatario
+     * @param mensaje      cuerpo de la notificación
+     */
     @Async
     public void enviarNotificacion(String destinatario, String mensaje) {
         enviarNotificacion(destinatario, mensaje, "Sistema de Pre-Sustentaciones", smtpUsername);

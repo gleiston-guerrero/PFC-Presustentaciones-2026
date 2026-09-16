@@ -28,6 +28,12 @@ public class SupresionDatosService {
     private final UsuarioRepository usuarioRepository;
     private final SolicitudSupresionRepository solicitudRepository;
 
+    /**
+     * @param usuarioId id del usuario titular que solicita la supresión de sus datos
+     * @return la solicitud de supresión creada, en estado "PENDIENTE"
+     * @throws IllegalStateException    si ya existe una solicitud pendiente para esa cuenta
+     * @throws IllegalArgumentException si el usuario no existe
+     */
     public SolicitudSupresion solicitar(Long usuarioId) {
         if (solicitudRepository.existsByUsuarioIdAndEstado(usuarioId, "PENDIENTE")) {
             throw new IllegalStateException("Ya existe una solicitud de supresión pendiente para esta cuenta.");
@@ -43,14 +49,21 @@ public class SupresionDatosService {
         return solicitudRepository.save(solicitud);
     }
 
+    /** @return todas las solicitudes de supresión, de la más reciente a la más antigua */
     public List<SolicitudSupresion> listar() {
         return solicitudRepository.findAllByOrderByFechaSolicitudDesc();
     }
 
     /**
-     * @param aceptar true para seudonimizar la cuenta, false para rechazar la solicitud (p. ej.
-     *                porque el titular tiene un proceso de titulación en curso que la normativa
-     *                obliga a poder identificar)
+     * @param solicitudId   id de la solicitud de supresión a resolver
+     * @param aceptar       true para seudonimizar la cuenta, false para rechazar la solicitud
+     *                      (p. ej. porque el titular tiene un proceso de titulación en curso
+     *                      que la normativa obliga a poder identificar)
+     * @param resueltoPorId id del usuario (ADMIN) que resuelve la solicitud
+     * @param notas         notas opcionales de la resolución
+     * @return la solicitud actualizada, con su resolución aplicada
+     * @throws IllegalArgumentException si la solicitud no existe
+     * @throws IllegalStateException    si la solicitud ya había sido resuelta
      */
     @Transactional
     public SolicitudSupresion resolver(Long solicitudId, boolean aceptar, Long resueltoPorId, String notas) {

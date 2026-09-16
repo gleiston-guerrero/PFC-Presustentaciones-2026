@@ -39,6 +39,17 @@ public class NotificacionServiceImpl implements NotificacionService {
         }
     }
 
+    /**
+     * Crea y persiste una notificación para un usuario, y adicionalmente le envía un correo si
+     * tiene configurado un {@code emailNotificaciones}. El remitente que figura en el correo se
+     * resuelve del usuario autenticado en el contexto de seguridad actual, o uno genérico si no
+     * hay ninguno.
+     *
+     * @param usuarioId id del usuario receptor de la notificación
+     * @param mensaje   texto de la notificación
+     * @return la notificación creada
+     * @throws RuntimeException si el usuario receptor no existe
+     */
     @Override
     public Notificacion crearNotificacion(Long usuarioId, String mensaje) {
         Usuario receptor = usuarioRepository.findById(usuarioId)
@@ -92,23 +103,41 @@ public class NotificacionServiceImpl implements NotificacionService {
         return new String[]{"Sistema de Pre-Sustentaciones", "noreply@uteq.edu.ec"};
     }
 
+    /**
+     * @param pageable configuración de paginación
+     * @return página de todas las notificaciones del sistema
+     */
     @Override
     public Page<Notificacion> listarNotificaciones(Pageable pageable) {
         return notificacionRepository.findAll(pageable);
     }
 
+    /**
+     * @param usuarioId id del usuario
+     * @param pageable  configuración de paginación
+     * @return página de notificaciones de ese usuario, más recientes primero
+     */
     @Override
     public Page<Notificacion> listarPorUsuario(Long usuarioId, Pageable pageable) {
         validarAcceso(usuarioId);
         return notificacionRepository.findByUsuarioIdOrderByFechaDesc(usuarioId, pageable);
     }
 
+    /**
+     * @param usuarioId id del usuario
+     * @return cantidad de notificaciones no leídas de ese usuario
+     */
     @Override
     public long contarNoLeidas(Long usuarioId) {
         validarAcceso(usuarioId);
         return notificacionRepository.countByUsuarioIdAndLeidaFalse(usuarioId);
     }
 
+    /**
+     * @param id id de la notificación a marcar
+     * @return la notificación actualizada con {@code leida = true}
+     * @throws RuntimeException si la notificación no existe
+     */
     @Override
     public Notificacion marcarComoLeida(Long id) {
         Notificacion n = notificacionRepository.findById(id)
@@ -118,6 +147,7 @@ public class NotificacionServiceImpl implements NotificacionService {
         return notificacionRepository.save(n);
     }
 
+    /** @param usuarioId id del usuario cuyas notificaciones se marcan todas como leídas */
     @Override
     @org.springframework.transaction.annotation.Transactional
     public void marcarTodasLeidas(Long usuarioId) {
@@ -125,6 +155,12 @@ public class NotificacionServiceImpl implements NotificacionService {
         notificacionRepository.marcarTodasLeidasPorUsuario(usuarioId);
     }
 
+    /**
+     * Elimina una notificación específica.
+     *
+     * @param id id de la notificación a eliminar
+     * @throws RuntimeException si la notificación no existe
+     */
     @Override
     public void eliminarNotificacion(Long id) {
         Notificacion n = notificacionRepository.findById(id)

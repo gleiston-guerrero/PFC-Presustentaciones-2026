@@ -252,6 +252,9 @@ public class AuthController {
      * entidad. La creación en sí (verificación de email duplicado, encode de password,
      * resolución de rol) reutiliza {@link IUsuarioService#crear} tal cual la usa
      * UsuarioController, en vez de duplicar esa lógica aquí.
+     *
+     * @param request los 5 campos permitidos para crear la cuenta
+     * @return 200 con el usuario creado, o 400 si el email ya existe o el rol no es válido
      */
     @PostMapping("/register")
     @PreAuthorize("@permisoService.tienePermiso(authentication, 'USUARIOS_GESTIONAR')")

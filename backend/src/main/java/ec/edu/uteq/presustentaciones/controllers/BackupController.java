@@ -60,7 +60,12 @@ public class BackupController {
         return ResponseEntity.ok(ResponseWrapper.success(info, "Respaldo generado correctamente"));
     }
 
-    /** Genera un respaldo DIFERENCIAL (filas cambiadas desde el último FULL). Fase 2. */
+    /**
+     * Genera un respaldo DIFERENCIAL (filas cambiadas desde el último FULL). Fase 2.
+     *
+     * @param origen opcional: MANUAL (por defecto) o EVENTO
+     * @return 200 con los metadatos del diferencial generado
+     */
     @PostMapping("/diferencial")
     public ResponseEntity<?> generarDiferencial(@RequestParam(defaultValue = "MANUAL") String origen) {
         OrigenRespaldo o = "EVENTO".equalsIgnoreCase(origen) ? OrigenRespaldo.EVENTO : OrigenRespaldo.MANUAL;
@@ -68,7 +73,12 @@ public class BackupController {
         return ResponseEntity.ok(ResponseWrapper.success(info, "Respaldo diferencial generado"));
     }
 
-    /** Descarga un respaldo como archivo adjunto. */
+    /**
+     * Descarga un respaldo como archivo adjunto.
+     *
+     * @param nombre nombre del archivo de respaldo
+     * @return 200 con el contenido del archivo como {@code application/octet-stream}
+     */
     @GetMapping("/{nombre}/descargar")
     public ResponseEntity<byte[]> descargar(@PathVariable String nombre) {
         byte[] contenido = backupService.leer(nombre);
@@ -78,7 +88,12 @@ public class BackupController {
                 .body(contenido);
     }
 
-    /** Restaura la base desde un respaldo (operación destructiva). */
+    /**
+     * Restaura la base desde un respaldo (operación destructiva).
+     *
+     * @param nombre nombre del respaldo FULL a restaurar
+     * @return 200 confirmando la restauración
+     */
     @PostMapping("/{nombre}/restaurar")
     public ResponseEntity<?> restaurar(@PathVariable String nombre) {
         backupService.restaurar(nombre);
@@ -87,7 +102,12 @@ public class BackupController {
                 + "para descartar datos en caché."));
     }
 
-    /** Elimina permanentemente un archivo de respaldo. */
+    /**
+     * Elimina permanentemente un archivo de respaldo.
+     *
+     * @param nombre nombre del respaldo a eliminar
+     * @return 200 confirmando el borrado
+     */
     @DeleteMapping("/{nombre}")
     public ResponseEntity<?> eliminar(@PathVariable String nombre) {
         backupService.eliminar(nombre);
@@ -96,7 +116,11 @@ public class BackupController {
 
     // ── Panel de estado ─────────────────────────────────────────────────────
 
-    /** Resumen para el panel: última copia, próxima programada, espacio, RPO, última prueba. */
+    /**
+     * Resumen para el panel: última copia, próxima programada, espacio, RPO, última prueba.
+     *
+     * @return 200 con el estado consolidado de respaldos
+     */
     @GetMapping("/estado")
     public ResponseEntity<?> estado() {
         return ResponseEntity.ok(ResponseWrapper.success(backupService.estado()));
@@ -104,6 +128,7 @@ public class BackupController {
 
     // ── Cronograma (programación + retención) ────────────────────────────────
 
+    /** @return 200 con la configuración vigente del cronograma de respaldos */
     @GetMapping("/config")
     public ResponseEntity<?> obtenerConfig() {
         return ResponseEntity.ok(ResponseWrapper.success(backupService.configDTO()));
@@ -112,6 +137,7 @@ public class BackupController {
     /**
      * Actualiza el cronograma: activo/pausado, expresión cron y política de retención GFS.
      *
+     * @param dto nueva configuración del cronograma
      * @return 200 con la config aplicada, o 400 si el cron es inválido
      */
     @PutMapping("/config")
@@ -132,11 +158,16 @@ public class BackupController {
 
     // ── Bitácora de pruebas de restauración ─────────────────────────────────
 
+    /** @return 200 con las últimas 50 pruebas de restauración registradas */
     @GetMapping("/pruebas")
     public ResponseEntity<?> listarPruebas() {
         return ResponseEntity.ok(ResponseWrapper.success(backupService.pruebas()));
     }
 
+    /**
+     * @param req datos de la prueba de restauración a registrar
+     * @return 200 con la prueba registrada
+     */
     @PostMapping("/pruebas")
     public ResponseEntity<?> registrarPrueba(@Valid @RequestBody RegistrarPruebaRestauracionRequest req) {
         return ResponseEntity.ok(ResponseWrapper.success(
@@ -147,20 +178,32 @@ public class BackupController {
 
     // ── Fase 2: WAL / PITR y base física ────────────────────────────────────
 
-    /** Estado del archivado de WAL, del directorio compartido y de las bases físicas. */
+    /**
+     * Estado del archivado de WAL, del directorio compartido y de las bases físicas.
+     *
+     * @return 200 con el estado del archivado de WAL
+     */
     @GetMapping("/wal")
     public ResponseEntity<?> estadoWal() {
         return ResponseEntity.ok(ResponseWrapper.success(walPitrService.estado()));
     }
 
-    /** Cierra el segmento de WAL actual para que se archive de inmediato. */
+    /**
+     * Cierra el segmento de WAL actual para que se archive de inmediato.
+     *
+     * @return 200 con el nombre del segmento cerrado
+     */
     @PostMapping("/wal/switch")
     public ResponseEntity<?> switchWal() {
         String wal = walPitrService.forzarSwitchWal();
         return ResponseEntity.ok(ResponseWrapper.success(wal, "Segmento " + wal + " cerrado y en cola de archivado"));
     }
 
-    /** Limpia el WAL archivado más antiguo que la retención configurada. */
+    /**
+     * Limpia el WAL archivado más antiguo que la retención configurada.
+     *
+     * @return 200 con la cantidad de segmentos eliminados
+     */
     @PostMapping("/wal/limpiar")
     public ResponseEntity<?> limpiarWal() {
         int dias = backupService.config().getRetenerDiasWal();
@@ -169,13 +212,21 @@ public class BackupController {
                 borrados == 0 ? "No había WAL para limpiar." : borrados + " segmento(s) de WAL eliminados."));
     }
 
-    /** Genera un respaldo físico base ({@code pg_basebackup}), la base para PITR. */
+    /**
+     * Genera un respaldo físico base ({@code pg_basebackup}), la base para PITR.
+     *
+     * @return 200 con los metadatos de la base física generada
+     */
     @PostMapping("/bases")
     public ResponseEntity<?> generarBaseFisica() {
         return ResponseEntity.ok(ResponseWrapper.success(
                 walPitrService.generarBaseFisica(), "Base física generada"));
     }
 
+    /**
+     * @param nombre nombre de la base física a eliminar
+     * @return 200 confirmando el borrado
+     */
     @DeleteMapping("/bases/{nombre}")
     public ResponseEntity<?> eliminarBase(@PathVariable String nombre) {
         walPitrService.eliminarBase(nombre);

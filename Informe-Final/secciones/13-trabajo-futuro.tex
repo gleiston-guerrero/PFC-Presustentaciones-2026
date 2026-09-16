@@ -8,16 +8,13 @@ maquillarlo con contenido de relleno:
     \item \textbf{Despliegue público en producción:} preparado completamente (Dockerfiles verificados,
     configuración de Railway, documentación de despliegue), pero la cuenta y el despliegue real requieren
     una acción del equipo humano que no se completó a la fecha de este informe.
-    \item \textbf{Cobertura de pruebas automatizadas:} 36 de 50 requisitos Must tienen prueba automatizada
-    dedicada (72\,\%, ver Sección~\ref{sec:requisitos}); los 14 restantes se enumeran en \S10.3 del SRS.
-    Cobertura general de 71.46\,\% de líneas y 53.82\,\% de ramas (JaCoCo, 2026-09-13, 657 tests, 0
-    fallos), la primera por encima del objetivo de 60\,\% de RNF-04, la segunda bajo el objetivo de
-    70\,\%. La capa de controladores supera el umbral de 70\,\% exigido por la guía en líneas \emph{y} en
-    ramas a la vez, con margen real: pasó de 8.75\,\%/0\,\% a \textbf{79.01\,\%/80.34\,\%}. Servicios pasó de
-    59.64\,\%/40.87\,\% a
-    \textbf{70.22\,\%/54.48\,\%}: supera el umbral en líneas pero no en ramas. La brecha de ramas que
-    queda a nivel global se concentra en los componentes transversales de seguridad (autenticación, JWT,
-    filtros) y en la propia capa de servicios, y queda declarada como trabajo futuro en vez de omitida.
+    \item \textbf{Cobertura de requisitos Must por prueba dedicada:} 36 de 50 requisitos Must tienen
+    prueba automatizada dedicada (72\,\%, ver Sección~\ref{sec:requisitos}); los 14 restantes se
+    enumeran en \S10.3 del SRS. La cobertura de código en sí ya no es trabajo futuro: la corrida vigente
+    (JaCoCo, 2026-09-15, 801 tests, 0 fallos) da \textbf{82.10\,\%/73.49\,\%} (líneas/ramas) a nivel
+    global, por encima del umbral del 70\,\% exigido por la guía en ambas métricas (ver
+    Sección~\ref{sec:evaluacion} para el desglose por paquete y qué se cubrió para cerrar la brecha de
+    ramas).
     \item \textbf{Aplicación real del instrumento SUS:} el cuestionario está listo; aplicarlo a un grupo
     real de al menos 5--10 usuarios (estudiantes, docentes, coordinadores) es la tarea pendiente más
     directa y de menor esfuerzo entre las listadas aquí.

@@ -53,6 +53,13 @@ public class RubricaEvaluacionServiceImpl implements RubricaEvaluacionService {
         }
     }
 
+    /**
+     * El jurado registra sus escalas por criterio.
+     *
+     * @param req calificación por criterio de rúbrica emitida por un jurado
+     * @return la evaluación registrada, con la nota calculada para ese jurado
+     * @throws RuntimeException si la solicitud, la rúbrica o el jurado no existen
+     */
     @Override
     @Transactional
     public EvaluacionRubricaResponse registrarEvaluacion(EvaluacionRubricaRequest req) {
@@ -130,6 +137,13 @@ public class RubricaEvaluacionServiceImpl implements RubricaEvaluacionService {
         return buildResponse(jurado, guardadas, req.getSolicitudId(), evaluador.getId());
     }
  
+    /**
+     * Estado de la evaluación de un jurado para una solicitud.
+     *
+     * @param solicitudId id de la solicitud
+     * @param juradoId    id del jurado
+     * @return la evaluación de ese jurado para esa solicitud, si ya la registró
+     */
     @Override
     public EvaluacionRubricaResponse obtenerEvaluacionJurado(Long solicitudId, Long juradoId) {
         Jurado jurado = juradoRepo.findById(juradoId)
@@ -144,6 +158,12 @@ public class RubricaEvaluacionServiceImpl implements RubricaEvaluacionService {
         return buildResponse(jurado, evals, solicitudId, evaluador.getId());
     }
  
+    /**
+     * Resumen de todos los jurados para una solicitud.
+     *
+     * @param solicitudId id de la solicitud
+     * @return las evaluaciones registradas por cada jurado de esa solicitud
+     */
     @Override
     public List<EvaluacionRubricaResponse> obtenerEvaluacionesSolicitud(Long solicitudId) {
         Solicitud solicitudParaAcceso = solicitudRepo.findById(solicitudId)
@@ -163,6 +183,13 @@ public class RubricaEvaluacionServiceImpl implements RubricaEvaluacionService {
                 .collect(Collectors.toList());
     }
  
+    /**
+     * Nota promedio del tribunal (40%) lista para usar en la evaluación final.
+     *
+     * @param solicitudId id de la solicitud
+     * @return el promedio, redondeado a 2 decimales, de las notas de los jurados que ya
+     *         evaluaron; {@code 0.0} si ninguno ha evaluado todavía
+     */
     @Override
     public Double calcularNotaTribunal(Long solicitudId) {
         Solicitud solicitudParaAcceso = solicitudRepo.findById(solicitudId)
@@ -244,6 +271,12 @@ public class RubricaEvaluacionServiceImpl implements RubricaEvaluacionService {
                 .build();
     }
 
+    /**
+     * Obtener todas las observaciones de una solicitud (tutor, jurados, coordinador).
+     *
+     * @param solicitudId id de la solicitud
+     * @return observaciones consolidadas de todos los actores que han evaluado la solicitud
+     */
     @Override
     @Transactional(readOnly = true)
     public ObservacionesSolicitudDTO obtenerObservacionesSolicitud(Long solicitudId) {

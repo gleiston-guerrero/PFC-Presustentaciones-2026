@@ -67,6 +67,9 @@ public class WalPitrService {
 
     // ── Estado ──────────────────────────────────────────────────────────
 
+    /**
+     * @return el estado del archivado de WAL, del directorio compartido y de las bases físicas
+     */
     public EstadoWalDTO estado() {
         Map<String, Object> s;
         try {
@@ -148,7 +151,11 @@ public class WalPitrService {
 
     // ── Acciones ────────────────────────────────────────────────────────
 
-    /** Cierra el segmento de WAL actual para que se archive de inmediato. */
+    /**
+     * Cierra el segmento de WAL actual para que se archive de inmediato.
+     *
+     * @return el nombre del segmento de WAL cerrado
+     */
     public String forzarSwitchWal() {
         try {
             String wal = jdbc.queryForObject("SELECT pg_walfile_name(pg_switch_wal())", String.class);
@@ -163,6 +170,7 @@ public class WalPitrService {
      * Borra segmentos de WAL archivados más antiguos que {@code dias} días, pero nunca los
      * necesarios para la base física más antigua que se conserva.
      *
+     * @param dias antigüedad mínima en días para que un segmento sea candidato a borrado
      * @return cantidad de segmentos eliminados
      */
     public int limpiarWal(int dias) {
@@ -202,6 +210,7 @@ public class WalPitrService {
 
     // ── Base física (pg_basebackup) ─────────────────────────────────────
 
+    /** @return las bases físicas generadas, más recientes primero */
     public List<BaseFisicaDTO> listarBases() {
         Path dir = basesDir();
         if (!Files.isDirectory(dir)) return List.of();
@@ -217,6 +226,12 @@ public class WalPitrService {
         }
     }
 
+    /**
+     * Genera un respaldo físico base ({@code pg_basebackup}), la base para PITR.
+     *
+     * @return los metadatos de la base física generada
+     * @throws RuntimeException si no se pudo crear el directorio de bases, o {@code pg_basebackup} falla
+     */
     public BaseFisicaDTO generarBaseFisica() {
         Conexion c = conexion();
         Path dir = basesDir();
@@ -244,6 +259,10 @@ public class WalPitrService {
         return aBaseDTO(destino);
     }
 
+    /**
+     * @param nombre nombre de la base física a eliminar
+     * @throws IllegalArgumentException si el nombre no tiene el formato esperado
+     */
     public void eliminarBase(String nombre) {
         if (nombre == null || !nombre.matches("^base_[0-9]{8}_[0-9]{6}$")) {
             throw new IllegalArgumentException("Nombre de base física inválido.");

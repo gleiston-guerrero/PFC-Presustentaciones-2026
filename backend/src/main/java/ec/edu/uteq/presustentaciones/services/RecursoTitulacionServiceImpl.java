@@ -20,6 +20,12 @@ public class RecursoTitulacionServiceImpl implements RecursoTitulacionService {
     private final RecursoTitulacionRepository recursoRepository;
     private final CarreraRepository carreraRepository;
 
+    /**
+     * Recursos visibles para una carrera (los generales + los de esa carrera).
+     *
+     * @param carreraId id de la carrera a filtrar, o {@code null} para listar todos
+     * @return los recursos de titulación visibles
+     */
     @Override
     @Transactional(readOnly = true)
     public List<RecursoTitulacionDTO> listar(Integer carreraId) {
@@ -29,6 +35,11 @@ public class RecursoTitulacionServiceImpl implements RecursoTitulacionService {
         return recursos.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
+    /**
+     * @param request datos del recurso a crear
+     * @return el recurso creado
+     * @throws IllegalArgumentException si la carrera indicada no existe
+     */
     @Override
     @Transactional
     public RecursoTitulacionDTO crear(GuardarRecursoRequest request) {
@@ -41,6 +52,12 @@ public class RecursoTitulacionServiceImpl implements RecursoTitulacionService {
         return mapToDTO(recursoRepository.save(recurso));
     }
 
+    /**
+     * @param id      id del recurso a actualizar
+     * @param request datos nuevos del recurso
+     * @return el recurso actualizado
+     * @throws IllegalArgumentException si el recurso o la carrera indicada no existen
+     */
     @Override
     @Transactional
     public RecursoTitulacionDTO actualizar(Integer id, GuardarRecursoRequest request) {
@@ -53,6 +70,10 @@ public class RecursoTitulacionServiceImpl implements RecursoTitulacionService {
         return mapToDTO(recursoRepository.save(recurso));
     }
 
+    /**
+     * @param id id del recurso a eliminar
+     * @throws IllegalArgumentException si el recurso no existe
+     */
     @Override
     @Transactional
     public void eliminar(Integer id) {

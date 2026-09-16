@@ -51,6 +51,8 @@ public class PasswordRecoveryService {
      * de costo equivalente (una escritura en Redis con TTL corto) y no envía nada -- para que
      * el tiempo de respuesta no distinga "existe" de "no existe" además del cuerpo, que ya es
      * idéntico en ambos casos (ver {@code AuthController}).
+     *
+     * @param email email de la cuenta para la que se solicita recuperación
      */
     public void solicitarRecuperacion(String email) {
         Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
@@ -71,6 +73,8 @@ public class PasswordRecoveryService {
     /**
      * Aplica el nuevo password si el token es válido, no ha expirado y no se usó antes.
      *
+     * @param tokenPlano    token de recuperación recibido por correo
+     * @param passwordNueva la nueva contraseña en texto plano
      * @throws IllegalArgumentException token inválido, expirado o ya usado (400); o la nueva
      *         contraseña incumple RNF-06 (mensaje del propio {@link PasswordPolicyValidator})
      */

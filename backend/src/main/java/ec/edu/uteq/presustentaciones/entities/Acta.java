@@ -91,7 +91,7 @@ public class Acta {
         this.firmada = firmadaPresidente && firmadaVocal1 && firmadaVocal2 && firmadaTutor;
     }
 
-    /** Retorna los firmantes pendientes como texto */
+    /** @return los firmantes pendientes como texto, o cadena vacía si ya firmaron todos */
     public String getFirmantesPendientes() {
         StringBuilder sb = new StringBuilder();
         if (!firmadaPresidente) sb.append("Presidente, ");

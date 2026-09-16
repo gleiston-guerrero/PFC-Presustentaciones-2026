@@ -149,6 +149,12 @@ public class ActaController {
      * El coordinador consulta y cambia estado según el flujo académico; ACTAS_GESTIONAR
      * (solo ADMIN) queda reservado para operaciones administrativas adicionales.
      *
+     * @param estado   código de estado del acta a filtrar, o {@code null} para no filtrar
+     * @param carrera  carrera a filtrar, o {@code null} para no filtrar
+     * @param desde    fecha mínima de generación, o {@code null} para no acotar
+     * @param hasta    fecha máxima de generación, o {@code null} para no acotar
+     * @param q        texto libre de búsqueda, o {@code null} para no filtrar
+     * @param pageable página y tamaño solicitados
      * @return 200 con la página de actas que cumplen los filtros recibidos
      */
     @GetMapping("/buscar")
@@ -202,7 +208,8 @@ public class ActaController {
      * COORDINADOR / ADMINISTRADOR: cambia el estado del acta. Cada cambio queda registrado
      * en el historial con el usuario, el estado anterior, el nuevo y el motivo.
      *
-     * @param id acta cuyo estado se cambia
+     * @param id  acta cuyo estado se cambia
+     * @param req nuevo estado y motivo del cambio
      * @return 200 con el acta actualizada, o 400 si la transición no es válida o falta el
      *         motivo en los estados que lo exigen (OBSERVADA, ANULADA)
      */

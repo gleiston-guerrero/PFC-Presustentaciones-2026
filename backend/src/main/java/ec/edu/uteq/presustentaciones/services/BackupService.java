@@ -105,7 +105,12 @@ public class BackupService {
 
     // ── Consultas ────────────────────────────────────────────────────────────
 
-    /** Respaldos existentes, del más reciente al más antiguo. */
+    /**
+     * Respaldos existentes, del más reciente al más antiguo.
+     *
+     * @return lista de metadatos de cada archivo de respaldo válido en el directorio
+     *         configurado, o una lista vacía si el directorio aún no existe
+     */
     public List<BackupInfoDTO> listar() {
         Path dir = Paths.get(backupsDir);
         if (!Files.isDirectory(dir)) {
@@ -125,7 +130,12 @@ public class BackupService {
         }
     }
 
-    /** Panel de estado del apartado. */
+    /**
+     * Panel de estado del apartado.
+     *
+     * @return resumen con el último respaldo, la próxima ejecución programada, el uso de
+     *         espacio en disco y el resultado de la última prueba de restauración
+     */
     public EstadoRespaldosDTO estado() {
         List<BackupInfoDTO> todos = listar();
         RespaldoConfig cfg = config();
@@ -177,6 +187,12 @@ public class BackupService {
 
     // ── Configuración del cronograma ─────────────────────────────────────────
 
+    /**
+     * Configuración vigente del cronograma de respaldos, creando una por defecto si todavía
+     * no existe ninguna fila en {@code presus.respaldo_config}.
+     *
+     * @return la configuración guardada (nunca {@code null})
+     */
     public RespaldoConfig config() {
         return configRepo.findById(RespaldoConfig.ID_UNICO)
                 .orElseGet(() -> configRepo.save(RespaldoConfig.builder()
@@ -193,10 +209,25 @@ public class BackupService {
                         .build()));
     }
 
+    /**
+     * Configuración vigente del cronograma, en el DTO expuesto por la API (incluye la
+     * descripción legible del cron, ver {@link #describirCron(String)}).
+     *
+     * @return la configuración vigente, convertida a DTO
+     */
     public RespaldoConfigDTO configDTO() {
         return aConfigDTO(config());
     }
 
+    /**
+     * Actualiza la configuración del cronograma de respaldos (activación, expresión cron
+     * y política de retención GFS), validando ambas expresiones cron antes de guardar nada.
+     *
+     * @param dto nueva configuración enviada por el administrador
+     * @return la configuración ya guardada, en el mismo DTO
+     * @throws IllegalArgumentException si el cron principal o el del diferencial no son
+     *                                   expresiones cron válidas de 6 campos
+     */
     public RespaldoConfigDTO actualizarConfig(RespaldoConfigDTO dto) {
         if (cronValido(dto.getCron()) == null) {
             throw new IllegalArgumentException(
@@ -229,10 +260,26 @@ public class BackupService {
 
     // ── Pruebas de restauración ─────────────────────────────────────────────
 
+    /** @return las últimas 50 pruebas de restauración registradas, de la más reciente a la más antigua */
     public List<RespaldoPruebaRestauracion> pruebas() {
         return pruebaRepo.findTop50ByOrderByFechaDesc();
     }
 
+    /**
+     * Registra en la bitácora el resultado de una prueba de restauración manual. El respaldo
+     * probado puede ya no existir en disco (se probó y se borró después): no se exige que
+     * exista, solo que el nombre tenga forma válida, para no guardar basura.
+     *
+     * @param respaldoNombre nombre del archivo de respaldo que se probó
+     * @param resultado      {@code "FALLIDA"} para marcarla como fallida; cualquier otro
+     *                       valor (incluido {@code null}) se guarda como {@code "EXITOSA"}
+     * @param responsable    quién ejecutó la prueba; si viene vacío se usa el usuario
+     *                       autenticado actual
+     * @param notas          observaciones libres de la prueba, o {@code null} si no hay
+     * @return la prueba ya guardada
+     * @throws IllegalArgumentException si {@code respaldoNombre} es nulo o no tiene la forma
+     *                                   de un nombre de respaldo válido
+     */
     public RespaldoPruebaRestauracion registrarPrueba(String respaldoNombre, String resultado,
                                                       String responsable, String notas) {
         // el respaldo puede ya no existir (se probó y se borró) -> no se exige que exista,
@@ -252,12 +299,21 @@ public class BackupService {
 
     // ── Generación ──────────────────────────────────────────────────────────
 
-    /** Compat: FULL manual. */
+    /** Compat: FULL manual. @return el respaldo FULL manual generado */
     public BackupInfoDTO generar() {
         return generar(TipoRespaldo.FULL, OrigenRespaldo.MANUAL);
     }
 
-    /** Genera un respaldo con {@code pg_dump -Fc} etiquetado con su tipo y origen. */
+    /**
+     * Genera un respaldo con {@code pg_dump -Fc} etiquetado con su tipo y origen.
+     *
+     * @param tipo   FULL o DIFERENCIAL (para el diferencial real, ver
+     *               {@link #generarDiferencial(OrigenRespaldo)})
+     * @param origen quién lo disparó: MANUAL, AUTOMATICO o EVENTO
+     * @return metadatos del archivo de respaldo generado
+     * @throws RuntimeException si {@code pg_dump} falla o termina sin error pero deja el
+     *                          archivo vacío
+     */
     public BackupInfoDTO generar(TipoRespaldo tipo, OrigenRespaldo origen) {
         Conexion c = parsearConexion();
         Path dir = crearDirectorio();
@@ -281,7 +337,12 @@ public class BackupService {
         return aInfo(destino);
     }
 
-    /** Fecha del respaldo AUTOMÁTICO más reciente, o una fecha muy antigua si no hay ninguno. */
+    /**
+     * Fecha del respaldo AUTOMÁTICO más reciente, o una fecha muy antigua si no hay ninguno.
+     *
+     * @return la fecha de creación del último respaldo automático, o {@code now() - 10 años}
+     *         si nunca se ha generado uno (para que el scheduler lo trate como "ya toca")
+     */
     public LocalDateTime fechaUltimoAutomatico() {
         return listar().stream()
                 .filter(b -> OrigenRespaldo.AUTOMATICO.name().equals(b.getOrigen()))
@@ -290,7 +351,12 @@ public class BackupService {
                 .orElse(LocalDateTime.now().minusYears(10));
     }
 
-    /** Fecha del último AUTOMÁTICO DIFERENCIAL, o muy antigua si no hay ninguno (para el scheduler). */
+    /**
+     * Fecha del último AUTOMÁTICO DIFERENCIAL, o muy antigua si no hay ninguno (para el scheduler).
+     *
+     * @return la fecha de creación del último diferencial automático, o {@code now() - 10 años}
+     *         si nunca se ha generado uno
+     */
     public LocalDateTime fechaUltimoDiferencialAutomatico() {
         return listar().stream()
                 .filter(b -> TipoRespaldo.DIFERENCIAL.name().equals(b.getTipo()))
@@ -305,6 +371,12 @@ public class BackupService {
      * FULL, más la lista de ids eliminados, empaquetadas en un {@code .tar.gz} de CSVs.
      * El "qué cambió" se resuelve por la tabla de auditoría (V15). Se restaura aplicando
      * los CSV sobre una restauración del FULL base (procedimiento en el plan §4).
+     *
+     * @param origen quién lo disparó: MANUAL o AUTOMATICO
+     * @return metadatos del archivo {@code .tar.gz} generado
+     * @throws IllegalStateException si no existe ningún respaldo FULL del que partir
+     * @throws RuntimeException      si falla la exportación con {@code psql}, la creación del
+     *                                {@code .tar.gz}, o cualquier operación de archivo
      */
     public BackupInfoDTO generarDiferencial(OrigenRespaldo origen) {
         BackupInfoDTO ultimoFull = listar().stream()
@@ -462,6 +534,15 @@ public class BackupService {
 
     // ── Descargar / restaurar / eliminar ────────────────────────────────────
 
+    /**
+     * Lee el contenido crudo de un respaldo, para descargarlo.
+     *
+     * @param nombre nombre del archivo de respaldo
+     * @return el contenido completo del archivo
+     * @throws IllegalArgumentException si el nombre es inválido, intenta salir del
+     *                                   directorio de respaldos, o el archivo no existe
+     * @throws RuntimeException         si falla la lectura del archivo en disco
+     */
     public byte[] leer(String nombre) {
         Path archivo = resolverExistente(nombre);
         try {
@@ -471,6 +552,14 @@ public class BackupService {
         }
     }
 
+    /**
+     * Restaura la base de datos completa desde un respaldo FULL con {@code pg_restore}
+     * (operación destructiva: reemplaza el contenido actual).
+     *
+     * @param nombre nombre del respaldo FULL a restaurar
+     * @throws IllegalArgumentException si el nombre es inválido, el archivo no existe, o es
+     *                                   un respaldo DIFERENCIAL (esos no se restauran solos)
+     */
     public void restaurar(String nombre) {
         Path archivo = resolverExistente(nombre);
         if (nombre.endsWith(".tar.gz")) {
@@ -490,6 +579,13 @@ public class BackupService {
                 nombre, usuarioActual(), codigo);
     }
 
+    /**
+     * Elimina permanentemente un archivo de respaldo.
+     *
+     * @param nombre nombre del respaldo a eliminar
+     * @throws IllegalArgumentException si el nombre es inválido o el archivo no existe
+     * @throws RuntimeException         si falla el borrado en disco
+     */
     public void eliminar(String nombre) {
         Path archivo = resolverExistente(nombre);
         try {

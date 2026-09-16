@@ -63,6 +63,12 @@ public class TutoriaServiceImpl implements TutoriaService {
 
     // ── Resumen ───────────────────────────────────────────────────────────────
 
+    /**
+     * @param tutorId   id del registro de tutoría
+     * @param usuarioId id del usuario que consulta (para resolver permisos de vista)
+     * @return resumen de la tutoría: fase actual, progreso y estado
+     * @throws RuntimeException si la tutoría no existe
+     */
     @Override
     public TutoriaResumenDTO obtenerResumen(Long tutorId, Long usuarioId) {
         Tutor tutor = tutorRepository.findById(tutorId)
@@ -74,6 +80,11 @@ public class TutoriaServiceImpl implements TutoriaService {
 
     // ── Fases ─────────────────────────────────────────────────────────────────
 
+    /**
+     * @param tutorId   id del registro de tutoría
+     * @param usuarioId id del usuario que consulta (para resolver permisos)
+     * @return las fases registradas de esa tutoría, en orden
+     */
     @Override
     public List<TutoriaFaseDTO> obtenerFases(Long tutorId, Long usuarioId) {
         Tutor tutor = tutorRepository.findById(tutorId)
@@ -86,6 +97,13 @@ public class TutoriaServiceImpl implements TutoriaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * @param tutorId        id del registro de tutoría
+     * @param tutorUsuarioId id del usuario docente que crea la fase
+     * @param observacion    observación inicial del docente para esta fase
+     * @return la fase creada
+     * @throws RuntimeException si la tutoría no existe
+     */
     @Override
     @Transactional
     public TutoriaFaseDTO crearFaseConObservacion(Long tutorId, Long tutorUsuarioId, String observacion) {
@@ -133,6 +151,13 @@ public class TutoriaServiceImpl implements TutoriaService {
 
     // ── Subida de PDF ─────────────────────────────────────────────────────────
 
+    /**
+     * @param faseId              id de la fase de tutoría
+     * @param archivo             PDF corregido subido por el estudiante
+     * @param estudianteUsuarioId id del usuario estudiante que sube el archivo
+     * @return la fase actualizada con el nuevo PDF
+     * @throws RuntimeException si la fase no existe o el archivo no es un PDF válido
+     */
     @Override
     @Transactional
     public TutoriaFaseDTO subirPdfCorregido(Long faseId, MultipartFile archivo, Long estudianteUsuarioId) {
@@ -207,6 +232,13 @@ public class TutoriaServiceImpl implements TutoriaService {
 
     // ── Aprobación ────────────────────────────────────────────────────────────
 
+    /**
+     * @param faseId         id de la fase a aprobar
+     * @param tutorUsuarioId id del usuario docente que aprueba
+     * @param comentario     comentario opcional de aprobación
+     * @return la fase actualizada en estado aprobado
+     * @throws RuntimeException si la fase no existe
+     */
     @Override
     @Transactional
     public TutoriaFaseDTO aprobarFase(Long faseId, Long tutorUsuarioId, String comentario) {
@@ -292,6 +324,14 @@ public class TutoriaServiceImpl implements TutoriaService {
 
     // ── Mensajes ──────────────────────────────────────────────────────────────
 
+    /**
+     * @param faseId      id de la fase de tutoría
+     * @param remitenteId id del usuario que envía el mensaje
+     * @param contenido   texto del mensaje
+     * @param tipo        tipo de mensaje (p. ej. comentario, corrección)
+     * @return el mensaje creado
+     * @throws RuntimeException si la fase no existe
+     */
     @Override
     @Transactional
     public TutoriaMensajeDTO enviarMensaje(Long faseId, Long remitenteId, String contenido, String tipo) {
@@ -323,6 +363,10 @@ public class TutoriaServiceImpl implements TutoriaService {
         return mapMensaje(tutoriaMensajeRepository.save(mensaje));
     }
 
+    /**
+     * @param faseId    id de la fase de tutoría
+     * @param usuarioId id del usuario que marca los mensajes como leídos
+     */
     @Override
     @Transactional
     public void marcarMensajesLeidos(Long faseId, Long usuarioId) {
@@ -334,6 +378,12 @@ public class TutoriaServiceImpl implements TutoriaService {
 
     // ── PDF ───────────────────────────────────────────────────────────────────
 
+    /**
+     * @param faseId    id de la fase de tutoría
+     * @param usuarioId id del usuario que solicita el PDF
+     * @return el recurso PDF de esa fase, para descarga
+     * @throws RuntimeException si la fase no existe o no tiene PDF
+     */
     @Override
     public Resource obtenerPdfFase(Long faseId, Long usuarioId) {
         TutoriaFase fase = tutoriaFaseRepository.findById(faseId)
@@ -363,6 +413,10 @@ public class TutoriaServiceImpl implements TutoriaService {
 
     // ── Listados por usuario ──────────────────────────────────────────────────
 
+    /**
+     * @param estudianteUsuarioId id del usuario estudiante
+     * @return resúmenes de todas las tutorías de ese estudiante
+     */
     @Override
     public List<TutoriaResumenDTO> obtenerTutoriasEstudiante(Long estudianteUsuarioId) {
         return tutorRepository.findBySolicitudEstudianteUsuarioId(estudianteUsuarioId).stream()
@@ -370,6 +424,10 @@ public class TutoriaServiceImpl implements TutoriaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * @param docenteUsuarioId id del usuario docente
+     * @return resúmenes de todas las tutorías a cargo de ese docente
+     */
     @Override
     public List<TutoriaResumenDTO> obtenerTutoriasDocente(Long docenteUsuarioId) {
         return tutorRepository.findByDocenteUsuarioId(docenteUsuarioId).stream()
@@ -479,6 +537,16 @@ public class TutoriaServiceImpl implements TutoriaService {
         }
     }
 
+    /**
+     * Registra el avance de una fase de tutoría vía procedimiento almacenado.
+     *
+     * @param tutorId     id del registro de tutoría
+     * @param numeroFase  número de fase que avanza
+     * @param archivoPdf  nombre del archivo PDF asociado al avance
+     * @param tamanoBytes tamaño en bytes del archivo
+     * @param sha256      hash SHA-256 del archivo, para verificación de integridad posterior
+     * @param usuarioId   id del usuario estudiante que registra el avance (para validacion)
+     */
     @Override
     @Transactional
     public void registrarAvanceSP(Long tutorId, Integer numeroFase, String archivoPdf, Long tamanoBytes, String sha256, Long usuarioId) {

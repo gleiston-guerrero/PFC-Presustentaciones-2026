@@ -30,6 +30,11 @@ public class CatalogoAdminService {
     private final PeriodoAcademicoRepository periodoAcademicoRepo;
     private final AuditoriaService auditoriaService;
 
+    /**
+     * @param id id de la facultad a eliminar
+     * @throws org.springframework.dao.DataIntegrityViolationException si hay carreras
+     *         asociadas a la facultad
+     */
     @Transactional
     public void eliminarFacultad(Integer id) {
         auditoriaService.marcarActorActual();
@@ -37,6 +42,11 @@ public class CatalogoAdminService {
         facultadRepo.flush();
     }
 
+    /**
+     * @param id id de la carrera a eliminar
+     * @throws org.springframework.dao.DataIntegrityViolationException si hay registros
+     *         dependientes de la carrera
+     */
     @Transactional
     public void eliminarCarrera(Integer id) {
         auditoriaService.marcarActorActual();
@@ -44,6 +54,11 @@ public class CatalogoAdminService {
         carreraRepo.flush();
     }
 
+    /**
+     * @param id id de la modalidad de titulación a eliminar
+     * @throws org.springframework.dao.DataIntegrityViolationException si hay registros
+     *         dependientes de la modalidad
+     */
     @Transactional
     public void eliminarModalidad(Short id) {
         auditoriaService.marcarActorActual();
@@ -51,6 +66,11 @@ public class CatalogoAdminService {
         modalidadRepo.flush();
     }
 
+    /**
+     * @param id id del periodo académico a eliminar
+     * @throws org.springframework.dao.DataIntegrityViolationException si hay registros
+     *         dependientes del periodo
+     */
     @Transactional
     public void eliminarPeriodo(Integer id) {
         auditoriaService.marcarActorActual();

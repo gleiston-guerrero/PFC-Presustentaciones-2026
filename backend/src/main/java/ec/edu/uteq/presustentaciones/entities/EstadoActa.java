@@ -34,7 +34,12 @@ public class EstadoActa {
     @Column(name = "orden", nullable = false)
     private Short orden;
 
-    /** Contraparte de @JsonValue: ver EstadoSolicitud.fromCodigo (round-trip vía caché Redis). */
+    /**
+     * Contraparte de @JsonValue: ver EstadoSolicitud.fromCodigo (round-trip vía caché Redis).
+     *
+     * @param codigo código del estado de acta
+     * @return una instancia con solo el código repoblado (id/nombre quedan null)
+     */
     @JsonCreator
     public static EstadoActa fromCodigo(String codigo) {
         return EstadoActa.builder().codigo(codigo).build();

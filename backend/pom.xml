@@ -175,6 +175,16 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
+
+        <!-- EqualsVerifier: prueba el contrato equals/hashCode (incluye el generado por Lombok)
+             de forma exhaustiva, cubriendo todas las combinaciones de campos nulos/distintos,
+             no solo un caso feliz. -->
+        <dependency>
+            <groupId>nl.jqno.equalsverifier</groupId>
+            <artifactId>equalsverifier</artifactId>
+            <version>3.16.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -240,6 +250,18 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <source>17</source>
+                    <doclint>none</doclint>
+                    <quiet>true</quiet>
+                    <failOnError>true</failOnError>
+                </configuration>
             </plugin>
 
             <!-- Analisis estatico de seguridad (incluye SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE) -->

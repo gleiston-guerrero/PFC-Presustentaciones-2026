@@ -80,6 +80,12 @@ public class SolicitudServiceImpl implements SolicitudService {
 
     // ─── Métodos ─────────────────────────────────────────────────────────────
 
+    /**
+     * @param estudianteId id del {@code Estudiante} propietario de la solicitud
+     * @param datos        datos de la solicitud a crear (título del tema, modalidad, etc.)
+     * @return la solicitud creada y persistida, con su estado y estudiante asociados
+     * @throws RuntimeException si el estudiante no existe o falta la modalidad de titulación
+     */
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
@@ -155,6 +161,13 @@ public class SolicitudServiceImpl implements SolicitudService {
         return solicitudRepository.save(datos);
     }
 
+    /**
+     * @param usuarioId id del {@code Usuario} autenticado (rol ESTUDIANTE)
+     * @param datos     datos de la solicitud a crear
+     * @return la solicitud creada
+     * @throws RuntimeException si el usuario no existe, no tiene rol ESTUDIANTE, o no hay
+     *                          carreras configuradas para crear el perfil automáticamente
+     */
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
@@ -249,6 +262,11 @@ public class SolicitudServiceImpl implements SolicitudService {
         return estudianteRepository.save(nuevoEstudiante);
     }
  
+    /**
+     * @param usuarioId id del usuario (se resuelve a su perfil de estudiante internamente)
+     * @return las solicitudes del estudiante asociado a ese usuario, o lista vacía si no tiene
+     *         perfil de estudiante todavía
+     */
     @Override
     @Cacheable(value = "solicitudes", key = "'usuario:' + #usuarioId")
     public List<Solicitud> listarPorUsuario(Long usuarioId) {
@@ -257,6 +275,11 @@ public class SolicitudServiceImpl implements SolicitudService {
                 .orElse(java.util.Collections.emptyList());
     }
  
+    /**
+     * @param solicitudId id de la solicitud a enviar
+     * @return la solicitud actualizada en estado "ENVIADA"
+     * @throws RuntimeException si la solicitud no existe o no tiene anteproyecto adjunto
+     */
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
@@ -289,6 +312,10 @@ public class SolicitudServiceImpl implements SolicitudService {
         return guardada;
     }
  
+    /**
+     * @param solicitudId id de la solicitud a aprobar
+     * @return la solicitud actualizada
+     */
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
@@ -311,13 +338,22 @@ public class SolicitudServiceImpl implements SolicitudService {
         return guardada;
     }
  
+    /**
+     * @param solicitudId id de la solicitud a rechazar
+     * @return la solicitud actualizada en estado "RECHAZADA"
+     */
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
     public Solicitud rechazarSolicitud(Long solicitudId) {
         return rechazarConObservacion(solicitudId, null);
     }
- 
+
+    /**
+     * @param solicitudId  id de la solicitud a rechazar
+     * @param observacion  motivo del rechazo, visible luego para el estudiante
+     * @return la solicitud actualizada en estado "RECHAZADA" con la observación guardada
+     */
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
@@ -350,6 +386,7 @@ public class SolicitudServiceImpl implements SolicitudService {
      *  llenan Redis. El listado completo navegable es GET /api/v1/solicitudes/paginado. */
     private static final int LIMITE_LISTADO_SIN_PAGINAR = 500;
 
+    /** @return todas las solicitudes del sistema, sin paginar */
     @Override
     @Cacheable(value = "solicitudes", key = "'all'")
     public List<Solicitud> listarSolicitudes() {
@@ -357,6 +394,15 @@ public class SolicitudServiceImpl implements SolicitudService {
                 PageRequest.of(0, LIMITE_LISTADO_SIN_PAGINAR));
     }
 
+    /**
+     * @param pagina       número de página, base 0
+     * @param tamanio      tamaño de página
+     * @param estado       código de estado por el que filtrar, o {@code null} para no filtrar
+     * @param texto        texto libre de búsqueda (título/estudiante), o {@code null}
+     * @param fechaDesde   fecha mínima de registro, o {@code null} para no acotar
+     * @param fechaHasta   fecha máxima de registro, o {@code null} para no acotar
+     * @return página de solicitudes que cumplen los filtros
+     */
     @Override
     public Page<Solicitud> listarSolicitudesPaginado(int pagina, int tamanio, String estado, String texto,
                                                        LocalDate fechaDesde, LocalDate fechaHasta) {
@@ -374,6 +420,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         return solicitudRepository.buscarConFiltros(estado, texto, desde, hasta, pageRequest);
     }
 
+    /** @return conteo de solicitudes agrupado por código de estado, para el dashboard */
     @Override
     public Map<String, Long> contarPorEstado() {
         Map<String, Long> conteos = new LinkedHashMap<>();
@@ -385,18 +432,33 @@ public class SolicitudServiceImpl implements SolicitudService {
         return conteos;
     }
 
+    /**
+     * @param estudianteId id del estudiante
+     * @return todas las solicitudes registradas por ese estudiante
+     */
     @Override
     @Cacheable(value = "solicitudes", key = "'estudiante:' + #estudianteId")
     public List<Solicitud> listarPorEstudiante(Long estudianteId) {
         return solicitudRepository.findByEstudianteId(estudianteId);
     }
  
+    /**
+     * @param id id de la solicitud
+     * @return la solicitud si existe, o {@link Optional#empty()} en caso contrario
+     */
     @Override
     @Cacheable(value = "solicitudes", key = "#id", unless = "#result == null")
     public Optional<Solicitud> obtenerPorId(Long id) {
         return solicitudRepository.findById(id);
     }
  
+    /**
+     * @param solicitudId id de la solicitud a suspender
+     * @param motivo      motivo de la suspensión; no puede estar vacío
+     * @return la solicitud actualizada en estado "SUSPENDIDA"
+     * @throws RuntimeException si la solicitud no existe, su estado actual no permite
+     *                          suspensión, o el motivo está vacío
+     */
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
@@ -433,6 +495,12 @@ public class SolicitudServiceImpl implements SolicitudService {
         return guardada;
     }
 
+    /**
+     * @param carrera nombre (o coincidencia parcial, {@code ILIKE}) de la carrera a filtrar
+     * @return una fila por defensa, con las claves declaradas en
+     *         {@code docs/basedatos/CATALOGO-SP.md} (solicitudId, estudianteNombre, expediente,
+     *         tituloTema, estadoSolicitud, fechaDefensa, salaNombre, notaFinal)
+     */
     @Override
     public List<Map<String, Object>> generarReporteDefensasSP(String carrera) {
         List<Object[]> res = solicitudRepository.generarReporteDefensasSp(carrera);
@@ -452,6 +520,10 @@ public class SolicitudServiceImpl implements SolicitudService {
         return list;
     }
 
+    /**
+     * @param solicitudId el ID de la solicitud
+     * @return un DTO con el progreso y etapas del proceso
+     */
     @Override
     public ec.edu.uteq.presustentaciones.dto.SeguimientoDTO obtenerSeguimiento(Long solicitudId) {
         Solicitud s = solicitudRepository.findById(solicitudId)

@@ -31,6 +31,11 @@ public class TutorServiceImpl implements TutorService {
     private final NotificacionService notificacionService;
     private final ec.edu.uteq.presustentaciones.repositories.EstadoSolicitudRepository estadoSolicitudRepository;
 
+    /**
+     * @param solicitudId id de la solicitud
+     * @param docenteId   id del docente que actuará como tutor
+     * @return el registro de tutoría creado
+     */
     @Override
     @Transactional
     public Tutor asignarTutor(Long solicitudId, Long docenteId) {
@@ -81,21 +86,34 @@ public class TutorServiceImpl implements TutorService {
         return guardado;
     }
 
+    /**
+     * @param solicitudId id de la solicitud
+     * @return el tutor asignado, si existe
+     */
     @Override
     public Optional<Tutor> buscarPorSolicitud(Long solicitudId) {
         return tutorRepository.findBySolicitudId(solicitudId);
     }
 
+    /**
+     * @param pageable configuración de paginación
+     * @return página de todos los registros de tutoría del sistema
+     */
     @Override
     public Page<Tutor> listarTodos(Pageable pageable) {
         return tutorRepository.findAll(pageable);
     }
 
+    /** @param tutorId id del registro de tutoría a eliminar */
     @Override
     public void eliminarTutor(Long tutorId) {
         tutorRepository.deleteById(tutorId);
     }
 
+    /**
+     * @param usuarioIdDocente id del usuario docente
+     * @return los estudiantes tutorados actualmente por ese docente
+     */
     @Override
     public List<MiEstudianteTutoradoDTO> misEstudiantes(Long usuarioIdDocente) {
         return tutorRepository.findByDocenteUsuarioId(usuarioIdDocente).stream()
@@ -125,6 +143,11 @@ public class TutorServiceImpl implements TutorService {
                 .toList();
     }
 
+    /**
+     * Invoca el procedimiento almacenado de estadísticas de carga de tutores.
+     *
+     * @return una fila por docente con su carga actual de tutorías
+     */
     @Override
     public List<Map<String, Object>> obtenerEstadisticasTutoresSP() {
         List<Object[]> res = tutorRepository.obtenerEstadisticasTutoresSp();

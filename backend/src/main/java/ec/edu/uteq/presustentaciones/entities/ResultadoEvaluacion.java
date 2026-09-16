@@ -26,7 +26,12 @@ public class ResultadoEvaluacion {
     @Column(name = "nombre", nullable = false, length = 80)
     private String nombre;
 
-    /** Contraparte de @JsonValue: ver RolUsuario.fromCodigo para el motivo (round-trip vía caché Redis). */
+    /**
+     * Contraparte de @JsonValue: ver RolUsuario.fromCodigo para el motivo (round-trip vía caché Redis).
+     *
+     * @param codigo código del resultado de evaluación
+     * @return una instancia con solo el código repoblado (id/nombre quedan null)
+     */
     @JsonCreator
     public static ResultadoEvaluacion fromCodigo(String codigo) {
         return ResultadoEvaluacion.builder().codigo(codigo).build();

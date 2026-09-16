@@ -1,5 +1,8 @@
 package ec.edu.uteq.presustentaciones.services;
 
+import ec.edu.uteq.presustentaciones.entities.Docente;
+import ec.edu.uteq.presustentaciones.entities.Usuario;
+import ec.edu.uteq.presustentaciones.repositories.DocenteRepository;
 import ec.edu.uteq.presustentaciones.repositories.PermisoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,8 +13,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -28,6 +36,9 @@ class PermisoServiceTest {
 
     @Mock
     private PermisoRepository permisoRepository;
+
+    @Mock
+    private DocenteRepository docenteRepository;
 
     @InjectMocks
     private PermisoService permisoService;
@@ -75,5 +86,106 @@ class PermisoServiceTest {
                 .thenReturn(false);
 
         assertFalse(permisoService.tienePermiso(auth, "USUARIOS_GESTIONAR"));
+    }
+
+    // ── permisosDe ───────────────────────────────────────────────────────────
+
+    @Test
+    void permisosDeRetornaListaVaciaSiAuthenticationEsNull() {
+        assertEquals(List.of(), permisoService.permisosDe(null));
+        verify(permisoRepository, never()).findCodigosPorEmail(anyString());
+    }
+
+    @Test
+    void permisosDeRetornaListaVaciaSiNoEstaAutenticado() {
+        Authentication auth = new UsernamePasswordAuthenticationToken("user@uteq.edu.ec", "pass");
+        auth.setAuthenticated(false);
+
+        assertEquals(List.of(), permisoService.permisosDe(auth));
+    }
+
+    @Test
+    void permisosDeRetornaListaVaciaParaUsuarioAnonimo() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "anonymousUser", null, AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
+
+        assertEquals(List.of(), permisoService.permisosDe(auth));
+    }
+
+    @Test
+    void permisosDeDelegaAlRepositorioConElEmailDelUsuarioAutenticado() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "docente@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_DOCENTE"));
+        when(permisoRepository.findCodigosPorEmail("docente@uteq.edu.ec"))
+                .thenReturn(List.of("SOLICITUDES_VER", "ACTAS_VER_PROPIAS"));
+
+        assertEquals(List.of("SOLICITUDES_VER", "ACTAS_VER_PROPIAS"), permisoService.permisosDe(auth));
+    }
+
+    // ── esPropioDocente ──────────────────────────────────────────────────────
+
+    @Test
+    void esPropioDocenteRetornaFalseSiAuthenticationEsNull() {
+        assertFalse(permisoService.esPropioDocente(null, 1L));
+        verify(docenteRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    void esPropioDocenteRetornaFalseSiNoEstaAutenticado() {
+        Authentication auth = new UsernamePasswordAuthenticationToken("user@uteq.edu.ec", "pass");
+        auth.setAuthenticated(false);
+
+        assertFalse(permisoService.esPropioDocente(auth, 1L));
+    }
+
+    @Test
+    void esPropioDocenteRetornaFalseParaUsuarioAnonimo() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "anonymousUser", null, AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
+
+        assertFalse(permisoService.esPropioDocente(auth, 1L));
+    }
+
+    @Test
+    void esPropioDocenteRetornaFalseSiElDocenteNoExiste() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "docente@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_DOCENTE"));
+        when(docenteRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertFalse(permisoService.esPropioDocente(auth, 99L));
+    }
+
+    @Test
+    void esPropioDocenteRetornaFalseSiElDocenteNoTieneUsuarioAsociado() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "docente@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_DOCENTE"));
+        Docente docente = Docente.builder().id(7L).usuario(null).build();
+        when(docenteRepository.findById(7L)).thenReturn(Optional.of(docente));
+
+        assertFalse(permisoService.esPropioDocente(auth, 7L));
+    }
+
+    @Test
+    void esPropioDocenteRetornaFalseSiElEmailNoCoincide() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "docente@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_DOCENTE"));
+        Usuario otroUsuario = new Usuario();
+        otroUsuario.setEmail("otro@uteq.edu.ec");
+        Docente docente = Docente.builder().id(7L).usuario(otroUsuario).build();
+        when(docenteRepository.findById(7L)).thenReturn(Optional.of(docente));
+
+        assertFalse(permisoService.esPropioDocente(auth, 7L));
+    }
+
+    @Test
+    void esPropioDocenteRetornaTrueSiElEmailCoincide() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "docente@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_DOCENTE"));
+        Usuario mismoUsuario = new Usuario();
+        mismoUsuario.setEmail("docente@uteq.edu.ec");
+        Docente docente = Docente.builder().id(7L).usuario(mismoUsuario).build();
+        when(docenteRepository.findById(7L)).thenReturn(Optional.of(docente));
+
+        assertTrue(permisoService.esPropioDocente(auth, 7L));
     }
 }

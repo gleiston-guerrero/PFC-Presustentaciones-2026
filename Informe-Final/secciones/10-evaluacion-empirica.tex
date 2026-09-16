@@ -230,6 +230,22 @@ y \texttt{BackupControllerTest} (19 pruebas, los 17 endpoints protegidos por \te
 a nivel de clase), llegando a \textbf{79.01\,\% de líneas (990/1,253) y 80.34\,\% de ramas (286/356)} ---
 con margen real sobre el umbral de 70\,\% en vez de al filo.
 
+El umbral del 70\,\% aplica también de forma \emph{global} (líneas y ramas, no solo en controladores);
+la corrida del 13-09 daba 71.46\,\%/53.82\,\% global, con las ramas muy por debajo. Los paquetes con más
+ramas sin ejercitar y cero test dedicado eran \texttt{security.dto} (188 ramas al 0\,\%: los
+\texttt{equals}/\texttt{hashCode} que Lombok genera para los DTOs de autenticación, cubiertos con
+\texttt{EqualsVerifier}, que explora todas las combinaciones de campos nulos/distintos del contrato en
+vez de adivinarlas a mano), \texttt{BackupService} y \texttt{WalPitrService} (162 y 90 ramas al 0\,\%,
+la lógica de respaldos y WAL más grande del backend sin ningún test), \texttt{BackupScheduler} (30
+ramas), y \texttt{JwtTokenProvider} (36.8\,\% de ramas: la lógica de refresh tokens y blacklist en Redis
+no tenía ningún test, cubierta ahora con un \texttt{StringRedisTemplate} simulado, incluido el camino
+fail-closed de RNF-04 cuando Redis no responde). Esa primera pasada dejó 71.90\,\% de ramas --- por
+encima del umbral pero al filo para el gusto del equipo, así que se hizo una segunda pasada sobre lo
+que quedaba: \texttt{EstadoTiempoRealController} y \texttt{AnteproyectoController} (0\,\% cada uno,
+sin ningún test), y \texttt{EmailService}/\texttt{AuditoriaService} (0\,\% cada uno). Resultado:
+\textbf{82.10\,\% de líneas (4,020/4,897) y 73.49\,\% de ramas (1,483/2,018)} a nivel global (801
+pruebas, 0 fallos).
+
 Una precisión metodológica sobre el alcance de la medición: el \texttt{jacoco-maven-plugin} excluye
 \texttt{config/}, \texttt{entities/} y \texttt{dto/} (ver \texttt{<excludes>} en \texttt{pom.xml}), de
 modo que los porcentajes se calculan sobre los paquetes donde vive la lógica. Consecuencia verificada en

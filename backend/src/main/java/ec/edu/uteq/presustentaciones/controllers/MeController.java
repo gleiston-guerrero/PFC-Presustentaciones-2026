@@ -35,6 +35,7 @@ public class MeController {
     private final PermisoService permisoService;
 
     /**
+     * @param authentication autenticación de la sesión actual
      * @return 200 con la lista de códigos de permiso del usuario autenticado
      */
     @GetMapping("/permisos")

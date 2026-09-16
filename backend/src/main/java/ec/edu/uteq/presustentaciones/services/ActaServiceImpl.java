@@ -126,6 +126,14 @@ public class ActaServiceImpl implements ActaService {
         throw new RuntimeException("No tienes permiso para acceder a esta acta");
     }
 
+    /**
+     * RF-11: Genera el acta y crea el PDF real en disco.
+     *
+     * @param solicitudId id de la solicitud a la que pertenece el acta
+     * @return el acta existente si ya se había generado, o la recién creada (con su PDF)
+     * @throws RuntimeException si la solicitud no existe, no tiene evaluación final, o no se
+     *                          pudo crear el directorio de actas en disco
+     */
     @Override
     @Transactional
     public Acta generarActa(Long solicitudId) {
@@ -171,6 +179,18 @@ public class ActaServiceImpl implements ActaService {
         return guardada;
     }
 
+    /**
+     * RF-08: Firma el acta por un actor específico (PRESIDENTE, VOCAL_1, VOCAL_2, TUTOR).
+     *
+     * @param actaId      id del acta a firmar
+     * @param rol         rol que firma ({@code PRESIDENTE}, {@code VOCAL_1}, {@code VOCAL_2}
+     *                    o {@code TUTOR}); no distingue mayúsculas/minúsculas
+     * @param observacion observación opcional del firmante, o {@code null}
+     * @return el acta actualizada; si con esta firma quedan las 4 completas, la solicitud pasa
+     *         a "COMPLETADA" y el PDF se regenera con el estado final de las firmas
+     * @throws RuntimeException si el acta no existe, {@code rol} no es uno de los 4 válidos, el
+     *                          usuario no está autenticado, o no tiene permiso para firmar ese rol
+     */
     @Override
     @Transactional
     public Acta firmarActa(Long actaId, String rol, String observacion) {
@@ -265,6 +285,12 @@ public class ActaServiceImpl implements ActaService {
         return actaRepository.save(acta);
     }
 
+    /**
+     * @param actaId id del acta
+     * @return los bytes del PDF generado para esa acta
+     * @throws RuntimeException si el acta no existe, el usuario no tiene acceso a ella, o
+     *                          todavía no tiene PDF generado
+     */
     @Override
     public byte[] obtenerPdfBytes(Long actaId) {
         Acta acta = actaRepository.findById(actaId)
@@ -281,11 +307,19 @@ public class ActaServiceImpl implements ActaService {
         }
     }
 
+    /**
+     * @param pageable configuración de paginación
+     * @return página de todas las actas del sistema
+     */
     @Override
     public Page<Acta> listarActas(Pageable pageable) {
         return actaRepository.findAll(pageable);
     }
 
+    /**
+     * @param solicitudId id de la solicitud
+     * @return el acta de esa solicitud, si ya fue generada
+     */
     @Override
     public Optional<Acta> buscarPorSolicitud(Long solicitudId) {
         Optional<Acta> acta = actaRepository.findBySolicitudId(solicitudId);
@@ -295,12 +329,30 @@ public class ActaServiceImpl implements ActaService {
 
     // ── Módulo 2: gestión e historial de actas ───────────────────────────────
 
+    /**
+     * "Mis actas" del docente: actas de las pre-sustentaciones en las que es tutor o jurado.
+     *
+     * @param email    email del usuario autenticado
+     * @param pageable configuración de paginación
+     * @return página de resúmenes de acta correspondientes a ese docente
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<ActaResumenDTO> listarMisActas(String email, Pageable pageable) {
         return actaRepository.findMisActas(email, pageable).map(ActaResumenDTO::de);
     }
 
+    /**
+     * Búsqueda/filtrado administrativo de actas. Parámetros nulos/vacíos no filtran.
+     *
+     * @param estado   código de estado del acta a filtrar, o {@code null}/vacío
+     * @param carrera  carrera de la solicitud a filtrar, o {@code null}/vacío
+     * @param desde    fecha mínima de generación, o {@code null} para no acotar
+     * @param hasta    fecha máxima de generación, o {@code null} para no acotar
+     * @param q        texto libre de búsqueda, o {@code null}/vacío
+     * @param pageable configuración de paginación
+     * @return página de resúmenes de acta que cumplen los filtros
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<ActaResumenDTO> buscarActas(String estado, String carrera, LocalDate desde, LocalDate hasta,
@@ -314,6 +366,15 @@ public class ActaServiceImpl implements ActaService {
                 .map(ActaResumenDTO::de);
     }
 
+    /**
+     * Detalle de un acta. Aplica control de acceso: ADMIN/COORDINADOR (permiso ACTAS_VER),
+     * o el estudiante dueño / jurado / tutor de la solicitud.
+     *
+     * @param actaId id del acta
+     * @return el detalle del acta junto con su tribunal
+     * @throws RuntimeException si el acta no existe, o el usuario no participa en ella
+     *                          (previene IDOR/BOLA)
+     */
     @Override
     @Transactional(readOnly = true)
     public ActaDetalleDTO obtenerDetalle(Long actaId) {
@@ -324,6 +385,14 @@ public class ActaServiceImpl implements ActaService {
         return ActaDetalleDTO.de(acta, jurados);
     }
 
+    /**
+     * Historial de trazabilidad (timeline) del acta, más reciente primero. Mismo control
+     * de acceso que {@link #obtenerDetalle(Long)}.
+     *
+     * @param actaId id del acta
+     * @return los cambios de estado del acta, del más reciente al más antiguo
+     * @throws RuntimeException si el acta no existe, o el usuario no participa en ella
+     */
     @Override
     @Transactional(readOnly = true)
     public List<HistorialActaDTO> obtenerHistorial(Long actaId) {
@@ -335,6 +404,18 @@ public class ActaServiceImpl implements ActaService {
                 .toList();
     }
 
+    /**
+     * Cambia el estado del acta (GENERADA -> REVISADA -> FINALIZADA, u OBSERVADA/ANULADA)
+     * validando la transición y registrando el cambio en historial_estados_acta con el
+     * usuario, su rol, el estado anterior/nuevo y el motivo.
+     *
+     * @param actaId            id del acta
+     * @param nuevoEstadoCodigo código del catálogo estados_acta
+     * @param motivo            motivo/observación (obligatorio para OBSERVADA y ANULADA)
+     * @return el acta con el nuevo estado aplicado
+     * @throws RuntimeException si el acta no existe, el estado no es válido, la transición no
+     *                          está permitida, o falta el motivo cuando es obligatorio
+     */
     @Override
     @Transactional
     public Acta cambiarEstado(Long actaId, String nuevoEstadoCodigo, String motivo) {
@@ -675,6 +756,12 @@ public class ActaServiceImpl implements ActaService {
         return s != null ? s : "—";
     }
 
+    /**
+     * Elimina un acta si el usuario tiene permiso, incluido su archivo PDF en disco si existe.
+     *
+     * @param actaId id del acta
+     * @throws RuntimeException si el acta no existe, o el usuario no tiene acceso a ella
+     */
     @Override
     public void eliminarActa(Long actaId) {
         Acta acta = actaRepository.findById(actaId)

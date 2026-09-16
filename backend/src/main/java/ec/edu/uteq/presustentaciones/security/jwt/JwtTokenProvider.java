@@ -38,11 +38,19 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * @param authentication autenticación del usuario ya validada por Spring Security
+     * @return un JWT de acceso firmado para el username del principal autenticado
+     */
     public String generateToken(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         return generateTokenFromUsername(userDetails.getUsername());
     }
 
+    /**
+     * @param username sujeto (username) del token a emitir
+     * @return un JWT de acceso firmado, con expiración {@code jwt.expiration}
+     */
     public String generateTokenFromUsername(String username) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpiration);
@@ -60,6 +68,11 @@ public class JwtTokenProvider {
     }
 
     // Generar y almacenar Refresh Token en Redis (Multi-device support)
+    /**
+     * @param username titular del refresh token a emitir
+     * @return un refresh token opaco (UUID) registrado en Redis, o el UUID sin persistir si
+     *         Redis no está disponible ({@code redisTemplate} es {@code null})
+     */
     public String generateRefreshToken(String username) {
         String refreshToken = UUID.randomUUID().toString();
         if (redisTemplate != null) {
@@ -77,21 +90,43 @@ public class JwtTokenProvider {
         return refreshToken;
     }
 
+    /**
+     * @param token refresh token opaco a resolver
+     * @return el username dueño del token, o {@code null} si no existe, expiró, o Redis no
+     *         está disponible
+     */
     public String getUsernameFromRefreshToken(String token) {
         if (redisTemplate == null) return null;
         return redisTemplate.opsForValue().get("refresh_token:" + token);
     }
-    
+
+    /**
+     * @param token refresh token ya rotado (movido a "usados" por {@link #rotateRefreshToken})
+     * @return el username dueño del token usado, o {@code null} si no está registrado como
+     *         usado o Redis no está disponible
+     */
     public String getUsernameFromUsedRefreshToken(String token) {
         if (redisTemplate == null) return null;
         return redisTemplate.opsForValue().get("used_refresh_token:" + token);
     }
 
+    /**
+     * @param token refresh token a validar
+     * @return {@code true} si el token existe entre los activos en Redis; {@code false} si no
+     *         existe, expiró, o Redis no está disponible
+     */
     public boolean validateRefreshToken(String token) {
         if (redisTemplate == null) return false;
         return Boolean.TRUE.equals(redisTemplate.hasKey("refresh_token:" + token));
     }
 
+    /**
+     * Invalida {@code oldToken} y lo mueve a "usados" (detección de reutilización), quitándolo
+     * de la lista de tokens activos del usuario. No emite un token nuevo.
+     *
+     * @param oldToken refresh token a rotar
+     * @param username titular del token
+     */
     public void rotateRefreshToken(String oldToken, String username) {
         if (redisTemplate == null) return;
         
@@ -103,6 +138,11 @@ public class JwtTokenProvider {
         redisTemplate.opsForSet().remove("user_refresh_tokens:" + username, oldToken);
     }
     
+    /**
+     * Revoca todos los refresh tokens activos del usuario (logout de todas las sesiones).
+     *
+     * @param username titular cuyas sesiones se revocan
+     */
     public void revokeAllUserTokens(String username) {
         if (redisTemplate == null) return;
         String userSetKey = "user_refresh_tokens:" + username;
@@ -139,6 +179,11 @@ public class JwtTokenProvider {
         log.warn("Todos los refresh tokens salvo el de la sesión actual han sido revocados para el usuario: {}", username);
     }
 
+    /**
+     * Elimina un refresh token puntual (logout de una sola sesión).
+     *
+     * @param token refresh token a eliminar
+     */
     public void deleteRefreshToken(String token) {
         if (redisTemplate == null) return;
         String username = getUsernameFromRefreshToken(token);
@@ -149,6 +194,13 @@ public class JwtTokenProvider {
     }
 
     // Invalidar token JWT (Blacklist en Redis - Requisito Blacklist)
+    /**
+     * Agrega un JWT de acceso a la blacklist de Redis hasta su expiración natural, para
+     * invalidarlo antes de tiempo (p. ej. en logout). Si el token ya expiró o Redis no está
+     * disponible, no hace nada.
+     *
+     * @param token JWT de acceso a invalidar
+     */
     public void blacklistToken(String token) {
         if (redisTemplate == null) {
             log.warn("StringRedisTemplate no está disponible. Blacklist omitida.");
@@ -178,6 +230,10 @@ public class JwtTokenProvider {
      * de DISPONIBILIDAD DEL ALMACEN) estan en bloques try/catch separados: solo la segunda
      * excepcion dispara el fail-closed. Un token malformado/invalido sigue sin bloquear nada
      * aqui -- lo rechaza el parseo real de {@code validateToken()}, con su propio motivo.
+     *
+     * @param token JWT de acceso a comprobar
+     * @return {@code true} si el token está en la blacklist o si Redis no responde
+     *         (fail-closed); {@code false} en caso contrario
      */
     public boolean isTokenBlacklisted(String token) {
         if (redisTemplate == null) {
@@ -203,6 +259,11 @@ public class JwtTokenProvider {
         }
     }
 
+    /**
+     * @param token JWT firmado a parsear
+     * @return los claims del token
+     * @throws io.jsonwebtoken.JwtException si la firma no es válida o el token está mal formado
+     */
     public Claims getClaimsFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -211,10 +272,20 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 
+    /**
+     * @param token JWT firmado a parsear
+     * @return el subject (username) codificado en el token
+     */
     public String getUsernameFromToken(String token) {
         return getClaimsFromToken(token).getSubject();
     }
 
+    /**
+     * @param token JWT de acceso a validar
+     * @return {@code true} si el token tiene firma válida y no está en la blacklist
+     * @throws io.jsonwebtoken.JwtException si el token está en la blacklist, mal formado, o su
+     *                                       firma no es válida
+     */
     public boolean validateToken(String token) {
         if (isTokenBlacklisted(token)) {
             log.warn("Token JWT rechazado: se encuentra en la blacklist.");

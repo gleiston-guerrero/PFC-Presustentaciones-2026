@@ -220,6 +220,14 @@ public class SolicitudController {
      * que es lo que hacía colapsar la tabla de "Gestionar Solicitudes" en el frontend.
      * ERR-01: agrega búsqueda de texto libre (parámetro "q") combinable con el filtro de
      * estado, mismo patrón que GET /api/v1/usuarios/paginado.
+     *
+     * @param page        número de página, base 0
+     * @param size        tamaño de página
+     * @param estado      código de estado a filtrar, o {@code null} para no filtrar
+     * @param q           texto libre de búsqueda, o {@code null} para no filtrar
+     * @param fechaDesde  fecha mínima a incluir, o {@code null} para no acotar
+     * @param fechaHasta  fecha máxima a incluir, o {@code null} para no acotar
+     * @return 200 con la página de solicitudes y sus metadatos de paginación
      */
     @GetMapping("/paginado")
     @PreAuthorize("@permisoService.tienePermiso(authentication, 'SOLICITUDES_REVISAR')")

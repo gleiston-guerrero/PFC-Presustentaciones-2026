@@ -40,6 +40,9 @@ public class RolUsuario {
      * no String-argument constructor"). Solo repuebla el código; id/nombre quedan null,
      * pero eso es invisible para el cliente porque @JsonValue vuelve a colapsar la
      * respuesta al string de todos modos.
+     *
+     * @param codigo código del rol de usuario
+     * @return una instancia con solo el código repoblado (id/nombre quedan null)
      */
     @JsonCreator
     public static RolUsuario fromCodigo(String codigo) {

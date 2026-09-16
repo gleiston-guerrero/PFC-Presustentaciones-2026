@@ -47,6 +47,15 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins-extra:}")
     private String corsAllowedOriginsExtra;
 
+    /**
+     * Configura la cadena de filtros de seguridad: CORS, CSRF, sesiones stateless, cabeceras
+     * de seguridad (HSTS, CSP, X-Frame-Options, X-Content-Type-Options), autorización de rutas
+     * bajo {@code /api/v1/}, y el orden de los filtros de rate limiting y JWT.
+     *
+     * @param http builder de configuración HTTP de Spring Security
+     * @return la cadena de filtros de seguridad construida
+     * @throws Exception si Spring Security no puede construir la configuración indicada
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -97,6 +106,13 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Responde 401 con un JSON uniforme cuando la petición no está autenticada (token ausente
+     * o expirado), en vez del 403 genérico de Spring Security -- así el frontend distingue
+     * "hay que iniciar sesión de nuevo" de "estás autenticado pero sin permiso".
+     *
+     * @return el manejador de errores de autenticación de Spring Security
+     */
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -109,6 +125,13 @@ public class SecurityConfig {
         };
     }
 
+    /**
+     * Orígenes CORS permitidos: los de desarrollo local, más los que llegan por la variable
+     * de entorno {@code cors.allowed-origins-extra} (coma-separado), para no tener que
+     * recompilar si cambia el dominio público del frontend.
+     *
+     * @return la configuración CORS aplicada a todas las rutas
+     */
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -138,6 +161,7 @@ public class SecurityConfig {
         return source;
     }
 
+    /** @return el proveedor de autenticación DAO, con el {@link UserDetailsService} y el encoder de contraseñas del sistema */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -146,11 +170,17 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    /** @return el codificador de contraseñas (BCrypt) usado en todo el sistema */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * @param config configuración de autenticación de Spring Security
+     * @return el {@link AuthenticationManager} resuelto por Spring, usado por el flujo de login
+     * @throws Exception si Spring no puede resolver el manager de autenticación
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

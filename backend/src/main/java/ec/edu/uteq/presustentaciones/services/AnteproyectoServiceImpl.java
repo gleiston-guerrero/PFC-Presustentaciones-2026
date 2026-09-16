@@ -74,6 +74,15 @@ public class AnteproyectoServiceImpl implements AnteproyectoService {
         }
     }
 
+    /**
+     * Sube el PDF del anteproyecto de una solicitud, calcula y persiste su hash SHA-256, y
+     * deja el anteproyecto en estado pendiente de revisión.
+     *
+     * @param solicitudId id de la solicitud a la que pertenece el anteproyecto
+     * @param archivo     archivo PDF subido por el estudiante
+     * @return el anteproyecto creado o actualizado
+     * @throws RuntimeException si la solicitud no existe o el archivo no es un PDF válido
+     */
     @Override
     public Anteproyecto enviarAnteproyecto(Long solicitudId, MultipartFile archivo) {
         Solicitud solicitud = solicitudRepository.findById(solicitudId)
@@ -142,6 +151,16 @@ public class AnteproyectoServiceImpl implements AnteproyectoService {
         }
     }
 
+    /**
+     * RF-02: Verifica que el archivo en disco coincida con el hash SHA-256 almacenado.
+     *
+     * @param solicitudId id de la solicitud cuyo anteproyecto se va a verificar
+     * @return {@code true} si el hash SHA-256 del archivo en disco coincide con el
+     *         almacenado en base de datos (comparación con {@code MessageDigest.isEqual},
+     *         resistente a ataques de timing)
+     * @throws RuntimeException si la solicitud no tiene anteproyecto o el archivo no existe
+     *                          en disco
+     */
     @Override
     public boolean verificarIntegridad(Long solicitudId) {
         Anteproyecto ap = anteproyectoRepository.findBySolicitudId(solicitudId)
@@ -163,6 +182,12 @@ public class AnteproyectoServiceImpl implements AnteproyectoService {
         }
     }
 
+    /**
+     * @param id  id del anteproyecto a aprobar
+     * @param obs observaciones opcionales del revisor
+     * @return el anteproyecto actualizado en estado "APROBADO"
+     * @throws RuntimeException si el anteproyecto no existe
+     */
     @Override
     public Anteproyecto aprobarAnteproyecto(Long id, String obs) {
         Anteproyecto ap = anteproyectoRepository.findById(id)
@@ -177,6 +202,12 @@ public class AnteproyectoServiceImpl implements AnteproyectoService {
         return guardado;
     }
 
+    /**
+     * @param id  id del anteproyecto a rechazar
+     * @param obs motivo del rechazo
+     * @return el anteproyecto actualizado en estado "RECHAZADO"
+     * @throws RuntimeException si el anteproyecto no existe
+     */
     @Override
     public Anteproyecto rechazarAnteproyecto(Long id, String obs) {
         Anteproyecto ap = anteproyectoRepository.findById(id)
@@ -191,6 +222,10 @@ public class AnteproyectoServiceImpl implements AnteproyectoService {
         return guardado;
     }
 
+    /**
+     * @param solicitudId id de la solicitud
+     * @return el anteproyecto de esa solicitud, si ya fue enviado
+     */
     @Override
     public Optional<Anteproyecto> buscarPorSolicitud(Long solicitudId) {
         Optional<Anteproyecto> anteproyecto = anteproyectoRepository.findBySolicitudId(solicitudId);

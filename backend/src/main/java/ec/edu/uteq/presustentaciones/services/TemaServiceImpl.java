@@ -34,6 +34,17 @@ public class TemaServiceImpl implements TemaService {
     private final LineaInvestigacionRepository lineaInvestigacionRepository;
     private final AreaTematicaRepository areaTematicaRepository;
 
+    /**
+     * Explora el catálogo de temas propuestos con filtros opcionales.
+     *
+     * @param carreraId            id de carrera a filtrar, o {@code null} para no filtrar
+     * @param lineaInvestigacionId id de línea de investigación a filtrar, o {@code null}
+     * @param areaId               id de área temática a filtrar, o {@code null}
+     * @param nivelDificultad      nivel de dificultad a filtrar, o {@code null}/vacío
+     * @param estudianteId         si no es {@code null}, cada tema se marca con {@code guardado}
+     *                             según los temas que ya guardó ese estudiante
+     * @return los temas propuestos que cumplen los filtros
+     */
     @Override
     @Transactional(readOnly = true)
     public List<TemaPropuestoDTO> explorar(Integer carreraId, Integer lineaInvestigacionId,
@@ -51,6 +62,13 @@ public class TemaServiceImpl implements TemaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Sugiere ideas de tema a partir de la carrera / línea del estudiante.
+     *
+     * @param request carrera (obligatoria) y línea de investigación (opcional) a partir de
+     *                las cuales sugerir temas
+     * @return los temas propuestos del catálogo que coinciden con la carrera/línea indicadas
+     */
     @Override
     @Transactional(readOnly = true)
     public List<TemaPropuestoDTO> generarIdeas(GenerarTemaRequest request) {
@@ -64,6 +82,13 @@ public class TemaServiceImpl implements TemaService {
         return temas.stream().map(t -> mapToDTO(t, null)).collect(Collectors.toList());
     }
 
+    /**
+     * Detalle de un tema propuesto.
+     *
+     * @param temaPropuestoId id del tema propuesto
+     * @return el detalle del tema, con sus catálogos (carrera/línea/área) resueltos
+     * @throws IllegalArgumentException si el tema no existe
+     */
     @Override
     @Transactional(readOnly = true)
     public TemaPropuestoDTO obtenerDetalle(Integer temaPropuestoId) {
@@ -72,6 +97,14 @@ public class TemaServiceImpl implements TemaService {
         return mapToDTO(tema, null);
     }
 
+    /**
+     * Guarda un tema propuesto en la lista de favoritos del estudiante.
+     *
+     * @param estudianteId    id del estudiante
+     * @param temaPropuestoId id del tema propuesto a guardar
+     * @throws IllegalStateException   si el estudiante ya había guardado ese tema
+     * @throws IllegalArgumentException si el estudiante o el tema no existen
+     */
     @Override
     @Transactional
     public void guardarTemaEstudiante(Long estudianteId, Integer temaPropuestoId) {
@@ -93,6 +126,13 @@ public class TemaServiceImpl implements TemaService {
         temaGuardadoEstudianteRepository.save(temaGuardado);
     }
 
+    /**
+     * Quita un tema de la lista de favoritos del estudiante.
+     *
+     * @param estudianteId    id del estudiante
+     * @param temaPropuestoId id del tema propuesto a quitar
+     * @throws IllegalArgumentException si el tema no estaba guardado por ese estudiante
+     */
     @Override
     @Transactional
     public void quitarTemaGuardado(Long estudianteId, Integer temaPropuestoId) {
@@ -103,6 +143,10 @@ public class TemaServiceImpl implements TemaService {
         }
     }
 
+    /**
+     * @param estudianteId id del estudiante
+     * @return los temas que ese estudiante tiene guardados, del más reciente al más antiguo
+     */
     @Override
     @Transactional(readOnly = true)
     public List<TemaPropuestoDTO> obtenerTemasGuardados(Long estudianteId) {
@@ -112,6 +156,14 @@ public class TemaServiceImpl implements TemaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Crea un tema propuesto en el catálogo (permiso ORIENTACION_CATALOGO_GESTIONAR).
+     *
+     * @param request datos del tema a crear
+     * @return el tema creado
+     * @throws IllegalArgumentException si la carrera, línea de investigación o área indicadas
+     *                                  no existen, o el área no pertenece a la línea indicada
+     */
     @Override
     @Transactional
     public TemaPropuestoDTO crear(GuardarTemaPropuestoRequest request) {
@@ -120,6 +172,15 @@ public class TemaServiceImpl implements TemaService {
         return mapToDTO(temaPropuestoRepository.save(tema), null);
     }
 
+    /**
+     * Actualiza un tema propuesto del catálogo (permiso ORIENTACION_CATALOGO_GESTIONAR).
+     *
+     * @param temaPropuestoId id del tema a actualizar
+     * @param request         datos nuevos del tema
+     * @return el tema actualizado
+     * @throws IllegalArgumentException si el tema no existe, o la carrera/línea/área indicadas
+     *                                  no existen o son inconsistentes entre sí
+     */
     @Override
     @Transactional
     public TemaPropuestoDTO actualizar(Integer temaPropuestoId, GuardarTemaPropuestoRequest request) {
@@ -129,6 +190,13 @@ public class TemaServiceImpl implements TemaService {
         return mapToDTO(temaPropuestoRepository.save(tema), null);
     }
 
+    /**
+     * Elimina un tema del catálogo (permiso ORIENTACION_CATALOGO_GESTIONAR). Los temas
+     * guardados por estudiantes que apunten a él se eliminan en cascada (FK V20).
+     *
+     * @param temaPropuestoId id del tema a eliminar
+     * @throws IllegalArgumentException si el tema no existe
+     */
     @Override
     @Transactional
     public void eliminar(Integer temaPropuestoId) {

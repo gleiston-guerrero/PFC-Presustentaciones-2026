@@ -16,6 +16,8 @@ public class RateLimiterService {
     private final StringRedisTemplate redisTemplate;
 
     /**
+     * @param ipAddress dirección IP del intento de login a limitar
+     * @return {@code true} si la IP todavía no alcanzó el máximo de intentos permitidos
      * @throws RateLimiterUnavailableException RNF-04: si Redis no responde, esto NO es "sin
      *         límite" (dejaría pasar fuerza bruta) ni un 500 sin explicación -- es una
      *         degradación identificable que {@code RateLimitingFilter} convierte en 503.
@@ -32,6 +34,7 @@ public class RateLimiterService {
      * @param key            clave completa en Redis (ya prefijada por el llamador)
      * @param maxIntentos    máximo de intentos permitidos dentro de la ventana
      * @param ventanaSegundos duración de la ventana, en segundos
+     * @return {@code true} si la clave todavía no alcanzó el máximo de intentos en la ventana
      * @throws RateLimiterUnavailableException RNF-04: mismo fail-closed que {@link #isAllowed(String)}
      */
     public boolean isAllowed(String key, int maxIntentos, long ventanaSegundos) {

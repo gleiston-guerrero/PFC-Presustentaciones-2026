@@ -57,7 +57,10 @@ public class PasswordPolicyValidator {
         }
     }
 
-    /** @return true si la contraseña cumple la política, sin lanzar excepción. */
+    /**
+     * @param password contraseña en texto plano a evaluar
+     * @return true si la contraseña cumple la política, sin lanzar excepción.
+     */
     public boolean cumple(String password) {
         try {
             validar(password);

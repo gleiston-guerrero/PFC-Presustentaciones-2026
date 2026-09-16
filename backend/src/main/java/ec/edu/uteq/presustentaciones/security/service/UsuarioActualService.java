@@ -22,6 +22,11 @@ public class UsuarioActualService {
     private final UsuarioRepository usuarioRepository;
     private final EstudianteRepository estudianteRepository;
 
+    /**
+     * @return el usuario autenticado, resuelto desde el {@code SecurityContext}
+     * @throws IllegalStateException si no hay un usuario autenticado, o el email del
+     *                                contexto de seguridad no corresponde a ningún usuario
+     */
     public Usuario usuario() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
@@ -31,13 +36,21 @@ public class UsuarioActualService {
                 .orElseThrow(() -> new IllegalStateException("Usuario autenticado no encontrado en el sistema"));
     }
 
+    /**
+     * @return el perfil de estudiante del usuario autenticado
+     * @throws IllegalStateException    si no hay un usuario autenticado
+     * @throws IllegalArgumentException si el usuario autenticado no tiene perfil de estudiante
+     */
     public Estudiante estudiante() {
         return estudianteRepository.findByUsuarioId(usuario().getId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "El usuario autenticado no tiene un perfil de estudiante asociado"));
     }
 
-    /** Id del estudiante autenticado, o null si quien consulta no es estudiante. */
+    /**
+     * @return el id del estudiante autenticado, o {@code null} si no hay un usuario
+     *         autenticado o quien consulta no tiene perfil de estudiante
+     */
     public Long estudianteIdOrNull() {
         try {
             return estudianteRepository.findByUsuarioId(usuario().getId())

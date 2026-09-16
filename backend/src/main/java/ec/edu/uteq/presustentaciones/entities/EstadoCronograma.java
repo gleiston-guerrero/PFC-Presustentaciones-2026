@@ -26,7 +26,12 @@ public class EstadoCronograma {
     @Column(name = "nombre", nullable = false, length = 80)
     private String nombre;
 
-    /** Contraparte de @JsonValue: ver RolUsuario.fromCodigo para el motivo (round-trip vía caché Redis). */
+    /**
+     * Contraparte de @JsonValue: ver RolUsuario.fromCodigo para el motivo (round-trip vía caché Redis).
+     *
+     * @param codigo código del estado de cronograma
+     * @return una instancia con solo el código repoblado (id/nombre quedan null)
+     */
     @JsonCreator
     public static EstadoCronograma fromCodigo(String codigo) {
         return EstadoCronograma.builder().codigo(codigo).build();

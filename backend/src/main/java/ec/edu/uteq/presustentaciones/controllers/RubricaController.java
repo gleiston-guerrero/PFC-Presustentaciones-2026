@@ -94,6 +94,9 @@ public class RubricaController {
      *   Documento  → máx 3 pts (100%=3, 67%=2, 33%=1, 0%=0)
      *   Exposición → máx 1 pt  (100%=1, 67%=0.7, 33%=0.3, 0%=0)
      *   Total máximo = 10 pts
+     *
+     * @param rubricaId id de la rúbrica a inicializar
+     * @return 200 con los criterios creados, o 400 si la rúbrica ya tiene criterios
      */
     @PostMapping("/{rubricaId}/inicializar-criterios")
     @PreAuthorize("@permisoService.tienePermiso(authentication, 'RUBRICA_GESTIONAR')")

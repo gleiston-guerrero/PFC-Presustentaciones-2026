@@ -43,6 +43,14 @@ public class ReporteServiceImpl implements ReporteService {
     private static String limpiar(String s)           { return (s == null || s.isBlank()) ? null : s.trim(); }
     private static long asLong(Object o)              { return o == null ? 0L : ((Number) o).longValue(); }
 
+    /**
+     * Resumen general del proceso de pre-sustentaciones (dashboard).
+     *
+     * @param desde   fecha mínima a incluir, o {@code null} para no acotar
+     * @param hasta   fecha máxima a incluir, o {@code null} para no acotar
+     * @param carrera carrera a filtrar, o {@code null}/vacío para todas
+     * @return el resumen agregado del proceso
+     */
     @Override
     public ReporteResumenDTO resumen(LocalDate desde, LocalDate hasta, String carrera) {
         List<ReporteConteoDTO> porEstado = solicitudesPorEstado(desde, hasta, carrera);
@@ -71,6 +79,14 @@ public class ReporteServiceImpl implements ReporteService {
                 .build();
     }
 
+    /**
+     * Cantidad de solicitudes/pre-sustentaciones por estado.
+     *
+     * @param desde   fecha mínima a incluir, o {@code null} para no acotar
+     * @param hasta   fecha máxima a incluir, o {@code null} para no acotar
+     * @param carrera carrera a filtrar, o {@code null}/vacío para todas
+     * @return el conteo de solicitudes agrupado por estado
+     */
     @Override
     public List<ReporteConteoDTO> solicitudesPorEstado(LocalDate desde, LocalDate hasta, String carrera) {
         return solicitudRepository.contarPorEstado(inicioDe(desde), finDe(hasta), limpiar(carrera)).stream()
@@ -78,6 +94,13 @@ public class ReporteServiceImpl implements ReporteService {
                 .toList();
     }
 
+    /**
+     * Cantidad de pre-sustentaciones por período académico.
+     *
+     * @param desde fecha mínima a incluir, o {@code null} para no acotar
+     * @param hasta fecha máxima a incluir, o {@code null} para no acotar
+     * @return el conteo de sustentaciones agrupado por período
+     */
     @Override
     public List<ReporteConteoDTO> sustentacionesPorPeriodo(LocalDate desde, LocalDate hasta) {
         return solicitudRepository.contarPorPeriodo(inicioDe(desde), finDe(hasta)).stream()
@@ -85,6 +108,14 @@ public class ReporteServiceImpl implements ReporteService {
                 .toList();
     }
 
+    /**
+     * Estado de las actas: generadas, revisadas, observadas, finalizadas, anuladas, pendientes
+     * de firma.
+     *
+     * @param desde fecha mínima a incluir, o {@code null} para no acotar
+     * @param hasta fecha máxima a incluir, o {@code null} para no acotar
+     * @return mapa de estado de acta a cantidad
+     */
     @Override
     public Map<String, Long> resumenActas(LocalDate desde, LocalDate hasta) {
         Map<String, Long> out = new LinkedHashMap<>();
@@ -102,6 +133,11 @@ public class ReporteServiceImpl implements ReporteService {
         return out;
     }
 
+    /**
+     * Actividad por docente: como jurado, como tutor y actas firmadas.
+     *
+     * @return la actividad agregada de cada docente
+     */
     @Override
     public List<ReporteActividadDocenteDTO> actividadPorDocente() {
         Map<Long, long[]> acc = new LinkedHashMap<>(); // id -> [jurado, tutor, actasFirmadas]
@@ -141,6 +177,11 @@ public class ReporteServiceImpl implements ReporteService {
         return out;
     }
 
+    /**
+     * Estadísticas por carrera/programa: total, completadas y rechazadas.
+     *
+     * @return las estadísticas agregadas por carrera
+     */
     @Override
     public List<Map<String, Object>> estadisticasPorCarrera() {
         List<Map<String, Object>> out = new ArrayList<>();
