@@ -57,3 +57,25 @@ git log -1 --format="%ad" --date=iso 3f7f6efc28f6b9cc70a59e106a63a68a40dbc070
 # Confirmar donde se completo realmente el ADR-007
 git log --oneline --all -- docs/adr/ADR-007-despliegue-docker.md
 ```
+
+## Seguimiento (2026-09-13): correo al docente-director, sin respuesta
+
+El punto 1 de la revisión del examen suspenso ("Conversación sobre la ronda del 2 de septiembre",
+peso 0,5) exige, según la nota del propio ingeniero en esa revisión, que el punto se cierre en
+conversación directa con él ("Este punto se cierra con usted, no en el repositorio") — no basta con
+documentación en el repo.
+
+Alava Alvarado le escribió por correo el 2026-09-13 a las 18:51 (asunto "Sobre el Punto 1 de la
+revisión del examen final", `jalavaa@uteq.edu.ec` → `gguerrero`), explicando: (a) que el equipo no
+tiene registro de que esa conversación se haya dado y no pudo identificar con certeza a qué se
+refería; (b) el origen real de los tres commits vacíos del 2 de septiembre documentados arriba, por
+si la conversación esperada tenía que ver con ellos; y pidiendo indicación de cómo abordar el punto.
+Se adjuntó la captura de la fila exacta de la revisión del ingeniero como referencia. Evidencia:
+[`evidencia-correo-2026-09-13-punto1.png`](evidencia-correo-2026-09-13-punto1.png).
+
+Una conversación presencial no es viable en el tiempo que queda antes del plazo del examen, por lo
+que el correo es el sustituto práctico disponible. A la fecha de esta nota, sin respuesta del
+ingeniero. Lo que dependía del equipo para este punto — identificar el origen de los commits,
+preguntar directamente en vez de asumir, y dejar constancia fechada del intento — está hecho; lo que
+falta (la respuesta/conversación en sí) depende exclusivamente del ingeniero, según su propio
+criterio de cierre, y no es algo que el equipo pueda completar unilateralmente.
