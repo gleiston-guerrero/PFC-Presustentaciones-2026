@@ -102,7 +102,28 @@ Requisito: comparar los escenarios de caché fría (sin entrada en Redis, dispar
 - z = −6.65, **p < 0.0001** (dos colas) — la diferencia es estadísticamente significativa muy por debajo de α=0.05.
 - Correlación biserial de rangos (tamaño de efecto) r = **1.00** — efecto máximo posible según las convenciones de Cohen para r (>0.5 ya se considera grande).
 
-**Conclusión:** la caché Redis reduce la latencia de este endpoint en ~14× (109.6 ms → 7.9 ms de media), con una diferencia estadísticamente significativa y de tamaño de efecto máximo. Esto valida cuantitativamente el Requisito E2 (caché Redis activa con TTL).
+**Familia de comparaciones + corrección por comparaciones múltiples (P6):** sobre este mismo par de
+muestras también se prueba si difiere la mediana (p50) y si difiere la cola (p95), cada una con un
+test de permutación de dos colas ($10^5$ permutaciones, semilla fija). Probar 3 hipótesis
+relacionadas sobre los mismos 60 datos sin corregir infla el error familiar por encima de
+$\alpha=0.05$; se aplica **corrección de Holm-Bonferroni** (step-down, Holm 1979), preferida sobre
+Bonferroni simple por tener más potencia con la misma garantía, y sobre Benjamini-Hochberg porque
+con una familia de tamaño 3 interesa el control familywise (cero falsos positivos), no una tasa de
+falsos descubrimientos tolerable (pensada para familias de docenas/cientos de pruebas):
+
+| Prueba | p crudo | Umbral Holm | p ajustado | Decisión (α=0.05) |
+|---|---|---|---|---|
+| Mann-Whitney U (distribución completa) | 3.02×10⁻¹¹ | 0.0167 | 9.06×10⁻¹¹ | Significativo |
+| Permutación, diferencia de medianas (p50) | 1×10⁻⁵ | 0.025 | 2×10⁻⁵ | Significativo |
+| Permutación, diferencia de p95 | 1×10⁻⁵ | 0.05 | 2×10⁻⁵ | Significativo |
+
+Los p-valores de permutación se reportan como 1×10⁻⁵ (piso reportable con 10⁵ permutaciones —
+ninguna de las 10⁵ reasignaciones aleatorias igualó o superó la diferencia observada) en vez de 0
+exacto. Las tres pruebas siguen significativas tras la corrección, consistente con que el mínimo en
+frío (104.96 ms) ya supera el máximo en caliente (11.15 ms). Reproducible con
+[`scripts/perf-analysis.ipynb`](../scripts/perf-analysis.ipynb).
+
+**Conclusión:** la caché Redis reduce la latencia de este endpoint en ~14× (109.6 ms → 7.9 ms de media), con una diferencia estadísticamente significativa y de tamaño de efecto máximo, robusta a la corrección por comparaciones múltiples. Esto valida cuantitativamente el Requisito E2 (caché Redis activa con TTL).
 
 ### Cómo se reprodujo
 

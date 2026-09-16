@@ -134,4 +134,14 @@ autorización (protegido solo por la regla global de \texttt{SecurityConfig}); s
 consulta general cuya respuesta no depende del rol (Sección~\ref{sec:seguridad-corregida}). Tanto el
 controlador (\texttt{ChatbotControllerTest}) como el servicio (\texttt{ChatbotServiceTest}) tienen
 prueba automatizada dedicada, incluido el caso sin autenticar y la cobertura de cada rama de intención.
+
+\textbf{Cierre de brecha (examen suspenso, P7):} las dos pruebas de arriba invocan el método Java del
+controlador/servicio directamente con mocks, sin pasar por el \emph{dispatcher} real de Spring MVC ni
+por la cadena de filtros de seguridad --- no ejercitaban el endpoint HTTP en sí. Se agregó
+\texttt{ChatbotControllerIntegrationTest} (\texttt{@WebMvcTest} + \texttt{SecurityConfig} real, mismo
+patrón que \texttt{MeControllerTest}), que hace peticiones HTTP reales contra
+\texttt{POST /api/v1/chatbot/ask}: sin token (401), con token válido y cuerpo JSON serializado de
+verdad (200, respuesta del mock del servicio visible en el JSON de salida), y con un cuerpo JSON mal
+formado (400). Corre como parte de \texttt{./mvnw test} en el job \texttt{backend} de
+\texttt{.github/workflows/ci.yml} igual que el resto de la suite, sin configuración adicional.
 \newpage

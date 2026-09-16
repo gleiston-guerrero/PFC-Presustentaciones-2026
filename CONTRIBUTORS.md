@@ -33,7 +33,12 @@ como coautor, en el informe final).
 revisión de código y documentación que aplica a los cuatro):
 
 - **Alava Alvarado, Jean Pierre** ([ORCID: 0009-0001-2878-2919](https://orcid.org/0009-0001-2878-2919)): Conceptualización del sistema, seguridad backend (JWT/Spring
-  Security), administración del proyecto.
+  Security), administración del proyecto. Contribuye bajo dos identidades de Git: `Jean30042
+  <jeanalavaalavarado@gmail.com>` (la práctica totalidad del historial) y, a pedido del
+  docente-director, `jalavaa-dev <jalavaa@uteq.edu.ec>` (correo institucional, registrada como
+  colaboradora de GitHub con un único commit sin contenido —
+  [`docs/observaciones/BITACORA-COMMITS-2026-09-09.md`](docs/observaciones/BITACORA-COMMITS-2026-09-09.md)).
+  Ambas identidades corresponden a la misma persona.
 - **Moncayo Loor, Xavier Alejandro:** Desarrollo frontend (Angular), diseño de interfaz. Se retiró de
   la carrera durante el desarrollo del proyecto; no registró ORCID por esa misma razón, no por un
   trámite pendiente.

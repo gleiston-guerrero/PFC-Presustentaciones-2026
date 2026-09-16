@@ -221,6 +221,26 @@ declarativa. Se agregó `@PreAuthorize("isAuthenticated()")` a los 7, mismo nive
 global de `SecurityConfig` ya exigía sesión) pero haciendo explícito en el propio endpoint lo que antes
 solo garantizaba la configuración global.
 
+**Hallado y corregido (2026-09-13):** `MeController` (endpoint `GET /api/me/permisos`, que el panel consulta en caliente para saber qué módulos mostrar) era, tras el cierre del 2026-09-11 de arriba, el único controlador que había quedado sin ninguna anotación de autorización — se agregó después de esa barrida. Se corrigió con `@PreAuthorize("isAuthenticated()")` a nivel de clase, mismo patrón que `ChatbotController` y el resto de controladores de auto-servicio.
+
+**Re-auditoría completa (2026-09-16, examen suspenso P8):** se repitió la barrida del 2026-09-11 sobre el estado actual del código, contando explícitamente cada endpoint `POST`/`PUT`/`PATCH`/`DELETE` de todos los controladores y si tiene alguna forma de `@PreAuthorize`/`@Secured` (de clase o de método) — reproducible con
+[`docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py`](scripts/audit-endpoints-autorizacion.py)
+(`python docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py`, corrido real, salida transcrita abajo). Resultado: **102 endpoints de escritura totales**, misma cifra que reporta la guía del examen suspenso. De esos 102, **0 quedan sin alguna forma de `@PreAuthorize`**, salvo los 5 endpoints de `AuthController` (`login`, `refresh`, `logout`, `recuperar`, `restablecer`) que son deliberadamente públicos: son el propio mecanismo de autenticación/recuperación y no pueden exigir sesión previa; los protege el `permitAll()` de `SecurityConfig` junto con `RateLimitingFilter`, no `@PreAuthorize`. El endpoint del propio perfil (`PATCH /api/usuarios/{id}/perfil`, `UsuarioController`) tiene tanto la anotación (`@PreAuthorize("isAuthenticated()")`, agregada en el cierre del 2026-09-11) como una comprobación explícita de propiedad del recurso que devuelve 403 si el id del path no coincide con el usuario autenticado — probado end-to-end con MockMvc real en `UsuarioControllerTest#actualizarPerfilRechazaEditarElPerfilDeOtroUsuario` (verificado pasando: `mockMvc.perform(patch("/api/v1/usuarios/99/perfil")...).andExpect(status().isForbidden())`, más `#actualizarPerfilPermiteAlPropioUsuario` para el camino positivo).
+
+```
+$ python docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py
+Total endpoints de escritura (POST/PUT/PATCH/DELETE): 102
+Sin ninguna anotacion de autorizacion: 5
+
+  AuthController.login (PostMapping, L68) -- exento conocido (auth pre-login)
+  AuthController.refresh (PostMapping, L127) -- exento conocido (auth pre-login)
+  AuthController.logout (PostMapping, L193) -- exento conocido (auth pre-login)
+  AuthController.recuperar (PostMapping, L354) -- exento conocido (auth pre-login)
+  AuthController.restablecer (PostMapping, L383) -- exento conocido (auth pre-login)
+
+OK: todos los endpoints sin @PreAuthorize son exentos conocidos y documentados.
+```
+
 **Verificado:** CORS restringido explícitamente a `http://localhost:4200` y `http://localhost:3000` (`SecurityConfig` + `WebConfig`, más `@CrossOrigin` por controlador) — configurado en 3 lugares distintos que hay que mantener sincronizados si se agrega un origen nuevo (riesgo de mantenimiento, no de seguridad activa). CSRF deshabilitado deliberadamente (correcto para una API JWT stateless sin cookies de sesión). Sesión configurada como `STATELESS`.
 
 **Hallado y corregido (2026-08-29):** `nginx.conf` declaraba `X-Frame-Options`/`X-Content-Type-Options`/`Content-Security-Policy`/`Permissions-Policy` a nivel `server{}`, lo que hacía que nginx los añadiera también a las respuestas proxied de `/api/v1/` y `/actuator/` — **encima** de los que Spring Security ya agrega para esas mismas rutas, verificado real con `curl -D -` (headers duplicados en la respuesta). Por la especificación de CSP, cuando el navegador recibe dos cabeceras `Content-Security-Policy`, aplica la **intersección** de ambas: la política más laxa del backend (`connect-src` con `localhost:4200`/websockets, necesaria para el frontend en dev) quedaba silenciosamente recortada por la más estricta de nginx (`connect-src 'self'`). Corregido moviendo esas cabeceras exclusivamente a `location /` (la única ruta que nginx sirve directamente, sin backend detrás) — verificado real: tras el fix, `curl -D -` contra `/api/v1/auth/login` muestra un único `Content-Security-Policy`, el del backend con su `connect-src` completo.
