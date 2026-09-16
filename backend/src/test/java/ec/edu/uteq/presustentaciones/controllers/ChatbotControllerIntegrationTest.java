@@ -70,10 +70,10 @@ class ChatbotControllerIntegrationTest {
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @MockBean
-    private ec.edu.uteq.presustentaciones.repositories.RolUsuarioRepository rolUsuarioRepository;
+    private ec.edu.uteq.presustentaciones.repositories.RoleAppUserRepository roleAppUserRepository;
 
     @MockBean
-    private ec.edu.uteq.presustentaciones.repositories.UsuarioRepository usuarioRepository;
+    private ec.edu.uteq.presustentaciones.repositories.AppUserRepository appUserRepository;
 
     @Test
     void sinTokenDevuelve401() throws Exception {

@@ -1,9 +1,9 @@
 package ec.edu.uteq.presustentaciones.bootstrap;
 
-import ec.edu.uteq.presustentaciones.entities.RolUsuario;
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.RolUsuarioRepository;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.entities.RoleAppUser;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.RoleAppUserRepository;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -13,10 +13,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * RNF-15: siembra las cuentas de demostración (admin@/demo@/docente@/estudiante@uteq.edu.ec)
+ * RNF-15: siembra las cuentas de demostración (admin@/demo@/teacher@/student@uteq.edu.ec)
  * con contraseñas literales en el código. Antes de esta fase corría en TODO arranque, sin
  * importar el entorno -- este componente ahora solo existe bajo el perfil {@code dev}
- * (activar con {@code SPRING_PROFILES_ACTIVE=dev}, como ya hace {@code docker-compose.override.yml}
+ * (activate con {@code SPRING_PROFILES_ACTIVE=dev}, como ya hace {@code docker-compose.override.yml}
  * para desarrollo local). Un despliegue sin ese perfil activo nunca instancia esta clase: cero
  * cuentas con contraseña conocida en el código. El bootstrap de un despliegue real vive en
  * {@link AdminBootstrap}, que toma la contraseña del entorno y valida contra
@@ -29,14 +29,14 @@ import org.springframework.stereotype.Component;
 public class DemoDataSeeder implements CommandLineRunner {
 
     private final JdbcTemplate jdbcTemplate;
-    private final UsuarioRepository usuarioRepository;
+    private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RolUsuarioRepository rolUsuarioRepository;
+    private final RoleAppUserRepository roleAppUserRepository;
 
     @Override
     public void run(String... args) {
         try {
-            // Insertar facultad inicial si no existe
+            // Insertar faculty inicial si no existe
             try {
                 jdbcTemplate.update(
                     "INSERT INTO presus.facultades (id, codigo, nombre) OVERRIDING SYSTEM VALUE VALUES (1, 'FCI', 'Facultad de Ciencias de la Ingeniería') ON CONFLICT (id) DO NOTHING"
@@ -45,7 +45,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                 log.warn("Verificación de facultad inicial: {}", e.getMessage());
             }
 
-            // Insertar carrera inicial si no existe
+            // Insertar program inicial si no existe
             try {
                 jdbcTemplate.update(
                     "INSERT INTO presus.carreras (id, facultad_id, codigo, nombre) OVERRIDING SYSTEM VALUE VALUES (1, 1, 'ISW', 'Ingeniería en Software') ON CONFLICT (id) DO NOTHING"
@@ -55,7 +55,7 @@ public class DemoDataSeeder implements CommandLineRunner {
             }
 
             // Sembrar catalogo de roles si no existe (ninguna migracion los inserta:
-            // roles_usuario.id no es autogenerado, requiere valores explicitos)
+            // roles_appUser.id no es autogenerado, requiere valores explicitos)
             try {
                 jdbcTemplate.update(
                     "INSERT INTO presus.roles_usuario (id, codigo, nombre) VALUES " +
@@ -67,77 +67,77 @@ public class DemoDataSeeder implements CommandLineRunner {
                 log.warn("Verificación de catálogo de roles: {}", e.getMessage());
             }
 
-            RolUsuario adminRol = rolUsuarioRepository.findByCodigo("ADMIN").orElse(null);
-            RolUsuario coordinadorRol = rolUsuarioRepository.findByCodigo("COORDINADOR").orElse(null);
+            RoleAppUser adminRole = roleAppUserRepository.findByCodigo("ADMIN").orElse(null);
+            RoleAppUser coordinadorRole = roleAppUserRepository.findByCodigo("COORDINADOR").orElse(null);
 
-            // Usuario administrador del sistema
-            if (!usuarioRepository.existsByEmail("admin@uteq.edu.ec")) {
-                Usuario admin = Usuario.builder()
+            // AppUser administrador del sistema
+            if (!appUserRepository.existsByEmail("admin@uteq.edu.ec")) {
+                AppUser admin = AppUser.builder()
                     .nombre("Admin")
                     .apellido("Sistema")
                     .email("admin@uteq.edu.ec")
                     .password(passwordEncoder.encode("Admin2026!"))
-                    .rol("ADMIN")
-                    .rolUsuario(adminRol)
+                    .role("ADMIN")
+                    .roleAppUser(adminRole)
                     .activo(true)
                     .build();
-                usuarioRepository.save(admin);
+                appUserRepository.save(admin);
                 log.info("Usuario administrador inicial verificado.");
             }
 
-            // Usuario de demostración (Fase 8, criterio P5): credenciales publicadas en
-            // README.md para que el tribunal pueda entrar sin registrarse. Rol COORDINADOR
-            // porque expone el flujo académico completo (asignar jurados, programar
-            // cronograma, ver reportes) sin ser una cuenta de administración del sistema.
-            if (!usuarioRepository.existsByEmail("demo@uteq.edu.ec")) {
-                Usuario demo = Usuario.builder()
+            // AppUser de demostración (Fase 8, criterio P5): credenciales publicadas en
+            // README.md para que el tribunal pueda entrar sin registerse. Role COORDINADOR
+            // porque expone el flujo académico completo (assign panelists, programar
+            // schedule, ver reportes) sin ser una cuenta de administración del sistema.
+            if (!appUserRepository.existsByEmail("demo@uteq.edu.ec")) {
+                AppUser demo = AppUser.builder()
                     .nombre("Usuario")
                     .apellido("Demostración")
                     .email("demo@uteq.edu.ec")
                     .password(passwordEncoder.encode("Demo2026!"))
-                    .rol("COORDINADOR")
-                    .rolUsuario(coordinadorRol)
+                    .role("COORDINADOR")
+                    .roleAppUser(coordinadorRole)
                     .activo(true)
                     .build();
-                usuarioRepository.save(demo);
+                appUserRepository.save(demo);
                 log.info("Usuario de demostración inicial verificado.");
             }
 
-            RolUsuario docenteRol = rolUsuarioRepository.findByCodigo("DOCENTE").orElse(null);
-            RolUsuario estudianteRol = rolUsuarioRepository.findByCodigo("ESTUDIANTE").orElse(null);
+            RoleAppUser teacherRole = roleAppUserRepository.findByCodigo("DOCENTE").orElse(null);
+            RoleAppUser studentRole = roleAppUserRepository.findByCodigo("ESTUDIANTE").orElse(null);
 
-            // Usuario Docente / Tutor / Jurado
-            if (!usuarioRepository.existsByEmail("docente@uteq.edu.ec")) {
-                Usuario docenteUser = Usuario.builder()
+            // AppUser Teacher / Tutor / Panelist
+            if (!appUserRepository.existsByEmail("docente@uteq.edu.ec")) {
+                AppUser teacherUser = AppUser.builder()
                     .nombre("Docente")
                     .apellido("Tutor")
                     .email("docente@uteq.edu.ec")
                     .password(passwordEncoder.encode("Docente2026!"))
-                    .rol("DOCENTE")
-                    .rolUsuario(docenteRol)
+                    .role("DOCENTE")
+                    .roleAppUser(teacherRole)
                     .activo(true)
                     .build();
-                Usuario savedDocente = usuarioRepository.save(docenteUser);
+                AppUser savedTeacher = appUserRepository.save(teacherUser);
                 jdbcTemplate.update(
                     "INSERT INTO presus.docente (usuario_id, facultad_id, area_especialidad, carga_horaria_semanal, disponible, creado_en) " +
                     "VALUES (?, 1, 'Ingeniería de Software', 20, true, now()) ON CONFLICT (usuario_id) DO NOTHING",
-                    savedDocente.getId()
+                    savedTeacher.getId()
                 );
                 log.info("Usuario docente inicial verificado.");
             }
 
-            // Usuario Estudiante
-            if (!usuarioRepository.existsByEmail("estudiante@uteq.edu.ec")) {
-                Usuario estUser = Usuario.builder()
+            // AppUser Student
+            if (!appUserRepository.existsByEmail("estudiante@uteq.edu.ec")) {
+                AppUser estUser = AppUser.builder()
                     .nombre("Estudiante")
                     .apellido("Pregrado")
                     .email("estudiante@uteq.edu.ec")
                     .password(passwordEncoder.encode("Estudiante2026!"))
-                    .rol("ESTUDIANTE")
-                    .rolUsuario(estudianteRol)
+                    .role("ESTUDIANTE")
+                    .roleAppUser(studentRole)
                     .activo(true)
                     .build();
-                Usuario savedEst = usuarioRepository.save(estUser);
+                AppUser savedEst = appUserRepository.save(estUser);
                 jdbcTemplate.update(
                     "INSERT INTO presus.estudiante (usuario_id, carrera_id, carrera, semestre, semestre_actual, expediente_codigo, telefono, creado_en) " +
                     "VALUES (?, 1, 'Ingeniería en Software', '8vo', 8, 'EXP-2026-001', '0999999999', now()) ON CONFLICT (usuario_id) DO NOTHING",

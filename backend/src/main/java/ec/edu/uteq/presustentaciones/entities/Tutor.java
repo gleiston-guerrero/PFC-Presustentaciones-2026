@@ -1,5 +1,6 @@
 package ec.edu.uteq.presustentaciones.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,12 +24,14 @@ public class Tutor {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "docente_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "jurados", "tutores"})
-    private Docente docente;
+    @JsonProperty("docente")
+    private Teacher teacher;
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "solicitud_id", nullable = false, unique = true)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "jurados", "tutor", "evaluacion", "acta", "anteproyecto", "cronograma", "notificaciones"})
-    private Solicitud solicitud;
+    @JsonProperty("solicitud")
+    private Submission submission;
 
     @Column(name = "fecha_asignacion", nullable = false, updatable = false)
     private LocalDateTime fechaAsignacion;
@@ -39,13 +42,13 @@ public class Tutor {
     private String estado = "ACTIVO";
 
     /**
-     * Columna "estado_id" (FK NOT NULL a estados_proceso) heredada del esquema real,
+     * Columna "estado_id" (FK NOT NULL a estados_process) heredada del esquema real,
      * en paralelo a "estado" (texto), que es el que usa la lógica de la aplicación.
      * Se sincroniza automáticamente a partir de "estado" (mismo patrón aplicado en
-     * Solicitud.java y Anteproyecto.java para el mismo problema).
+     * Submission.java y Proposal.java para el mismo problema).
      */
     @Column(name = "estado_id", nullable = false)
-    private Short estadoProcesoId;
+    private Short estadoProcessId;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
@@ -53,16 +56,16 @@ public class Tutor {
     @PrePersist
     protected void onCreate() {
         fechaAsignacion = LocalDateTime.now();
-        sincronizarEstadoProceso();
+        synchronizeEstadoProcess();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        sincronizarEstadoProceso();
+        synchronizeEstadoProcess();
     }
 
-    private void sincronizarEstadoProceso() {
-        estadoProcesoId = switch (estado) {
+    private void synchronizeEstadoProcess() {
+        estadoProcessId = switch (estado) {
             case "ACTIVO" -> (short) 2;                         // EN_PROCESO
             case "COMPLETADA", "FINALIZADO" -> (short) 3;       // APROBADO
             case "REEMPLAZADO" -> (short) 5;                    // RECHAZADO

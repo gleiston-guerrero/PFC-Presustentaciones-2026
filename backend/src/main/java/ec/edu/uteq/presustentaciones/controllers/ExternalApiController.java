@@ -32,7 +32,7 @@ public class ExternalApiController {
      *         el servicio devuelve lo que tenga en caché en vez de propagar el error
      */
     @GetMapping
-    @PreAuthorize("isAuthenticated()") // Permite acceso a cualquier usuario autenticado en la plataforma
+    @PreAuthorize("isAuthenticated()") // Permite acceso a cualquier appUser autenticado en la plataforma
     @Operation(summary = "Obtener listado de universidades de Ecuador", description = "Consume la API de Hipo Labs con timeouts, reintentos y caché Redis activa.")
     public ResponseEntity<List<UniversityDto>> getUniversities() {
         log.info("GET /api/v1/universidades - Procesando solicitud");

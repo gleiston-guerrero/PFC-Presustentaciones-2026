@@ -1,5 +1,6 @@
 package ec.edu.uteq.presustentaciones.security.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ public class LoginResponse {
     private Long id;
     private String email;
     private String nombre;
-    private String rol;
-    private String emailNotificaciones;
+    @JsonProperty("rol")
+    private String role;
+    private String emailNotifications;
 }

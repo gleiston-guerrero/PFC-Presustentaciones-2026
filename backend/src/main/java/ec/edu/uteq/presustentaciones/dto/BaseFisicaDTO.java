@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/** Metadatos de un respaldo físico base ({@code pg_basebackup}), la base para PITR. */
+/** Metadatos de un backup físico base ({@code pg_basebackup}), la base para PITR. */
 @Getter
 @Builder
 @NoArgsConstructor

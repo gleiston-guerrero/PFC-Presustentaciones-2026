@@ -112,7 +112,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void generateRefreshTokenGuardaElTokenYLoAgregaAlSetDelUsuario() {
+    void generateRefreshTokenGuardaElTokenYLoAgregaAlSetDelAppUser() {
         conRedis();
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(redisTemplate.opsForSet()).thenReturn(setOps);
@@ -196,7 +196,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void deleteRefreshTokenNoHaceNadaSiElTokenYaNoApuntaAUnUsuario() {
+    void deleteRefreshTokenNoHaceNadaSiElTokenYaNoApuntaAUnAppUser() {
         conRedis();
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(valueOps.get("refresh_token:abc")).thenReturn(null);
@@ -207,7 +207,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void deleteRefreshTokenBorraElTokenYLoQuitaDelSetDelUsuario() {
+    void deleteRefreshTokenBorraElTokenYLoQuitaDelSetDelAppUser() {
         conRedis();
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(redisTemplate.opsForSet()).thenReturn(setOps);

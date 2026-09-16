@@ -1,12 +1,12 @@
 package ec.edu.uteq.presustentaciones.services;
 
-import ec.edu.uteq.presustentaciones.dto.ReporteActividadDocenteDTO;
-import ec.edu.uteq.presustentaciones.dto.ReporteConteoDTO;
+import ec.edu.uteq.presustentaciones.dto.ReporteActividadTeacherDTO;
+import ec.edu.uteq.presustentaciones.dto.ReporteCountDTO;
 import ec.edu.uteq.presustentaciones.dto.ReporteResumenDTO;
-import ec.edu.uteq.presustentaciones.repositories.ActaRepository;
-import ec.edu.uteq.presustentaciones.repositories.DocenteRepository;
-import ec.edu.uteq.presustentaciones.repositories.JuradoRepository;
-import ec.edu.uteq.presustentaciones.repositories.SolicitudRepository;
+import ec.edu.uteq.presustentaciones.repositories.MinutesRepository;
+import ec.edu.uteq.presustentaciones.repositories.TeacherRepository;
+import ec.edu.uteq.presustentaciones.repositories.PanelistRepository;
+import ec.edu.uteq.presustentaciones.repositories.SubmissionRepository;
 import ec.edu.uteq.presustentaciones.repositories.TutorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,14 +25,14 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class ReporteServiceImpl implements ReporteService {
 
-    private final SolicitudRepository solicitudRepository;
-    private final ActaRepository actaRepository;
-    private final JuradoRepository juradoRepository;
+    private final SubmissionRepository submissionRepository;
+    private final MinutesRepository minutesRepository;
+    private final PanelistRepository panelistRepository;
     private final TutorRepository tutorRepository;
-    private final DocenteRepository docenteRepository;
+    private final TeacherRepository teacherRepository;
 
     // Sentinelas para rangos "sin filtro": una query con ":fecha IS NULL" deja a Postgres
-    // sin tipo para el bind. Mismo criterio que SolicitudRepository.buscarConFiltros.
+    // sin tipo para el bind. Mismo criterio que SubmissionRepository.searchConFiltros.
     private static final LocalDate MIN_FECHA = LocalDate.of(1900, 1, 1);
     private static final LocalDate MAX_FECHA = LocalDate.of(2999, 12, 31);
 
@@ -44,53 +44,53 @@ public class ReporteServiceImpl implements ReporteService {
     private static long asLong(Object o)              { return o == null ? 0L : ((Number) o).longValue(); }
 
     /**
-     * Resumen general del proceso de pre-sustentaciones (dashboard).
+     * Resumen general del process de pre-sustentaciones (dashboard).
      *
      * @param desde   fecha mínima a incluir, o {@code null} para no acotar
      * @param hasta   fecha máxima a incluir, o {@code null} para no acotar
-     * @param carrera carrera a filtrar, o {@code null}/vacío para todas
-     * @return el resumen agregado del proceso
+     * @param program program a filtrar, o {@code null}/vacío para todas
+     * @return el resumen agregado del process
      */
     @Override
-    public ReporteResumenDTO resumen(LocalDate desde, LocalDate hasta, String carrera) {
-        List<ReporteConteoDTO> porEstado = solicitudesPorEstado(desde, hasta, carrera);
-        Map<String, Long> actas = resumenActas(desde, hasta);
+    public ReporteResumenDTO resumen(LocalDate desde, LocalDate hasta, String program) {
+        List<ReporteCountDTO> porEstado = submissionsPorEstado(desde, hasta, program);
+        Map<String, Long> minutes = resumenMinutes(desde, hasta);
 
-        long total = porEstado.stream().mapToLong(ReporteConteoDTO::getCantidad).sum();
+        long total = porEstado.stream().mapToLong(ReporteCountDTO::getCantidad).sum();
         long completadas = porEstado.stream().filter(c -> "COMPLETADA".equals(c.getEtiqueta()))
-                .mapToLong(ReporteConteoDTO::getCantidad).sum();
+                .mapToLong(ReporteCountDTO::getCantidad).sum();
         long rechazadas = porEstado.stream().filter(c -> "RECHAZADA".equals(c.getEtiqueta()) || "SUSPENDIDA".equals(c.getEtiqueta()))
-                .mapToLong(ReporteConteoDTO::getCantidad).sum();
+                .mapToLong(ReporteCountDTO::getCantidad).sum();
 
         return ReporteResumenDTO.builder()
-                .totalSolicitudes(total)
-                .solicitudesCompletadas(completadas)
-                .solicitudesRechazadas(rechazadas)
-                .solicitudesEnProceso(Math.max(0, total - completadas - rechazadas))
-                .totalActas(actas.getOrDefault("total", 0L))
-                .actasGeneradas(actas.getOrDefault("GENERADA", 0L))
-                .actasRevisadas(actas.getOrDefault("REVISADA", 0L))
-                .actasObservadas(actas.getOrDefault("OBSERVADA", 0L))
-                .actasFinalizadas(actas.getOrDefault("FINALIZADA", 0L))
-                .actasAnuladas(actas.getOrDefault("ANULADA", 0L))
-                .actasPendientesFirma(actas.getOrDefault("pendientesFirma", 0L))
-                .solicitudesPorEstado(porEstado)
-                .sustentacionesPorPeriodo(sustentacionesPorPeriodo(desde, hasta))
+                .totalSubmissions(total)
+                .submissionsCompletadas(completadas)
+                .submissionsRechazadas(rechazadas)
+                .submissionsEnProcess(Math.max(0, total - completadas - rechazadas))
+                .totalMinutes(minutes.getOrDefault("total", 0L))
+                .minutesGeneradas(minutes.getOrDefault("GENERADA", 0L))
+                .minutesRevisadas(minutes.getOrDefault("REVISADA", 0L))
+                .minutesObservadas(minutes.getOrDefault("OBSERVADA", 0L))
+                .minutesFinalizadas(minutes.getOrDefault("FINALIZADA", 0L))
+                .minutesAnuladas(minutes.getOrDefault("ANULADA", 0L))
+                .minutesPendientesFirma(minutes.getOrDefault("pendientesFirma", 0L))
+                .submissionsPorEstado(porEstado)
+                .sustentacionesPorPeriod(sustentacionesPorPeriod(desde, hasta))
                 .build();
     }
 
     /**
-     * Cantidad de solicitudes/pre-sustentaciones por estado.
+     * Cantidad de submissions/pre-sustentaciones por estado.
      *
      * @param desde   fecha mínima a incluir, o {@code null} para no acotar
      * @param hasta   fecha máxima a incluir, o {@code null} para no acotar
-     * @param carrera carrera a filtrar, o {@code null}/vacío para todas
-     * @return el conteo de solicitudes agrupado por estado
+     * @param program program a filtrar, o {@code null}/vacío para todas
+     * @return el count de submissions agrupado por estado
      */
     @Override
-    public List<ReporteConteoDTO> solicitudesPorEstado(LocalDate desde, LocalDate hasta, String carrera) {
-        return solicitudRepository.contarPorEstado(inicioDe(desde), finDe(hasta), limpiar(carrera)).stream()
-                .map(r -> new ReporteConteoDTO((String) r[0], asLong(r[1])))
+    public List<ReporteCountDTO> submissionsPorEstado(LocalDate desde, LocalDate hasta, String program) {
+        return submissionRepository.countPorEstado(inicioDe(desde), finDe(hasta), limpiar(program)).stream()
+                .map(r -> new ReporteCountDTO((String) r[0], asLong(r[1])))
                 .toList();
     }
 
@@ -99,28 +99,28 @@ public class ReporteServiceImpl implements ReporteService {
      *
      * @param desde fecha mínima a incluir, o {@code null} para no acotar
      * @param hasta fecha máxima a incluir, o {@code null} para no acotar
-     * @return el conteo de sustentaciones agrupado por período
+     * @return el count de sustentaciones agrupado por período
      */
     @Override
-    public List<ReporteConteoDTO> sustentacionesPorPeriodo(LocalDate desde, LocalDate hasta) {
-        return solicitudRepository.contarPorPeriodo(inicioDe(desde), finDe(hasta)).stream()
-                .map(r -> new ReporteConteoDTO((String) r[0], asLong(r[1])))
+    public List<ReporteCountDTO> sustentacionesPorPeriod(LocalDate desde, LocalDate hasta) {
+        return submissionRepository.countPorPeriod(inicioDe(desde), finDe(hasta)).stream()
+                .map(r -> new ReporteCountDTO((String) r[0], asLong(r[1])))
                 .toList();
     }
 
     /**
-     * Estado de las actas: generadas, revisadas, observadas, finalizadas, anuladas, pendientes
+     * Estado de las minutes: generadas, revisadas, observadas, finalizadas, anuladas, pendientes
      * de firma.
      *
      * @param desde fecha mínima a incluir, o {@code null} para no acotar
      * @param hasta fecha máxima a incluir, o {@code null} para no acotar
-     * @return mapa de estado de acta a cantidad
+     * @return mapa de estado de minutes a cantidad
      */
     @Override
-    public Map<String, Long> resumenActas(LocalDate desde, LocalDate hasta) {
+    public Map<String, Long> resumenMinutes(LocalDate desde, LocalDate hasta) {
         Map<String, Long> out = new LinkedHashMap<>();
         long total = 0;
-        for (Object[] r : actaRepository.contarPorEstado(desdeDe(desde), hastaDe(hasta))) {
+        for (Object[] r : minutesRepository.countPorEstado(desdeDe(desde), hastaDe(hasta))) {
             long c = asLong(r[1]);
             out.put((String) r[0], c);
             total += c;
@@ -129,63 +129,63 @@ public class ReporteServiceImpl implements ReporteService {
             out.putIfAbsent(e, 0L);
         }
         out.put("total", total);
-        out.put("pendientesFirma", actaRepository.countByFirmadaFalse());
+        out.put("pendientesFirma", minutesRepository.countByFirmadaFalse());
         return out;
     }
 
     /**
-     * Actividad por docente: como jurado, como tutor y actas firmadas.
+     * Actividad por teacher: como panelist, como tutor y minutes firmadas.
      *
-     * @return la actividad agregada de cada docente
+     * @return la actividad agregada de cada teacher
      */
     @Override
-    public List<ReporteActividadDocenteDTO> actividadPorDocente() {
-        Map<Long, long[]> acc = new LinkedHashMap<>(); // id -> [jurado, tutor, actasFirmadas]
+    public List<ReporteActividadTeacherDTO> actividadPorTeacher() {
+        Map<Long, long[]> acc = new LinkedHashMap<>(); // id -> [panelist, tutor, minutesFirmadas]
         Map<Long, String> nombres = new LinkedHashMap<>();
 
-        for (Object[] r : juradoRepository.contarAsignacionesPorDocente()) {
+        for (Object[] r : panelistRepository.countAsignacionesPorTeacher()) {
             Long id = ((Number) r[0]).longValue();
             nombres.put(id, (r[1] + " " + r[2]).trim());
             acc.computeIfAbsent(id, k -> new long[3])[0] = asLong(r[3]);
         }
-        for (Object[] r : tutorRepository.contarTutoriasPorDocente()) {
+        for (Object[] r : tutorRepository.countTutoringsPorTeacher()) {
             Long id = ((Number) r[0]).longValue();
             acc.computeIfAbsent(id, k -> new long[3])[1] = asLong(r[1]);
         }
-        for (Object[] r : juradoRepository.contarActasFirmadasPorDocente()) {
+        for (Object[] r : panelistRepository.countMinutesFirmadasPorTeacher()) {
             Long id = ((Number) r[0]).longValue();
             acc.computeIfAbsent(id, k -> new long[3])[2] = asLong(r[1]);
         }
 
-        // Nombres de los docentes que solo aparecen por tutoría (una sola consulta acotada).
+        // Nombres de los teachers que solo aparecen por tutoría (una sola consulta acotada).
         List<Long> faltantes = acc.keySet().stream().filter(id -> !nombres.containsKey(id)).toList();
         if (!faltantes.isEmpty()) {
-            for (Object[] r : docenteRepository.findNombresByIds(faltantes)) {
+            for (Object[] r : teacherRepository.findNombresByIds(faltantes)) {
                 nombres.put(((Number) r[0]).longValue(), (r[1] + " " + r[2]).trim());
             }
         }
 
-        List<ReporteActividadDocenteDTO> out = new ArrayList<>();
+        List<ReporteActividadTeacherDTO> out = new ArrayList<>();
         for (Map.Entry<Long, long[]> e : acc.entrySet()) {
             long[] v = e.getValue();
-            out.add(new ReporteActividadDocenteDTO(
+            out.add(new ReporteActividadTeacherDTO(
                     e.getKey(), nombres.getOrDefault(e.getKey(), "Docente #" + e.getKey()),
                     v[0], v[1], v[2]));
         }
         out.sort((a, b) -> Long.compare(
-                b.getComoJurado() + b.getComoTutor(), a.getComoJurado() + a.getComoTutor()));
+                b.getComoPanelist() + b.getComoTutor(), a.getComoPanelist() + a.getComoTutor()));
         return out;
     }
 
     /**
-     * Estadísticas por carrera/programa: total, completadas y rechazadas.
+     * Estadísticas por program/programa: total, completadas y rechazadas.
      *
-     * @return las estadísticas agregadas por carrera
+     * @return las estadísticas agregadas por program
      */
     @Override
-    public List<Map<String, Object>> estadisticasPorCarrera() {
+    public List<Map<String, Object>> estadisticasPorProgram() {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Object[] r : solicitudRepository.estadisticasPorCarrera()) {
+        for (Object[] r : submissionRepository.estadisticasPorProgram()) {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("carrera", r[0]);
             row.put("total", asLong(r[1]));

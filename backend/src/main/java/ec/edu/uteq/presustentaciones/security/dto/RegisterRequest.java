@@ -1,5 +1,6 @@
 package ec.edu.uteq.presustentaciones.security.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -23,5 +24,6 @@ public class RegisterRequest {
     private String password;
 
     @NotBlank(message = "El rol es obligatorio")
-    private String rol; // ESTUDIANTE, DOCENTE, ADMIN
+    @JsonProperty("rol")
+    private String role; // ESTUDIANTE, DOCENTE, ADMIN
 }

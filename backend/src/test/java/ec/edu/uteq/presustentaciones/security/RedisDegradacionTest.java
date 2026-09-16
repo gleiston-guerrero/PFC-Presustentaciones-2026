@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 /**
  * RNF-04: con el almacén de Redis caído, los tres mecanismos que dependen de él deben
  * comportarse distinto a propósito -- revocación y límite de tasa son controles de
- * SEGURIDAD (fail-closed: rechazar), la caché de lectura es RENDIMIENTO (fail-open: resolver
+ * SEGURIDAD (fail-closed: reject), la caché de lectura es RENDIMIENTO (fail-open: resolve
  * contra el origen). El doble de {@link StringRedisTemplate} lanza
  * {@link RedisConnectionFailureException} (una {@code DataAccessException} real, no un mock
  * genérico) para que la prueba ejercite exactamente la rama que el código distingue.
@@ -56,14 +56,14 @@ class RedisDegradacionTest {
         assertTrue(jwtTokenProvider.isTokenBlacklisted(token),
                 "con el almacen de revocacion caido, el token debe tratarse como revocado (fail-closed)");
 
-        // Y por lo tanto validateToken() debe rechazarlo, no aceptarlo silenciosamente.
+        // Y por lo tanto validateToken() debe rejectlo, no aceptarlo silenciosamente.
         assertThrows(io.jsonwebtoken.JwtException.class, () -> jwtTokenProvider.validateToken(token));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void isTokenBlacklistedConTokenMalformadoNoLoConfundeConFalloDeRedis() {
-        // Un token malformado no debe disparar el fail-closed de disponibilidad: Redis nunca
+        // Un token malformado no debe disparar el fail-closed de availability: Redis nunca
         // se llega a consultar porque el parseo del token falla antes.
         StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
         JwtTokenProvider jwtTokenProvider = new JwtTokenProvider();

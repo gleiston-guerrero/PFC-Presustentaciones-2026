@@ -1,7 +1,7 @@
 package ec.edu.uteq.presustentaciones.security.service;
 
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,26 +19,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UsuarioRepository usuarioRepository;
+    private final AppUserRepository appUserRepository;
 
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByEmail(username)
+        AppUser appUser = appUserRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "Usuario no encontrado: " + username));
 
         List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + usuario.getRol()));
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + appUser.getRole()));
 
         return User.builder()
-                .username(usuario.getEmail())
-                .password(usuario.getPassword())
+                .username(appUser.getEmail())
+                .password(appUser.getPassword())
                 .authorities(authorities)
                 .accountExpired(false)
                 .accountLocked(false)
                 .credentialsExpired(false)
-                .disabled(!usuario.getActivo())
+                .disabled(!appUser.getActivo())
                 .build();
     }
 }

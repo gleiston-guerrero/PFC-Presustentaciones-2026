@@ -1,19 +1,19 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.dto.ReporteConteoDTO;
+import ec.edu.uteq.presustentaciones.dto.ReporteCountDTO;
 import ec.edu.uteq.presustentaciones.dto.ReporteDefensaResult;
 import ec.edu.uteq.presustentaciones.dto.ReporteResumenDTO;
-import ec.edu.uteq.presustentaciones.entities.Cronograma;
-import ec.edu.uteq.presustentaciones.entities.EstadoCronograma;
-import ec.edu.uteq.presustentaciones.entities.Estudiante;
-import ec.edu.uteq.presustentaciones.entities.EvaluacionFinal;
-import ec.edu.uteq.presustentaciones.entities.ResultadoEvaluacion;
-import ec.edu.uteq.presustentaciones.entities.Sala;
-import ec.edu.uteq.presustentaciones.entities.Solicitud;
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.CronogramaRepository;
-import ec.edu.uteq.presustentaciones.repositories.EvaluacionFinalRepository;
-import ec.edu.uteq.presustentaciones.repositories.SolicitudRepository;
+import ec.edu.uteq.presustentaciones.entities.Schedule;
+import ec.edu.uteq.presustentaciones.entities.EstadoSchedule;
+import ec.edu.uteq.presustentaciones.entities.Student;
+import ec.edu.uteq.presustentaciones.entities.EvaluationFinal;
+import ec.edu.uteq.presustentaciones.entities.ResultadoEvaluation;
+import ec.edu.uteq.presustentaciones.entities.Room;
+import ec.edu.uteq.presustentaciones.entities.Submission;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.ScheduleRepository;
+import ec.edu.uteq.presustentaciones.repositories.EvaluationFinalRepository;
+import ec.edu.uteq.presustentaciones.repositories.SubmissionRepository;
 import ec.edu.uteq.presustentaciones.services.ReporteService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,16 +41,16 @@ import static org.mockito.Mockito.*;
  *
  * Los reportes PDF se generan de verdad con iText contra un ByteArrayOutputStream en
  * memoria: se verifica que la salida sea un PDF real (cabecera %PDF-) y no solo que el
- * método no lance excepción. Cada caso incluye filas con relaciones nulas (solicitud,
- * estudiante, sala, estado, resultado, notas), que es donde vive la mayoría de las ramas
+ * método no lance excepción. Cada caso incluye filas con relaciones nulas (submission,
+ * student, room, estado, resultado, notas), que es donde vive la mayoría de las ramas
  * y donde un NullPointerException real rompería la descarga del reporte en producción.
  */
 @ExtendWith(MockitoExtension.class)
 class ReporteControllerTest {
 
-    @Mock private CronogramaRepository cronogramaRepo;
-    @Mock private EvaluacionFinalRepository evaluacionFinalRepo;
-    @Mock private SolicitudRepository solicitudRepo;
+    @Mock private ScheduleRepository scheduleRepo;
+    @Mock private EvaluationFinalRepository evaluationFinalRepo;
+    @Mock private SubmissionRepository submissionRepo;
     @Mock private ReporteService reporteService;
 
     @InjectMocks
@@ -58,15 +58,15 @@ class ReporteControllerTest {
 
     // ── Fixtures ──────────────────────────────────────────────────────────────
 
-    private Usuario usuario(String nombre, String apellido) {
-        return Usuario.builder().id(1L).nombre(nombre).apellido(apellido).build();
+    private AppUser appUser(String nombre, String apellido) {
+        return AppUser.builder().id(1L).nombre(nombre).apellido(apellido).build();
     }
 
-    private Solicitud solicitudCompleta() {
-        return Solicitud.builder()
+    private Submission submissionCompleta() {
+        return Submission.builder()
                 .id(1L)
-                .tituloTema("Sistema de gestión de pre-sustentaciones")
-                .estudiante(Estudiante.builder().id(1L).usuario(usuario("Ana", "Pérez")).build())
+                .tituloTopic("Sistema de gestión de pre-sustentaciones")
+                .student(Student.builder().id(1L).appUser(appUser("Ana", "Pérez")).build())
                 .build();
     }
 
@@ -81,102 +81,102 @@ class ReporteControllerTest {
                 "la respuesta debe ser un PDF real generado por iText, no bytes arbitrarios");
     }
 
-    // ── PDF de cronograma ─────────────────────────────────────────────────────
+    // ── PDF de schedule ─────────────────────────────────────────────────────
 
     @Test
-    void reporteCronogramaGeneraPdfRealConFilasCompletasYConRelacionesNulas() throws Exception {
-        Cronograma completo = Cronograma.builder()
+    void reporteScheduleGeneraPdfRealConFilasCompletasYConRelacionesNulas() throws Exception {
+        Schedule completo = Schedule.builder()
                 .id(1L)
-                .solicitud(solicitudCompleta())
-                .sala(Sala.builder().id(1L).nombre("Aula 101").build())
-                .estado(EstadoCronograma.builder().codigo("PROGRAMADO").nombre("Programado").build())
+                .submission(submissionCompleta())
+                .room(Room.builder().id(1L).nombre("Aula 101").build())
+                .estado(EstadoSchedule.builder().codigo("PROGRAMADO").nombre("Programado").build())
                 .fechaInicio(LocalDateTime.of(2026, 9, 10, 9, 0))
                 .build();
-        // Fila sin solicitud, sin sala y sin estado: ejercita las tres ramas de fallback "—"
-        Cronograma minimo = Cronograma.builder()
+        // Fila sin submission, sin room y sin estado: ejercita las tres ramas de fallback "—"
+        Schedule minimo = Schedule.builder()
                 .id(2L)
                 .fechaInicio(LocalDateTime.of(2026, 9, 11, 11, 30))
                 .build();
         // Tercera fila para ejercitar también el alternado de color de fondo (i % 2)
-        Cronograma sinEstudiante = Cronograma.builder()
+        Schedule sinStudent = Schedule.builder()
                 .id(3L)
-                .solicitud(Solicitud.builder().id(2L).build())
+                .submission(Submission.builder().id(2L).build())
                 .fechaInicio(LocalDateTime.of(2026, 9, 12, 15, 0))
                 .build();
-        when(cronogramaRepo.findReporteCronograma()).thenReturn(List.of(completo, minimo, sinEstudiante));
+        when(scheduleRepo.findReporteSchedule()).thenReturn(List.of(completo, minimo, sinStudent));
 
-        assertEsPdfDescargable(controller.reporteCronograma(), "cronograma_presustentaciones.pdf");
-        verify(cronogramaRepo).findReporteCronograma();
+        assertEsPdfDescargable(controller.reporteSchedule(), "cronograma_presustentaciones.pdf");
+        verify(scheduleRepo).findReporteSchedule();
     }
 
     @Test
-    void reporteCronogramaSinDatosGeneraPdfConTablaVacia() throws Exception {
-        when(cronogramaRepo.findReporteCronograma()).thenReturn(List.of());
+    void reporteScheduleSinDatosGeneraPdfConTablaVacia() throws Exception {
+        when(scheduleRepo.findReporteSchedule()).thenReturn(List.of());
 
-        assertEsPdfDescargable(controller.reporteCronograma(), "cronograma_presustentaciones.pdf");
+        assertEsPdfDescargable(controller.reporteSchedule(), "cronograma_presustentaciones.pdf");
     }
 
     // ── PDF de estadísticas ───────────────────────────────────────────────────
 
     @Test
     void reporteEstadisticasGeneraPdfRealConAprobadosReprobadosYSinResultado() throws Exception {
-        EvaluacionFinal aprobado = EvaluacionFinal.builder()
+        EvaluationFinal aprobado = EvaluationFinal.builder()
                 .id(1L)
-                .solicitud(solicitudCompleta())
-                .notaInstructor(9.0).notaJuradoPromedio(8.5).notaFinal(8.8)
-                .resultado(ResultadoEvaluacion.builder().codigo("APROBADO").nombre("Aprobado").build())
+                .submission(submissionCompleta())
+                .notaInstructor(9.0).notaPanelistPromedio(8.5).notaFinal(8.8)
+                .resultado(ResultadoEvaluation.builder().codigo("APROBADO").nombre("Aprobado").build())
                 .build();
-        EvaluacionFinal reprobado = EvaluacionFinal.builder()
+        EvaluationFinal reprobado = EvaluationFinal.builder()
                 .id(2L)
-                .solicitud(Solicitud.builder().id(3L).build())
-                .notaInstructor(4.0).notaJuradoPromedio(3.5).notaFinal(3.8)
-                .resultado(ResultadoEvaluacion.builder().codigo("REPROBADO").nombre("Reprobado").build())
+                .submission(Submission.builder().id(3L).build())
+                .notaInstructor(4.0).notaPanelistPromedio(3.5).notaFinal(3.8)
+                .resultado(ResultadoEvaluation.builder().codigo("REPROBADO").nombre("Reprobado").build())
                 .build();
         // Sin resultado y sin notas: ejercita el fallback "—" de fmt() y la rama de color rojo
-        EvaluacionFinal sinDatos = EvaluacionFinal.builder().id(3L).build();
-        when(evaluacionFinalRepo.findAllWithRelationships())
+        EvaluationFinal sinDatos = EvaluationFinal.builder().id(3L).build();
+        when(evaluationFinalRepo.findAllWithRelationships())
                 .thenReturn(List.of(aprobado, reprobado, sinDatos));
 
         assertEsPdfDescargable(controller.reporteEstadisticas(), "estadisticas_evaluaciones.pdf");
-        verify(evaluacionFinalRepo).findAllWithRelationships();
+        verify(evaluationFinalRepo).findAllWithRelationships();
     }
 
     @Test
-    void reporteEstadisticasSinEvaluacionesUsaPromedioCeroYNoFalla() throws Exception {
-        when(evaluacionFinalRepo.findAllWithRelationships()).thenReturn(List.of());
+    void reporteEstadisticasSinEvaluationsUsaPromedioCeroYNoFalla() throws Exception {
+        when(evaluationFinalRepo.findAllWithRelationships()).thenReturn(List.of());
 
         assertEsPdfDescargable(controller.reporteEstadisticas(), "estadisticas_evaluaciones.pdf");
     }
 
-    // ── Procedimiento almacenado sp_generar_reporte_defensas ──────────────────
+    // ── Procedimiento almacenado sp_generate_reporte_defensas ──────────────────
 
     @Test
     void reporteDefensasDelegaEnElProcedimientoAlmacenado() {
         List<ReporteDefensaResult> esperado = List.of(new ReporteDefensaResult());
-        when(solicitudRepo.generarReporteDefensas("Software")).thenReturn(esperado);
+        when(submissionRepo.generateReporteDefensas("Software")).thenReturn(esperado);
 
         ResponseEntity<List<ReporteDefensaResult>> response = controller.reporteDefensas("Software");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertSame(esperado, response.getBody());
-        verify(solicitudRepo).generarReporteDefensas("Software");
+        verify(submissionRepo).generateReporteDefensas("Software");
     }
 
     // ── Estadísticas JSON ─────────────────────────────────────────────────────
 
     @Test
     void estadisticasJsonCalculaTotalesPromedioYTasaDeAprobacion() {
-        EvaluacionFinal aprobado1 = EvaluacionFinal.builder().notaFinal(8.0)
-                .resultado(ResultadoEvaluacion.builder().codigo("APROBADO").build()).build();
-        EvaluacionFinal aprobado2 = EvaluacionFinal.builder().notaFinal(9.0)
-                .resultado(ResultadoEvaluacion.builder().codigo("APROBADO").build()).build();
-        EvaluacionFinal reprobado = EvaluacionFinal.builder().notaFinal(4.0)
-                .resultado(ResultadoEvaluacion.builder().codigo("REPROBADO").build()).build();
-        // notaFinal null y resultado null: no debe contar en el promedio ni en los conteos
-        EvaluacionFinal incompleto = EvaluacionFinal.builder().build();
-        when(evaluacionFinalRepo.findAllWithRelationships())
+        EvaluationFinal aprobado1 = EvaluationFinal.builder().notaFinal(8.0)
+                .resultado(ResultadoEvaluation.builder().codigo("APROBADO").build()).build();
+        EvaluationFinal aprobado2 = EvaluationFinal.builder().notaFinal(9.0)
+                .resultado(ResultadoEvaluation.builder().codigo("APROBADO").build()).build();
+        EvaluationFinal reprobado = EvaluationFinal.builder().notaFinal(4.0)
+                .resultado(ResultadoEvaluation.builder().codigo("REPROBADO").build()).build();
+        // notaFinal null y resultado null: no debe count en el promedio ni en los counts
+        EvaluationFinal incompleto = EvaluationFinal.builder().build();
+        when(evaluationFinalRepo.findAllWithRelationships())
                 .thenReturn(List.of(aprobado1, aprobado2, reprobado, incompleto));
-        when(solicitudRepo.countByEstadoCodigo("APROBADA")).thenReturn(5L);
+        when(submissionRepo.countByEstadoCodigo("APROBADA")).thenReturn(5L);
 
         ResponseEntity<Map<String, Object>> response = controller.estadisticasJson();
 
@@ -193,9 +193,9 @@ class ReporteControllerTest {
     }
 
     @Test
-    void estadisticasJsonSinEvaluacionesDevuelveTasaCeroSinDividirPorCero() {
-        when(evaluacionFinalRepo.findAllWithRelationships()).thenReturn(List.of());
-        when(solicitudRepo.countByEstadoCodigo("APROBADA")).thenReturn(0L);
+    void estadisticasJsonSinEvaluationsDevuelveTasaCeroSinDividirPorCero() {
+        when(evaluationFinalRepo.findAllWithRelationships()).thenReturn(List.of());
+        when(submissionRepo.countByEstadoCodigo("APROBADA")).thenReturn(0L);
 
         Map<String, Object> body = controller.estadisticasJson().getBody();
 
@@ -204,14 +204,14 @@ class ReporteControllerTest {
         assertEquals(0.0, body.get("notaPromedio"));
         // El operador ternario del controlador promueve ambas ramas a long, asi que
         // la tasa viaja como Long incluso en el caso 0 -- el frontend recibe siempre
-        // el mismo tipo JSON, sin importar si hay evaluaciones o no.
+        // el mismo tipo JSON, sin importar si hay evaluations o no.
         assertEquals(0L, body.get("tasaAprobacion"));
     }
 
     // ── Módulo de reportes JSON (delegación en ReporteService) ────────────────
 
     @Test
-    void resumenDelegaEnElServicioConFiltrosDeFechaYCarrera() {
+    void resumenDelegaEnElServicioConFiltrosDeFechaYProgram() {
         LocalDate desde = LocalDate.of(2026, 1, 1);
         LocalDate hasta = LocalDate.of(2026, 12, 31);
         ReporteResumenDTO esperado = ReporteResumenDTO.builder().build();
@@ -232,52 +232,52 @@ class ReporteControllerTest {
     }
 
     @Test
-    void solicitudesPorEstadoDelegaEnElServicio() {
-        List<ReporteConteoDTO> esperado = List.of(new ReporteConteoDTO());
-        when(reporteService.solicitudesPorEstado(null, null, null)).thenReturn(esperado);
+    void submissionsPorEstadoDelegaEnElServicio() {
+        List<ReporteCountDTO> esperado = List.of(new ReporteCountDTO());
+        when(reporteService.submissionsPorEstado(null, null, null)).thenReturn(esperado);
 
-        ResponseEntity<?> response = controller.solicitudesPorEstado(null, null, null);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(esperado, response.getBody());
-    }
-
-    @Test
-    void sustentacionesPorPeriodoDelegaEnElServicio() {
-        List<ReporteConteoDTO> esperado = List.of(new ReporteConteoDTO());
-        when(reporteService.sustentacionesPorPeriodo(null, null)).thenReturn(esperado);
-
-        ResponseEntity<?> response = controller.sustentacionesPorPeriodo(null, null);
+        ResponseEntity<?> response = controller.submissionsPorEstado(null, null, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertSame(esperado, response.getBody());
     }
 
     @Test
-    void resumenActasDelegaEnElServicio() {
+    void sustentacionesPorPeriodDelegaEnElServicio() {
+        List<ReporteCountDTO> esperado = List.of(new ReporteCountDTO());
+        when(reporteService.sustentacionesPorPeriod(null, null)).thenReturn(esperado);
+
+        ResponseEntity<?> response = controller.sustentacionesPorPeriod(null, null);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertSame(esperado, response.getBody());
+    }
+
+    @Test
+    void resumenMinutesDelegaEnElServicio() {
         Map<String, Long> esperado = Map.of("generadas", 3L);
-        when(reporteService.resumenActas(null, null)).thenReturn(esperado);
+        when(reporteService.resumenMinutes(null, null)).thenReturn(esperado);
 
-        ResponseEntity<?> response = controller.resumenActas(null, null);
+        ResponseEntity<?> response = controller.resumenMinutes(null, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertSame(esperado, response.getBody());
     }
 
     @Test
-    void actividadDocenteDelegaEnElServicio() {
-        when(reporteService.actividadPorDocente()).thenReturn(List.of());
+    void actividadTeacherDelegaEnElServicio() {
+        when(reporteService.actividadPorTeacher()).thenReturn(List.of());
 
-        assertEquals(HttpStatus.OK, controller.actividadDocente().getStatusCode());
-        verify(reporteService).actividadPorDocente();
+        assertEquals(HttpStatus.OK, controller.actividadTeacher().getStatusCode());
+        verify(reporteService).actividadPorTeacher();
     }
 
     @Test
-    void porCarreraDelegaEnElServicio() {
+    void porProgramDelegaEnElServicio() {
         List<Map<String, Object>> esperado = List.of(Map.of("carrera", "Software"));
-        when(reporteService.estadisticasPorCarrera()).thenReturn(esperado);
+        when(reporteService.estadisticasPorProgram()).thenReturn(esperado);
 
-        ResponseEntity<?> response = controller.porCarrera();
+        ResponseEntity<?> response = controller.porProgram();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertSame(esperado, response.getBody());

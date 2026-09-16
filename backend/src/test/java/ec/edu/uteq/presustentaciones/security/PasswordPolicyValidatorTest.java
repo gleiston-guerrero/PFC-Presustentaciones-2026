@@ -3,13 +3,13 @@ package ec.edu.uteq.presustentaciones.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ec.edu.uteq.presustentaciones.config.SecurityConfig;
 import ec.edu.uteq.presustentaciones.controllers.AuthController;
-import ec.edu.uteq.presustentaciones.controllers.UsuarioController;
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.RolUsuarioRepository;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.controllers.AppUserController;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.RoleAppUserRepository;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.security.jwt.JwtTokenProvider;
-import ec.edu.uteq.presustentaciones.services.IUsuarioService;
-import ec.edu.uteq.presustentaciones.services.PermisoService;
+import ec.edu.uteq.presustentaciones.services.IAppUserService;
+import ec.edu.uteq.presustentaciones.services.PermissionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,30 +52,30 @@ class PasswordPolicyValidatorTest {
     @Test
     void rechazaSieteCaracteresPorSerMenorQueElMinimo() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> validador.validar("Ab1cd2f")); // 7 caracteres, no está en la lista de comunes
+                () -> validador.validate("Ab1cd2f")); // 7 caracteres, no está en la lista de comunes
         assertTrue(ex.getMessage().contains("8 caracteres"));
         assertFalse(ex.getMessage().contains("Ab1cd2f"), "el mensaje no debe revelar la contraseña");
     }
 
     @Test
     void aceptaOchoCaracteresQueNoEstanEnLaListaDeComunes() {
-        assertDoesNotThrow(() -> validador.validar("Xq7#mZ9d"));
+        assertDoesNotThrow(() -> validador.validate("Xq7#mZ9d"));
         assertTrue(validador.cumple("Xq7#mZ9d"));
     }
 
     @Test
     void rechazaUnaContrasenaDeLaListaAunqueTengaOchoCaracteresOMas() {
         // "password123" (11 caracteres) esta en common-passwords.txt: cumple la longitud
-        // minima y aun asi debe rechazarse por estar en la lista de comunes.
+        // minima y aun asi debe rejectse por estar en la lista de comunes.
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> validador.validar("password123"));
+                () -> validador.validate("password123"));
         assertTrue(ex.getMessage().toLowerCase().contains("común"));
         assertFalse(ex.getMessage().contains("password123"));
     }
 
     @Test
     void laComprobacionDeComunesEsInsensibleAMayusculas() {
-        assertThrows(IllegalArgumentException.class, () -> validador.validar("Admin123"));
+        assertThrows(IllegalArgumentException.class, () -> validador.validate("Admin123"));
     }
 
     @Test
@@ -87,7 +87,7 @@ class PasswordPolicyValidatorTest {
 
     // ── Caso de integración: POST /api/v1/auth/register con la política REAL activa ────────
 
-    @WebMvcTest(controllers = {AuthController.class, UsuarioController.class})
+    @WebMvcTest(controllers = {AuthController.class, AppUserController.class})
     @Import({SecurityConfig.class, PasswordPolicyValidator.class})
     static class RegisterIntegrationTest {
 
@@ -98,17 +98,17 @@ class PasswordPolicyValidatorTest {
         private ObjectMapper objectMapper;
 
         @MockBean private AuthenticationManager authenticationManager;
-        @MockBean private UsuarioRepository usuarioRepository;
+        @MockBean private AppUserRepository appUserRepository;
         @MockBean private PasswordEncoder passwordEncoder;
         @MockBean private JwtTokenProvider jwtTokenProvider;
         @MockBean private UserDetailsService userDetailsService;
         @MockBean private ec.edu.uteq.presustentaciones.security.RateLimiterService rateLimiterService;
         @MockBean private ec.edu.uteq.presustentaciones.security.PasswordRecoveryService passwordRecoveryService;
         @MockBean private ec.edu.uteq.presustentaciones.services.SupresionDatosService supresionDatosService;
-        @MockBean private IUsuarioService usuarioService;
+        @MockBean private IAppUserService appUserService;
         @MockBean private JdbcTemplate jdbcTemplate;
-        @MockBean private RolUsuarioRepository rolUsuarioRepository;
-        @MockBean(name = "permisoService") private PermisoService permisoService;
+        @MockBean private RoleAppUserRepository roleAppUserRepository;
+        @MockBean(name = "permissionService") private PermissionService permissionService;
 
         private void autenticarComoAdmin() {
             String token = "adminToken";
@@ -117,11 +117,11 @@ class PasswordPolicyValidatorTest {
             when(jwtTokenProvider.validateToken(token)).thenReturn(true);
             when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn("admin@uteq.edu.ec");
             when(userDetailsService.loadUserByUsername("admin@uteq.edu.ec")).thenReturn(adminDetails);
-            when(permisoService.tienePermiso(any(), any())).thenReturn(true);
+            when(permissionService.tienePermission(any(), any())).thenReturn(true);
         }
 
         @Test
-        void registerConContrasenaDeLaListaDeComunesDevuelve400SinCrearUsuario() throws Exception {
+        void registerConContrasenaDeLaListaDeComunesDevuelve400SinCreateAppUser() throws Exception {
             autenticarComoAdmin();
             String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                     "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"}"; // esta en common-passwords.txt
@@ -134,7 +134,7 @@ class PasswordPolicyValidatorTest {
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("común")));
 
-            verify(usuarioService, never()).crear(any());
+            verify(appUserService, never()).create(any());
         }
 
         @Test
@@ -149,16 +149,16 @@ class PasswordPolicyValidatorTest {
                             .content(body))
                     .andExpect(status().isBadRequest());
 
-            verify(usuarioService, never()).crear(any());
+            verify(appUserService, never()).create(any());
         }
 
         @Test
-        void registerConContrasenaQueCumpleLaPoliticaLlegaAUsuarioService() throws Exception {
+        void registerConContrasenaQueCumpleLaPoliticaLlegaAAppUserService() throws Exception {
             autenticarComoAdmin();
             String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                     "\"password\":\"Xq7#mZ9d\",\"rol\":\"ESTUDIANTE\"}"; // 8 caracteres, no comun
 
-            when(usuarioService.crear(any(Usuario.class))).thenReturn(new Usuario());
+            when(appUserService.create(any(AppUser.class))).thenReturn(new AppUser());
 
             mockMvc.perform(post("/api/v1/auth/register")
                             .header("Authorization", "Bearer adminToken")
@@ -167,7 +167,7 @@ class PasswordPolicyValidatorTest {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.success").value(true));
 
-            verify(usuarioService).crear(any(Usuario.class));
+            verify(appUserService).create(any(AppUser.class));
         }
     }
 }

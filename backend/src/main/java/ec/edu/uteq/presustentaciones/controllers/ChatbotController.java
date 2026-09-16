@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
  * anotación de autorización, ni de clase ni de método -- quedaba protegido sólo por la
  * regla global de autenticación de SecurityConfig. Se hace explícita con
  * {@code isAuthenticated()}, el mismo nivel que ya usan otros controladores de consulta
- * general, porque las respuestas no dependen del rol. La comprobación equivalente que el
+ * general, porque las respuestas no dependen del role. La comprobación equivalente que el
  * servicio hace por su cuenta queda como defensa en profundidad, no como única barrera.
  */
 @RestController
@@ -29,9 +29,9 @@ public class ChatbotController {
     private final ChatbotService chatbotService;
 
     /**
-     * Responde una consulta en lenguaje natural con la guía correspondiente al tema detectado.
+     * Responde una consulta en lenguaje natural con la guía correspondiente al topic detectado.
      *
-     * @param request cuerpo con el mensaje del usuario
+     * @param request cuerpo con el mensaje del appUser
      * @return 200 con la respuesta del asistente y, cuando aplica, las opciones sugeridas
      *         y la ruta del módulo relacionado
      */

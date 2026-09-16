@@ -17,8 +17,8 @@ import static org.mockito.Mockito.when;
  * RNF-07: un access token vigente pero expirado debe responder 401 con un mensaje
  * distinguible de "sin permiso" (403 de {@code GlobalExceptionHandler.handleAccessDenied}) --
  * el frontend necesita saber si debe reautenticar (expirado) o simplemente no mostrar la
- * acción (sin permiso). El comportamiento ya existía en {@code JwtAuthenticationFilter}; esta
- * prueba solo lo cubre, sin cambiarlo.
+ * acción (sin permission). El comportamiento ya existía en {@code JwtAuthenticationFilter}; esta
+ * prueba solo lo cubre, sin changelo.
  */
 class JwtAuthenticationFilterTest {
 
@@ -27,7 +27,7 @@ class JwtAuthenticationFilterTest {
     private final JwtAuthenticationFilter filtro = new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
 
     @Test
-    void tokenExpiradoResponde401ConMensajeDistinguibleDeSinPermiso() throws Exception {
+    void tokenExpiradoResponde401ConMensajeDistinguibleDeSinPermission() throws Exception {
         SecurityContextHolder.clearContext();
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer token-expirado");
@@ -77,7 +77,7 @@ class JwtAuthenticationFilterTest {
 
         filtro.doFilter(request, response, chain);
 
-        // Sin token no hay nada que rechazar aqui -- SecurityConfig decide mas adelante si la
+        // Sin token no hay nada que reject aqui -- SecurityConfig decide mas adelante si la
         // ruta requiere autenticacion. El filtro solo debe dejar pasar, no fijar Authentication.
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }

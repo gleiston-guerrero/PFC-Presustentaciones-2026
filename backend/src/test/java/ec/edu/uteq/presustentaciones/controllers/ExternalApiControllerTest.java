@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Cubre GET /api/universidades: sin test dedicado hasta ahora (el único controlador,
  * junto con {@code MeController}, sin ninguna cobertura). Mismo patrón @WebMvcTest +
- * SecurityConfig real que {@code DocenteControllerTest}.
+ * SecurityConfig real que {@code TeacherControllerTest}.
  */
 @WebMvcTest(controllers = ExternalApiController.class)
 @Import(SecurityConfig.class)
@@ -61,10 +61,10 @@ class ExternalApiControllerTest {
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @MockBean
-    private ec.edu.uteq.presustentaciones.repositories.RolUsuarioRepository rolUsuarioRepository;
+    private ec.edu.uteq.presustentaciones.repositories.RoleAppUserRepository roleAppUserRepository;
 
     @MockBean
-    private ec.edu.uteq.presustentaciones.repositories.UsuarioRepository usuarioRepository;
+    private ec.edu.uteq.presustentaciones.repositories.AppUserRepository appUserRepository;
 
     @Test
     void sinTokenDevuelve401() throws Exception {

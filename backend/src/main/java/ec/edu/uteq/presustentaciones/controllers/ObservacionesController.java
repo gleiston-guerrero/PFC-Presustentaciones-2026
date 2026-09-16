@@ -1,7 +1,7 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.dto.ObservacionesSolicitudDTO;
-import ec.edu.uteq.presustentaciones.services.RubricaEvaluacionService;
+import ec.edu.uteq.presustentaciones.dto.ObservacionesSubmissionDTO;
+import ec.edu.uteq.presustentaciones.services.RubricEvaluationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,19 +16,19 @@ import java.util.Map;
 @PreAuthorize("isAuthenticated()")
 public class ObservacionesController {
 
-    private final RubricaEvaluacionService rubricaEvaluacionService;
+    private final RubricEvaluationService rubricEvaluationService;
 
     /**
-     * Observaciones registradas sobre una solicitud (las que el revisor deja al rechazar o
+     * Observaciones registradas sobre una submission (las que el revisor deja al reject o
      * al pedir correcciones).
      *
-     * @param solicitudId solicitud consultada
-     * @return 200 con las observaciones de esa solicitud
+     * @param submissionId submission consultada
+     * @return 200 con las observaciones de esa submission
      */
-    @GetMapping("/solicitud/{solicitudId}")
-    public ResponseEntity<?> obtenerObservaciones(@PathVariable Long solicitudId) {
+    @GetMapping("/solicitud/{submissionId}")
+    public ResponseEntity<?> obtainObservaciones(@PathVariable Long submissionId) {
         try {
-            ObservacionesSolicitudDTO obs = rubricaEvaluacionService.obtenerObservacionesSolicitud(solicitudId);
+            ObservacionesSubmissionDTO obs = rubricEvaluationService.obtainObservacionesSubmission(submissionId);
             return ResponseEntity.ok(obs);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

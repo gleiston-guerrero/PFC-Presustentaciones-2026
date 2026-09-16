@@ -3,7 +3,7 @@ package ec.edu.uteq.presustentaciones.controllers;
 import ec.edu.uteq.presustentaciones.config.SecurityConfig;
 import ec.edu.uteq.presustentaciones.security.RateLimiterService;
 import ec.edu.uteq.presustentaciones.security.jwt.JwtTokenProvider;
-import ec.edu.uteq.presustentaciones.services.PermisoService;
+import ec.edu.uteq.presustentaciones.services.PermissionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -29,9 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Cubre GET /api/me/permisos: el panel lo consulta en caliente para saber qué módulos
+ * Cubre GET /api/me/permissions: el panel lo consulta en caliente para saber qué módulos
  * mostrar (ver comentario de clase en {@code MeController}). Mismo patrón
- * @WebMvcTest + SecurityConfig real que {@code DocenteControllerTest}.
+ * @WebMvcTest + SecurityConfig real que {@code TeacherControllerTest}.
  */
 @WebMvcTest(controllers = MeController.class)
 @Import(SecurityConfig.class)
@@ -41,7 +41,7 @@ class MeControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private PermisoService permisoService;
+    private PermissionService permissionService;
 
     @MockBean
     private JwtTokenProvider jwtTokenProvider;
@@ -62,10 +62,10 @@ class MeControllerTest {
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @MockBean
-    private ec.edu.uteq.presustentaciones.repositories.RolUsuarioRepository rolUsuarioRepository;
+    private ec.edu.uteq.presustentaciones.repositories.RoleAppUserRepository roleAppUserRepository;
 
     @MockBean
-    private ec.edu.uteq.presustentaciones.repositories.UsuarioRepository usuarioRepository;
+    private ec.edu.uteq.presustentaciones.repositories.AppUserRepository appUserRepository;
 
     @Test
     void sinTokenDevuelve401() throws Exception {
@@ -74,7 +74,7 @@ class MeControllerTest {
     }
 
     @Test
-    void devuelveLosPermisosDelUsuarioAutenticado() throws Exception {
+    void devuelveLosPermissionsDelAppUserAutenticado() throws Exception {
         String email = "docente@uteq.edu.ec";
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",
@@ -82,7 +82,7 @@ class MeControllerTest {
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(email);
         when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
-        when(permisoService.permisosDe(any(Authentication.class)))
+        when(permissionService.permissionsDe(any(Authentication.class)))
                 .thenReturn(List.of("SOLICITUDES_VER", "ACTAS_VER_PROPIAS"));
 
         mockMvc.perform(get("/api/v1/me/permisos")

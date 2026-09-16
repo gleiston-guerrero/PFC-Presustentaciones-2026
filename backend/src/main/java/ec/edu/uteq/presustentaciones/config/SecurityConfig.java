@@ -54,7 +54,7 @@ public class SecurityConfig {
      *
      * @param http builder de configuración HTTP de Spring Security
      * @return la cadena de filtros de seguridad construida
-     * @throws Exception si Spring Security no puede construir la configuración indicada
+     * @throws Exception si Spring Security no puede build la configuración indicada
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -73,7 +73,7 @@ public class SecurityConfig {
                         // de la proteccion contra XSS que da esta cabecera (alerta 10055 de ZAP).
                         // connect-src 'self' a secas: el frontend llama al backend con rutas
                         // relativas (/api/...) a traves del proxy de nginx, siempre mismo origen.
-                        // Se retiran los origenes localhost (que en un despliegue real bloquearian
+                        // Se retiran los origenes localhost (que en un despliegue real blockarian
                         // las llamadas del frontend), los ws:// (no hay WebSocket: el estado en
                         // tiempo real es polling) y universities.hipolabs.com, que consume el
                         // backend server-side via ExternalApiServiceImpl, nunca el navegador.
@@ -94,7 +94,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/**").authenticated()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
-                // Sin esto, Spring Security responde 403 (AccessDeniedException del usuario anónimo)
+                // Sin esto, Spring Security responde 403 (AccessDeniedException del appUser anónimo)
                 // tanto para "no autenticado / token expirado" como para "autenticado pero sin permiso",
                 // y el frontend solo sabe redirigir a /login cuando ve 401 -- con un JWT vencido la app
                 // se quedaba mostrando un error genérico en vez de pedir iniciar sesión de nuevo.
@@ -179,7 +179,7 @@ public class SecurityConfig {
     /**
      * @param config configuración de autenticación de Spring Security
      * @return el {@link AuthenticationManager} resuelto por Spring, usado por el flujo de login
-     * @throws Exception si Spring no puede resolver el manager de autenticación
+     * @throws Exception si Spring no puede resolve el manager de autenticación
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

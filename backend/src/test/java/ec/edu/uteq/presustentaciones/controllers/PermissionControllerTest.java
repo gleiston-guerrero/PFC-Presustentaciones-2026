@@ -1,0 +1,162 @@
+package ec.edu.uteq.presustentaciones.controllers;
+
+import ec.edu.uteq.presustentaciones.entities.Permission;
+import ec.edu.uteq.presustentaciones.entities.RoleAppUser;
+import ec.edu.uteq.presustentaciones.repositories.PermissionRepository;
+import ec.edu.uteq.presustentaciones.repositories.RoleAppUserRepository;
+import ec.edu.uteq.presustentaciones.services.AuditService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+/**
+ * PermissionController tenía 1 de 20 líneas cubiertas y 12 ramas en cero, pese a contener
+ * la salvaguarda que impide dejar al sistema sin ningún role capaz de gestionar permissions.
+ *
+ * Ese es el caso crítico que se cubre aquí: si se acepta remove ROLES_PERMISOS_GESTIONAR
+ * del último role que lo tiene, nadie puede volver a assignlo desde la interfaz y el
+ * sistema queda blockado sin más salida que tocar la base de datos a mano.
+ */
+@ExtendWith(MockitoExtension.class)
+class PermissionControllerTest {
+
+    private static final String GESTION = "ROLES_PERMISOS_GESTIONAR";
+
+    @Mock private PermissionRepository permissionRepository;
+    @Mock private RoleAppUserRepository roleAppUserRepository;
+    @Mock private AuditService auditService;
+
+    @InjectMocks
+    private PermissionController controller;
+
+    @SuppressWarnings("unchecked")
+    private String errorDe(ResponseEntity<?> response) {
+        return ((Map<String, String>) response.getBody()).get("error");
+    }
+
+    private Permission permission(short id, String codigo) {
+        return Permission.builder().id(id).codigo(codigo).build();
+    }
+
+    @Test
+    void listDevuelveElCatalogoOrdenadoPorCategoriaYNombre() {
+        List<Permission> catalogo = List.of(permission((short) 1, "SOLICITUDES_REVISAR"));
+        when(permissionRepository.findAllByOrderByCategoriaAscNombreAsc()).thenReturn(catalogo);
+
+        assertSame(catalogo, controller.list());
+    }
+
+    @Test
+    void updatePermissionsDeRoleInexistenteDevuelve404() {
+        when(roleAppUserRepository.findById((short) 99)).thenReturn(Optional.empty());
+
+        assertEquals(HttpStatus.NOT_FOUND,
+                controller.updatePermissionsDeRole((short) 99, List.of("SOLICITUDES_REVISAR")).getStatusCode());
+        verify(permissionRepository, never()).deletePermissionsDeRole(any());
+    }
+
+    @Test
+    void updatePermissionsRechazaCodigosQueNoExisten() {
+        when(roleAppUserRepository.findById((short) 1))
+                .thenReturn(Optional.of(RoleAppUser.builder().id((short) 1).build()));
+        // Se piden 2 códigos pero el repositorio solo resuelve 1: hay uno inventado
+        when(permissionRepository.findByCodigoIn(List.of("SOLICITUDES_REVISAR", "INVENTADO")))
+                .thenReturn(List.of(permission((short) 1, "SOLICITUDES_REVISAR")));
+
+        ResponseEntity<?> response = controller.updatePermissionsDeRole(
+                (short) 1, List.of("SOLICITUDES_REVISAR", "INVENTADO"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Uno o más códigos de permiso no existen.", errorDe(response));
+        verify(permissionRepository, never()).deletePermissionsDeRole(any());
+    }
+
+    @Test
+    void updatePermissionsAceptaCodigosDuplicadosEnLaPeticion() {
+        // El frontend puede mandar el mismo código repetido; el count se hace sobre
+        // los distintos, así que no debe tratarse como "código inexistente".
+        when(roleAppUserRepository.findById((short) 1))
+                .thenReturn(Optional.of(RoleAppUser.builder().id((short) 1).build()));
+        when(permissionRepository.findByCodigoIn(List.of(GESTION, GESTION)))
+                .thenReturn(List.of(permission((short) 1, GESTION)));
+        when(permissionRepository.findCodigosPorRole((short) 1)).thenReturn(List.of(GESTION));
+
+        ResponseEntity<?> response = controller.updatePermissionsDeRole((short) 1, List.of(GESTION, GESTION));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void noSePuedeRemoveLaGestionDePermissionsAlUltimoRoleQueLaTiene() {
+        when(roleAppUserRepository.findById((short) 1))
+                .thenReturn(Optional.of(RoleAppUser.builder().id((short) 1).build()));
+        when(permissionRepository.findByCodigoIn(List.of("SOLICITUDES_REVISAR")))
+                .thenReturn(List.of(permission((short) 1, "SOLICITUDES_REVISAR")));
+        // El único role que hoy tiene el permission es el que se está editando
+        when(permissionRepository.findRoleIdsConPermission(GESTION)).thenReturn(List.of((short) 1));
+
+        ResponseEntity<?> response = controller.updatePermissionsDeRole(
+                (short) 1, List.of("SOLICITUDES_REVISAR"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(errorDe(response).contains("ningún otro rol lo tendría"));
+        verify(permissionRepository, never()).deletePermissionsDeRole(any());
+        verify(auditService, never()).marcarActorActual();
+    }
+
+    @Test
+    void siOtroRoleConservaLaGestionDePermissionsSiSePuedeRemoveDeEste() {
+        when(roleAppUserRepository.findById((short) 2))
+                .thenReturn(Optional.of(RoleAppUser.builder().id((short) 2).build()));
+        when(permissionRepository.findByCodigoIn(List.of("SOLICITUDES_REVISAR")))
+                .thenReturn(List.of(permission((short) 5, "SOLICITUDES_REVISAR")));
+        // El role 1 (ADMIN) también lo tiene, así que quitárselo al 2 no blocka el sistema
+        when(permissionRepository.findRoleIdsConPermission(GESTION)).thenReturn(List.of((short) 1, (short) 2));
+        when(permissionRepository.findCodigosPorRole((short) 2)).thenReturn(List.of("SOLICITUDES_REVISAR"));
+
+        ResponseEntity<?> response = controller.updatePermissionsDeRole(
+                (short) 2, List.of("SOLICITUDES_REVISAR"));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(auditService).marcarActorActual();
+        verify(permissionRepository).deletePermissionsDeRole((short) 2);
+        verify(permissionRepository).assignPermission((short) 2, (short) 5);
+    }
+
+    @Test
+    void updatePermissionsReemplazaElConjuntoCompletoDelRole() {
+        when(roleAppUserRepository.findById((short) 1))
+                .thenReturn(Optional.of(RoleAppUser.builder().id((short) 1).build()));
+        List<String> codigos = List.of(GESTION, "SOLICITUDES_REVISAR", "ACTAS_GESTIONAR");
+        when(permissionRepository.findByCodigoIn(codigos)).thenReturn(List.of(
+                permission((short) 1, GESTION),
+                permission((short) 2, "SOLICITUDES_REVISAR"),
+                permission((short) 3, "ACTAS_GESTIONAR")));
+        when(permissionRepository.findCodigosPorRole((short) 1)).thenReturn(codigos);
+
+        ResponseEntity<?> response = controller.updatePermissionsDeRole((short) 1, codigos);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(codigos, response.getBody());
+        // Primero borra todo y luego reinserta: es un reemplazo, no un delta
+        var orden = inOrder(permissionRepository);
+        orden.verify(permissionRepository).deletePermissionsDeRole((short) 1);
+        orden.verify(permissionRepository).assignPermission((short) 1, (short) 1);
+        orden.verify(permissionRepository).assignPermission((short) 1, (short) 2);
+        orden.verify(permissionRepository).assignPermission((short) 1, (short) 3);
+        // Incluye el permission de gestión, así que no hace falta consultar los otros roles
+        verify(permissionRepository, never()).findRoleIdsConPermission(any());
+    }
+}

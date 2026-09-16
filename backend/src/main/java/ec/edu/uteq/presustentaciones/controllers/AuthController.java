@@ -1,19 +1,19 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.security.dto.LoginRequest;
 import ec.edu.uteq.presustentaciones.security.dto.LoginResponse;
-import ec.edu.uteq.presustentaciones.security.dto.CambiarPasswordRequest;
+import ec.edu.uteq.presustentaciones.security.dto.ChangePasswordRequest;
 import ec.edu.uteq.presustentaciones.security.dto.RecuperarPasswordRequest;
 import ec.edu.uteq.presustentaciones.security.dto.RegisterRequest;
-import ec.edu.uteq.presustentaciones.security.dto.RestablecerPasswordRequest;
+import ec.edu.uteq.presustentaciones.security.dto.ResetPasswordRequest;
 import ec.edu.uteq.presustentaciones.security.PasswordPolicyValidator;
 import ec.edu.uteq.presustentaciones.security.PasswordRecoveryService;
 import ec.edu.uteq.presustentaciones.security.RateLimiterService;
 import ec.edu.uteq.presustentaciones.security.RateLimiterUnavailableException;
 import ec.edu.uteq.presustentaciones.security.jwt.JwtTokenProvider;
-import ec.edu.uteq.presustentaciones.services.IUsuarioService;
+import ec.edu.uteq.presustentaciones.services.IAppUserService;
 import ec.edu.uteq.presustentaciones.dto.ResponseWrapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,16 +47,16 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final UsuarioRepository usuarioRepository;
+    private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final IUsuarioService usuarioService;
+    private final IAppUserService appUserService;
     private final PasswordPolicyValidator passwordPolicyValidator;
     private final PasswordRecoveryService passwordRecoveryService;
     private final RateLimiterService rateLimiterService;
 
     /**
-     * Autentica al usuario y emite el par de tokens. El access token viaja en el cuerpo y el
+     * Autentica al appUser y emite el par de tokens. El access token viaja en el cuerpo y el
      * refresh token se deja además en una cookie HTTP-Only, de modo que JavaScript no pueda
      * leerlo. Este endpoint está sujeto al rate limiting de 6 intentos por minuto y por IP.
      *
@@ -73,10 +73,10 @@ public class AuthController {
         // el GlobalExceptionHandler devolviera 400, mientras que una contrasena incorrecta (mas
         // abajo, via authenticationManager.authenticate) devuelve 401 -- un atacante podia
         // distinguir "email no existe" de "email existe, password incorrecta" por el codigo HTTP
-        // (enumeracion de usuarios). UsernameNotFoundException es una AuthenticationException,
+        // (enumeracion de appUsers). UsernameNotFoundException es una AuthenticationException,
         // capturada por el mismo handler que ya usa authenticationManager.authenticate() -> 401
         // en ambos casos, igual que ya hace CustomUserDetailsService para este mismo escenario.
-        Usuario usuario = usuarioRepository.findByEmail(loginRequest.getEmail())
+        AppUser appUser = appUserRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         Authentication authentication = authenticationManager.authenticate(
@@ -88,7 +88,7 @@ public class AuthController {
 
         // Generamos Access Token (JWT de 7 claims) y Refresh Token (UUID en Redis)
         String token = jwtTokenProvider.generateToken(authentication);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(usuario.getEmail());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(appUser.getEmail());
 
         // Cabeceras para Set-Cookie seguras (Requisito E13 - HttpOnly, Secure, SameSite=Strict)
         // Usamos addHeader en lugar de Cookie de Servlet para tener soporte de SameSite=Strict completo
@@ -100,11 +100,11 @@ public class AuthController {
         LoginResponse loginResponse = LoginResponse.builder()
                 .token(token)
                 .type("Bearer")
-                .id(usuario.getId())
-                .email(usuario.getEmail())
-                .nombre(usuario.getNombre() + " " + usuario.getApellido())
-                .rol(usuario.getRol())
-                .emailNotificaciones(usuario.getEmailNotificaciones())
+                .id(appUser.getId())
+                .email(appUser.getEmail())
+                .nombre(appUser.getNombre() + " " + appUser.getApellido())
+                .role(appUser.getRole())
+                .emailNotifications(appUser.getEmailNotifications())
                 .build();
 
         // Creamos una respuesta enriquecida
@@ -144,7 +144,7 @@ public class AuthController {
                     .body(ResponseWrapper.error("Refresh token no proporcionado"));
         }
 
-        // 1. Verificar si el token fue reutilizado (ataque de robo de sesión)
+        // 1. Verify si el token fue reutilizado (ataque de robo de sesión)
         String reusedBy = jwtTokenProvider.getUsernameFromUsedRefreshToken(refreshToken);
         if (reusedBy != null) {
             log.warn("¡ALERTA DE SEGURIDAD! Intento de reutilización de Refresh Token detectado para el usuario: {}", reusedBy);
@@ -153,22 +153,22 @@ public class AuthController {
                     .body(ResponseWrapper.error("Token de seguridad comprometido. Todas las sesiones han sido cerradas."));
         }
 
-        // 2. Extraer usuario del token válido
+        // 2. Extraer appUser del token válido
         String email = jwtTokenProvider.getUsernameFromRefreshToken(refreshToken);
         if (email == null || !jwtTokenProvider.validateRefreshToken(refreshToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ResponseWrapper.error("Refresh token inválido o expirado"));
         }
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        AppUser appUser = appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
-        // 3. Rotación de tokens (Requisito Rotación): invalidar el usado y generar nuevos
+        // 3. Rotación de tokens (Requisito Rotación): invalidate el usado y generate nuevos
         jwtTokenProvider.rotateRefreshToken(refreshToken, email);
         String newAccessToken = jwtTokenProvider.generateTokenFromUsername(email);
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(email);
 
-        // Actualizar cookies seguras
+        // Update cookies seguras
         response.addHeader(HttpHeaders.SET_COOKIE, 
                 String.format("jwtToken=%s; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400", newAccessToken));
         response.addHeader(HttpHeaders.SET_COOKIE, 
@@ -216,7 +216,7 @@ public class AuthController {
             jwtTokenProvider.blacklistToken(token);
             
             try {
-                // Eliminar el refresh token específico de la sesión (usando las cookies)
+                // Delete el refresh token específico de la sesión (usando las cookies)
                 String refreshCookie = null;
                 if (request.getCookies() != null) {
                     for (Cookie cookie : request.getCookies()) {
@@ -242,38 +242,38 @@ public class AuthController {
     }
 
     /**
-     * Provisión de cuentas: solo un ADMIN puede crear usuarios (incluye poder asignar cualquier
-     * rol). Hallazgo real de auditoría (2026-09-04): antes recibía la entidad {@link Usuario}
+     * Provisión de cuentas: solo un ADMIN puede create appUsers (incluye poder assign cualquier
+     * role). Hallazgo real de auditoría (2026-09-04): antes recibía la entidad {@link AppUser}
      * cruda por @RequestBody, sin @Valid -- un body con "id", "activo":false, "rolUsuario":
      * {"id":N} o "creadoEn" podía pisar esos campos directamente (mass-assignment), y "rol" y
-     * "rolUsuario" podían quedar desincronizados porque nunca pasaba por resolverRol(). Ahora se
-     * usa {@link RegisterRequest} (ya existía, sin usar) con @Valid, y el Usuario se arma en el
+     * "rolUsuario" podían quedar desincronizados porque nunca pasaba por resolveRole(). Ahora se
+     * usa {@link RegisterRequest} (ya existía, sin usar) con @Valid, y el AppUser se arma en el
      * controller solo con los 5 campos permitidos -- ningún otro campo del cliente llega a la
      * entidad. La creación en sí (verificación de email duplicado, encode de password,
-     * resolución de rol) reutiliza {@link IUsuarioService#crear} tal cual la usa
-     * UsuarioController, en vez de duplicar esa lógica aquí.
+     * resolución de role) reutiliza {@link IAppUserService#create} tal cual la usa
+     * AppUserController, en vez de duplicar esa lógica aquí.
      *
-     * @param request los 5 campos permitidos para crear la cuenta
-     * @return 200 con el usuario creado, o 400 si el email ya existe o el rol no es válido
+     * @param request los 5 campos permitidos para create la cuenta
+     * @return 200 con el appUser creado, o 400 si el email ya existe o el role no es válido
      */
     @PostMapping("/register")
-    @PreAuthorize("@permisoService.tienePermiso(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Registrar nuevo usuario", description = "Permite a un administrador crear nuevos usuarios en el sistema.")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         // RNF-06: @Size en el DTO ya cubre la longitud minima; la lista de contrasenas
         // comunes no se puede expresar como anotacion de Bean Validation sin un
         // ConstraintValidator dedicado, asi que se aplica aqui explicitamente.
-        passwordPolicyValidator.validar(request.getPassword());
+        passwordPolicyValidator.validate(request.getPassword());
 
-        Usuario usuario = new Usuario();
-        usuario.setNombre(request.getNombre());
-        usuario.setApellido(request.getApellido());
-        usuario.setEmail(request.getEmail());
-        usuario.setPassword(request.getPassword());
-        usuario.setRol(request.getRol());
-        usuario.setActivo(true);
+        AppUser appUser = new AppUser();
+        appUser.setNombre(request.getNombre());
+        appUser.setApellido(request.getApellido());
+        appUser.setEmail(request.getEmail());
+        appUser.setPassword(request.getPassword());
+        appUser.setRole(request.getRole());
+        appUser.setActivo(true);
 
-        usuarioService.crear(usuario);
+        appUserService.create(appUser);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ResponseWrapper.success(null, "Usuario registrado exitosamente"));
@@ -281,25 +281,25 @@ public class AuthController {
 
     /**
      * RF-06: cambio de contraseña propia. Antes de esta fase no existía ninguna vía, propia ni
-     * administrativa, para cambiar una contraseña una vez creada la cuenta.
+     * administrativa, para change una contraseña una vez creada la cuenta.
      *
-     * @param id      usuario cuya contraseña se cambia -- debe ser el mismo que el autenticado
+     * @param id      appUser cuya contraseña se cambia -- debe ser el mismo que el autenticado
      * @param request contraseña vigente y nueva contraseña
      * @param http    para leer la cookie {@code refreshToken} de la sesión actual y preservarla
      * @return 200 si el cambio se aplicó, 401 si la contraseña vigente no coincide (sin tocar
-     *         nada), 403 si {@code id} no es el propio usuario autenticado
+     *         nada), 403 si {@code id} no es el propio appUser autenticado
      */
     @PatchMapping("/usuarios/{id}/password")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Cambiar la contraseña propia", description = "Solo el titular puede cambiar su propia contraseña, incluso si quien lo intenta es Administrador.")
-    public ResponseEntity<?> cambiarPassword(@PathVariable Long id,
-                                              @Valid @RequestBody CambiarPasswordRequest request,
+    public ResponseEntity<?> changePassword(@PathVariable Long id,
+                                              @Valid @RequestBody ChangePasswordRequest request,
                                               HttpServletRequest http) {
-        // Mismo patrón que UsuarioController#actualizarPerfil (RF-10): la identidad se resuelve
+        // Mismo patrón que AppUserController#updatePerfil (RF-10): la identidad se resuelve
         // por el email del JWT, nunca por el id de la ruta -- ni siquiera un Administrador puede
-        // cambiar la contraseña de otra cuenta por aquí.
+        // change la contraseña de otra cuenta por aquí.
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Usuario titular = usuarioRepository.findByEmail(auth.getName())
+        AppUser titular = appUserRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
         if (!titular.getId().equals(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -315,13 +315,13 @@ public class AuthController {
                     .body(ResponseWrapper.error("La nueva contraseña no puede ser igual a la actual"));
         }
         // RNF-06, mismo validador que RF-04 (alta): longitud minima y lista de comunes.
-        passwordPolicyValidator.validar(request.getPasswordNueva());
+        passwordPolicyValidator.validate(request.getPasswordNueva());
 
         titular.setPassword(passwordEncoder.encode(request.getPasswordNueva()));
-        usuarioRepository.save(titular);
+        appUserRepository.save(titular);
 
         // Revoca todas las sesiones activas SALVO la actual -- revocar tambien esa dejaria al
-        // usuario fuera justo despues de un cambio legitimo.
+        // appUser fuera justo despues de un cambio legitimo.
         String refreshActual = null;
         if (http.getCookies() != null) {
             for (Cookie cookie : http.getCookies()) {
@@ -337,13 +337,13 @@ public class AuthController {
     }
 
     /**
-     * RF-05: solicitud de recuperación de contraseña, sin sesión activa. Endpoint público (ver
+     * RF-05: submission de recuperación de contraseña, sin sesión activa. Endpoint público (ver
      * {@code SecurityConfig}/{@code JwtAuthenticationFilter.shouldNotFilter}, igual que
      * {@code /login} y {@code /refresh}).
      *
      * <p>Responde exactamente el mismo cuerpo, con el mismo código, exista o no una cuenta con
      * ese correo -- de lo contrario el propio endpoint sería una forma de enumerar cuentas
-     * registradas. La diferencia de trabajo interno (enviar el correo o no) vive en
+     * registradas. La diferencia de trabajo interno (send el correo o no) vive en
      * {@link PasswordRecoveryService#solicitarRecuperacion}, que iguala también el costo para
      * no filtrar la respuesta por el tiempo.
      *
@@ -382,8 +382,8 @@ public class AuthController {
      */
     @PostMapping("/restablecer")
     @Operation(summary = "Restablecer contraseña con el token de recuperación")
-    public ResponseEntity<?> restablecer(@Valid @RequestBody RestablecerPasswordRequest request) {
-        passwordRecoveryService.restablecer(request.getToken(), request.getPasswordNueva());
+    public ResponseEntity<?> reset(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordRecoveryService.reset(request.getToken(), request.getPasswordNueva());
         return ResponseEntity.ok(ResponseWrapper.success(null, "Contraseña restablecida correctamente"));
     }
 }

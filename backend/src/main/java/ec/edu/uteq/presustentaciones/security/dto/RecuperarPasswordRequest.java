@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-/** RF-05: solicitud de recuperación de contraseña. */
+/** RF-05: submission de recuperación de contraseña. */
 @Data
 public class RecuperarPasswordRequest {
 

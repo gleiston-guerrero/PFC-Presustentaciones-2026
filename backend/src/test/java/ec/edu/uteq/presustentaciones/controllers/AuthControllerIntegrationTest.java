@@ -2,15 +2,15 @@ package ec.edu.uteq.presustentaciones.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ec.edu.uteq.presustentaciones.config.SecurityConfig;
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.security.PasswordPolicyValidator;
 import ec.edu.uteq.presustentaciones.security.RateLimiterService;
 import ec.edu.uteq.presustentaciones.security.dto.LoginRequest;
 import ec.edu.uteq.presustentaciones.security.jwt.JwtAuthenticationFilter;
 import ec.edu.uteq.presustentaciones.security.jwt.JwtTokenProvider;
-import ec.edu.uteq.presustentaciones.services.IUsuarioService;
-import ec.edu.uteq.presustentaciones.services.PermisoService;
+import ec.edu.uteq.presustentaciones.services.IAppUserService;
+import ec.edu.uteq.presustentaciones.services.PermissionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -49,7 +49,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = {AuthController.class, UsuarioController.class})
+@WebMvcTest(controllers = {AuthController.class, AppUserController.class})
 @Import({SecurityConfig.class})
 class AuthControllerIntegrationTest {
 
@@ -63,7 +63,7 @@ class AuthControllerIntegrationTest {
     private AuthenticationManager authenticationManager;
 
     @MockBean
-    private UsuarioRepository usuarioRepository;
+    private AppUserRepository appUserRepository;
 
     @MockBean
     private PasswordEncoder passwordEncoder;
@@ -84,10 +84,10 @@ class AuthControllerIntegrationTest {
     private ec.edu.uteq.presustentaciones.services.SupresionDatosService supresionDatosService;
 
     @MockBean
-    private IUsuarioService usuarioService;
+    private IAppUserService appUserService;
 
     // Mock, no la implementacion real: un mock sin stub no hace nada en un metodo void
-    // (validar()), asi que los tests existentes de /register siguen pasando sin tocar sus
+    // (validate()), asi que los tests existentes de /register siguen pasando sin tocar sus
     // fixtures de password. La politica real (longitud, lista de comunes) se prueba en
     // PasswordPolicyValidatorTest, incluido su caso de integracion contra este mismo endpoint.
     @MockBean
@@ -97,23 +97,23 @@ class AuthControllerIntegrationTest {
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @MockBean
-    private ec.edu.uteq.presustentaciones.repositories.RolUsuarioRepository rolUsuarioRepository;
+    private ec.edu.uteq.presustentaciones.repositories.RoleAppUserRepository roleAppUserRepository;
 
-    @MockBean(name = "permisoService")
-    private PermisoService permisoService;
+    @MockBean(name = "permissionService")
+    private PermissionService permissionService;
 
-    private Usuario dummyUsuario;
+    private AppUser dummyAppUser;
 
     @BeforeEach
     void setUp() {
-        dummyUsuario = new Usuario();
-        dummyUsuario.setId(1L);
-        dummyUsuario.setEmail("test@uteq.edu.ec");
-        dummyUsuario.setPassword("encodedPassword");
-        dummyUsuario.setNombre("Carla");
-        dummyUsuario.setApellido("Perez");
-        dummyUsuario.setRol("ADMIN");
-        dummyUsuario.setActivo(true);
+        dummyAppUser = new AppUser();
+        dummyAppUser.setId(1L);
+        dummyAppUser.setEmail("test@uteq.edu.ec");
+        dummyAppUser.setPassword("encodedPassword");
+        dummyAppUser.setNombre("Carla");
+        dummyAppUser.setApellido("Perez");
+        dummyAppUser.setRole("ADMIN");
+        dummyAppUser.setActivo(true);
 
         // Permitir peticiones en rate limiter
         when(rateLimiterService.isAllowed(any())).thenReturn(true);
@@ -126,14 +126,14 @@ class AuthControllerIntegrationTest {
         loginRequest.setPassword("correctPassword");
 
         Authentication dummyAuth = Mockito.mock(Authentication.class);
-        UserDetails userDetails = new User(dummyUsuario.getEmail(), dummyUsuario.getPassword(), 
+        UserDetails userDetails = new User(dummyAppUser.getEmail(), dummyAppUser.getPassword(), 
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
         when(dummyAuth.getPrincipal()).thenReturn(userDetails);
 
-        when(usuarioRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(dummyUsuario));
+        when(appUserRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(dummyAppUser));
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(dummyAuth);
         when(jwtTokenProvider.generateToken(dummyAuth)).thenReturn("dummyAccessToken");
-        when(jwtTokenProvider.generateRefreshToken(dummyUsuario.getEmail())).thenReturn("dummyRefreshToken");
+        when(jwtTokenProvider.generateRefreshToken(dummyAppUser.getEmail())).thenReturn("dummyRefreshToken");
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -151,7 +151,7 @@ class AuthControllerIntegrationTest {
         loginRequest.setEmail("test@uteq.edu.ec");
         loginRequest.setPassword("wrongPassword");
 
-        when(usuarioRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(dummyUsuario));
+        when(appUserRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(dummyAppUser));
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
@@ -175,14 +175,14 @@ class AuthControllerIntegrationTest {
     @Test
     void testAccesoProtegidoConTokenValido() throws Exception {
         String token = "validToken";
-        UserDetails userDetails = new User(dummyUsuario.getEmail(), dummyUsuario.getPassword(), 
+        UserDetails userDetails = new User(dummyAppUser.getEmail(), dummyAppUser.getPassword(), 
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
 
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
-        when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(dummyUsuario.getEmail());
-        when(userDetailsService.loadUserByUsername(dummyUsuario.getEmail())).thenReturn(userDetails);
-        when(usuarioService.listarTodos()).thenReturn(Collections.emptyList());
-        when(permisoService.tienePermiso(any(), any())).thenReturn(true);
+        when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(dummyAppUser.getEmail());
+        when(userDetailsService.loadUserByUsername(dummyAppUser.getEmail())).thenReturn(userDetails);
+        when(appUserService.listTodos()).thenReturn(Collections.emptyList());
+        when(permissionService.tienePermission(any(), any())).thenReturn(true);
 
         mockMvc.perform(get("/api/v1/usuarios")
                         .header("Authorization", "Bearer " + token)
@@ -191,12 +191,12 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testLoginUsuarioInexistente() throws Exception {
+    void testLoginAppUserInexistente() throws Exception {
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setEmail("noexiste@uteq.edu.ec");
         loginRequest.setPassword("password");
 
-        when(usuarioRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
+        when(appUserRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -204,7 +204,7 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 // Si el Controller arroja RuntimeException("Usuario no encontrado") es atrapado por el ExceptionHandler.
                 // Si asume BadCredentials o algo, verificamos el código. 
-                // Segun AuthController linea 48 lanza RuntimeException. El GlobalExceptionHandler (si existe) lo puede manejar a 400 o 500, pero al ser login y fallar, el handler de Spring Security lo ataja o el GlobalExceptionHandler.
+                // Segun AuthController line 48 lanza RuntimeException. El GlobalExceptionHandler (si existe) lo puede manejar a 400 o 500, pero al ser login y fallar, el handler de Spring Security lo ataja o el GlobalExceptionHandler.
                 .andExpect(jsonPath("$.success").value(false));
     }
 
@@ -217,12 +217,12 @@ class AuthControllerIntegrationTest {
         jakarta.servlet.http.Cookie refreshCookie = new jakarta.servlet.http.Cookie("refreshToken", refreshToken);
 
         when(jwtTokenProvider.getUsernameFromUsedRefreshToken(refreshToken)).thenReturn(null); // No reutilizado
-        when(jwtTokenProvider.getUsernameFromRefreshToken(refreshToken)).thenReturn(dummyUsuario.getEmail());
+        when(jwtTokenProvider.getUsernameFromRefreshToken(refreshToken)).thenReturn(dummyAppUser.getEmail());
         when(jwtTokenProvider.validateRefreshToken(refreshToken)).thenReturn(true);
-        when(usuarioRepository.findByEmail(dummyUsuario.getEmail())).thenReturn(Optional.of(dummyUsuario));
+        when(appUserRepository.findByEmail(dummyAppUser.getEmail())).thenReturn(Optional.of(dummyAppUser));
         
-        when(jwtTokenProvider.generateTokenFromUsername(dummyUsuario.getEmail())).thenReturn(newAccessToken);
-        when(jwtTokenProvider.generateRefreshToken(dummyUsuario.getEmail())).thenReturn(newRefreshToken);
+        when(jwtTokenProvider.generateTokenFromUsername(dummyAppUser.getEmail())).thenReturn(newAccessToken);
+        when(jwtTokenProvider.generateRefreshToken(dummyAppUser.getEmail())).thenReturn(newRefreshToken);
 
         mockMvc.perform(post("/api/v1/auth/refresh")
                         .cookie(refreshCookie)
@@ -238,7 +238,7 @@ class AuthControllerIntegrationTest {
         String refreshToken = "stolenRefresh";
         jakarta.servlet.http.Cookie refreshCookie = new jakarta.servlet.http.Cookie("refreshToken", refreshToken);
 
-        when(jwtTokenProvider.getUsernameFromUsedRefreshToken(refreshToken)).thenReturn(dummyUsuario.getEmail());
+        when(jwtTokenProvider.getUsernameFromUsedRefreshToken(refreshToken)).thenReturn(dummyAppUser.getEmail());
 
         mockMvc.perform(post("/api/v1/auth/refresh")
                         .cookie(refreshCookie)
@@ -254,7 +254,7 @@ class AuthControllerIntegrationTest {
         jakarta.servlet.http.Cookie refreshCookie = new jakarta.servlet.http.Cookie("refreshToken", refreshToken);
 
         when(jwtTokenProvider.getUsernameFromUsedRefreshToken(refreshToken)).thenReturn(null);
-        when(jwtTokenProvider.getUsernameFromRefreshToken(refreshToken)).thenReturn(dummyUsuario.getEmail());
+        when(jwtTokenProvider.getUsernameFromRefreshToken(refreshToken)).thenReturn(dummyAppUser.getEmail());
         when(jwtTokenProvider.validateRefreshToken(refreshToken)).thenReturn(false); // token invalido o expirado
 
         mockMvc.perform(post("/api/v1/auth/refresh")
@@ -282,24 +282,24 @@ class AuthControllerIntegrationTest {
     // ── /register: endurecido contra mass-assignment (auditoría 2026-09-04) ────────────────
 
     /** Autentica como un ADMIN con USUARIOS_GESTIONAR, igual que testAccesoProtegidoConTokenValido. */
-    private void autenticarComoAdminConGestionUsuarios() {
+    private void autenticarComoAdminConGestionAppUsers() {
         String token = "adminToken";
-        UserDetails adminDetails = new User(dummyUsuario.getEmail(), dummyUsuario.getPassword(),
+        UserDetails adminDetails = new User(dummyAppUser.getEmail(), dummyAppUser.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
-        when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(dummyUsuario.getEmail());
-        when(userDetailsService.loadUserByUsername(dummyUsuario.getEmail())).thenReturn(adminDetails);
-        when(permisoService.tienePermiso(any(), any())).thenReturn(true);
+        when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(dummyAppUser.getEmail());
+        when(userDetailsService.loadUserByUsername(dummyAppUser.getEmail())).thenReturn(adminDetails);
+        when(permissionService.tienePermission(any(), any())).thenReturn(true);
     }
 
     @Test
-    void testRegisterExitosoDelegaEnUsuarioServiceConLosCincoCamposPermitidos() throws Exception {
-        autenticarComoAdminConGestionUsuarios();
+    void testRegisterExitosoDelegaEnAppUserServiceConLosCincoCamposPermitidos() throws Exception {
+        autenticarComoAdminConGestionAppUsers();
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"}";
 
-        org.mockito.ArgumentCaptor<Usuario> captor = org.mockito.ArgumentCaptor.forClass(Usuario.class);
-        when(usuarioService.crear(captor.capture())).thenReturn(new Usuario());
+        org.mockito.ArgumentCaptor<AppUser> captor = org.mockito.ArgumentCaptor.forClass(AppUser.class);
+        when(appUserService.create(captor.capture())).thenReturn(new AppUser());
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .header("Authorization", "Bearer adminToken")
@@ -308,26 +308,26 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true));
 
-        Usuario creado = captor.getValue();
+        AppUser creado = captor.getValue();
         assertEquals("Carlos", creado.getNombre());
         assertEquals("Mendoza", creado.getApellido());
         assertEquals("cmendoza@uteq.edu.ec", creado.getEmail());
         assertEquals("password123", creado.getPassword());
-        assertEquals("ESTUDIANTE", creado.getRol());
+        assertEquals("ESTUDIANTE", creado.getRole());
         assertEquals(Boolean.TRUE, creado.getActivo());
     }
 
     @Test
     void testRegisterIgnoraCamposSensiblesEnviadosPorElCliente() throws Exception {
-        // Mass-assignment: id, activo=false y rolUsuario no existen en RegisterRequest, así que
-        // Jackson los descarta al deserializar -- nunca llegan a la entidad Usuario real.
-        autenticarComoAdminConGestionUsuarios();
+        // Mass-assignment: id, activo=false y roleAppUser no existen en RegisterRequest, así que
+        // Jackson los descarta al deserializar -- nunca llegan a la entidad AppUser real.
+        autenticarComoAdminConGestionAppUsers();
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"," +
                 "\"id\":999,\"activo\":false,\"rolUsuario\":{\"id\":1},\"creadoEn\":\"2020-01-01T00:00:00\"}";
 
-        org.mockito.ArgumentCaptor<Usuario> captor = org.mockito.ArgumentCaptor.forClass(Usuario.class);
-        when(usuarioService.crear(captor.capture())).thenReturn(new Usuario());
+        org.mockito.ArgumentCaptor<AppUser> captor = org.mockito.ArgumentCaptor.forClass(AppUser.class);
+        when(appUserService.create(captor.capture())).thenReturn(new AppUser());
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .header("Authorization", "Bearer adminToken")
@@ -335,14 +335,14 @@ class AuthControllerIntegrationTest {
                         .content(body))
                 .andExpect(status().isCreated());
 
-        Usuario creado = captor.getValue();
+        AppUser creado = captor.getValue();
         assertNull(creado.getId());
         assertEquals(Boolean.TRUE, creado.getActivo(), "activo debe quedar forzado a true pese al false enviado por el cliente");
     }
 
     @Test
-    void testRegisterDatosInvalidosDevuelve400SinLlamarAUsuarioService() throws Exception {
-        autenticarComoAdminConGestionUsuarios();
+    void testRegisterDatosInvalidosDevuelve400SinLlamarAAppUserService() throws Exception {
+        autenticarComoAdminConGestionAppUsers();
         // Falta "nombre" (obligatorio) y password muy corta.
         String body = "{\"apellido\":\"Mendoza\",\"email\":\"no-es-un-email\",\"password\":\"123\",\"rol\":\"ESTUDIANTE\"}";
 
@@ -352,15 +352,15 @@ class AuthControllerIntegrationTest {
                         .content(body))
                 .andExpect(status().isBadRequest());
 
-        verify(usuarioService, never()).crear(any());
+        verify(appUserService, never()).create(any());
     }
 
     @Test
     void testRegisterEmailDuplicadoDevuelve400() throws Exception {
-        autenticarComoAdminConGestionUsuarios();
+        autenticarComoAdminConGestionAppUsers();
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"}";
-        when(usuarioService.crear(any(Usuario.class)))
+        when(appUserService.create(any(AppUser.class)))
                 .thenThrow(new IllegalArgumentException("Ya existe un usuario con el email: cmendoza@uteq.edu.ec"));
 
         mockMvc.perform(post("/api/v1/auth/register")
@@ -372,11 +372,11 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testRegisterRolInvalidoDevuelve400() throws Exception {
-        autenticarComoAdminConGestionUsuarios();
+    void testRegisterRoleInvalidoDevuelve400() throws Exception {
+        autenticarComoAdminConGestionAppUsers();
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"SUPERUSUARIO_INVENTADO\"}";
-        when(usuarioService.crear(any(Usuario.class)))
+        when(appUserService.create(any(AppUser.class)))
                 .thenThrow(new IllegalArgumentException("Rol inválido o no existe: SUPERUSUARIO_INVENTADO"));
 
         mockMvc.perform(post("/api/v1/auth/register")
@@ -387,14 +387,14 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testRegisterSinPermisoUsuariosGestionarDevuelve403() throws Exception {
+    void testRegisterSinPermissionAppUsersGestionarDevuelve403() throws Exception {
         String token = "docenteToken";
-        UserDetails docenteDetails = new User("docente@uteq.edu.ec", "x",
+        UserDetails teacherDetails = new User("docente@uteq.edu.ec", "x",
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_DOCENTE")));
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn("docente@uteq.edu.ec");
-        when(userDetailsService.loadUserByUsername("docente@uteq.edu.ec")).thenReturn(docenteDetails);
-        when(permisoService.tienePermiso(any(), any())).thenReturn(false);
+        when(userDetailsService.loadUserByUsername("docente@uteq.edu.ec")).thenReturn(teacherDetails);
+        when(permissionService.tienePermission(any(), any())).thenReturn(false);
 
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"}";
@@ -405,25 +405,25 @@ class AuthControllerIntegrationTest {
                         .content(body))
                 .andExpect(status().isForbidden());
 
-        verify(usuarioService, never()).crear(any());
+        verify(appUserService, never()).create(any());
     }
 
-    // ── PATCH /api/v1/auth/usuarios/{id}/password (RF-06: cambio de contraseña propia) ─────
+    // ── PATCH /api/v1/auth/appUsers/{id}/password (RF-06: cambio de contraseña propia) ─────
 
     private void autenticarComoTitular() {
         String token = "selfToken";
-        UserDetails userDetails = new User(dummyUsuario.getEmail(), dummyUsuario.getPassword(),
+        UserDetails userDetails = new User(dummyAppUser.getEmail(), dummyAppUser.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
-        when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(dummyUsuario.getEmail());
-        when(userDetailsService.loadUserByUsername(dummyUsuario.getEmail())).thenReturn(userDetails);
-        when(usuarioRepository.findByEmail(dummyUsuario.getEmail())).thenReturn(Optional.of(dummyUsuario));
+        when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(dummyAppUser.getEmail());
+        when(userDetailsService.loadUserByUsername(dummyAppUser.getEmail())).thenReturn(userDetails);
+        when(appUserRepository.findByEmail(dummyAppUser.getEmail())).thenReturn(Optional.of(dummyAppUser));
     }
 
     @Test
-    void cambiarPasswordConLaActualCorrectaDevuelve200YRevocaSesionesSalvoLaActual() throws Exception {
+    void changePasswordConLaActualCorrectaDevuelve200YRevocaSesionesSalvoLaActual() throws Exception {
         autenticarComoTitular();
-        when(passwordEncoder.matches("actualCorrecta", dummyUsuario.getPassword())).thenReturn(true);
+        when(passwordEncoder.matches("actualCorrecta", dummyAppUser.getPassword())).thenReturn(true);
         when(passwordEncoder.encode("NuevaClave#2026")).thenReturn("hashNuevo");
 
         jakarta.servlet.http.Cookie refreshCookie = new jakarta.servlet.http.Cookie("refreshToken", "refresh-de-esta-sesion");
@@ -436,16 +436,16 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
-        verify(passwordPolicyValidator).validar("NuevaClave#2026");
-        verify(usuarioRepository).save(dummyUsuario);
-        assertEquals("hashNuevo", dummyUsuario.getPassword());
-        verify(jwtTokenProvider).revokeAllUserTokensExcept(dummyUsuario.getEmail(), "refresh-de-esta-sesion");
+        verify(passwordPolicyValidator).validate("NuevaClave#2026");
+        verify(appUserRepository).save(dummyAppUser);
+        assertEquals("hashNuevo", dummyAppUser.getPassword());
+        verify(jwtTokenProvider).revokeAllUserTokensExcept(dummyAppUser.getEmail(), "refresh-de-esta-sesion");
     }
 
     @Test
-    void cambiarPasswordConLaActualIncorrectaDevuelve401YNoCambiaNada() throws Exception {
+    void changePasswordConLaActualIncorrectaDevuelve401YNoCambiaNada() throws Exception {
         autenticarComoTitular();
-        when(passwordEncoder.matches("incorrecta", dummyUsuario.getPassword())).thenReturn(false);
+        when(passwordEncoder.matches("incorrecta", dummyAppUser.getPassword())).thenReturn(false);
 
         mockMvc.perform(patch("/api/v1/auth/usuarios/1/password")
                         .header("Authorization", "Bearer selfToken")
@@ -454,14 +454,14 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false));
 
-        verify(usuarioRepository, never()).save(any());
+        verify(appUserRepository, never()).save(any());
         verify(jwtTokenProvider, never()).revokeAllUserTokensExcept(any(), any());
     }
 
     @Test
-    void cambiarPasswordIgualALaVigenteDevuelve400() throws Exception {
+    void changePasswordIgualALaVigenteDevuelve400() throws Exception {
         autenticarComoTitular();
-        when(passwordEncoder.matches("igual", dummyUsuario.getPassword())).thenReturn(true);
+        when(passwordEncoder.matches("igual", dummyAppUser.getPassword())).thenReturn(true);
 
         mockMvc.perform(patch("/api/v1/auth/usuarios/1/password")
                         .header("Authorization", "Bearer selfToken")
@@ -469,15 +469,15 @@ class AuthControllerIntegrationTest {
                         .content("{\"passwordActual\":\"igual\",\"passwordNueva\":\"igual\"}"))
                 .andExpect(status().isBadRequest());
 
-        verify(usuarioRepository, never()).save(any());
+        verify(appUserRepository, never()).save(any());
     }
 
     @Test
-    void cambiarPasswordQueIncumpleLaPoliticaDevuelve400() throws Exception {
+    void changePasswordQueIncumpleLaPoliticaDevuelve400() throws Exception {
         autenticarComoTitular();
-        when(passwordEncoder.matches("actualCorrecta", dummyUsuario.getPassword())).thenReturn(true);
+        when(passwordEncoder.matches("actualCorrecta", dummyAppUser.getPassword())).thenReturn(true);
         org.mockito.Mockito.doThrow(new IllegalArgumentException("Esa contraseña es demasiado común. Elige una diferente."))
-                .when(passwordPolicyValidator).validar("comun123");
+                .when(passwordPolicyValidator).validate("comun123");
 
         mockMvc.perform(patch("/api/v1/auth/usuarios/1/password")
                         .header("Authorization", "Bearer selfToken")
@@ -486,12 +486,12 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Esa contraseña es demasiado común. Elige una diferente."));
 
-        verify(usuarioRepository, never()).save(any());
+        verify(appUserRepository, never()).save(any());
     }
 
     @Test
-    void cambiarPasswordDeOtroUsuarioDevuelve403AunqueQuienLoIntentaSeaAdmin() throws Exception {
-        // dummyUsuario (id=1, ROLE_ADMIN) intenta cambiar la contraseña del usuario id=2.
+    void changePasswordDeOtroAppUserDevuelve403AunqueQuienLoIntentaSeaAdmin() throws Exception {
+        // dummyAppUser (id=1, ROLE_ADMIN) intenta change la contraseña del appUser id=2.
         autenticarComoTitular();
 
         mockMvc.perform(patch("/api/v1/auth/usuarios/2/password")
@@ -501,14 +501,14 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("No puedes cambiar la contraseña de otro usuario"));
 
-        verify(usuarioRepository, never()).save(any());
+        verify(appUserRepository, never()).save(any());
         org.mockito.Mockito.verifyNoInteractions(passwordEncoder);
     }
 
     @Test
-    void cambiarPasswordNuncaDevuelveLaContrasenaEnLaRespuesta() throws Exception {
+    void changePasswordNuncaDevuelveLaContrasenaEnLaRespuesta() throws Exception {
         autenticarComoTitular();
-        when(passwordEncoder.matches("actualCorrecta", dummyUsuario.getPassword())).thenReturn(true);
+        when(passwordEncoder.matches("actualCorrecta", dummyAppUser.getPassword())).thenReturn(true);
         when(passwordEncoder.encode(any())).thenReturn("hashNuevo");
 
         String cuerpo = mockMvc.perform(patch("/api/v1/auth/usuarios/1/password")
@@ -523,7 +523,7 @@ class AuthControllerIntegrationTest {
         assertFalse(cuerpo.toLowerCase().contains("password"));
     }
 
-    // ── POST /api/v1/auth/recuperar y /restablecer (RF-05: recuperación sin sesión) ────────
+    // ── POST /api/v1/auth/recuperar y /reset (RF-05: recuperación sin sesión) ────────
 
     @Test
     void recuperarDevuelveElMismoCuerpoYCodigoExistaONoLaCuenta() throws Exception {
@@ -571,20 +571,20 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void restablecerConTokenValidoDevuelve200() throws Exception {
+    void resetConTokenValidoDevuelve200() throws Exception {
         mockMvc.perform(post("/api/v1/auth/restablecer")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"token\":\"un-token-cualquiera\",\"passwordNueva\":\"NuevaClave#2026\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
-        verify(passwordRecoveryService).restablecer("un-token-cualquiera", "NuevaClave#2026");
+        verify(passwordRecoveryService).reset("un-token-cualquiera", "NuevaClave#2026");
     }
 
     @Test
-    void restablecerConTokenInvalidoOExpiradoDevuelve400() throws Exception {
+    void resetConTokenInvalidoOExpiradoDevuelve400() throws Exception {
         org.mockito.Mockito.doThrow(new IllegalArgumentException("El enlace de recuperación es inválido o ya expiró."))
-                .when(passwordRecoveryService).restablecer("token-vencido", "NuevaClave#2026");
+                .when(passwordRecoveryService).reset("token-vencido", "NuevaClave#2026");
 
         mockMvc.perform(post("/api/v1/auth/restablecer")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -593,18 +593,18 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.message").value("El enlace de recuperación es inválido o ya expiró."));
     }
 
-    // ── POST /api/v1/usuarios (UsuarioController.crear): mismo hallazgo que /register ──────
+    // ── POST /api/v1/appUsers (AppUserController.create): mismo hallazgo que /register ──────
 
     @Test
-    void testCrearUsuarioIgnoraIdDelClienteEnviadoEnElBody() throws Exception {
+    void testCreateAppUserIgnoraIdDelClienteEnviadoEnElBody() throws Exception {
         // Mismo patrón que testRegisterIgnoraCamposSensiblesEnviadosPorElCliente: "id" no existe
-        // en RegisterRequest, así que Jackson lo descarta -- nunca llega a la entidad Usuario.
-        autenticarComoAdminConGestionUsuarios();
+        // en RegisterRequest, así que Jackson lo descarta -- nunca llega a la entidad AppUser.
+        autenticarComoAdminConGestionAppUsers();
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza2@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\",\"id\":1,\"activo\":false}";
 
-        org.mockito.ArgumentCaptor<Usuario> captor = org.mockito.ArgumentCaptor.forClass(Usuario.class);
-        when(usuarioService.crear(captor.capture())).thenReturn(new Usuario());
+        org.mockito.ArgumentCaptor<AppUser> captor = org.mockito.ArgumentCaptor.forClass(AppUser.class);
+        when(appUserService.create(captor.capture())).thenReturn(new AppUser());
 
         mockMvc.perform(post("/api/v1/usuarios")
                         .header("Authorization", "Bearer adminToken")

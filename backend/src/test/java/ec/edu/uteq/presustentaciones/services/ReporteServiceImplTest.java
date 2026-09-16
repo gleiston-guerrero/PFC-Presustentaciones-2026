@@ -1,12 +1,12 @@
 package ec.edu.uteq.presustentaciones.services;
 
-import ec.edu.uteq.presustentaciones.dto.ReporteActividadDocenteDTO;
-import ec.edu.uteq.presustentaciones.dto.ReporteConteoDTO;
+import ec.edu.uteq.presustentaciones.dto.ReporteActividadTeacherDTO;
+import ec.edu.uteq.presustentaciones.dto.ReporteCountDTO;
 import ec.edu.uteq.presustentaciones.dto.ReporteResumenDTO;
-import ec.edu.uteq.presustentaciones.repositories.ActaRepository;
-import ec.edu.uteq.presustentaciones.repositories.DocenteRepository;
-import ec.edu.uteq.presustentaciones.repositories.JuradoRepository;
-import ec.edu.uteq.presustentaciones.repositories.SolicitudRepository;
+import ec.edu.uteq.presustentaciones.repositories.MinutesRepository;
+import ec.edu.uteq.presustentaciones.repositories.TeacherRepository;
+import ec.edu.uteq.presustentaciones.repositories.PanelistRepository;
+import ec.edu.uteq.presustentaciones.repositories.SubmissionRepository;
 import ec.edu.uteq.presustentaciones.repositories.TutorRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,28 +22,28 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * ReporteServiceImpl agrega las cifras del proceso de pre-sustentaciones a partir de
+ * ReporteServiceImpl agrega las cifras del process de pre-sustentaciones a partir de
  * consultas GROUP BY (COUNT en la base, nunca cargando la tabla). Estos tests verifican
- * el mapeo Object[] -> DTO y la combinación de actividad por docente.
+ * el mapeo Object[] -> DTO y la combinación de actividad por teacher.
  */
 @ExtendWith(MockitoExtension.class)
 class ReporteServiceImplTest {
 
-    @Mock private SolicitudRepository solicitudRepository;
-    @Mock private ActaRepository actaRepository;
-    @Mock private JuradoRepository juradoRepository;
+    @Mock private SubmissionRepository submissionRepository;
+    @Mock private MinutesRepository minutesRepository;
+    @Mock private PanelistRepository panelistRepository;
     @Mock private TutorRepository tutorRepository;
-    @Mock private DocenteRepository docenteRepository;
+    @Mock private TeacherRepository teacherRepository;
 
     @InjectMocks private ReporteServiceImpl reporteService;
 
     @Test
-    void solicitudesPorEstadoMapeaLasFilasAgrupadas() {
-        when(solicitudRepository.contarPorEstado(any(), any(), any())).thenReturn(java.util.List.<Object[]>of(
+    void submissionsPorEstadoMapeaLasFilasAgrupadas() {
+        when(submissionRepository.countPorEstado(any(), any(), any())).thenReturn(java.util.List.<Object[]>of(
                 new Object[]{"COMPLETADA", 9L},
                 new Object[]{"RECHAZADA", 2L}));
 
-        List<ReporteConteoDTO> r = reporteService.solicitudesPorEstado(null, null, null);
+        List<ReporteCountDTO> r = reporteService.submissionsPorEstado(null, null, null);
 
         assertEquals(2, r.size());
         assertEquals("COMPLETADA", r.get(0).getEtiqueta());
@@ -51,12 +51,12 @@ class ReporteServiceImplTest {
     }
 
     @Test
-    void resumenActasRellenaLosEstadosFaltantesConCero() {
-        when(actaRepository.contarPorEstado(any(), any())).thenReturn(java.util.List.<Object[]>of(
+    void resumenMinutesRellenaLosEstadosFaltantesConCero() {
+        when(minutesRepository.countPorEstado(any(), any())).thenReturn(java.util.List.<Object[]>of(
                 new Object[]{"FINALIZADA", 5L}));
-        when(actaRepository.countByFirmadaFalse()).thenReturn(3L);
+        when(minutesRepository.countByFirmadaFalse()).thenReturn(3L);
 
-        Map<String, Long> r = reporteService.resumenActas(null, null);
+        Map<String, Long> r = reporteService.resumenMinutes(null, null);
 
         assertEquals(5L, r.get("FINALIZADA"));
         assertEquals(0L, r.get("GENERADA"));
@@ -66,40 +66,40 @@ class ReporteServiceImplTest {
     }
 
     @Test
-    void actividadPorDocenteCombinaJuradoTutorYActasFirmadas() {
-        when(juradoRepository.contarAsignacionesPorDocente()).thenReturn(java.util.List.<Object[]>of(
+    void actividadPorTeacherCombinaPanelistTutorYMinutesFirmadas() {
+        when(panelistRepository.countAsignacionesPorTeacher()).thenReturn(java.util.List.<Object[]>of(
                 new Object[]{1L, "Luis", "Pérez", 4L}));
-        when(tutorRepository.contarTutoriasPorDocente()).thenReturn(java.util.List.<Object[]>of(
+        when(tutorRepository.countTutoringsPorTeacher()).thenReturn(java.util.List.<Object[]>of(
                 new Object[]{1L, 2L}));
-        when(juradoRepository.contarActasFirmadasPorDocente()).thenReturn(java.util.List.<Object[]>of(
+        when(panelistRepository.countMinutesFirmadasPorTeacher()).thenReturn(java.util.List.<Object[]>of(
                 new Object[]{1L, 3L}));
 
-        List<ReporteActividadDocenteDTO> r = reporteService.actividadPorDocente();
+        List<ReporteActividadTeacherDTO> r = reporteService.actividadPorTeacher();
 
         assertEquals(1, r.size());
-        ReporteActividadDocenteDTO d = r.get(0);
-        assertEquals("Luis Pérez", d.getDocente());
-        assertEquals(4L, d.getComoJurado());
+        ReporteActividadTeacherDTO d = r.get(0);
+        assertEquals("Luis Pérez", d.getTeacher());
+        assertEquals(4L, d.getComoPanelist());
         assertEquals(2L, d.getComoTutor());
-        assertEquals(3L, d.getActasFirmadas());
-        verify(docenteRepository, never()).findNombresByIds(any());
+        assertEquals(3L, d.getMinutesFirmadas());
+        verify(teacherRepository, never()).findNombresByIds(any());
     }
 
     @Test
-    void resumenCalculaTotalesYEnProceso() {
-        when(solicitudRepository.contarPorEstado(any(), any(), any())).thenReturn(java.util.List.<Object[]>of(
+    void resumenCalculaTotalesYEnProcess() {
+        when(submissionRepository.countPorEstado(any(), any(), any())).thenReturn(java.util.List.<Object[]>of(
                 new Object[]{"COMPLETADA", 10L},
                 new Object[]{"EVALUACION", 5L},
                 new Object[]{"RECHAZADA", 3L}));
-        when(actaRepository.contarPorEstado(any(), any())).thenReturn(java.util.List.<Object[]>of());
-        when(actaRepository.countByFirmadaFalse()).thenReturn(0L);
-        when(solicitudRepository.contarPorPeriodo(any(), any())).thenReturn(java.util.List.<Object[]>of());
+        when(minutesRepository.countPorEstado(any(), any())).thenReturn(java.util.List.<Object[]>of());
+        when(minutesRepository.countByFirmadaFalse()).thenReturn(0L);
+        when(submissionRepository.countPorPeriod(any(), any())).thenReturn(java.util.List.<Object[]>of());
 
         ReporteResumenDTO r = reporteService.resumen(null, null, null);
 
-        assertEquals(18L, r.getTotalSolicitudes());
-        assertEquals(10L, r.getSolicitudesCompletadas());
-        assertEquals(3L, r.getSolicitudesRechazadas());
-        assertEquals(5L, r.getSolicitudesEnProceso());
+        assertEquals(18L, r.getTotalSubmissions());
+        assertEquals(10L, r.getSubmissionsCompletadas());
+        assertEquals(3L, r.getSubmissionsRechazadas());
+        assertEquals(5L, r.getSubmissionsEnProcess());
     }
 }

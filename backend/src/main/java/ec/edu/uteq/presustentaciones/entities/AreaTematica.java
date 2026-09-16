@@ -1,5 +1,6 @@
 package ec.edu.uteq.presustentaciones.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,7 +22,8 @@ public class AreaTematica {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "linea_investigacion_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private LineaInvestigacion lineaInvestigacion;
+    @JsonProperty("lineaInvestigacion")
+    private LineInvestigacion lineInvestigacion;
 
     @Column(name = "nombre", nullable = false, length = 150)
     private String nombre;

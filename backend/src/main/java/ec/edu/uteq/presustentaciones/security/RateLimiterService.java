@@ -27,7 +27,7 @@ public class RateLimiterService {
     }
 
     /**
-     * Versión general, reutilizada por RF-05 (solicitudes de recuperación de contraseña, fase
+     * Versión general, reutilizada por RF-05 (submissions de recuperación de contraseña, fase
      * 6) para no duplicar la lógica de ventana deslizante ni el fail-closed de RNF-04 con una
      * clave/ventana propia.
      *

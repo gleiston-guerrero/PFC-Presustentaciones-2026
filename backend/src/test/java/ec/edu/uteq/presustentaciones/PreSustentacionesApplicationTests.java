@@ -22,7 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * Spring Boot detecta el driver H2 en el classpath de test (declarado en {@code pom.xml} para
  * generación offline de DDL) y reemplaza silenciosamente el DataSource real por una BD H2 en
  * memoria -- confirmado localmente: sin esta anotación, el test falla porque Flyway intenta
- * ejecutar PL/pgSQL (procedimientos almacenados) contra H2, que no lo entiende. Con la
+ * execute PL/pgSQL (procedimientos almacenados) contra H2, que no lo entiende. Con la
  * anotación, el contexto usa el Postgres real y Flyway aplica las 18 migraciones desde cero.
  */
 @SpringBootTest(properties = "spring.test.database.replace=NONE")

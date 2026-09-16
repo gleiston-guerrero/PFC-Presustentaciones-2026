@@ -1,0 +1,133 @@
+package ec.edu.uteq.presustentaciones.services;
+
+import ec.edu.uteq.presustentaciones.entities.Teacher;
+import ec.edu.uteq.presustentaciones.entities.Panelist;
+import ec.edu.uteq.presustentaciones.entities.Tutor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface PanelistService {
+
+    // ── Panelists ──────────────────────────────────────────────────────────────
+
+    /**
+     * Asigna (upsert) un teacher como panelist de una submission con el role indicado.
+     *
+     * @param submissionId id de la submission
+     * @param teacherId   id del teacher a assign
+     * @param role         código de role de panelist ({@code PRESIDENTE}, {@code VOCAL_1} o
+     *                    {@code VOCAL_2})
+     * @return el registro de panelist creado o actualizado
+     * @throws RuntimeException si el role no es uno de los tres válidos
+     */
+    Panelist assignPanelist(Long submissionId, Long teacherId, String role);
+
+    /**
+     * @param submissionId id de la submission
+     * @return los panelists asignados a esa submission (0 a 3 registros)
+     */
+    List<Panelist> listPorSubmission(Long submissionId);
+
+    /**
+     * @param pageable configuración de paginación
+     * @return página de todos los registros de panelist del sistema
+     */
+    Page<Panelist> listTodos(Pageable pageable);
+
+    /** @param panelistId id del registro de panelist a delete */
+    void deletePanelist(Long panelistId);
+
+    // ── Tutor ─────────────────────────────────────────────────────────────────
+
+    /**
+     * @param submissionId id de la submission
+     * @param teacherId   id del teacher que actuará como tutor
+     * @return el registro de tutoría creado
+     */
+    Tutor assignTutor(Long submissionId, Long teacherId);
+
+    /**
+     * @param submissionId id de la submission
+     * @return el tutor asignado, si existe
+     */
+    Optional<Tutor> obtainTutorDeSubmission(Long submissionId);
+
+    /** @param tutorId id del registro de tutoría a delete */
+    void deleteTutor(Long tutorId);
+
+    // ── Sugerencia automática ─────────────────────────────────────────────────
+
+    /**
+     * Sugiere teachers candidatos a panelist para una submission (excluyendo al tutor asignado y a
+     * quienes ya tengan conflicto de horario), sin assignlos todavía.
+     *
+     * @param submissionId id de la submission
+     * @param cantidad    número máximo de teachers a sugerir
+     * @return lista de teachers candidatos, tamaño ≤ {@code cantidad}
+     */
+    List<Teacher> sugerirTeachers(Long submissionId, int cantidad);
+
+    /**
+     * Asigna automáticamente los 3 roles de tribunal (PRESIDENTE, VOCAL_1, VOCAL_2) para una
+     * submission, usando la misma lógica de sugerencia que {@link #sugerirTeachers}.
+     *
+     * @param submissionId id de la submission
+     * @throws RuntimeException si no hay suficientes teachers disponibles para completar el
+     *                          tribunal
+     */
+    void assignPanelistsAutomaticamente(Long submissionId);
+
+    // ── Asignación masiva vía procedimiento almacenado (sp_assign_panelist_masivo) ─
+
+    /**
+     * Asigna en lote pares (submissionId, teacherId) al role indicado, invocando
+     * sp_assign_panelist_masivo una vez por par. Toda la operación corre dentro
+     * de una única transacción: si un par falla (role inválido, FK inexistente),
+     * se revierten también los pares ya procesados en esa misma llamada.
+     *
+     * @param submissionIds ids de las submissions, en el mismo orden que {@code teacherIds}
+     * @param teacherIds   ids de los teachers a assign, uno por cada submission del arreglo
+     * @param roleCodigo    código de role aplicado a todos los pares del lote
+     * @throws RuntimeException si los dos arreglos no tienen la misma longitud, o si el
+     *                          procedimiento almacenado rechaza algún par (role inválido, FK
+     *                          inexistente, o conflicto de horario)
+     */
+    void assignPanelistMasivo(List<Long> submissionIds, List<Long> teacherIds, String roleCodigo);
+
+    // ── Vista del teacher ─────────────────────────────────────────────────────
+
+    /**
+     * @param teacherId id del teacher
+     * @return las asignaciones de panelist de ese teacher, en cualquier submission
+     */
+    List<Panelist> listPorTeacher(Long teacherId);
+
+    /**
+     * @param teacherId id del teacher
+     * @return las tutorías activas de ese teacher
+     */
+    List<Tutor> listTutoringsPorTeacher(Long teacherId);
+
+    /**
+     * @param submissionId id de la submission
+     * @param appUserId   id del appUser autenticado (se resuelve contra el teacher vinculado)
+     * @return la asignación de panelist de ese appUser en esa submission, si existe
+     */
+    Optional<Panelist> obtainInfoPanelist(Long submissionId, Long appUserId);
+
+    /**
+     * Variante de {@link #assignPanelistMasivo} que invoca directamente la sobrecarga de
+     * {@code sp_assign_panelist_masivo} que recibe arreglos SQL ({@code BIGINT[]}) en una sola
+     * llamada, en vez de iterar en Java. Ver la nota de fusión de ramas en
+     * {@code docs/basedatos/CATALOGO-SP.md} sobre por qué la variante scaler (iterando en
+     * Java) es la que queda verificada end-to-end, no esta.
+     *
+     * @param submissionIds arreglo de ids de submission
+     * @param teacherIds   arreglo de ids de teacher, en el mismo orden
+     * @param role          código de role aplicado a todo el lote
+     */
+    void assignPanelistMasivoSP(Long[] submissionIds, Long[] teacherIds, String role);
+}

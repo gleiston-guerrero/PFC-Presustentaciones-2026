@@ -23,15 +23,15 @@ public class EmailService {
     private boolean enabled;
 
     /**
-     * Envía una notificación HTML con el nombre del remitente (usuario logueado).
+     * Envía una notificación HTML con el nombre del remitente (appUser logueado).
      *
      * @param destinatario  correo del receptor
      * @param mensaje       cuerpo del mensaje
-     * @param remitenteNombre nombre completo del usuario que genera la notificación
-     * @param remitenteEmail  correo del usuario que genera la notificación
+     * @param remitenteNombre nombre completo del appUser que genera la notificación
+     * @param remitenteEmail  correo del appUser que genera la notificación
      */
     @Async
-    public void enviarNotificacion(String destinatario, String mensaje,
+    public void sendNotification(String destinatario, String mensaje,
                                    String remitenteNombre, String remitenteEmail) {
         if (!enabled || mailSender == null) {
             log.info("[EMAIL DESHABILITADO] Para: {} | Mensaje: {}", destinatario, mensaje);
@@ -41,7 +41,7 @@ public class EmailService {
             MimeMessage mail = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mail, true, "UTF-8");
 
-            // El correo sale desde la cuenta SMTP pero con el nombre del usuario
+            // El correo sale desde la cuenta SMTP pero con el nombre del appUser
             helper.setFrom(smtpUsername, remitenteNombre + " (UTEQ - Pre-Sustentaciones)");
             helper.setTo(destinatario);
             helper.setSubject("📬 Nueva Notificación — Sistema de Pre-Sustentaciones UTEQ");
@@ -61,8 +61,8 @@ public class EmailService {
      * @param mensaje      cuerpo de la notificación
      */
     @Async
-    public void enviarNotificacion(String destinatario, String mensaje) {
-        enviarNotificacion(destinatario, mensaje, "Sistema de Pre-Sustentaciones", smtpUsername);
+    public void sendNotification(String destinatario, String mensaje) {
+        sendNotification(destinatario, mensaje, "Sistema de Pre-Sustentaciones", smtpUsername);
     }
 
     /**
@@ -76,7 +76,7 @@ public class EmailService {
      *                     y en la respuesta al enlace del correo; el almacén guarda su hash)
      */
     @Async
-    public void enviarRecuperacionPassword(String destinatario, String tokenPlano) {
+    public void sendRecuperacionPassword(String destinatario, String tokenPlano) {
         String enlace = "http://localhost:4200/restablecer-password?token=" + tokenPlano;
         if (!enabled || mailSender == null) {
             log.info("[EMAIL DESHABILITADO] Recuperación de contraseña para: {} | enlace: {}", destinatario, enlace);
@@ -113,7 +113,7 @@ public class EmailService {
 
                     <!-- HEADER -->
                     <tr>
-                      <td style="background:linear-gradient(135deg,#1a3c6e 0%%,#2563eb 100%%);
+                      <td style="background:liner-gradient(135deg,#1a3c6e 0%%,#2563eb 100%%);
                                  border-radius:12px 12px 0 0;padding:32px 40px;text-align:center;">
                         <p style="margin:0;color:#93c5fd;font-size:13px;letter-spacing:2px;
                                   text-transform:uppercase;font-weight:600;">
@@ -153,7 +153,7 @@ public class EmailService {
                         <!-- Botón CTA -->
                         <div style="text-align:center;margin-bottom:32px;">
                           <a href="http://localhost:4200"
-                             style="display:inline-block;background:linear-gradient(135deg,#1a3c6e,#2563eb);
+                             style="display:inline-block;background:liner-gradient(135deg,#1a3c6e,#2563eb);
                                     color:#ffffff;text-decoration:none;padding:14px 36px;
                                     border-radius:8px;font-size:15px;font-weight:600;
                                     letter-spacing:0.5px;">

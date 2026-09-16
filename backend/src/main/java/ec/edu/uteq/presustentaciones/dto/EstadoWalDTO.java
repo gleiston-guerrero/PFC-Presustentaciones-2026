@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/** Estado del archivado continuo de WAL y de los respaldos físicos base (panel PITR). */
+/** Estado del archivado continuo de WAL y de los backups físicos base (panel PITR). */
 @Getter
 @Builder
 @NoArgsConstructor
@@ -37,7 +37,7 @@ public class EstadoWalDTO {
     /** Punto más antiguo al que se puede recuperar (base física más antigua, o el WAL más viejo). */
     private String pitrDisponibleDesde;
 
-    // ── Respaldos físicos base (pg_basebackup) ──────────────────────────
+    // ── Backups físicos base (pg_basebackup) ──────────────────────────
     private List<BaseFisicaDTO> basesFisicas;
     private boolean hayBaseFisica;
     private String  advertencia;   // p. ej. "hay WAL pero ninguna base física: no se puede hacer PITR"

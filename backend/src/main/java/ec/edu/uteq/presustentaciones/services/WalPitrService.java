@@ -27,14 +27,14 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
- * Fase 2 del plan de respaldos: archivado continuo de WAL / PITR (el "incremental") y
- * respaldos físicos base ({@code pg_basebackup}).
+ * Fase 2 del plan de backups: archivado continuo de WAL / PITR (el "incremental") y
+ * backups físicos base ({@code pg_basebackup}).
  *
- * <p>El archivado de WAL se activa en {@code docker-compose.yml} (no se puede activar en
+ * <p>El archivado de WAL se activa en {@code docker-compose.yml} (no se puede activate en
  * caliente: es configuración del motor). Este servicio lo <b>consulta</b>
  * ({@code pg_stat_archiver}, {@code pg_settings}, el directorio compartido {@code /wal}) y
  * ofrece acciones ligeras: forzar el cierre del segmento actual, limpiar WAL viejo y
- * generar la base física. La restauración PITR en sí requiere parar el motor y es un
+ * generate la base física. La restauración PITR en sí requiere parar el motor y es un
  * procedimiento documentado (ver {@code docs/basedatos/PLAN-RESPALDOS-RECUPERACION.md} §4).
  */
 @Service
@@ -109,7 +109,7 @@ public class WalPitrService {
             }
         }
 
-        List<BaseFisicaDTO> bases = listarBases();
+        List<BaseFisicaDTO> bases = listBases();
         boolean hayBase = !bases.isEmpty();
         LocalDateTime baseMasAntigua = bases.stream()
                 .map(BaseFisicaDTO::getFechaCreacion).min(Comparator.naturalOrder()).orElse(null);
@@ -178,9 +178,9 @@ public class WalPitrService {
         if (!Files.isDirectory(dir)) return 0;
 
         LocalDateTime porDias = LocalDateTime.now().minusDays(Math.max(0, dias));
-        LocalDateTime baseMasAntigua = listarBases().stream()
+        LocalDateTime baseMasAntigua = listBases().stream()
                 .map(BaseFisicaDTO::getFechaCreacion).min(Comparator.naturalOrder()).orElse(null);
-        // corte = el más conservador de los dos (no borrar WAL que una base podría necesitar)
+        // corte = el más conservador de los dos (no erase WAL que una base podría necesitar)
         LocalDateTime corte = baseMasAntigua != null && baseMasAntigua.isBefore(porDias)
                 ? baseMasAntigua : porDias;
 
@@ -211,7 +211,7 @@ public class WalPitrService {
     // ── Base física (pg_basebackup) ─────────────────────────────────────
 
     /** @return las bases físicas generadas, más recientes primero */
-    public List<BaseFisicaDTO> listarBases() {
+    public List<BaseFisicaDTO> listBases() {
         Path dir = basesDir();
         if (!Files.isDirectory(dir)) return List.of();
         try (Stream<Path> hijos = Files.list(dir)) {
@@ -227,12 +227,12 @@ public class WalPitrService {
     }
 
     /**
-     * Genera un respaldo físico base ({@code pg_basebackup}), la base para PITR.
+     * Genera un backup físico base ({@code pg_basebackup}), la base para PITR.
      *
      * @return los metadatos de la base física generada
-     * @throws RuntimeException si no se pudo crear el directorio de bases, o {@code pg_basebackup} falla
+     * @throws RuntimeException si no se pudo create el directorio de bases, o {@code pg_basebackup} falla
      */
-    public BaseFisicaDTO generarBaseFisica() {
+    public BaseFisicaDTO generateBaseFisica() {
         Conexion c = conexion();
         Path dir = basesDir();
         try {
@@ -245,25 +245,25 @@ public class WalPitrService {
 
         List<String> comando = List.of(
                 "pg_basebackup",
-                "-h", c.host, "-p", c.port, "-U", c.usuario,
+                "-h", c.host, "-p", c.port, "-U", c.appUser,
                 "-D", destino.toAbsolutePath().toString(),
                 "--format=tar", "--gzip", "--wal-method=stream", "--checkpoint=fast", "--progress");
 
-        Proceso r = correr(comando, "pg_basebackup");
+        ProcessResult r = correr(comando, "pg_basebackup");
         if (r.codigo != 0) {
             // limpiar restos parciales
-            try { borrarRec(destino); } catch (Exception ignore) {}
-            throw new RuntimeException("No se pudo generar la base física: " + ultimaLinea(r.salida));
+            try { eraseRec(destino); } catch (Exception ignore) {}
+            throw new RuntimeException("No se pudo generar la base física: " + ultimaLine(r.salida));
         }
         log.info("Base física generada: {} ({})", nombre, formato(tamanoDir(destino)));
         return aBaseDTO(destino);
     }
 
     /**
-     * @param nombre nombre de la base física a eliminar
+     * @param nombre nombre de la base física a delete
      * @throws IllegalArgumentException si el nombre no tiene el formato esperado
      */
-    public void eliminarBase(String nombre) {
+    public void deleteBase(String nombre) {
         if (nombre == null || !nombre.matches("^base_[0-9]{8}_[0-9]{6}$")) {
             throw new IllegalArgumentException("Nombre de base física inválido.");
         }
@@ -275,7 +275,7 @@ public class WalPitrService {
             throw new IllegalArgumentException("La base física '" + nombre + "' no existe.");
         }
         try {
-            borrarRec(dir);
+            eraseRec(dir);
             log.info("Base física eliminada: {}", nombre);
         } catch (IOException e) {
             throw new RuntimeException("No se pudo eliminar la base física: " + e.getMessage(), e);
@@ -284,7 +284,7 @@ public class WalPitrService {
 
     // ── Internos ────────────────────────────────────────────────────────
 
-    private record Conexion(String host, String port, String baseDatos, String usuario) {}
+    private record Conexion(String host, String port, String baseDatos, String appUser) {}
 
     private Conexion conexion() {
         Matcher m = JDBC_URL.matcher(datasourceUrl == null ? "" : datasourceUrl.trim());
@@ -298,9 +298,9 @@ public class WalPitrService {
                 : Paths.get("uploads/bases");
     }
 
-    private record Proceso(int codigo, String salida) {}
+    private record ProcessResult(int codigo, String salida) {}
 
-    private Proceso correr(List<String> comando, String bin) {
+    private ProcessResult correr(List<String> comando, String bin) {
         ProcessBuilder pb = new ProcessBuilder(comando);
         pb.environment().put("PGPASSWORD", dbPassword == null ? "" : dbPassword);
         pb.redirectErrorStream(true);
@@ -323,7 +323,7 @@ public class WalPitrService {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Operación interrumpida.");
         }
-        return new Proceso(p.exitValue(), salida.trim());
+        return new ProcessResult(p.exitValue(), salida.trim());
     }
 
     private BaseFisicaDTO aBaseDTO(Path d) {
@@ -349,7 +349,7 @@ public class WalPitrService {
         }
     }
 
-    private static void borrarRec(Path d) throws IOException {
+    private static void eraseRec(Path d) throws IOException {
         if (!Files.exists(d)) return;
         try (Stream<Path> w = Files.walk(d)) {
             w.sorted(Comparator.reverseOrder()).forEach(p -> {
@@ -366,7 +366,7 @@ public class WalPitrService {
         } catch (IOException e) { return null; }
     }
 
-    private static String ultimaLinea(String s) {
+    private static String ultimaLine(String s) {
         if (s == null || s.isBlank()) return "sin detalle (ver logs del backend).";
         String[] l = s.strip().split("\\r?\\n");
         String u = l[l.length - 1].trim();

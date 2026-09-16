@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * Metadatos de un archivo de respaldo (dump) de la base de datos, para la tabla del
+ * Metadatos de un archivo de backup (dump) de la base de datos, para la tabla del
  * apartado "Gestión de Respaldos" del administrador. No expone la ruta absoluta en el
  * servidor -- solo el nombre del archivo, que es lo único que los endpoints aceptan de
- * vuelta para descargar / restaurar / eliminar.
+ * vuelta para download / restore / delete.
  */
 @Getter
 @Builder
@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class BackupInfoDTO {
 
-    /** Nombre del archivo, p. ej. {@code respaldo_FULL_AUTOMATICO_20260907_230000.dump}. */
+    /** Nombre del archivo, p. ej. {@code backup_FULL_AUTOMATICO_20260907_230000.dump}. */
     private String nombre;
 
     /** FULL | DIFERENCIAL (leído del nombre del archivo; los formatos antiguos son FULL). */

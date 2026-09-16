@@ -12,7 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * ChatbotService no tenia ninguna prueba (3.85% lineas, 0% ramas antes de este archivo) --
+ * ChatbotService no tenia ninguna prueba (3.85% lines, 0% ramas antes de este archivo) --
  * era el unico servicio del proyecto sin cero pruebas de ChatbotController, y con el propio
  * servicio tambien sin cubrir.
  */
@@ -45,7 +45,7 @@ class ChatbotServiceTest {
     }
 
     @Test
-    void usuarioAnonimoPideIniciarSesion() {
+    void appUserAnonimoPideIniciarSesion() {
         SecurityContextHolder.getContext().setAuthentication(
                 new AnonymousAuthenticationToken("key", "anonymousUser",
                         AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
@@ -62,19 +62,19 @@ class ChatbotServiceTest {
     }
 
     @Test
-    void preguntaSobreSolicitud() {
+    void preguntaSobreSubmission() {
         autenticar();
         assertTrue(chatbotService.processMessage(req("¿Cómo veo mi SOLICITUD?")).getResponse().contains("Solicitudes"));
     }
 
     @Test
-    void preguntaSobreAnteproyecto() {
+    void preguntaSobreProposal() {
         autenticar();
         assertTrue(chatbotService.processMessage(req("dudas del anteproyecto")).getResponse().contains("anteproyecto"));
     }
 
     @Test
-    void preguntaSobreNotificaciones() {
+    void preguntaSobreNotifications() {
         autenticar();
         assertTrue(chatbotService.processMessage(req("tengo notificaciones")).getResponse().contains("notificaciones"));
         assertTrue(chatbotService.processMessage(req("una notificación")).getResponse().contains("notificaciones"));

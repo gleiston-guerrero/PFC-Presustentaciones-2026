@@ -20,52 +20,52 @@ import java.util.Map;
 @PreAuthorize("isAuthenticated()")
 public class EstadoTiempoRealController {
 
-    private final SolicitudRepository solicitudRepo;
-    private final AnteproyectoRepository anteproyectoRepo;
-    private final CronogramaRepository cronogramaRepo;
-    private final ActaRepository actaRepo;
-    private final EvaluacionRepository evaluacionRepo;
+    private final SubmissionRepository submissionRepo;
+    private final ProposalRepository proposalRepo;
+    private final ScheduleRepository scheduleRepo;
+    private final MinutesRepository minutesRepo;
+    private final EvaluationRepository evaluationRepo;
 
     /**
-     * Devuelve el estado completo de una solicitud en un solo request: estado de la
-     * solicitud, anteproyecto, cronograma, evaluación y acta. Pensado para que el frontend
+     * Devuelve el estado completo de una submission en un solo request: estado de la
+     * submission, proposal, schedule, evaluación y minutes. Pensado para que el frontend
      * haga polling cada 15 s sin encadenar cinco llamadas distintas.
      *
-     * @param id solicitud consultada
+     * @param id submission consultada
      * @return 200 con el mapa de estado. Las claves de un módulo que todavía no existe para
-     *         esa solicitud (sin anteproyecto, sin cronograma, sin evaluación) se
+     *         esa submission (sin proposal, sin schedule, sin evaluación) se
      *         <b>omiten</b> del mapa en vez de venir en null, así que el frontend debe
-     *         comprobar presencia. La única excepción es {@code actaGenerada}, que siempre
-     *         viene (false si aún no hay acta), más {@code timestamp} con la marca de tiempo
+     *         comprobar presencia. La única excepción es {@code minutesGenerada}, que siempre
+     *         viene (false si aún no hay minutes), más {@code timestamp} con la marca de tiempo
      *         del servidor
      */
     @GetMapping("/solicitud/{id}")
-    public ResponseEntity<Map<String, Object>> estadoSolicitud(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> estadoSubmission(@PathVariable Long id) {
         Map<String, Object> estado = new HashMap<>();
 
-        solicitudRepo.findById(id).ifPresent(s -> {
+        submissionRepo.findById(id).ifPresent(s -> {
             estado.put("solicitudEstado", s.getEstado());
             estado.put("solicitudId", s.getId());
         });
 
-        anteproyectoRepo.findBySolicitudId(id).ifPresent(a -> {
+        proposalRepo.findBySubmissionId(id).ifPresent(a -> {
             estado.put("anteproyectoEstado", a.getEstado());
             estado.put("anteproyectoSha256", a.getSha256Hash() != null ? a.getSha256Hash() : null);
             estado.put("anteproyectoIntegridadVerificada", a.getSha256Hash() != null);
         });
 
-        cronogramaRepo.findBySolicitudId(id).ifPresent(c -> {
+        scheduleRepo.findBySubmissionId(id).ifPresent(c -> {
             estado.put("cronogramaFecha", c.getFechaInicio());
-            estado.put("cronogramaSala", c.getSala() != null ? c.getSala().getNombre() : null);
+            estado.put("cronogramaSala", c.getRoom() != null ? c.getRoom().getNombre() : null);
             estado.put("cronogramaEstado", c.getEstado());
         });
 
-        evaluacionRepo.findBySolicitudId(id).ifPresent(e -> {
+        evaluationRepo.findBySubmissionId(id).ifPresent(e -> {
             estado.put("evaluacionNota", e.getNotaFinal());
             estado.put("evaluacionResultado", e.getResultado());
         });
 
-        actaRepo.findBySolicitudId(id).ifPresent(a -> {
+        minutesRepo.findBySubmissionId(id).ifPresent(a -> {
             estado.put("actaGenerada", true);
             estado.put("actaFirmadaPresidente", a.isFirmadaPresidente());
             estado.put("actaFirmadaVocal1", a.isFirmadaVocal1());
@@ -81,20 +81,20 @@ public class EstadoTiempoRealController {
     }
 
     /**
-     * Estado resumido de varias solicitudes en un solo request, para la lista de
-     * "mis asignaciones" del docente: evita una llamada por fila de la tabla.
+     * Estado resumido de varias submissions en un solo request, para la lista de
+     * "mis asignaciones" del teacher: evita una llamada por fila de la tabla.
      *
-     * @param solicitudIds identificadores de las solicitudes a consultar
-     * @return 200 con un mapa de id de solicitud a su estado resumido
+     * @param submissionIds identificadores de las submissions a consultar
+     * @return 200 con un mapa de id de submission a su estado resumido
      */
     @PostMapping("/solicitudes/batch")
     public ResponseEntity<Map<Long, Map<String, Object>>> estadoBatch(
-            @RequestBody java.util.List<Long> solicitudIds) {
+            @RequestBody java.util.List<Long> submissionIds) {
         Map<Long, Map<String, Object>> resultado = new HashMap<>();
-        for (Long id : solicitudIds) {
+        for (Long id : submissionIds) {
             Map<String, Object> est = new HashMap<>();
-            solicitudRepo.findById(id).ifPresent(s -> est.put("estado", s.getEstado()));
-            evaluacionRepo.findBySolicitudId(id).ifPresent(e -> est.put("evaluada", true));
+            submissionRepo.findById(id).ifPresent(s -> est.put("estado", s.getEstado()));
+            evaluationRepo.findBySubmissionId(id).ifPresent(e -> est.put("evaluada", true));
             if (!est.containsKey("evaluada")) est.put("evaluada", false);
             resultado.put(id, est);
         }

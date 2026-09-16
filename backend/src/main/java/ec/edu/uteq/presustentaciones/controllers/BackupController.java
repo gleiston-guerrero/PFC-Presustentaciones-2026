@@ -1,13 +1,13 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
 import ec.edu.uteq.presustentaciones.dto.BackupInfoDTO;
-import ec.edu.uteq.presustentaciones.dto.RegistrarPruebaRestauracionRequest;
-import ec.edu.uteq.presustentaciones.dto.RespaldoConfigDTO;
+import ec.edu.uteq.presustentaciones.dto.RegisterPruebaRestauracionRequest;
+import ec.edu.uteq.presustentaciones.dto.BackupConfigDTO;
 import ec.edu.uteq.presustentaciones.dto.ResponseWrapper;
 import ec.edu.uteq.presustentaciones.services.BackupService;
 import ec.edu.uteq.presustentaciones.services.WalPitrService;
-import ec.edu.uteq.presustentaciones.services.backup.OrigenRespaldo;
-import ec.edu.uteq.presustentaciones.services.backup.TipoRespaldo;
+import ec.edu.uteq.presustentaciones.services.backup.OrigenBackup;
+import ec.edu.uteq.presustentaciones.services.backup.TipoBackup;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -22,7 +22,7 @@ import java.util.List;
  * Apartado "Gestión de Respaldos de Base de Datos" del administrador. Fase 1 del plan
  * (ver {@code docs/basedatos/PLAN-RESPALDOS-RECUPERACION.md}):
  * <ul>
- *   <li>Respaldo FULL bajo demanda + programado (cronograma cron editable).</li>
+ *   <li>Backup FULL bajo demanda + programado (schedule cron editable).</li>
  *   <li>Retención automática GFS de las copias automáticas.</li>
  *   <li>Panel de estado y bitácora de pruebas de restauración.</li>
  * </ul>
@@ -33,7 +33,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/backups")
 @RequiredArgsConstructor
-@PreAuthorize("@permisoService.tienePermiso(authentication, 'BACKUPS_GESTIONAR')")
+@PreAuthorize("@permissionService.tienePermission(authentication, 'BACKUPS_GESTIONAR')")
 public class BackupController {
 
     private final BackupService backupService;
@@ -41,46 +41,46 @@ public class BackupController {
 
     // ── Copias ──────────────────────────────────────────────────────────────
 
-    /** @return 200 con la lista de respaldos, del más reciente al más antiguo */
+    /** @return 200 con la lista de backups, del más reciente al más antiguo */
     @GetMapping
-    public ResponseEntity<?> listar() {
-        return ResponseEntity.ok(ResponseWrapper.success(backupService.listar()));
+    public ResponseEntity<?> list() {
+        return ResponseEntity.ok(ResponseWrapper.success(backupService.list()));
     }
 
     /**
-     * Genera un respaldo FULL ahora.
+     * Genera un backup FULL ahora.
      *
      * @param origen opcional: MANUAL (por defecto) o EVENTO
-     * @return 200 con los metadatos del respaldo, o 400/409 si {@code pg_dump} falla
+     * @return 200 con los metadatos del backup, o 400/409 si {@code pg_dump} falla
      */
     @PostMapping
-    public ResponseEntity<?> generar(@RequestParam(defaultValue = "MANUAL") String origen) {
-        OrigenRespaldo o = "EVENTO".equalsIgnoreCase(origen) ? OrigenRespaldo.EVENTO : OrigenRespaldo.MANUAL;
-        BackupInfoDTO info = backupService.generar(TipoRespaldo.FULL, o);
+    public ResponseEntity<?> generate(@RequestParam(defaultValue = "MANUAL") String origen) {
+        OrigenBackup o = "EVENTO".equalsIgnoreCase(origen) ? OrigenBackup.EVENTO : OrigenBackup.MANUAL;
+        BackupInfoDTO info = backupService.generate(TipoBackup.FULL, o);
         return ResponseEntity.ok(ResponseWrapper.success(info, "Respaldo generado correctamente"));
     }
 
     /**
-     * Genera un respaldo DIFERENCIAL (filas cambiadas desde el último FULL). Fase 2.
+     * Genera un backup DIFERENCIAL (filas cambiadas desde el último FULL). Fase 2.
      *
      * @param origen opcional: MANUAL (por defecto) o EVENTO
      * @return 200 con los metadatos del diferencial generado
      */
     @PostMapping("/diferencial")
-    public ResponseEntity<?> generarDiferencial(@RequestParam(defaultValue = "MANUAL") String origen) {
-        OrigenRespaldo o = "EVENTO".equalsIgnoreCase(origen) ? OrigenRespaldo.EVENTO : OrigenRespaldo.MANUAL;
-        BackupInfoDTO info = backupService.generarDiferencial(o);
+    public ResponseEntity<?> generateDiferencial(@RequestParam(defaultValue = "MANUAL") String origen) {
+        OrigenBackup o = "EVENTO".equalsIgnoreCase(origen) ? OrigenBackup.EVENTO : OrigenBackup.MANUAL;
+        BackupInfoDTO info = backupService.generateDiferencial(o);
         return ResponseEntity.ok(ResponseWrapper.success(info, "Respaldo diferencial generado"));
     }
 
     /**
-     * Descarga un respaldo como archivo adjunto.
+     * Descarga un backup como archivo adjunto.
      *
-     * @param nombre nombre del archivo de respaldo
+     * @param nombre nombre del archivo de backup
      * @return 200 con el contenido del archivo como {@code application/octet-stream}
      */
     @GetMapping("/{nombre}/descargar")
-    public ResponseEntity<byte[]> descargar(@PathVariable String nombre) {
+    public ResponseEntity<byte[]> download(@PathVariable String nombre) {
         byte[] contenido = backupService.leer(nombre);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -89,28 +89,28 @@ public class BackupController {
     }
 
     /**
-     * Restaura la base desde un respaldo (operación destructiva).
+     * Restaura la base desde un backup (operación destructiva).
      *
-     * @param nombre nombre del respaldo FULL a restaurar
+     * @param nombre nombre del backup FULL a restore
      * @return 200 confirmando la restauración
      */
     @PostMapping("/{nombre}/restaurar")
-    public ResponseEntity<?> restaurar(@PathVariable String nombre) {
-        backupService.restaurar(nombre);
+    public ResponseEntity<?> restore(@PathVariable String nombre) {
+        backupService.restore(nombre);
         return ResponseEntity.ok(ResponseWrapper.success(null,
                 "Base de datos restaurada desde el respaldo. Se recomienda reiniciar el backend "
                 + "para descartar datos en caché."));
     }
 
     /**
-     * Elimina permanentemente un archivo de respaldo.
+     * Elimina permanentemente un archivo de backup.
      *
-     * @param nombre nombre del respaldo a eliminar
+     * @param nombre nombre del backup a delete
      * @return 200 confirmando el borrado
      */
     @DeleteMapping("/{nombre}")
-    public ResponseEntity<?> eliminar(@PathVariable String nombre) {
-        backupService.eliminar(nombre);
+    public ResponseEntity<?> delete(@PathVariable String nombre) {
+        backupService.delete(nombre);
         return ResponseEntity.ok(ResponseWrapper.success(null, "Respaldo eliminado"));
     }
 
@@ -119,31 +119,31 @@ public class BackupController {
     /**
      * Resumen para el panel: última copia, próxima programada, espacio, RPO, última prueba.
      *
-     * @return 200 con el estado consolidado de respaldos
+     * @return 200 con el estado consolidado de backups
      */
     @GetMapping("/estado")
     public ResponseEntity<?> estado() {
         return ResponseEntity.ok(ResponseWrapper.success(backupService.estado()));
     }
 
-    // ── Cronograma (programación + retención) ────────────────────────────────
+    // ── Schedule (programación + retención) ────────────────────────────────
 
-    /** @return 200 con la configuración vigente del cronograma de respaldos */
+    /** @return 200 con la configuración vigente del schedule de backups */
     @GetMapping("/config")
-    public ResponseEntity<?> obtenerConfig() {
+    public ResponseEntity<?> obtainConfig() {
         return ResponseEntity.ok(ResponseWrapper.success(backupService.configDTO()));
     }
 
     /**
-     * Actualiza el cronograma: activo/pausado, expresión cron y política de retención GFS.
+     * Actualiza el schedule: activo/pausado, expresión cron y política de retención GFS.
      *
-     * @param dto nueva configuración del cronograma
+     * @param dto nueva configuración del schedule
      * @return 200 con la config aplicada, o 400 si el cron es inválido
      */
     @PutMapping("/config")
-    public ResponseEntity<?> actualizarConfig(@Valid @RequestBody RespaldoConfigDTO dto) {
+    public ResponseEntity<?> updateConfig(@Valid @RequestBody BackupConfigDTO dto) {
         return ResponseEntity.ok(ResponseWrapper.success(
-                backupService.actualizarConfig(dto), "Cronograma actualizado"));
+                backupService.updateConfig(dto), "Cronograma actualizado"));
     }
 
     /** Aplica la retención GFS ahora mismo. @return 200 con los nombres eliminados */
@@ -160,18 +160,18 @@ public class BackupController {
 
     /** @return 200 con las últimas 50 pruebas de restauración registradas */
     @GetMapping("/pruebas")
-    public ResponseEntity<?> listarPruebas() {
+    public ResponseEntity<?> listPruebas() {
         return ResponseEntity.ok(ResponseWrapper.success(backupService.pruebas()));
     }
 
     /**
-     * @param req datos de la prueba de restauración a registrar
+     * @param req datos de la prueba de restauración a register
      * @return 200 con la prueba registrada
      */
     @PostMapping("/pruebas")
-    public ResponseEntity<?> registrarPrueba(@Valid @RequestBody RegistrarPruebaRestauracionRequest req) {
+    public ResponseEntity<?> registerPrueba(@Valid @RequestBody RegisterPruebaRestauracionRequest req) {
         return ResponseEntity.ok(ResponseWrapper.success(
-                backupService.registrarPrueba(req.getRespaldoNombre(), req.getResultado(),
+                backupService.registerPrueba(req.getBackupNombre(), req.getResultado(),
                         req.getResponsable(), req.getNotas()),
                 "Prueba de restauración registrada"));
     }
@@ -213,23 +213,23 @@ public class BackupController {
     }
 
     /**
-     * Genera un respaldo físico base ({@code pg_basebackup}), la base para PITR.
+     * Genera un backup físico base ({@code pg_basebackup}), la base para PITR.
      *
      * @return 200 con los metadatos de la base física generada
      */
     @PostMapping("/bases")
-    public ResponseEntity<?> generarBaseFisica() {
+    public ResponseEntity<?> generateBaseFisica() {
         return ResponseEntity.ok(ResponseWrapper.success(
-                walPitrService.generarBaseFisica(), "Base física generada"));
+                walPitrService.generateBaseFisica(), "Base física generada"));
     }
 
     /**
-     * @param nombre nombre de la base física a eliminar
+     * @param nombre nombre de la base física a delete
      * @return 200 confirmando el borrado
      */
     @DeleteMapping("/bases/{nombre}")
-    public ResponseEntity<?> eliminarBase(@PathVariable String nombre) {
-        walPitrService.eliminarBase(nombre);
+    public ResponseEntity<?> deleteBase(@PathVariable String nombre) {
+        walPitrService.deleteBase(nombre);
         return ResponseEntity.ok(ResponseWrapper.success(null, "Base física eliminada"));
     }
 }

@@ -1,9 +1,9 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.dto.MiEstudianteTutoradoDTO;
+import ec.edu.uteq.presustentaciones.dto.MiStudentTutoradoDTO;
 import ec.edu.uteq.presustentaciones.entities.Tutor;
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.services.TutorService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,22 +28,22 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * TutorController expone sp_obtener_estadisticas_tutores y tenía 4 de 21 líneas
- * cubiertas. Se cubre además el caso en que el usuario autenticado no existe en la
- * base (token válido de un usuario ya borrado), que hoy revienta con RuntimeException
+ * TutorController expone sp_obtain_estadisticas_tutores y tenía 4 de 21 líneas
+ * cubiertas. Se cubre además el caso en que el appUser autenticado no existe en la
+ * base (token válido de un appUser ya borrado), que hoy revienta con RuntimeException
  * y conviene dejar fijado como comportamiento conocido.
  */
 @ExtendWith(MockitoExtension.class)
 class TutorControllerTest {
 
     @Mock private TutorService tutorService;
-    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private AppUserRepository appUserRepository;
 
     @InjectMocks
     private TutorController controller;
 
     @BeforeEach
-    void autenticarDocente() {
+    void autenticarTeacher() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("docente@uteq.edu.ec", null, List.of()));
     }
@@ -54,87 +54,87 @@ class TutorControllerTest {
     }
 
     @Test
-    void misEstudiantesResuelveElDocenteAutenticadoAntesDeConsultar() {
-        Usuario docente = Usuario.builder().id(50L).email("docente@uteq.edu.ec").build();
-        List<MiEstudianteTutoradoDTO> roster = List.of();
-        when(usuarioRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.of(docente));
-        when(tutorService.misEstudiantes(50L)).thenReturn(roster);
+    void misStudentsResuelveElTeacherAutenticadoAntesDeConsultar() {
+        AppUser teacher = AppUser.builder().id(50L).email("docente@uteq.edu.ec").build();
+        List<MiStudentTutoradoDTO> roster = List.of();
+        when(appUserRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.of(teacher));
+        when(tutorService.misStudents(50L)).thenReturn(roster);
 
-        ResponseEntity<List<MiEstudianteTutoradoDTO>> response = controller.misEstudiantes();
+        ResponseEntity<List<MiStudentTutoradoDTO>> response = controller.misStudents();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertSame(roster, response.getBody());
     }
 
     @Test
-    void misEstudiantesFallaSiElUsuarioDelTokenYaNoExiste() {
-        when(usuarioRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.empty());
+    void misStudentsFallaSiElAppUserDelTokenYaNoExiste() {
+        when(appUserRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.empty());
 
-        RuntimeException error = assertThrows(RuntimeException.class, () -> controller.misEstudiantes());
+        RuntimeException error = assertThrows(RuntimeException.class, () -> controller.misStudents());
 
         assertEquals("Usuario autenticado no encontrado", error.getMessage());
-        verify(tutorService, never()).misEstudiantes(any());
+        verify(tutorService, never()).misStudents(any());
     }
 
     @Test
-    void asignarDevuelveElTutorCreado() {
+    void assignDevuelveElTutorCreado() {
         Tutor tutor = Tutor.builder().id(1L).build();
-        when(tutorService.asignarTutor(1L, 2L)).thenReturn(tutor);
+        when(tutorService.assignTutor(1L, 2L)).thenReturn(tutor);
 
-        ResponseEntity<Tutor> response = controller.asignar(1L, 2L);
+        ResponseEntity<Tutor> response = controller.assign(1L, 2L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertSame(tutor, response.getBody());
     }
 
     @Test
-    void asignarDevuelve400SinCuerpoCuandoElServicioRechaza() {
-        when(tutorService.asignarTutor(1L, 2L)).thenThrow(new RuntimeException("La solicitud ya tiene tutor"));
+    void assignDevuelve400SinCuerpoCuandoElServicioRechaza() {
+        when(tutorService.assignTutor(1L, 2L)).thenThrow(new RuntimeException("La solicitud ya tiene tutor"));
 
-        ResponseEntity<Tutor> response = controller.asignar(1L, 2L);
+        ResponseEntity<Tutor> response = controller.assign(1L, 2L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNull(response.getBody());
     }
 
     @Test
-    void porSolicitudDevuelve404CuandoNoHayTutorAsignado() {
-        when(tutorService.buscarPorSolicitud(1L)).thenReturn(Optional.empty());
+    void porSubmissionDevuelve404CuandoNoHayTutorAsignado() {
+        when(tutorService.searchPorSubmission(1L)).thenReturn(Optional.empty());
 
-        assertEquals(HttpStatus.NOT_FOUND, controller.porSolicitud(1L).getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, controller.porSubmission(1L).getStatusCode());
     }
 
     @Test
-    void porSolicitudDevuelveElTutorCuandoExiste() {
+    void porSubmissionDevuelveElTutorCuandoExiste() {
         Tutor tutor = Tutor.builder().id(1L).build();
-        when(tutorService.buscarPorSolicitud(1L)).thenReturn(Optional.of(tutor));
+        when(tutorService.searchPorSubmission(1L)).thenReturn(Optional.of(tutor));
 
-        assertSame(tutor, controller.porSolicitud(1L).getBody());
+        assertSame(tutor, controller.porSubmission(1L).getBody());
     }
 
     @Test
-    void listarPropagaLaPaginacionRecibida() {
+    void listPropagaLaPaginacionRecibida() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Tutor> pagina = new PageImpl<>(List.of(Tutor.builder().id(1L).build()));
-        when(tutorService.listarTodos(pageable)).thenReturn(pagina);
+        when(tutorService.listTodos(pageable)).thenReturn(pagina);
 
-        assertSame(pagina, controller.listar(pageable).getBody());
+        assertSame(pagina, controller.list(pageable).getBody());
     }
 
     @Test
-    void eliminarDevuelve204() {
-        assertEquals(HttpStatus.NO_CONTENT, controller.eliminar(3L).getStatusCode());
-        verify(tutorService).eliminarTutor(3L);
+    void deleteDevuelve204() {
+        assertEquals(HttpStatus.NO_CONTENT, controller.delete(3L).getStatusCode());
+        verify(tutorService).deleteTutor(3L);
     }
 
-    // ── sp_obtener_estadisticas_tutores ───────────────────────────────────────
+    // ── sp_obtain_estadisticas_tutores ───────────────────────────────────────
 
     @Test
     void estadisticasDevuelveLasFilasDelProcedimientoAlmacenado() {
         List<Map<String, Object>> stats = List.of(Map.of(
                 "tutorDocenteId", 1L, "tutorNombre", "Ana Pérez",
                 "tutoriasActivas", 3L, "tutoriasCompletadas", 5L, "totalFasesAprobadas", 12L));
-        when(tutorService.obtenerEstadisticasTutoresSP()).thenReturn(stats);
+        when(tutorService.obtainEstadisticasTutoresSP()).thenReturn(stats);
 
         ResponseEntity<?> response = controller.estadisticas();
 
@@ -144,7 +144,7 @@ class TutorControllerTest {
 
     @Test
     void estadisticasTraduceElErrorDelProcedimientoA400() {
-        when(tutorService.obtenerEstadisticasTutoresSP())
+        when(tutorService.obtainEstadisticasTutoresSP())
                 .thenThrow(new RuntimeException("function presus.sp_obtener_estadisticas_tutores() does not exist"));
 
         ResponseEntity<?> response = controller.estadisticas();

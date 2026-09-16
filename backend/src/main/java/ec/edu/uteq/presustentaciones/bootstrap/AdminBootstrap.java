@@ -1,9 +1,9 @@
 package ec.edu.uteq.presustentaciones.bootstrap;
 
-import ec.edu.uteq.presustentaciones.entities.RolUsuario;
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.RolUsuarioRepository;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.entities.RoleAppUser;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.RoleAppUserRepository;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.security.PasswordPolicyValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import org.springframework.util.StringUtils;
 /**
  * RNF-15: cierra el hallazgo de las cuentas con contraseña literal (ver {@link DemoDataSeeder},
  * que ahora solo corre bajo el perfil {@code dev}). Fuera de ese perfil, un despliegue sin
- * ningún usuario ADMIN necesita de todos modos una primera cuenta para poder entrar -- este
+ * ningún appUser ADMIN necesita de todos modos una primera cuenta para poder entrar -- este
  * componente la crea, pero SOLO a partir de {@code ADMIN_BOOTSTRAP_EMAIL}/
  * {@code ADMIN_BOOTSTRAP_PASSWORD} del entorno, nunca con una contraseña conocida de antemano.
  *
@@ -33,8 +33,8 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class AdminBootstrap implements CommandLineRunner {
 
-    private final UsuarioRepository usuarioRepository;
-    private final RolUsuarioRepository rolUsuarioRepository;
+    private final AppUserRepository appUserRepository;
+    private final RoleAppUserRepository roleAppUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordPolicyValidator passwordPolicyValidator;
 
@@ -46,7 +46,7 @@ public class AdminBootstrap implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!usuarioRepository.findByRol("ADMIN").isEmpty()) {
+        if (!appUserRepository.findByRole("ADMIN").isEmpty()) {
             log.info("Ya existe al menos un usuario ADMIN; se omite el bootstrap de administración.");
             return;
         }
@@ -61,19 +61,19 @@ public class AdminBootstrap implements CommandLineRunner {
 
         // RNF-06: la contraseña de la primera cuenta administrativa tampoco puede ser débil
         // solo por venir del entorno -- se valida igual que cualquier otra.
-        passwordPolicyValidator.validar(bootstrapPassword);
+        passwordPolicyValidator.validate(bootstrapPassword);
 
-        RolUsuario adminRol = rolUsuarioRepository.findByCodigo("ADMIN").orElse(null);
-        Usuario admin = Usuario.builder()
+        RoleAppUser adminRole = roleAppUserRepository.findByCodigo("ADMIN").orElse(null);
+        AppUser admin = AppUser.builder()
                 .nombre("Administrador")
                 .apellido("Inicial")
                 .email(bootstrapEmail)
                 .password(passwordEncoder.encode(bootstrapPassword))
-                .rol("ADMIN")
-                .rolUsuario(adminRol)
+                .role("ADMIN")
+                .roleAppUser(adminRole)
                 .activo(true)
                 .build();
-        usuarioRepository.save(admin);
+        appUserRepository.save(admin);
         log.info("Cuenta ADMIN inicial creada desde ADMIN_BOOTSTRAP_EMAIL ({}). "
                 + "La contraseña nunca se registra en el log.", bootstrapEmail);
     }

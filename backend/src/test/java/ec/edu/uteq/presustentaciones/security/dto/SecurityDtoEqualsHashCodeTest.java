@@ -35,8 +35,8 @@ class SecurityDtoEqualsHashCodeTest {
     }
 
     @Test
-    void cambiarPasswordRequestCumpleElContratoEqualsHashCode() {
-        EqualsVerifier.forClass(CambiarPasswordRequest.class)
+    void changePasswordRequestCumpleElContratoEqualsHashCode() {
+        EqualsVerifier.forClass(ChangePasswordRequest.class)
                 .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
                 .verify();
     }
@@ -49,8 +49,8 @@ class SecurityDtoEqualsHashCodeTest {
     }
 
     @Test
-    void restablecerPasswordRequestCumpleElContratoEqualsHashCode() {
-        EqualsVerifier.forClass(RestablecerPasswordRequest.class)
+    void resetPasswordRequestCumpleElContratoEqualsHashCode() {
+        EqualsVerifier.forClass(ResetPasswordRequest.class)
                 .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
                 .verify();
     }

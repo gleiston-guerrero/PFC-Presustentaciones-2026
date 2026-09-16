@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class PerfilRequest {
-    private String emailNotificaciones;
+    private String emailNotifications;
     private String telefono;
 }

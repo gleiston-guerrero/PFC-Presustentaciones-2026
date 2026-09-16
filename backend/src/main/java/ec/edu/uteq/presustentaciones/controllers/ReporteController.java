@@ -12,11 +12,11 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import ec.edu.uteq.presustentaciones.entities.Cronograma;
-import ec.edu.uteq.presustentaciones.entities.EvaluacionFinal;
-import ec.edu.uteq.presustentaciones.repositories.CronogramaRepository;
-import ec.edu.uteq.presustentaciones.repositories.EvaluacionFinalRepository;
-import ec.edu.uteq.presustentaciones.repositories.SolicitudRepository;
+import ec.edu.uteq.presustentaciones.entities.Schedule;
+import ec.edu.uteq.presustentaciones.entities.EvaluationFinal;
+import ec.edu.uteq.presustentaciones.repositories.ScheduleRepository;
+import ec.edu.uteq.presustentaciones.repositories.EvaluationFinalRepository;
+import ec.edu.uteq.presustentaciones.repositories.SubmissionRepository;
 import ec.edu.uteq.presustentaciones.services.ReporteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -37,12 +37,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/reportes")
 @RequiredArgsConstructor
-@PreAuthorize("@permisoService.tienePermiso(authentication, 'REPORTES_VER')")
+@PreAuthorize("@permissionService.tienePermission(authentication, 'REPORTES_VER')")
 public class ReporteController {
 
-    private final CronogramaRepository cronogramaRepo;
-    private final EvaluacionFinalRepository evaluacionFinalRepo;
-    private final SolicitudRepository solicitudRepo;
+    private final ScheduleRepository scheduleRepo;
+    private final EvaluationFinalRepository evaluationFinalRepo;
+    private final SubmissionRepository submissionRepo;
     private final ReporteService reporteService;
 
     // ── Colores — siempre new DeviceRgb para evitar conflicto con Color.WHITE ──
@@ -58,17 +58,17 @@ public class ReporteController {
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     /**
-     * RF-11: Genera el PDF con el cronograma completo de pre-sustentaciones.
+     * RF-11: Genera el PDF con el schedule completo de pre-sustentaciones.
      *
      * @return 200 con el PDF como adjunto descargable
-     * @throws Exception si iText falla al construir el documento o las fuentes
+     * @throws Exception si iText falla al build el documento o las fuentes
      */
     @GetMapping("/cronograma/pdf")
-    public ResponseEntity<byte[]> reporteCronograma() throws Exception {
-        List<Cronograma> lista = cronogramaRepo.findReporteCronograma();
+    public ResponseEntity<byte[]> reporteSchedule() throws Exception {
+        List<Schedule> lista = scheduleRepo.findReporteSchedule();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Document doc = abrirDoc(baos);
+        Document doc = openDoc(baos);
         PdfFont bold    = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
         PdfFont regular = PdfFontFactory.createFont(StandardFonts.HELVETICA);
 
@@ -85,22 +85,22 @@ public class ReporteController {
         }
 
         int i = 1;
-        for (Cronograma c : lista) {
+        for (Schedule c : lista) {
             DeviceRgb bg = (i % 2 == 0) ? LIGHT_BG() : WHITE();
-            String est = "—", tema = "—";
-            if (c.getSolicitud() != null) {
-                var u = c.getSolicitud().getEstudiante() != null
-                        ? c.getSolicitud().getEstudiante().getUsuario() : null;
+            String est = "—", topic = "—";
+            if (c.getSubmission() != null) {
+                var u = c.getSubmission().getStudent() != null
+                        ? c.getSubmission().getStudent().getAppUser() : null;
                 if (u != null) est = u.getNombre() + " " + u.getApellido();
-                if (c.getSolicitud().getTituloTema() != null) tema = c.getSolicitud().getTituloTema();
+                if (c.getSubmission().getTituloTopic() != null) topic = c.getSubmission().getTituloTopic();
             }
             table.addCell(celda(String.valueOf(i++), regular, bg, TextAlignment.CENTER));
             table.addCell(new Cell()
                     .add(new Paragraph(est).setFont(bold).setFontSize(8))
-                    .add(new Paragraph(tema).setFont(regular).setFontSize(7).setFontColor(DARK_TEXT()))
+                    .add(new Paragraph(topic).setFont(regular).setFontSize(7).setFontColor(DARK_TEXT()))
                     .setBackgroundColor(bg));
             table.addCell(celda(c.getFechaInicio().format(FMT), regular, bg, TextAlignment.CENTER));
-            table.addCell(celda(c.getSala() != null ? c.getSala().getNombre() : "—", regular, bg, TextAlignment.CENTER));
+            table.addCell(celda(c.getRoom() != null ? c.getRoom().getNombre() : "—", regular, bg, TextAlignment.CENTER));
             table.addCell(celda(c.getEstado() != null ? c.getEstado().getNombre() : "—", regular, bg, TextAlignment.CENTER));
         }
         doc.add(table);
@@ -112,15 +112,15 @@ public class ReporteController {
     }
 
     /**
-     * RF-11: Genera el PDF de estadísticas de evaluaciones (totales, aprobados, reprobados,
-     * nota promedio y detalle por estudiante).
+     * RF-11: Genera el PDF de estadísticas de evaluations (totales, aprobados, reprobados,
+     * nota promedio y detalle por student).
      *
      * @return 200 con el PDF como adjunto descargable
-     * @throws Exception si iText falla al construir el documento o las fuentes
+     * @throws Exception si iText falla al build el documento o las fuentes
      */
     @GetMapping("/estadisticas/pdf")
     public ResponseEntity<byte[]> reporteEstadisticas() throws Exception {
-        List<EvaluacionFinal> evals = evaluacionFinalRepo.findAllWithRelationships();
+        List<EvaluationFinal> evals = evaluationFinalRepo.findAllWithRelationships();
 
         long total      = evals.size();
         long aprobados  = evals.stream().filter(e -> e.getResultado() != null && "APROBADO".equals(e.getResultado().getCodigo())).count();
@@ -130,7 +130,7 @@ public class ReporteController {
                 .filter(n -> n > 0).average().orElse(0);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Document doc = abrirDoc(baos);
+        Document doc = openDoc(baos);
         PdfFont bold    = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
         PdfFont regular = PdfFontFactory.createFont(StandardFonts.HELVETICA);
 
@@ -156,22 +156,22 @@ public class ReporteController {
         }
 
         int idx = 1;
-        for (EvaluacionFinal e : evals) {
+        for (EvaluationFinal e : evals) {
             DeviceRgb bg = (idx % 2 == 0) ? LIGHT_BG() : WHITE();
-            String est = "—", tema = "—";
-            if (e.getSolicitud() != null) {
-                var u = e.getSolicitud().getEstudiante() != null
-                        ? e.getSolicitud().getEstudiante().getUsuario() : null;
+            String est = "—", topic = "—";
+            if (e.getSubmission() != null) {
+                var u = e.getSubmission().getStudent() != null
+                        ? e.getSubmission().getStudent().getAppUser() : null;
                 if (u != null) est = u.getNombre() + " " + u.getApellido();
-                if (e.getSolicitud().getTituloTema() != null) tema = e.getSolicitud().getTituloTema();
+                if (e.getSubmission().getTituloTopic() != null) topic = e.getSubmission().getTituloTopic();
             }
             tabla.addCell(celda(String.valueOf(idx++), regular, bg, TextAlignment.CENTER));
             tabla.addCell(new Cell()
                     .add(new Paragraph(est).setFont(bold).setFontSize(8))
-                    .add(new Paragraph(tema).setFont(regular).setFontSize(7).setFontColor(DARK_TEXT()))
+                    .add(new Paragraph(topic).setFont(regular).setFontSize(7).setFontColor(DARK_TEXT()))
                     .setBackgroundColor(bg));
             tabla.addCell(celda(fmt(e.getNotaInstructor()), regular, bg, TextAlignment.CENTER));
-            tabla.addCell(celda(fmt(e.getNotaJuradoPromedio()), regular, bg, TextAlignment.CENTER));
+            tabla.addCell(celda(fmt(e.getNotaPanelistPromedio()), regular, bg, TextAlignment.CENTER));
             tabla.addCell(celda(fmt(e.getNotaFinal()),      bold,    bg, TextAlignment.CENTER));
             
             String resCod = e.getResultado() != null ? e.getResultado().getCodigo() : "";
@@ -188,38 +188,38 @@ public class ReporteController {
     }
 
     /**
-     * Reporte consolidado de defensas por carrera vía sp_generar_reporte_defensas
+     * Reporte consolidado de defensas por program vía sp_generate_reporte_defensas
      * (Fase 3 / Criterio P1, categoría "consultas multi-tabla"). @Transactional es
      * necesario aquí: el procedimiento devuelve un REFCURSOR y Postgres solo lo mantiene
      * abierto dentro de la misma transacción que lo abrió -- sin esto, Hibernate hace el
      * fetch del cursor en una transacción/conexión ya cerrada ("cursor ... does not exist").
      *
-     * @param carrera nombre o parte del nombre de la carrera por la que se filtra
+     * @param program nombre o parte del nombre de la program por la que se filtra
      * @return 200 con las filas del reporte que devuelve el procedimiento
      */
     @GetMapping("/defensas")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<ec.edu.uteq.presustentaciones.dto.ReporteDefensaResult>> reporteDefensas(
-            @RequestParam String carrera) {
-        return ResponseEntity.ok(solicitudRepo.generarReporteDefensas(carrera));
+            @RequestParam String program) {
+        return ResponseEntity.ok(submissionRepo.generateReporteDefensas(program));
     }
 
     /**
      * RF-11: Mismas estadísticas que el PDF pero en JSON, para las gráficas del dashboard.
      *
      * @return 200 con totales, aprobados, reprobados, nota promedio, tasa de aprobación y
-     *         solicitudes pendientes; la tasa es 0 cuando todavía no hay evaluaciones
+     *         submissions pendientes; la tasa es 0 cuando todavía no hay evaluations
      */
     @GetMapping("/estadisticas/json")
     public ResponseEntity<Map<String, Object>> estadisticasJson() {
-        List<EvaluacionFinal> evals = evaluacionFinalRepo.findAllWithRelationships();
+        List<EvaluationFinal> evals = evaluationFinalRepo.findAllWithRelationships();
         long total      = evals.size();
         long aprobados  = evals.stream().filter(e -> e.getResultado() != null && "APROBADO".equals(e.getResultado().getCodigo())).count();
         long reprobados = evals.stream().filter(e -> e.getResultado() != null && "REPROBADO".equals(e.getResultado().getCodigo())).count();
         double promedio = evals.stream()
                 .mapToDouble(e -> e.getNotaFinal() != null ? e.getNotaFinal() : 0)
                 .filter(n -> n > 0).average().orElse(0);
-        long pendientes = solicitudRepo.countByEstadoCodigo("APROBADA");
+        long pendientes = submissionRepo.countByEstadoCodigo("APROBADA");
 
         return ResponseEntity.ok(Map.of(
                 "totalEvaluados",       total,
@@ -236,35 +236,35 @@ public class ReporteController {
     // Todo se agrega con COUNT/GROUP BY en la base (ver ReporteServiceImpl).
 
     /**
-     * Resumen general del proceso de pre-sustentaciones para el dashboard.
+     * Resumen general del process de pre-sustentaciones para el dashboard.
      *
      * @param desde   inicio del rango de fechas, opcional
      * @param hasta   fin del rango de fechas, opcional
-     * @param carrera filtro por carrera, opcional
+     * @param program filtro por program, opcional
      * @return 200 con el resumen agregado
      */
     @GetMapping("/resumen")
     public ResponseEntity<?> resumen(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-            @RequestParam(required = false) String carrera) {
-        return ResponseEntity.ok(reporteService.resumen(desde, hasta, carrera));
+            @RequestParam(required = false) String program) {
+        return ResponseEntity.ok(reporteService.resumen(desde, hasta, program));
     }
 
     /**
-     * Cantidad de solicitudes/pre-sustentaciones agrupadas por estado.
+     * Cantidad de submissions/pre-sustentaciones agrupadas por estado.
      *
      * @param desde   inicio del rango de fechas, opcional
      * @param hasta   fin del rango de fechas, opcional
-     * @param carrera filtro por carrera, opcional
-     * @return 200 con el conteo por estado
+     * @param program filtro por program, opcional
+     * @return 200 con el count por estado
      */
     @GetMapping("/solicitudes-por-estado")
-    public ResponseEntity<?> solicitudesPorEstado(
+    public ResponseEntity<?> submissionsPorEstado(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-            @RequestParam(required = false) String carrera) {
-        return ResponseEntity.ok(reporteService.solicitudesPorEstado(desde, hasta, carrera));
+            @RequestParam(required = false) String program) {
+        return ResponseEntity.ok(reporteService.submissionsPorEstado(desde, hasta, program));
     }
 
     /**
@@ -272,53 +272,53 @@ public class ReporteController {
      *
      * @param desde inicio del rango de fechas, opcional
      * @param hasta fin del rango de fechas, opcional
-     * @return 200 con el conteo por período
+     * @return 200 con el count por período
      */
     @GetMapping("/sustentaciones-por-periodo")
-    public ResponseEntity<?> sustentacionesPorPeriodo(
+    public ResponseEntity<?> sustentacionesPorPeriod(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        return ResponseEntity.ok(reporteService.sustentacionesPorPeriodo(desde, hasta));
+        return ResponseEntity.ok(reporteService.sustentacionesPorPeriod(desde, hasta));
     }
 
     /**
-     * Estado de las actas: generadas, revisadas, observadas, finalizadas, anuladas y
+     * Estado de las minutes: generadas, revisadas, observadas, finalizadas, anuladas y
      * pendientes de firma.
      *
      * @param desde inicio del rango de fechas, opcional
      * @param hasta fin del rango de fechas, opcional
-     * @return 200 con el conteo por estado de acta
+     * @return 200 con el count por estado de minutes
      */
     @GetMapping("/actas")
-    public ResponseEntity<?> resumenActas(
+    public ResponseEntity<?> resumenMinutes(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        return ResponseEntity.ok(reporteService.resumenActas(desde, hasta));
+        return ResponseEntity.ok(reporteService.resumenMinutes(desde, hasta));
     }
 
     /**
-     * Actividad por docente: participaciones como jurado, como tutor y actas firmadas.
+     * Actividad por teacher: participaciones como panelist, como tutor y minutes firmadas.
      *
-     * @return 200 con una fila por docente
+     * @return 200 con una fila por teacher
      */
     @GetMapping("/actividad-docente")
-    public ResponseEntity<?> actividadDocente() {
-        return ResponseEntity.ok(reporteService.actividadPorDocente());
+    public ResponseEntity<?> actividadTeacher() {
+        return ResponseEntity.ok(reporteService.actividadPorTeacher());
     }
 
     /**
-     * Estadísticas por carrera/programa: total, completadas y rechazadas.
+     * Estadísticas por program/programa: total, completadas y rechazadas.
      *
-     * @return 200 con una fila por carrera
+     * @return 200 con una fila por program
      */
     @GetMapping("/por-carrera")
-    public ResponseEntity<?> porCarrera() {
-        return ResponseEntity.ok(reporteService.estadisticasPorCarrera());
+    public ResponseEntity<?> porProgram() {
+        return ResponseEntity.ok(reporteService.estadisticasPorProgram());
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private Document abrirDoc(ByteArrayOutputStream baos) throws Exception {
+    private Document openDoc(ByteArrayOutputStream baos) throws Exception {
         PdfDocument pdf = new PdfDocument(new PdfWriter(baos));
         return new Document(pdf);
     }

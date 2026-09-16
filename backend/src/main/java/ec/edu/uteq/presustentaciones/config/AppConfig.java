@@ -20,10 +20,10 @@ public class AppConfig implements CachingConfigurer {
     /**
      * RNF-04/RNF-03: a diferencia de la revocación (JwtTokenProvider) y el límite de tasa
      * (RateLimiterService), la caché de lectura es rendimiento, no seguridad -- con Redis
-     * caído, un {@code @Cacheable} debe resolver contra el origen (la base de datos) y servir
+     * caído, un {@code @Cacheable} debe resolve contra el origen (la base de datos) y servir
      * igual, no fallar. Sin este {@code CacheErrorHandler}, el comportamiento por omisión de
      * Spring ({@code SimpleCacheErrorHandler}) relanza cualquier excepción de la caché y el
-     * método anotado nunca llega a ejecutarse -- degradación de Redis tumbaría endpoints que
+     * método anotado nunca llega a executese -- degradación de Redis tumbaría endpoints que
      * no dependen de Redis para nada más que el caché de lectura.
      *
      * @return un manejador que registra (log) los fallos de caché y deja continuar la
@@ -56,9 +56,9 @@ public class AppConfig implements CachingConfigurer {
             }
 
             /**
-             * @param exception fallo ocurrido al invalidar una entrada de la caché
+             * @param exception fallo ocurrido al invalidate una entrada de la caché
              * @param cache     caché afectada
-             * @param key       llave que se intentaba invalidar
+             * @param key       llave que se intentaba invalidate
              */
             @Override
             public void handleCacheEvictError(RuntimeException exception, Cache cache, Object key) {

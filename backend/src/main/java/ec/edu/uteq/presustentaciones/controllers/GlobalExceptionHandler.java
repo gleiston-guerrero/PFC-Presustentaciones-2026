@@ -71,7 +71,7 @@ public class GlobalExceptionHandler {
     /**
      * NoResourceFoundException (Spring 6): ruta no encontrada.
      *
-     * @param ex excepcion de recurso inexistente
+     * @param ex excepcion de resource inexistente
      * @return 404 en vez del 500 generico
      */
     @ExceptionHandler(NoResourceFoundException.class)
@@ -93,11 +93,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * IllegalStateException representa un conflicto con el estado actual del recurso
+     * IllegalStateException representa un conflicto con el estado actual del resource
      * (p. ej. "el tema ya está guardado", "la fase ya fue aprobada"): 409, no 400 ni
      * el 500 genérico. Conserva el mensaje del servicio para que el frontend lo muestre.
      *
-     * @param ex conflicto con el estado actual del recurso
+     * @param ex conflicto con el estado actual del resource
      * @return 409 conservando el mensaje original del servicio
      */
     @ExceptionHandler(IllegalStateException.class)
@@ -125,7 +125,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Ultimo recurso para excepciones que no son RuntimeException. Igual que el anterior, el
+     * Ultimo resource para excepciones que no son RuntimeException. Igual que el anterior, el
      * detalle queda en el log y el cliente recibe un mensaje generico.
      *
      * @param ex excepcion inesperada

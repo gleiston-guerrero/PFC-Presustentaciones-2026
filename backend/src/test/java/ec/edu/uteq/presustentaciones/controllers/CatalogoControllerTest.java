@@ -1,24 +1,24 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.dto.GuardarCarreraRequest;
-import ec.edu.uteq.presustentaciones.dto.GuardarFacultadRequest;
-import ec.edu.uteq.presustentaciones.dto.GuardarModalidadRequest;
-import ec.edu.uteq.presustentaciones.dto.GuardarPeriodoRequest;
+import ec.edu.uteq.presustentaciones.dto.SaveProgramRequest;
+import ec.edu.uteq.presustentaciones.dto.SaveFacultyRequest;
+import ec.edu.uteq.presustentaciones.dto.SaveModalityRequest;
+import ec.edu.uteq.presustentaciones.dto.SavePeriodRequest;
 import ec.edu.uteq.presustentaciones.entities.AreaTematica;
-import ec.edu.uteq.presustentaciones.entities.Carrera;
-import ec.edu.uteq.presustentaciones.entities.ConvocatoriaTitulacion;
-import ec.edu.uteq.presustentaciones.entities.Facultad;
-import ec.edu.uteq.presustentaciones.entities.LineaInvestigacion;
-import ec.edu.uteq.presustentaciones.entities.ModalidadTitulacion;
-import ec.edu.uteq.presustentaciones.entities.PeriodoAcademico;
+import ec.edu.uteq.presustentaciones.entities.Program;
+import ec.edu.uteq.presustentaciones.entities.AnnouncementTitulacion;
+import ec.edu.uteq.presustentaciones.entities.Faculty;
+import ec.edu.uteq.presustentaciones.entities.LineInvestigacion;
+import ec.edu.uteq.presustentaciones.entities.ModalityTitulacion;
+import ec.edu.uteq.presustentaciones.entities.PeriodAcademico;
 import ec.edu.uteq.presustentaciones.repositories.AreaTematicaRepository;
-import ec.edu.uteq.presustentaciones.repositories.CarreraRepository;
-import ec.edu.uteq.presustentaciones.repositories.ConvocatoriaTitulacionRepository;
-import ec.edu.uteq.presustentaciones.repositories.FacultadRepository;
-import ec.edu.uteq.presustentaciones.repositories.LineaInvestigacionRepository;
-import ec.edu.uteq.presustentaciones.repositories.ModalidadTitulacionRepository;
-import ec.edu.uteq.presustentaciones.repositories.PeriodoAcademicoRepository;
-import ec.edu.uteq.presustentaciones.services.AuditoriaService;
+import ec.edu.uteq.presustentaciones.repositories.ProgramRepository;
+import ec.edu.uteq.presustentaciones.repositories.AnnouncementTitulacionRepository;
+import ec.edu.uteq.presustentaciones.repositories.FacultyRepository;
+import ec.edu.uteq.presustentaciones.repositories.LineInvestigacionRepository;
+import ec.edu.uteq.presustentaciones.repositories.ModalityTitulacionRepository;
+import ec.edu.uteq.presustentaciones.repositories.PeriodAcademicoRepository;
+import ec.edu.uteq.presustentaciones.services.AuditService;
 import ec.edu.uteq.presustentaciones.services.CatalogoAdminService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,24 +42,24 @@ import static org.mockito.Mockito.*;
  * CatalogoController concentraba la mayor cantidad de ramas sin ejercitar de todo el
  * paquete de controladores (1 de 136 líneas cubiertas y 102 ramas en cero). Casi toda
  * esa complejidad son validaciones de entrada del CRUD de la estructura académica
- * (facultad, carrera, modalidad, período), que es exactamente el tipo de código donde
- * un fallo silencioso deja crear catálogos inconsistentes.
+ * (faculty, program, modality, período), que es exactamente el tipo de código donde
+ * un fallo silencioso deja create catálogos inconsistentes.
  *
  * Se cubren las tres salidas de cada operación: éxito, rechazo por validación
  * (campos vacíos, duplicados, referencias inexistentes, rangos de fecha inválidos) y
- * el conflicto de integridad referencial al eliminar un catálogo que ya está en uso.
+ * el conflicto de integridad referencial al delete un catálogo que ya está en uso.
  */
 @ExtendWith(MockitoExtension.class)
 class CatalogoControllerTest {
 
-    @Mock private ModalidadTitulacionRepository modalidadRepo;
-    @Mock private ConvocatoriaTitulacionRepository convocatoriaRepo;
-    @Mock private LineaInvestigacionRepository lineaInvestigacionRepo;
+    @Mock private ModalityTitulacionRepository modalityRepo;
+    @Mock private AnnouncementTitulacionRepository announcementRepo;
+    @Mock private LineInvestigacionRepository lineInvestigacionRepo;
     @Mock private AreaTematicaRepository areaTematicaRepo;
-    @Mock private CarreraRepository carreraRepo;
-    @Mock private PeriodoAcademicoRepository periodoAcademicoRepo;
-    @Mock private FacultadRepository facultadRepo;
-    @Mock private AuditoriaService auditoriaService;
+    @Mock private ProgramRepository programRepo;
+    @Mock private PeriodAcademicoRepository periodAcademicoRepo;
+    @Mock private FacultyRepository facultyRepo;
+    @Mock private AuditService auditService;
     @Mock private CatalogoAdminService catalogoAdminService;
 
     @InjectMocks
@@ -70,31 +70,31 @@ class CatalogoControllerTest {
         return ((Map<String, String>) response.getBody()).get("error");
     }
 
-    private GuardarFacultadRequest facultadReq(String codigo, String nombre) {
-        GuardarFacultadRequest req = new GuardarFacultadRequest();
+    private SaveFacultyRequest facultyReq(String codigo, String nombre) {
+        SaveFacultyRequest req = new SaveFacultyRequest();
         req.setCodigo(codigo);
         req.setNombre(nombre);
         return req;
     }
 
-    private GuardarCarreraRequest carreraReq(String codigo, String nombre, Integer facultadId, String modalidad) {
-        GuardarCarreraRequest req = new GuardarCarreraRequest();
+    private SaveProgramRequest programReq(String codigo, String nombre, Integer facultyId, String modality) {
+        SaveProgramRequest req = new SaveProgramRequest();
         req.setCodigo(codigo);
         req.setNombre(nombre);
-        req.setFacultadId(facultadId);
-        req.setModalidadEstudio(modalidad);
+        req.setFacultyId(facultyId);
+        req.setModalityEstudio(modality);
         return req;
     }
 
-    private GuardarModalidadRequest modalidadReq(String codigo, String nombre) {
-        GuardarModalidadRequest req = new GuardarModalidadRequest();
+    private SaveModalityRequest modalityReq(String codigo, String nombre) {
+        SaveModalityRequest req = new SaveModalityRequest();
         req.setCodigo(codigo);
         req.setNombre(nombre);
         return req;
     }
 
-    private GuardarPeriodoRequest periodoReq(String codigo, String nombre, LocalDate inicio, LocalDate fin, Boolean activo) {
-        GuardarPeriodoRequest req = new GuardarPeriodoRequest();
+    private SavePeriodRequest periodReq(String codigo, String nombre, LocalDate inicio, LocalDate fin, Boolean activo) {
+        SavePeriodRequest req = new SavePeriodRequest();
         req.setCodigo(codigo);
         req.setNombre(nombre);
         req.setFechaInicio(inicio);
@@ -106,349 +106,349 @@ class CatalogoControllerTest {
     // ── Consultas de catálogo (abiertas a cualquier autenticado) ──────────────
 
     @Test
-    void listarModalidadesDevuelveLoQueEntregaElRepositorio() {
-        List<ModalidadTitulacion> esperado = List.of(ModalidadTitulacion.builder().id((short) 1).build());
-        when(modalidadRepo.findAll()).thenReturn(esperado);
+    void listModalitiesDevuelveLoQueEntregaElRepositorio() {
+        List<ModalityTitulacion> esperado = List.of(ModalityTitulacion.builder().id((short) 1).build());
+        when(modalityRepo.findAll()).thenReturn(esperado);
 
-        assertSame(esperado, controller.listarModalidades().getBody());
+        assertSame(esperado, controller.listModalities().getBody());
     }
 
     @Test
-    void listarLineasInvestigacionDevuelveLoQueEntregaElRepositorio() {
-        List<LineaInvestigacion> esperado = List.of(new LineaInvestigacion());
-        when(lineaInvestigacionRepo.findAll()).thenReturn(esperado);
+    void listLinesInvestigacionDevuelveLoQueEntregaElRepositorio() {
+        List<LineInvestigacion> esperado = List.of(new LineInvestigacion());
+        when(lineInvestigacionRepo.findAll()).thenReturn(esperado);
 
-        assertSame(esperado, controller.listarLineasInvestigacion().getBody());
+        assertSame(esperado, controller.listLinesInvestigacion().getBody());
     }
 
     @Test
-    void listarAreasTematicasSinLineaIdDevuelveTodas() {
+    void listAreasTematicasSinLineIdDevuelveTodas() {
         List<AreaTematica> todas = List.of(new AreaTematica());
         when(areaTematicaRepo.findAll()).thenReturn(todas);
 
-        assertSame(todas, controller.listarAreasTematicas(null).getBody());
-        verify(areaTematicaRepo, never()).findByLineaInvestigacionId(any());
+        assertSame(todas, controller.listAreasTematicas(null).getBody());
+        verify(areaTematicaRepo, never()).findByLineInvestigacionId(any());
     }
 
     @Test
-    void listarAreasTematicasConLineaIdFiltraPorEsaLinea() {
+    void listAreasTematicasConLineIdFiltraPorEsaLine() {
         List<AreaTematica> filtradas = List.of(new AreaTematica());
-        when(areaTematicaRepo.findByLineaInvestigacionId(7)).thenReturn(filtradas);
+        when(areaTematicaRepo.findByLineInvestigacionId(7)).thenReturn(filtradas);
 
-        assertSame(filtradas, controller.listarAreasTematicas(7).getBody());
+        assertSame(filtradas, controller.listAreasTematicas(7).getBody());
         verify(areaTematicaRepo, never()).findAll();
     }
 
     @Test
-    void listarConvocatoriasActivasDevuelveSoloLasActivas() {
-        List<ConvocatoriaTitulacion> activas = List.of(ConvocatoriaTitulacion.builder().id(1).build());
-        when(convocatoriaRepo.findByActivaTrue()).thenReturn(activas);
+    void listAnnouncementsActivasDevuelveSoloLasActivas() {
+        List<AnnouncementTitulacion> activas = List.of(AnnouncementTitulacion.builder().id(1).build());
+        when(announcementRepo.findByActivaTrue()).thenReturn(activas);
 
-        assertSame(activas, controller.listarConvocatoriasActivas().getBody());
+        assertSame(activas, controller.listAnnouncementsActivas().getBody());
     }
 
     @Test
-    void convocatoriaActivaDevuelveLaConvocatoriaCuandoExiste() {
-        ConvocatoriaTitulacion activa = ConvocatoriaTitulacion.builder().id(1).codigo("2026-1").build();
-        when(convocatoriaRepo.findFirstByActivaTrue()).thenReturn(Optional.of(activa));
+    void announcementActivaDevuelveLaAnnouncementCuandoExiste() {
+        AnnouncementTitulacion activa = AnnouncementTitulacion.builder().id(1).codigo("2026-1").build();
+        when(announcementRepo.findFirstByActivaTrue()).thenReturn(Optional.of(activa));
 
-        assertSame(activa, controller.convocatoriaActiva().getBody());
+        assertSame(activa, controller.announcementActiva().getBody());
     }
 
     @Test
-    void convocatoriaActivaDevuelve200ConMensajeCuandoNoHayNinguna() {
-        when(convocatoriaRepo.findFirstByActivaTrue()).thenReturn(Optional.empty());
+    void announcementActivaDevuelve200ConMensajeCuandoNoHayNinguna() {
+        when(announcementRepo.findFirstByActivaTrue()).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = controller.convocatoriaActiva();
+        ResponseEntity<?> response = controller.announcementActiva();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("No hay convocatoria activa", errorDe(response));
     }
 
     @Test
-    void listarCarrerasYPeriodosDeleganEnSusRepositorios() {
-        when(carreraRepo.findAll()).thenReturn(List.of(Carrera.builder().id(1).build()));
-        when(periodoAcademicoRepo.findAll()).thenReturn(List.of(PeriodoAcademico.builder().id(1).build()));
+    void listProgramsYPeriodsDeleganEnSusRepositorios() {
+        when(programRepo.findAll()).thenReturn(List.of(Program.builder().id(1).build()));
+        when(periodAcademicoRepo.findAll()).thenReturn(List.of(PeriodAcademico.builder().id(1).build()));
 
-        assertEquals(1, controller.listarCarreras().getBody().size());
-        assertEquals(1, controller.listarPeriodosAcademicos().getBody().size());
+        assertEquals(1, controller.listPrograms().getBody().size());
+        assertEquals(1, controller.listPeriodsAcademicos().getBody().size());
     }
 
     @Test
-    void listarFacultadesDelegaEnElRepositorio() {
-        when(facultadRepo.findAll()).thenReturn(List.of(Facultad.builder().id(1).build()));
+    void listFacultiesDelegaEnElRepositorio() {
+        when(facultyRepo.findAll()).thenReturn(List.of(Faculty.builder().id(1).build()));
 
-        assertEquals(1, controller.listarFacultades().getBody().size());
+        assertEquals(1, controller.listFaculties().getBody().size());
     }
 
-    // ── Facultades ────────────────────────────────────────────────────────────
+    // ── Faculties ────────────────────────────────────────────────────────────
 
     @Test
-    void crearFacultadNormalizaElCodigoAMayusculasYLoGuarda() {
-        when(facultadRepo.findByCodigo("FCI")).thenReturn(Optional.empty());
-        when(facultadRepo.save(any(Facultad.class))).thenAnswer(inv -> inv.getArgument(0));
+    void createFacultyNormalizaElCodigoAMayusculasYLoGuarda() {
+        when(facultyRepo.findByCodigo("FCI")).thenReturn(Optional.empty());
+        when(facultyRepo.save(any(Faculty.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ResponseEntity<?> response = controller.crearFacultad(facultadReq("  fci  ", "  Ciencias de la Ingeniería  "));
+        ResponseEntity<?> response = controller.createFaculty(facultyReq("  fci  ", "  Ciencias de la Ingeniería  "));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        Facultad guardada = (Facultad) response.getBody();
+        Faculty guardada = (Faculty) response.getBody();
         assertEquals("FCI", guardada.getCodigo());
         assertEquals("Ciencias de la Ingeniería", guardada.getNombre());
-        verify(auditoriaService).marcarActorActual();
+        verify(auditService).marcarActorActual();
     }
 
     @Test
-    void crearFacultadRechazaCodigoONombreVacios() {
-        ResponseEntity<?> sinCodigo = controller.crearFacultad(facultadReq("   ", "Ciencias"));
-        ResponseEntity<?> sinNombre = controller.crearFacultad(facultadReq("FCI", null));
+    void createFacultyRechazaCodigoONombreVacios() {
+        ResponseEntity<?> sinCodigo = controller.createFaculty(facultyReq("   ", "Ciencias"));
+        ResponseEntity<?> sinNombre = controller.createFaculty(facultyReq("FCI", null));
 
         assertEquals(HttpStatus.BAD_REQUEST, sinCodigo.getStatusCode());
         assertEquals(HttpStatus.BAD_REQUEST, sinNombre.getStatusCode());
         assertEquals("Código y nombre son obligatorios.", errorDe(sinNombre));
-        verify(facultadRepo, never()).save(any());
+        verify(facultyRepo, never()).save(any());
     }
 
     @Test
-    void crearFacultadRechazaCodigoDuplicado() {
-        when(facultadRepo.findByCodigo("FCI")).thenReturn(Optional.of(Facultad.builder().id(1).build()));
+    void createFacultyRechazaCodigoDuplicado() {
+        when(facultyRepo.findByCodigo("FCI")).thenReturn(Optional.of(Faculty.builder().id(1).build()));
 
-        ResponseEntity<?> response = controller.crearFacultad(facultadReq("FCI", "Ciencias"));
+        ResponseEntity<?> response = controller.createFaculty(facultyReq("FCI", "Ciencias"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Ya existe una facultad con ese código.", errorDe(response));
-        verify(facultadRepo, never()).save(any());
+        verify(facultyRepo, never()).save(any());
     }
 
     @Test
-    void actualizarFacultadCambiaElNombre() {
-        Facultad existente = Facultad.builder().id(1).codigo("FCI").nombre("Antiguo").build();
-        when(facultadRepo.findById(1)).thenReturn(Optional.of(existente));
-        when(facultadRepo.save(existente)).thenReturn(existente);
+    void updateFacultyCambiaElNombre() {
+        Faculty existente = Faculty.builder().id(1).codigo("FCI").nombre("Antiguo").build();
+        when(facultyRepo.findById(1)).thenReturn(Optional.of(existente));
+        when(facultyRepo.save(existente)).thenReturn(existente);
 
-        ResponseEntity<?> response = controller.actualizarFacultad(1, facultadReq(null, " Nuevo nombre "));
+        ResponseEntity<?> response = controller.updateFaculty(1, facultyReq(null, " Nuevo nombre "));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Nuevo nombre", existente.getNombre());
     }
 
     @Test
-    void actualizarFacultadInexistenteDevuelve404() {
-        when(facultadRepo.findById(99)).thenReturn(Optional.empty());
+    void updateFacultyInexistenteDevuelve404() {
+        when(facultyRepo.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND,
-                controller.actualizarFacultad(99, facultadReq(null, "X")).getStatusCode());
+                controller.updateFaculty(99, facultyReq(null, "X")).getStatusCode());
     }
 
     @Test
-    void actualizarFacultadRechazaNombreVacio() {
-        when(facultadRepo.findById(1)).thenReturn(Optional.of(Facultad.builder().id(1).build()));
+    void updateFacultyRechazaNombreVacio() {
+        when(facultyRepo.findById(1)).thenReturn(Optional.of(Faculty.builder().id(1).build()));
 
-        ResponseEntity<?> response = controller.actualizarFacultad(1, facultadReq(null, "   "));
+        ResponseEntity<?> response = controller.updateFaculty(1, facultyReq(null, "   "));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("El nombre no puede estar vacío.", errorDe(response));
-        verify(facultadRepo, never()).save(any());
+        verify(facultyRepo, never()).save(any());
     }
 
     @Test
-    void eliminarFacultadDevuelve204CuandoExiste() {
-        when(facultadRepo.existsById(1)).thenReturn(true);
+    void deleteFacultyDevuelve204CuandoExiste() {
+        when(facultyRepo.existsById(1)).thenReturn(true);
 
-        assertEquals(HttpStatus.NO_CONTENT, controller.eliminarFacultad(1).getStatusCode());
-        verify(catalogoAdminService).eliminarFacultad(1);
+        assertEquals(HttpStatus.NO_CONTENT, controller.deleteFaculty(1).getStatusCode());
+        verify(catalogoAdminService).deleteFaculty(1);
     }
 
     @Test
-    void eliminarFacultadInexistenteDevuelve404() {
-        when(facultadRepo.existsById(99)).thenReturn(false);
+    void deleteFacultyInexistenteDevuelve404() {
+        when(facultyRepo.existsById(99)).thenReturn(false);
 
-        assertEquals(HttpStatus.NOT_FOUND, controller.eliminarFacultad(99).getStatusCode());
-        verify(catalogoAdminService, never()).eliminarFacultad(any());
+        assertEquals(HttpStatus.NOT_FOUND, controller.deleteFaculty(99).getStatusCode());
+        verify(catalogoAdminService, never()).deleteFaculty(any());
     }
 
     @Test
-    void eliminarFacultadConCarrerasAsociadasDevuelveErrorLegible() {
-        when(facultadRepo.existsById(1)).thenReturn(true);
-        doThrow(new DataIntegrityViolationException("FK")).when(catalogoAdminService).eliminarFacultad(1);
+    void deleteFacultyConProgramsAsociadasDevuelveErrorLegible() {
+        when(facultyRepo.existsById(1)).thenReturn(true);
+        doThrow(new DataIntegrityViolationException("FK")).when(catalogoAdminService).deleteFaculty(1);
 
-        ResponseEntity<?> response = controller.eliminarFacultad(1);
+        ResponseEntity<?> response = controller.deleteFaculty(1);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(errorDe(response).contains("carreras u otros registros asociados"));
     }
 
-    // ── Carreras ──────────────────────────────────────────────────────────────
+    // ── Programs ──────────────────────────────────────────────────────────────
 
     @Test
-    void crearCarreraGuardaConLaFacultadResuelta() {
-        Facultad facultad = Facultad.builder().id(2).build();
-        when(carreraRepo.findByCodigo("SW")).thenReturn(Optional.empty());
-        when(facultadRepo.findById(2)).thenReturn(Optional.of(facultad));
-        when(carreraRepo.save(any(Carrera.class))).thenAnswer(inv -> inv.getArgument(0));
+    void createProgramGuardaConLaFacultyResuelta() {
+        Faculty faculty = Faculty.builder().id(2).build();
+        when(programRepo.findByCodigo("SW")).thenReturn(Optional.empty());
+        when(facultyRepo.findById(2)).thenReturn(Optional.of(faculty));
+        when(programRepo.save(any(Program.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ResponseEntity<?> response = controller.crearCarrera(carreraReq("sw", "Software", 2, "PRESENCIAL"));
+        ResponseEntity<?> response = controller.createProgram(programReq("sw", "Software", 2, "PRESENCIAL"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        Carrera guardada = (Carrera) response.getBody();
+        Program guardada = (Program) response.getBody();
         assertEquals("SW", guardada.getCodigo());
-        assertSame(facultad, guardada.getFacultad());
-        assertEquals("PRESENCIAL", guardada.getModalidadEstudio());
+        assertSame(faculty, guardada.getFaculty());
+        assertEquals("PRESENCIAL", guardada.getModalityEstudio());
     }
 
     @Test
-    void crearCarreraRechazaCamposObligatoriosFaltantes() {
-        ResponseEntity<?> sinFacultad = controller.crearCarrera(carreraReq("SW", "Software", null, null));
+    void createProgramRechazaCamposObligatoriosFaltantes() {
+        ResponseEntity<?> sinFaculty = controller.createProgram(programReq("SW", "Software", null, null));
 
-        assertEquals(HttpStatus.BAD_REQUEST, sinFacultad.getStatusCode());
-        assertEquals("Código, nombre y facultad son obligatorios.", errorDe(sinFacultad));
-        verify(carreraRepo, never()).save(any());
+        assertEquals(HttpStatus.BAD_REQUEST, sinFaculty.getStatusCode());
+        assertEquals("Código, nombre y facultad son obligatorios.", errorDe(sinFaculty));
+        verify(programRepo, never()).save(any());
     }
 
     @Test
-    void crearCarreraRechazaCodigoDuplicado() {
-        when(carreraRepo.findByCodigo("SW")).thenReturn(Optional.of(Carrera.builder().id(1).build()));
+    void createProgramRechazaCodigoDuplicado() {
+        when(programRepo.findByCodigo("SW")).thenReturn(Optional.of(Program.builder().id(1).build()));
 
-        ResponseEntity<?> response = controller.crearCarrera(carreraReq("SW", "Software", 2, null));
+        ResponseEntity<?> response = controller.createProgram(programReq("SW", "Software", 2, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Ya existe una carrera con ese código.", errorDe(response));
     }
 
     @Test
-    void crearCarreraConFacultadInexistenteEsRechazada() {
-        when(carreraRepo.findByCodigo("SW")).thenReturn(Optional.empty());
-        when(facultadRepo.findById(99)).thenReturn(Optional.empty());
+    void createProgramConFacultyInexistenteEsRechazada() {
+        when(programRepo.findByCodigo("SW")).thenReturn(Optional.empty());
+        when(facultyRepo.findById(99)).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = controller.crearCarrera(carreraReq("SW", "Software", 99, null));
+        ResponseEntity<?> response = controller.createProgram(programReq("SW", "Software", 99, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Facultad no encontrada.", errorDe(response));
-        verify(carreraRepo, never()).save(any());
+        verify(programRepo, never()).save(any());
     }
 
     @Test
-    void actualizarCarreraCambiaNombreModalidadYFacultad() {
-        Carrera existente = Carrera.builder().id(1).nombre("Antiguo").build();
-        Facultad nuevaFacultad = Facultad.builder().id(3).build();
-        when(carreraRepo.findById(1)).thenReturn(Optional.of(existente));
-        when(facultadRepo.findById(3)).thenReturn(Optional.of(nuevaFacultad));
-        when(carreraRepo.save(existente)).thenReturn(existente);
+    void updateProgramCambiaNombreModalityYFaculty() {
+        Program existente = Program.builder().id(1).nombre("Antiguo").build();
+        Faculty nuevaFaculty = Faculty.builder().id(3).build();
+        when(programRepo.findById(1)).thenReturn(Optional.of(existente));
+        when(facultyRepo.findById(3)).thenReturn(Optional.of(nuevaFaculty));
+        when(programRepo.save(existente)).thenReturn(existente);
 
-        ResponseEntity<?> response = controller.actualizarCarrera(1, carreraReq(null, "Software", 3, "VIRTUAL"));
+        ResponseEntity<?> response = controller.updateProgram(1, programReq(null, "Software", 3, "VIRTUAL"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Software", existente.getNombre());
-        assertEquals("VIRTUAL", existente.getModalidadEstudio());
-        assertSame(nuevaFacultad, existente.getFacultad());
+        assertEquals("VIRTUAL", existente.getModalityEstudio());
+        assertSame(nuevaFaculty, existente.getFaculty());
     }
 
     @Test
-    void actualizarCarreraSinModalidadNiFacultadConservaLosValoresPrevios() {
-        Facultad facultadPrevia = Facultad.builder().id(1).build();
-        Carrera existente = Carrera.builder().id(1).nombre("Antiguo")
-                .modalidadEstudio("PRESENCIAL").facultad(facultadPrevia).build();
-        when(carreraRepo.findById(1)).thenReturn(Optional.of(existente));
-        when(carreraRepo.save(existente)).thenReturn(existente);
+    void updateProgramSinModalityNiFacultyConservaLosValoresPrevios() {
+        Faculty facultyPrevia = Faculty.builder().id(1).build();
+        Program existente = Program.builder().id(1).nombre("Antiguo")
+                .modalityEstudio("PRESENCIAL").faculty(facultyPrevia).build();
+        when(programRepo.findById(1)).thenReturn(Optional.of(existente));
+        when(programRepo.save(existente)).thenReturn(existente);
 
-        controller.actualizarCarrera(1, carreraReq(null, "Software", null, null));
+        controller.updateProgram(1, programReq(null, "Software", null, null));
 
-        assertEquals("PRESENCIAL", existente.getModalidadEstudio());
-        assertSame(facultadPrevia, existente.getFacultad());
-        verify(facultadRepo, never()).findById(any());
+        assertEquals("PRESENCIAL", existente.getModalityEstudio());
+        assertSame(facultyPrevia, existente.getFaculty());
+        verify(facultyRepo, never()).findById(any());
     }
 
     @Test
-    void actualizarCarreraConFacultadInexistenteEsRechazada() {
-        when(carreraRepo.findById(1)).thenReturn(Optional.of(Carrera.builder().id(1).build()));
-        when(facultadRepo.findById(99)).thenReturn(Optional.empty());
+    void updateProgramConFacultyInexistenteEsRechazada() {
+        when(programRepo.findById(1)).thenReturn(Optional.of(Program.builder().id(1).build()));
+        when(facultyRepo.findById(99)).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = controller.actualizarCarrera(1, carreraReq(null, "Software", 99, null));
+        ResponseEntity<?> response = controller.updateProgram(1, programReq(null, "Software", 99, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Facultad no encontrada.", errorDe(response));
-        verify(carreraRepo, never()).save(any());
+        verify(programRepo, never()).save(any());
     }
 
     @Test
-    void actualizarCarreraInexistenteDevuelve404YNombreVacioEsRechazado() {
-        when(carreraRepo.findById(99)).thenReturn(Optional.empty());
+    void updateProgramInexistenteDevuelve404YNombreVacioEsRechazado() {
+        when(programRepo.findById(99)).thenReturn(Optional.empty());
         assertEquals(HttpStatus.NOT_FOUND,
-                controller.actualizarCarrera(99, carreraReq(null, "X", null, null)).getStatusCode());
+                controller.updateProgram(99, programReq(null, "X", null, null)).getStatusCode());
 
-        when(carreraRepo.findById(1)).thenReturn(Optional.of(Carrera.builder().id(1).build()));
-        ResponseEntity<?> vacio = controller.actualizarCarrera(1, carreraReq(null, null, null, null));
+        when(programRepo.findById(1)).thenReturn(Optional.of(Program.builder().id(1).build()));
+        ResponseEntity<?> vacio = controller.updateProgram(1, programReq(null, null, null, null));
         assertEquals(HttpStatus.BAD_REQUEST, vacio.getStatusCode());
         assertEquals("El nombre no puede estar vacío.", errorDe(vacio));
     }
 
     @Test
-    void eliminarCarreraCubreExitoNoEncontradaEIntegridad() {
-        when(carreraRepo.existsById(1)).thenReturn(true);
-        assertEquals(HttpStatus.NO_CONTENT, controller.eliminarCarrera(1).getStatusCode());
+    void deleteProgramCubreExitoNoEncontradaEIntegridad() {
+        when(programRepo.existsById(1)).thenReturn(true);
+        assertEquals(HttpStatus.NO_CONTENT, controller.deleteProgram(1).getStatusCode());
 
-        when(carreraRepo.existsById(99)).thenReturn(false);
-        assertEquals(HttpStatus.NOT_FOUND, controller.eliminarCarrera(99).getStatusCode());
+        when(programRepo.existsById(99)).thenReturn(false);
+        assertEquals(HttpStatus.NOT_FOUND, controller.deleteProgram(99).getStatusCode());
 
-        when(carreraRepo.existsById(2)).thenReturn(true);
-        doThrow(new DataIntegrityViolationException("FK")).when(catalogoAdminService).eliminarCarrera(2);
-        ResponseEntity<?> conflicto = controller.eliminarCarrera(2);
+        when(programRepo.existsById(2)).thenReturn(true);
+        doThrow(new DataIntegrityViolationException("FK")).when(catalogoAdminService).deleteProgram(2);
+        ResponseEntity<?> conflicto = controller.deleteProgram(2);
         assertEquals(HttpStatus.BAD_REQUEST, conflicto.getStatusCode());
         assertTrue(errorDe(conflicto).contains("estudiantes u otros registros asociados"));
     }
 
-    // ── Modalidades ───────────────────────────────────────────────────────────
+    // ── Modalities ───────────────────────────────────────────────────────────
 
     @Test
-    void crearModalidadReemplazaEspaciosPorGuionBajoEnElCodigo() {
-        when(modalidadRepo.findByCodigo("PROYECTO_DE_TITULACION")).thenReturn(Optional.empty());
-        when(modalidadRepo.save(any(ModalidadTitulacion.class))).thenAnswer(inv -> inv.getArgument(0));
+    void createModalityReemplazaEspaciosPorGuionBajoEnElCodigo() {
+        when(modalityRepo.findByCodigo("PROYECTO_DE_TITULACION")).thenReturn(Optional.empty());
+        when(modalityRepo.save(any(ModalityTitulacion.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ResponseEntity<?> response = controller.crearModalidad(
-                modalidadReq(" proyecto de titulacion ", "Proyecto de Titulación"));
+        ResponseEntity<?> response = controller.createModality(
+                modalityReq(" proyecto de titulacion ", "Proyecto de Titulación"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("PROYECTO_DE_TITULACION", ((ModalidadTitulacion) response.getBody()).getCodigo());
+        assertEquals("PROYECTO_DE_TITULACION", ((ModalityTitulacion) response.getBody()).getCodigo());
     }
 
     @Test
-    void crearModalidadRechazaVaciosYDuplicados() {
-        ResponseEntity<?> vacia = controller.crearModalidad(modalidadReq(null, "Proyecto"));
+    void createModalityRechazaVaciosYDuplicados() {
+        ResponseEntity<?> vacia = controller.createModality(modalityReq(null, "Proyecto"));
         assertEquals(HttpStatus.BAD_REQUEST, vacia.getStatusCode());
 
-        when(modalidadRepo.findByCodigo("EXAMEN")).thenReturn(Optional.of(ModalidadTitulacion.builder().id((short) 1).build()));
-        ResponseEntity<?> duplicada = controller.crearModalidad(modalidadReq("examen", "Examen"));
+        when(modalityRepo.findByCodigo("EXAMEN")).thenReturn(Optional.of(ModalityTitulacion.builder().id((short) 1).build()));
+        ResponseEntity<?> duplicada = controller.createModality(modalityReq("examen", "Examen"));
         assertEquals(HttpStatus.BAD_REQUEST, duplicada.getStatusCode());
         assertEquals("Ya existe una modalidad con ese código.", errorDe(duplicada));
     }
 
     @Test
-    void actualizarModalidadCubreExitoNoEncontradaYNombreVacio() {
-        ModalidadTitulacion existente = ModalidadTitulacion.builder().id((short) 1).nombre("Antiguo").build();
-        when(modalidadRepo.findById((short) 1)).thenReturn(Optional.of(existente));
-        when(modalidadRepo.save(existente)).thenReturn(existente);
-        assertEquals(HttpStatus.OK, controller.actualizarModalidad((short) 1, modalidadReq(null, "Nuevo")).getStatusCode());
+    void updateModalityCubreExitoNoEncontradaYNombreVacio() {
+        ModalityTitulacion existente = ModalityTitulacion.builder().id((short) 1).nombre("Antiguo").build();
+        when(modalityRepo.findById((short) 1)).thenReturn(Optional.of(existente));
+        when(modalityRepo.save(existente)).thenReturn(existente);
+        assertEquals(HttpStatus.OK, controller.updateModality((short) 1, modalityReq(null, "Nuevo")).getStatusCode());
         assertEquals("Nuevo", existente.getNombre());
 
-        when(modalidadRepo.findById((short) 99)).thenReturn(Optional.empty());
+        when(modalityRepo.findById((short) 99)).thenReturn(Optional.empty());
         assertEquals(HttpStatus.NOT_FOUND,
-                controller.actualizarModalidad((short) 99, modalidadReq(null, "X")).getStatusCode());
+                controller.updateModality((short) 99, modalityReq(null, "X")).getStatusCode());
 
-        when(modalidadRepo.findById((short) 2)).thenReturn(Optional.of(ModalidadTitulacion.builder().id((short) 2).build()));
+        when(modalityRepo.findById((short) 2)).thenReturn(Optional.of(ModalityTitulacion.builder().id((short) 2).build()));
         assertEquals(HttpStatus.BAD_REQUEST,
-                controller.actualizarModalidad((short) 2, modalidadReq(null, "  ")).getStatusCode());
+                controller.updateModality((short) 2, modalityReq(null, "  ")).getStatusCode());
     }
 
     @Test
-    void eliminarModalidadCubreExitoNoEncontradaEIntegridad() {
-        when(modalidadRepo.existsById((short) 1)).thenReturn(true);
-        assertEquals(HttpStatus.NO_CONTENT, controller.eliminarModalidad((short) 1).getStatusCode());
+    void deleteModalityCubreExitoNoEncontradaEIntegridad() {
+        when(modalityRepo.existsById((short) 1)).thenReturn(true);
+        assertEquals(HttpStatus.NO_CONTENT, controller.deleteModality((short) 1).getStatusCode());
 
-        when(modalidadRepo.existsById((short) 99)).thenReturn(false);
-        assertEquals(HttpStatus.NOT_FOUND, controller.eliminarModalidad((short) 99).getStatusCode());
+        when(modalityRepo.existsById((short) 99)).thenReturn(false);
+        assertEquals(HttpStatus.NOT_FOUND, controller.deleteModality((short) 99).getStatusCode());
 
-        when(modalidadRepo.existsById((short) 2)).thenReturn(true);
-        doThrow(new DataIntegrityViolationException("FK")).when(catalogoAdminService).eliminarModalidad((short) 2);
-        ResponseEntity<?> conflicto = controller.eliminarModalidad((short) 2);
+        when(modalityRepo.existsById((short) 2)).thenReturn(true);
+        doThrow(new DataIntegrityViolationException("FK")).when(catalogoAdminService).deleteModality((short) 2);
+        ResponseEntity<?> conflicto = controller.deleteModality((short) 2);
         assertEquals(HttpStatus.BAD_REQUEST, conflicto.getStatusCode());
         assertTrue(errorDe(conflicto).contains("solicitudes u otros registros asociados"));
     }
@@ -456,62 +456,62 @@ class CatalogoControllerTest {
     // ── Períodos académicos ───────────────────────────────────────────────────
 
     @Test
-    void crearPeriodoGuardaConActivoExplicito() {
+    void createPeriodGuardaConActivoExplicito() {
         LocalDate inicio = LocalDate.of(2026, 1, 1);
         LocalDate fin = LocalDate.of(2026, 6, 30);
-        when(periodoAcademicoRepo.findByCodigo("2026-1")).thenReturn(Optional.empty());
-        when(periodoAcademicoRepo.save(any(PeriodoAcademico.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(periodAcademicoRepo.findByCodigo("2026-1")).thenReturn(Optional.empty());
+        when(periodAcademicoRepo.save(any(PeriodAcademico.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ResponseEntity<?> response = controller.crearPeriodo(
-                periodoReq("2026-1", "Primer semestre 2026", inicio, fin, true));
+        ResponseEntity<?> response = controller.createPeriod(
+                periodReq("2026-1", "Primer semestre 2026", inicio, fin, true));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        PeriodoAcademico guardado = (PeriodoAcademico) response.getBody();
+        PeriodAcademico guardado = (PeriodAcademico) response.getBody();
         assertEquals("2026-1", guardado.getCodigo());
         assertTrue(guardado.getActivo());
     }
 
     @Test
-    void crearPeriodoConActivoNuloLoGuardaComoInactivo() {
-        when(periodoAcademicoRepo.findByCodigo("2026-2")).thenReturn(Optional.empty());
-        when(periodoAcademicoRepo.save(any(PeriodoAcademico.class))).thenAnswer(inv -> inv.getArgument(0));
+    void createPeriodConActivoNuloLoGuardaComoInactivo() {
+        when(periodAcademicoRepo.findByCodigo("2026-2")).thenReturn(Optional.empty());
+        when(periodAcademicoRepo.save(any(PeriodAcademico.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ResponseEntity<?> response = controller.crearPeriodo(periodoReq("2026-2", "Segundo",
+        ResponseEntity<?> response = controller.createPeriod(periodReq("2026-2", "Segundo",
                 LocalDate.of(2026, 7, 1), LocalDate.of(2026, 12, 31), null));
 
-        assertFalse(((PeriodoAcademico) response.getBody()).getActivo());
+        assertFalse(((PeriodAcademico) response.getBody()).getActivo());
     }
 
     @Test
-    void crearPeriodoRechazaCamposFaltantesFechasInvalidasYDuplicados() {
-        ResponseEntity<?> sinFechas = controller.crearPeriodo(periodoReq("2026-1", "Primer", null, null, null));
+    void createPeriodRechazaCamposFaltantesFechasInvalidasYDuplicados() {
+        ResponseEntity<?> sinFechas = controller.createPeriod(periodReq("2026-1", "Primer", null, null, null));
         assertEquals(HttpStatus.BAD_REQUEST, sinFechas.getStatusCode());
         assertTrue(errorDe(sinFechas).contains("obligatorios"));
 
         LocalDate inicio = LocalDate.of(2026, 6, 30);
         LocalDate finAnterior = LocalDate.of(2026, 1, 1);
-        ResponseEntity<?> fechasInvertidas = controller.crearPeriodo(
-                periodoReq("2026-1", "Primer", inicio, finAnterior, null));
+        ResponseEntity<?> fechasInvertidas = controller.createPeriod(
+                periodReq("2026-1", "Primer", inicio, finAnterior, null));
         assertEquals(HttpStatus.BAD_REQUEST, fechasInvertidas.getStatusCode());
         assertEquals("La fecha de fin debe ser posterior a la fecha de inicio.", errorDe(fechasInvertidas));
 
-        when(periodoAcademicoRepo.findByCodigo("2026-1")).thenReturn(Optional.of(PeriodoAcademico.builder().id(1).build()));
-        ResponseEntity<?> duplicado = controller.crearPeriodo(
-                periodoReq("2026-1", "Primer", finAnterior, inicio, null));
+        when(periodAcademicoRepo.findByCodigo("2026-1")).thenReturn(Optional.of(PeriodAcademico.builder().id(1).build()));
+        ResponseEntity<?> duplicado = controller.createPeriod(
+                periodReq("2026-1", "Primer", finAnterior, inicio, null));
         assertEquals(HttpStatus.BAD_REQUEST, duplicado.getStatusCode());
         assertEquals("Ya existe un período académico con ese código.", errorDe(duplicado));
     }
 
     @Test
-    void actualizarPeriodoSinFechasNuevasConservaLasExistentes() {
-        PeriodoAcademico existente = PeriodoAcademico.builder().id(1).nombre("Antiguo")
+    void updatePeriodSinFechasNuevasConservaLasExistentes() {
+        PeriodAcademico existente = PeriodAcademico.builder().id(1).nombre("Antiguo")
                 .fechaInicio(LocalDate.of(2026, 1, 1)).fechaFin(LocalDate.of(2026, 6, 30))
                 .activo(false).build();
-        when(periodoAcademicoRepo.findById(1)).thenReturn(Optional.of(existente));
-        when(periodoAcademicoRepo.save(existente)).thenReturn(existente);
+        when(periodAcademicoRepo.findById(1)).thenReturn(Optional.of(existente));
+        when(periodAcademicoRepo.save(existente)).thenReturn(existente);
 
-        ResponseEntity<?> response = controller.actualizarPeriodo(1,
-                periodoReq(null, "Nuevo nombre", null, null, true));
+        ResponseEntity<?> response = controller.updatePeriod(1,
+                periodReq(null, "Nuevo nombre", null, null, true));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Nuevo nombre", existente.getNombre());
@@ -521,41 +521,41 @@ class CatalogoControllerTest {
     }
 
     @Test
-    void actualizarPeriodoConRangoDeFechasInvalidoEsRechazado() {
-        PeriodoAcademico existente = PeriodoAcademico.builder().id(1)
+    void updatePeriodConRangoDeFechasInvalidoEsRechazado() {
+        PeriodAcademico existente = PeriodAcademico.builder().id(1)
                 .fechaInicio(LocalDate.of(2026, 1, 1)).fechaFin(LocalDate.of(2026, 6, 30)).build();
-        when(periodoAcademicoRepo.findById(1)).thenReturn(Optional.of(existente));
+        when(periodAcademicoRepo.findById(1)).thenReturn(Optional.of(existente));
 
-        ResponseEntity<?> response = controller.actualizarPeriodo(1,
-                periodoReq(null, "Nombre", LocalDate.of(2026, 12, 1), null, null));
+        ResponseEntity<?> response = controller.updatePeriod(1,
+                periodReq(null, "Nombre", LocalDate.of(2026, 12, 1), null, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("La fecha de fin debe ser posterior a la fecha de inicio.", errorDe(response));
-        verify(periodoAcademicoRepo, never()).save(any());
+        verify(periodAcademicoRepo, never()).save(any());
     }
 
     @Test
-    void actualizarPeriodoInexistenteDevuelve404YNombreVacioEsRechazado() {
-        when(periodoAcademicoRepo.findById(99)).thenReturn(Optional.empty());
+    void updatePeriodInexistenteDevuelve404YNombreVacioEsRechazado() {
+        when(periodAcademicoRepo.findById(99)).thenReturn(Optional.empty());
         assertEquals(HttpStatus.NOT_FOUND,
-                controller.actualizarPeriodo(99, periodoReq(null, "X", null, null, null)).getStatusCode());
+                controller.updatePeriod(99, periodReq(null, "X", null, null, null)).getStatusCode());
 
-        when(periodoAcademicoRepo.findById(1)).thenReturn(Optional.of(PeriodoAcademico.builder().id(1).build()));
+        when(periodAcademicoRepo.findById(1)).thenReturn(Optional.of(PeriodAcademico.builder().id(1).build()));
         assertEquals(HttpStatus.BAD_REQUEST,
-                controller.actualizarPeriodo(1, periodoReq(null, "   ", null, null, null)).getStatusCode());
+                controller.updatePeriod(1, periodReq(null, "   ", null, null, null)).getStatusCode());
     }
 
     @Test
-    void eliminarPeriodoCubreExitoNoEncontradoEIntegridad() {
-        when(periodoAcademicoRepo.existsById(1)).thenReturn(true);
-        assertEquals(HttpStatus.NO_CONTENT, controller.eliminarPeriodo(1).getStatusCode());
+    void deletePeriodCubreExitoNoEncontradoEIntegridad() {
+        when(periodAcademicoRepo.existsById(1)).thenReturn(true);
+        assertEquals(HttpStatus.NO_CONTENT, controller.deletePeriod(1).getStatusCode());
 
-        when(periodoAcademicoRepo.existsById(99)).thenReturn(false);
-        assertEquals(HttpStatus.NOT_FOUND, controller.eliminarPeriodo(99).getStatusCode());
+        when(periodAcademicoRepo.existsById(99)).thenReturn(false);
+        assertEquals(HttpStatus.NOT_FOUND, controller.deletePeriod(99).getStatusCode());
 
-        when(periodoAcademicoRepo.existsById(2)).thenReturn(true);
-        doThrow(new DataIntegrityViolationException("FK")).when(catalogoAdminService).eliminarPeriodo(2);
-        ResponseEntity<?> conflicto = controller.eliminarPeriodo(2);
+        when(periodAcademicoRepo.existsById(2)).thenReturn(true);
+        doThrow(new DataIntegrityViolationException("FK")).when(catalogoAdminService).deletePeriod(2);
+        ResponseEntity<?> conflicto = controller.deletePeriod(2);
         assertEquals(HttpStatus.BAD_REQUEST, conflicto.getStatusCode());
         assertTrue(errorDe(conflicto).contains("estudiantes o convocatorias asociadas"));
     }

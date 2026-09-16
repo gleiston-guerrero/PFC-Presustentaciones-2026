@@ -2,10 +2,10 @@ package ec.edu.uteq.presustentaciones.security;
 
 import ec.edu.uteq.presustentaciones.controllers.AuthController;
 import ec.edu.uteq.presustentaciones.dto.ResponseWrapper;
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.security.jwt.JwtTokenProvider;
-import ec.edu.uteq.presustentaciones.services.IUsuarioService;
+import ec.edu.uteq.presustentaciones.services.IAppUserService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,22 +80,22 @@ class RefreshTokenRotationTest {
         ReflectionTestUtils.setField(jwtTokenProvider, "jwtRefreshExpiration", 604800000L);
         ReflectionTestUtils.setField(jwtTokenProvider, "redisTemplate", redisTemplate);
 
-        Usuario usuario = new Usuario();
-        usuario.setId(1L);
-        usuario.setEmail(EMAIL);
-        usuario.setNombre("Ana");
-        usuario.setApellido("Perez");
-        usuario.setRol("ESTUDIANTE");
+        AppUser appUser = new AppUser();
+        appUser.setId(1L);
+        appUser.setEmail(EMAIL);
+        appUser.setNombre("Ana");
+        appUser.setApellido("Perez");
+        appUser.setRole("ESTUDIANTE");
 
-        UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
-        when(usuarioRepository.findByEmail(EMAIL)).thenReturn(Optional.of(usuario));
+        AppUserRepository appUserRepository = mock(AppUserRepository.class);
+        when(appUserRepository.findByEmail(EMAIL)).thenReturn(Optional.of(appUser));
 
         authController = new AuthController(
                 mock(AuthenticationManager.class),
-                usuarioRepository,
+                appUserRepository,
                 mock(PasswordEncoder.class),
                 jwtTokenProvider,
-                mock(IUsuarioService.class),
+                mock(IAppUserService.class),
                 mock(ec.edu.uteq.presustentaciones.security.PasswordPolicyValidator.class),
                 mock(ec.edu.uteq.presustentaciones.security.PasswordRecoveryService.class),
                 mock(ec.edu.uteq.presustentaciones.security.RateLimiterService.class));
@@ -181,9 +181,9 @@ class RefreshTokenRotationTest {
     }
 
     @Test
-    void reutilizarUnRefreshYaUsadoRevocaTodasLasSesionesActivasDelUsuario() {
+    void reutilizarUnRefreshYaUsadoRevocaTodasLasSesionesActivasDelAppUser() {
         String primerRefresh = jwtTokenProvider.generateRefreshToken(EMAIL);
-        // Segunda sesión activa del mismo usuario (p.ej. otro dispositivo), sin relación con el ataque.
+        // Segunda sesión activa del mismo appUser (p.ej. otro dispositivo), sin relación con el ataque.
         String segundoRefresh = jwtTokenProvider.generateRefreshToken(EMAIL);
 
         // Uso legítimo: rota el primer refresh y emite uno nuevo.

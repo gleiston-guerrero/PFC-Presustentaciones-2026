@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * EmailService no tenia ningun test (0% de ramas) pese a tener la logica real de cuando
- * un correo sale o no (feature flag app.mail.enabled + disponibilidad del JavaMailSender).
+ * un correo sale o no (feature flag app.mail.enabled + availability del JavaMailSender).
  */
 @ExtendWith(MockitoExtension.class)
 class EmailServiceTest {
@@ -39,63 +39,63 @@ class EmailServiceTest {
         return new MimeMessage(Session.getDefaultInstance(new Properties()));
     }
 
-    // ── enviarNotificacion(4 args) ───────────────────────────────────────────
+    // ── sendNotification(4 args) ───────────────────────────────────────────
 
     @Test
-    void enviarNotificacionNoEnviaNadaSiElFeatureFlagEstaDesactivado() {
+    void sendNotificationNoEnviaNadaSiElFeatureFlagEstaDesactivado() {
         ReflectionTestUtils.setField(service, "enabled", false);
 
-        service.enviarNotificacion("x@uteq.edu.ec", "hola", "Ana", "ana@uteq.edu.ec");
+        service.sendNotification("x@uteq.edu.ec", "hola", "Ana", "ana@uteq.edu.ec");
 
         verify(mailSender, never()).createMimeMessage();
     }
 
     @Test
-    void enviarNotificacionNoEnviaNadaSiNoHayMailSenderAunqueElFlagEsteActivo() {
+    void sendNotificationNoEnviaNadaSiNoHayMailSenderAunqueElFlagEsteActivo() {
         ReflectionTestUtils.setField(service, "enabled", true);
         ReflectionTestUtils.setField(service, "mailSender", null);
 
-        service.enviarNotificacion("x@uteq.edu.ec", "hola", "Ana", "ana@uteq.edu.ec");
-        // no debe lanzar NPE ni intentar nada; nada que verificar sobre un mock que no existe
+        service.sendNotification("x@uteq.edu.ec", "hola", "Ana", "ana@uteq.edu.ec");
+        // no debe lanzar NPE ni intentar nada; nada que verify sobre un mock que no existe
     }
 
     @Test
-    void enviarNotificacionEnviaElCorreoRealCuandoEstaHabilitado() throws Exception {
+    void sendNotificationEnviaElCorreoRealCuandoEstaHabilitado() throws Exception {
         ReflectionTestUtils.setField(service, "enabled", true);
         when(mailSender.createMimeMessage()).thenReturn(mimeReal());
 
-        service.enviarNotificacion("x@uteq.edu.ec", "hola", "Ana", "ana@uteq.edu.ec");
+        service.sendNotification("x@uteq.edu.ec", "hola", "Ana", "ana@uteq.edu.ec");
 
         verify(mailSender).send((MimeMessage) org.mockito.ArgumentMatchers.any());
     }
 
     @Test
-    void enviarNotificacionSinRemitenteUsaValorGenerico() {
+    void sendNotificationSinRemitenteUsaValorGenerico() {
         ReflectionTestUtils.setField(service, "enabled", true);
         when(mailSender.createMimeMessage()).thenReturn(mimeReal());
 
-        service.enviarNotificacion("x@uteq.edu.ec", "hola");
+        service.sendNotification("x@uteq.edu.ec", "hola");
 
         verify(mailSender).send((MimeMessage) org.mockito.ArgumentMatchers.any());
     }
 
-    // ── enviarRecuperacionPassword ───────────────────────────────────────────
+    // ── sendRecuperacionPassword ───────────────────────────────────────────
 
     @Test
-    void enviarRecuperacionPasswordNoEnviaNadaSiElFeatureFlagEstaDesactivado() {
+    void sendRecuperacionPasswordNoEnviaNadaSiElFeatureFlagEstaDesactivado() {
         ReflectionTestUtils.setField(service, "enabled", false);
 
-        service.enviarRecuperacionPassword("x@uteq.edu.ec", "token-123");
+        service.sendRecuperacionPassword("x@uteq.edu.ec", "token-123");
 
         verify(mailSender, never()).createMimeMessage();
     }
 
     @Test
-    void enviarRecuperacionPasswordEnviaElCorreoRealCuandoEstaHabilitado() {
+    void sendRecuperacionPasswordEnviaElCorreoRealCuandoEstaHabilitado() {
         ReflectionTestUtils.setField(service, "enabled", true);
         when(mailSender.createMimeMessage()).thenReturn(mimeReal());
 
-        service.enviarRecuperacionPassword("x@uteq.edu.ec", "token-123");
+        service.sendRecuperacionPassword("x@uteq.edu.ec", "token-123");
 
         verify(mailSender).send((MimeMessage) org.mockito.ArgumentMatchers.any());
     }

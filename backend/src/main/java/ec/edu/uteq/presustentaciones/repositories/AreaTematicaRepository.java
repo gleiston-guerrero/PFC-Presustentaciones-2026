@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface AreaTematicaRepository extends JpaRepository<AreaTematica, Integer> {
-    List<AreaTematica> findByLineaInvestigacionId(Integer lineaId);
+    List<AreaTematica> findByLineInvestigacionId(Integer lineId);
 }

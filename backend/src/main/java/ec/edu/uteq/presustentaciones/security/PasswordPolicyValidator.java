@@ -36,7 +36,7 @@ public class PasswordPolicyValidator {
     private final Set<String> comunes;
 
     public PasswordPolicyValidator() {
-        this.comunes = Collections.unmodifiableSet(cargarComunes());
+        this.comunes = Collections.unmodifiableSet(loadComunes());
     }
 
     /**
@@ -46,7 +46,7 @@ public class PasswordPolicyValidator {
      * @throws IllegalArgumentException con la regla incumplida (400 vía
      *         {@code GlobalExceptionHandler}) -- el mensaje nombra la regla, nunca la contraseña
      */
-    public void validar(String password) {
+    public void validate(String password) {
         if (password == null || password.length() < LONGITUD_MINIMA) {
             throw new IllegalArgumentException(
                     "La contraseña debe tener al menos " + LONGITUD_MINIMA + " caracteres.");
@@ -63,22 +63,22 @@ public class PasswordPolicyValidator {
      */
     public boolean cumple(String password) {
         try {
-            validar(password);
+            validate(password);
             return true;
         } catch (IllegalArgumentException e) {
             return false;
         }
     }
 
-    private Set<String> cargarComunes() {
+    private Set<String> loadComunes() {
         Set<String> resultado = new HashSet<>();
         try {
-            Resource recurso = new PathMatchingResourcePatternResolver().getResource(RUTA_LISTA);
+            Resource resource = new PathMatchingResourcePatternResolver().getResource(RUTA_LISTA);
             try (BufferedReader lector = new BufferedReader(
-                    new InputStreamReader(recurso.getInputStream(), StandardCharsets.UTF_8))) {
-                String linea;
-                while ((linea = lector.readLine()) != null) {
-                    String limpia = linea.strip().toLowerCase();
+                    new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = lector.readLine()) != null) {
+                    String limpia = line.strip().toLowerCase();
                     if (!limpia.isEmpty() && !limpia.startsWith("#")) {
                         resultado.add(limpia);
                     }

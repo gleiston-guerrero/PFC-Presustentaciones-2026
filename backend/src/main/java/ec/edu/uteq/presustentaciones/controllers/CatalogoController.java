@@ -1,24 +1,24 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.dto.GuardarCarreraRequest;
-import ec.edu.uteq.presustentaciones.dto.GuardarFacultadRequest;
-import ec.edu.uteq.presustentaciones.dto.GuardarModalidadRequest;
-import ec.edu.uteq.presustentaciones.dto.GuardarPeriodoRequest;
+import ec.edu.uteq.presustentaciones.dto.SaveProgramRequest;
+import ec.edu.uteq.presustentaciones.dto.SaveFacultyRequest;
+import ec.edu.uteq.presustentaciones.dto.SaveModalityRequest;
+import ec.edu.uteq.presustentaciones.dto.SavePeriodRequest;
 import ec.edu.uteq.presustentaciones.entities.AreaTematica;
-import ec.edu.uteq.presustentaciones.entities.Carrera;
-import ec.edu.uteq.presustentaciones.entities.ConvocatoriaTitulacion;
-import ec.edu.uteq.presustentaciones.entities.Facultad;
-import ec.edu.uteq.presustentaciones.entities.LineaInvestigacion;
-import ec.edu.uteq.presustentaciones.entities.ModalidadTitulacion;
-import ec.edu.uteq.presustentaciones.entities.PeriodoAcademico;
+import ec.edu.uteq.presustentaciones.entities.Program;
+import ec.edu.uteq.presustentaciones.entities.AnnouncementTitulacion;
+import ec.edu.uteq.presustentaciones.entities.Faculty;
+import ec.edu.uteq.presustentaciones.entities.LineInvestigacion;
+import ec.edu.uteq.presustentaciones.entities.ModalityTitulacion;
+import ec.edu.uteq.presustentaciones.entities.PeriodAcademico;
 import ec.edu.uteq.presustentaciones.repositories.AreaTematicaRepository;
-import ec.edu.uteq.presustentaciones.repositories.CarreraRepository;
-import ec.edu.uteq.presustentaciones.repositories.ConvocatoriaTitulacionRepository;
-import ec.edu.uteq.presustentaciones.repositories.FacultadRepository;
-import ec.edu.uteq.presustentaciones.repositories.LineaInvestigacionRepository;
-import ec.edu.uteq.presustentaciones.repositories.ModalidadTitulacionRepository;
-import ec.edu.uteq.presustentaciones.repositories.PeriodoAcademicoRepository;
-import ec.edu.uteq.presustentaciones.services.AuditoriaService;
+import ec.edu.uteq.presustentaciones.repositories.ProgramRepository;
+import ec.edu.uteq.presustentaciones.repositories.AnnouncementTitulacionRepository;
+import ec.edu.uteq.presustentaciones.repositories.FacultyRepository;
+import ec.edu.uteq.presustentaciones.repositories.LineInvestigacionRepository;
+import ec.edu.uteq.presustentaciones.repositories.ModalityTitulacionRepository;
+import ec.edu.uteq.presustentaciones.repositories.PeriodAcademicoRepository;
+import ec.edu.uteq.presustentaciones.services.AuditService;
 import ec.edu.uteq.presustentaciones.services.CatalogoAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -40,167 +40,167 @@ public class CatalogoController {
 
     private static final String PERMISO_GESTIONAR = "@permisoService.tienePermiso(authentication, 'CARRERAS_GESTIONAR')";
 
-    private final ModalidadTitulacionRepository modalidadRepo;
-    private final ConvocatoriaTitulacionRepository convocatoriaRepo;
-    private final LineaInvestigacionRepository lineaInvestigacionRepo;
+    private final ModalityTitulacionRepository modalityRepo;
+    private final AnnouncementTitulacionRepository announcementRepo;
+    private final LineInvestigacionRepository lineInvestigacionRepo;
     private final AreaTematicaRepository areaTematicaRepo;
-    private final CarreraRepository carreraRepo;
-    private final PeriodoAcademicoRepository periodoAcademicoRepo;
-    private final FacultadRepository facultadRepo;
-    private final AuditoriaService auditoriaService;
+    private final ProgramRepository programRepo;
+    private final PeriodAcademicoRepository periodAcademicoRepo;
+    private final FacultyRepository facultyRepo;
+    private final AuditService auditService;
     private final CatalogoAdminService catalogoAdminService;
 
     /**
-     * @return 200 con todas las modalidades de titulación disponibles para elegir al crear
-     *         una solicitud
+     * @return 200 con todas las modalities de titulación disponibles para elegir al create
+     *         una submission
      */
     @GetMapping("/modalidades")
-    public ResponseEntity<List<ModalidadTitulacion>> listarModalidades() {
-        return ResponseEntity.ok(modalidadRepo.findAll());
+    public ResponseEntity<List<ModalityTitulacion>> listModalities() {
+        return ResponseEntity.ok(modalityRepo.findAll());
     }
 
     /**
      * @return 200 con las líneas de investigación institucionales
      */
     @GetMapping("/lineas-investigacion")
-    public ResponseEntity<List<LineaInvestigacion>> listarLineasInvestigacion() {
-        return ResponseEntity.ok(lineaInvestigacionRepo.findAll());
+    public ResponseEntity<List<LineInvestigacion>> listLinesInvestigacion() {
+        return ResponseEntity.ok(lineInvestigacionRepo.findAll());
     }
 
     /**
-     * Lista las áreas temáticas. Si se pasa lineaId, filtra solo las de esa línea
-     * (uso típico: poblar el segundo dropdown dependiente del formulario de registro de tema).
+     * Lista las áreas temáticas. Si se pasa lineId, filtra solo las de esa línea
+     * (uso típico: poblar el segundo dropdown dependiente del formulario de registro de topic).
      *
-     * @param lineaId línea de investigación por la que filtrar; si es null devuelve todas
+     * @param lineId línea de investigación por la que filtrar; si es null devuelve todas
      * @return 200 con las áreas temáticas correspondientes
      */
     @GetMapping("/areas-tematicas")
-    public ResponseEntity<List<AreaTematica>> listarAreasTematicas(
-            @RequestParam(required = false) Integer lineaId) {
-        if (lineaId != null) {
-            return ResponseEntity.ok(areaTematicaRepo.findByLineaInvestigacionId(lineaId));
+    public ResponseEntity<List<AreaTematica>> listAreasTematicas(
+            @RequestParam(required = false) Integer lineId) {
+        if (lineId != null) {
+            return ResponseEntity.ok(areaTematicaRepo.findByLineInvestigacionId(lineId));
         }
         return ResponseEntity.ok(areaTematicaRepo.findAll());
     }
 
     /**
-     * @return 200 con las convocatorias de titulación marcadas como activas
+     * @return 200 con las announcements de titulación marcadas como activas
      */
     @GetMapping("/convocatorias")
-    public ResponseEntity<List<ConvocatoriaTitulacion>> listarConvocatoriasActivas() {
-        return ResponseEntity.ok(convocatoriaRepo.findByActivaTrue());
+    public ResponseEntity<List<AnnouncementTitulacion>> listAnnouncementsActivas() {
+        return ResponseEntity.ok(announcementRepo.findByActivaTrue());
     }
 
     /**
-     * Convocatoria vigente, para autocompletar el formulario de solicitud.
+     * Announcement vigente, para autocompletar el formulario de submission.
      *
-     * @return 200 con la convocatoria activa; si no hay ninguna devuelve igualmente 200 con
+     * @return 200 con la announcement activa; si no hay ninguna devuelve igualmente 200 con
      *         un mensaje de error en el cuerpo, no un 404, para que el formulario pueda
      *         mostrar el aviso sin tratarlo como fallo de red
      */
     @GetMapping("/convocatoria-activa")
-    public ResponseEntity<?> convocatoriaActiva() {
-        return convocatoriaRepo.findFirstByActivaTrue()
+    public ResponseEntity<?> announcementActiva() {
+        return announcementRepo.findFirstByActivaTrue()
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElse(ResponseEntity.ok(Map.of("error", "No hay convocatoria activa")));
     }
 
     /**
-     * @return 200 con todas las carreras; lo usa Gestión de Estudiantes para elegir la
-     *         carrera al registrar o editar un estudiante
+     * @return 200 con todas las programs; lo usa Gestión de Students para elegir la
+     *         program al register o editar un student
      */
     @GetMapping("/carreras")
-    public ResponseEntity<List<Carrera>> listarCarreras() {
-        return ResponseEntity.ok(carreraRepo.findAll());
+    public ResponseEntity<List<Program>> listPrograms() {
+        return ResponseEntity.ok(programRepo.findAll());
     }
 
     /**
-     * @return 200 con todos los períodos académicos; lo usa Gestión de Estudiantes para
-     *         asignar el período de ingreso
+     * @return 200 con todos los períodos académicos; lo usa Gestión de Students para
+     *         assign el período de ingreso
      */
     @GetMapping("/periodos-academicos")
-    public ResponseEntity<List<PeriodoAcademico>> listarPeriodosAcademicos() {
-        return ResponseEntity.ok(periodoAcademicoRepo.findAll());
+    public ResponseEntity<List<PeriodAcademico>> listPeriodsAcademicos() {
+        return ResponseEntity.ok(periodAcademicoRepo.findAll());
     }
 
-    // ── Gestión de Carreras (CARRERAS_GESTIONAR, solo ADMIN) ──────────────────────
-    // CRUD de la estructura académica base: facultades, carreras, modalidades de
+    // ── Gestión de Programs (CARRERAS_GESTIONAR, solo ADMIN) ──────────────────────
+    // CRUD de la estructura académica base: faculties, programs, modalities de
     // titulación y períodos académicos. Los GET de arriba quedan abiertos a cualquier
     // autenticado (@PreAuthorize de clase); estos métodos lo sobrescriben con el
-    // permiso dedicado porque en Spring Security el @PreAuthorize de método reemplaza
+    // permission dedicado porque en Spring Security el @PreAuthorize de método reemplaza
     // -- no combina con -- el de clase.
 
     /**
-     * @return 200 con todas las facultades
+     * @return 200 con todas las faculties
      */
     @GetMapping("/facultades")
-    public ResponseEntity<List<Facultad>> listarFacultades() {
-        return ResponseEntity.ok(facultadRepo.findAll());
+    public ResponseEntity<List<Faculty>> listFaculties() {
+        return ResponseEntity.ok(facultyRepo.findAll());
     }
 
     /**
-     * Crea una facultad. El código se normaliza a mayúsculas sin espacios sobrantes.
+     * Crea una faculty. El código se normaliza a mayúsculas sin espacios sobrantes.
      *
-     * @param req código y nombre de la facultad; ambos obligatorios
-     * @return 200 con la facultad creada, o 400 si falta algún campo o el código ya existe
+     * @param req código y nombre de la faculty; ambos obligatorios
+     * @return 200 con la faculty creada, o 400 si falta algún campo o el código ya existe
      */
     @PostMapping("/facultades")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> crearFacultad(@RequestBody GuardarFacultadRequest req) {
+    public ResponseEntity<?> createFaculty(@RequestBody SaveFacultyRequest req) {
         String codigo = req.getCodigo() == null ? "" : req.getCodigo().trim().toUpperCase();
         String nombre = req.getNombre() == null ? "" : req.getNombre().trim();
         if (codigo.isEmpty() || nombre.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Código y nombre son obligatorios."));
         }
-        if (facultadRepo.findByCodigo(codigo).isPresent()) {
+        if (facultyRepo.findByCodigo(codigo).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Ya existe una facultad con ese código."));
         }
-        auditoriaService.marcarActorActual();
-        Facultad facultad = facultadRepo.save(Facultad.builder().codigo(codigo).nombre(nombre).build());
-        return ResponseEntity.ok(facultad);
+        auditService.marcarActorActual();
+        Faculty faculty = facultyRepo.save(Faculty.builder().codigo(codigo).nombre(nombre).build());
+        return ResponseEntity.ok(faculty);
     }
 
     /**
-     * Renombra una facultad. El código no se modifica para no dejar huérfanas las
+     * Renombra una faculty. El código no se modifica para no dejar huérfanas las
      * referencias existentes.
      *
-     * @param id  facultad a actualizar
+     * @param id  faculty a update
      * @param req nuevo nombre
-     * @return 200 con la facultad actualizada, 404 si no existe, o 400 si el nombre viene vacío
+     * @return 200 con la faculty actualizada, 404 si no existe, o 400 si el nombre viene vacío
      */
     @PutMapping("/facultades/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> actualizarFacultad(@PathVariable Integer id, @RequestBody GuardarFacultadRequest req) {
-        auditoriaService.marcarActorActual();
-        Facultad facultad = facultadRepo.findById(id).orElse(null);
-        if (facultad == null) {
+    public ResponseEntity<?> updateFaculty(@PathVariable Integer id, @RequestBody SaveFacultyRequest req) {
+        auditService.marcarActorActual();
+        Faculty faculty = facultyRepo.findById(id).orElse(null);
+        if (faculty == null) {
             return ResponseEntity.notFound().build();
         }
         String nombre = req.getNombre() == null ? "" : req.getNombre().trim();
         if (nombre.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "El nombre no puede estar vacío."));
         }
-        facultad.setNombre(nombre);
-        return ResponseEntity.ok(facultadRepo.save(facultad));
+        faculty.setNombre(nombre);
+        return ResponseEntity.ok(facultyRepo.save(faculty));
     }
 
     /**
-     * Elimina una facultad.
+     * Elimina una faculty.
      *
-     * @param id facultad a eliminar
-     * @return 204 si se eliminó, 404 si no existe, o 400 si tiene carreras u otros registros
+     * @param id faculty a delete
+     * @return 204 si se eliminó, 404 si no existe, o 400 si tiene programs u otros registros
      *         asociados que impiden el borrado
      */
     @DeleteMapping("/facultades/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
-    public ResponseEntity<?> eliminarFacultad(@PathVariable Integer id) {
-        if (!facultadRepo.existsById(id)) {
+    public ResponseEntity<?> deleteFaculty(@PathVariable Integer id) {
+        if (!facultyRepo.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
         try {
-            catalogoAdminService.eliminarFacultad(id);
+            catalogoAdminService.deleteFaculty(id);
             return ResponseEntity.noContent().build();
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "No se pudo eliminar: hay carreras u otros registros asociados a esta facultad."));
@@ -208,87 +208,87 @@ public class CatalogoController {
     }
 
     /**
-     * Crea una carrera dentro de una facultad existente.
+     * Crea una program dentro de una faculty existente.
      *
-     * @param req código, nombre, facultadId y modalidad de estudio; los tres primeros obligatorios
-     * @return 200 con la carrera creada, o 400 si falta un campo, el código ya existe o la
-     *         facultad indicada no existe
+     * @param req código, nombre, facultyId y modality de estudio; los tres primeros obligatorios
+     * @return 200 con la program creada, o 400 si falta un campo, el código ya existe o la
+     *         faculty indicada no existe
      */
     @PostMapping("/carreras")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> crearCarrera(@RequestBody GuardarCarreraRequest req) {
+    public ResponseEntity<?> createProgram(@RequestBody SaveProgramRequest req) {
         String codigo = req.getCodigo() == null ? "" : req.getCodigo().trim().toUpperCase();
         String nombre = req.getNombre() == null ? "" : req.getNombre().trim();
-        if (codigo.isEmpty() || nombre.isEmpty() || req.getFacultadId() == null) {
+        if (codigo.isEmpty() || nombre.isEmpty() || req.getFacultyId() == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "Código, nombre y facultad son obligatorios."));
         }
-        if (carreraRepo.findByCodigo(codigo).isPresent()) {
+        if (programRepo.findByCodigo(codigo).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Ya existe una carrera con ese código."));
         }
-        Facultad facultad = facultadRepo.findById(req.getFacultadId()).orElse(null);
-        if (facultad == null) {
+        Faculty faculty = facultyRepo.findById(req.getFacultyId()).orElse(null);
+        if (faculty == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "Facultad no encontrada."));
         }
-        auditoriaService.marcarActorActual();
-        Carrera carrera = carreraRepo.save(Carrera.builder()
-                .codigo(codigo).nombre(nombre).facultad(facultad)
-                .modalidadEstudio(req.getModalidadEstudio())
+        auditService.marcarActorActual();
+        Program program = programRepo.save(Program.builder()
+                .codigo(codigo).nombre(nombre).faculty(faculty)
+                .modalityEstudio(req.getModalityEstudio())
                 .build());
-        return ResponseEntity.ok(carrera);
+        return ResponseEntity.ok(program);
     }
 
     /**
-     * Actualiza una carrera. La modalidad y la facultad sólo se tocan si vienen en el cuerpo;
+     * Actualiza una program. La modality y la faculty sólo se tocan si vienen en el cuerpo;
      * el código nunca se modifica.
      *
-     * @param id  carrera a actualizar
-     * @param req nombre (obligatorio) y, opcionalmente, modalidad de estudio y facultadId
-     * @return 200 con la carrera actualizada, 404 si no existe, o 400 si el nombre viene
-     *         vacío o la facultad indicada no existe
+     * @param id  program a update
+     * @param req nombre (obligatorio) y, opcionalmente, modality de estudio y facultyId
+     * @return 200 con la program actualizada, 404 si no existe, o 400 si el nombre viene
+     *         vacío o la faculty indicada no existe
      */
     @PutMapping("/carreras/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> actualizarCarrera(@PathVariable Integer id, @RequestBody GuardarCarreraRequest req) {
-        auditoriaService.marcarActorActual();
-        Carrera carrera = carreraRepo.findById(id).orElse(null);
-        if (carrera == null) {
+    public ResponseEntity<?> updateProgram(@PathVariable Integer id, @RequestBody SaveProgramRequest req) {
+        auditService.marcarActorActual();
+        Program program = programRepo.findById(id).orElse(null);
+        if (program == null) {
             return ResponseEntity.notFound().build();
         }
         String nombre = req.getNombre() == null ? "" : req.getNombre().trim();
         if (nombre.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "El nombre no puede estar vacío."));
         }
-        carrera.setNombre(nombre);
-        if (req.getModalidadEstudio() != null) {
-            carrera.setModalidadEstudio(req.getModalidadEstudio());
+        program.setNombre(nombre);
+        if (req.getModalityEstudio() != null) {
+            program.setModalityEstudio(req.getModalityEstudio());
         }
-        if (req.getFacultadId() != null) {
-            Facultad facultad = facultadRepo.findById(req.getFacultadId()).orElse(null);
-            if (facultad == null) {
+        if (req.getFacultyId() != null) {
+            Faculty faculty = facultyRepo.findById(req.getFacultyId()).orElse(null);
+            if (faculty == null) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Facultad no encontrada."));
             }
-            carrera.setFacultad(facultad);
+            program.setFaculty(faculty);
         }
-        return ResponseEntity.ok(carreraRepo.save(carrera));
+        return ResponseEntity.ok(programRepo.save(program));
     }
 
     /**
-     * Elimina una carrera.
+     * Elimina una program.
      *
-     * @param id carrera a eliminar
-     * @return 204 si se eliminó, 404 si no existe, o 400 si tiene estudiantes u otros
+     * @param id program a delete
+     * @return 204 si se eliminó, 404 si no existe, o 400 si tiene students u otros
      *         registros asociados
      */
     @DeleteMapping("/carreras/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
-    public ResponseEntity<?> eliminarCarrera(@PathVariable Integer id) {
-        if (!carreraRepo.existsById(id)) {
+    public ResponseEntity<?> deleteProgram(@PathVariable Integer id) {
+        if (!programRepo.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
         try {
-            catalogoAdminService.eliminarCarrera(id);
+            catalogoAdminService.deleteProgram(id);
             return ResponseEntity.noContent().build();
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "No se pudo eliminar: hay estudiantes u otros registros asociados a esta carrera."));
@@ -296,67 +296,67 @@ public class CatalogoController {
     }
 
     /**
-     * Crea una modalidad de titulación. El código se normaliza a mayúsculas y los espacios
+     * Crea una modality de titulación. El código se normaliza a mayúsculas y los espacios
      * internos se sustituyen por guiones bajos.
      *
      * @param req código y nombre; ambos obligatorios
-     * @return 200 con la modalidad creada, o 400 si falta un campo o el código ya existe
+     * @return 200 con la modality creada, o 400 si falta un campo o el código ya existe
      */
     @PostMapping("/modalidades")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> crearModalidad(@RequestBody GuardarModalidadRequest req) {
+    public ResponseEntity<?> createModality(@RequestBody SaveModalityRequest req) {
         String codigo = req.getCodigo() == null ? "" : req.getCodigo().trim().toUpperCase().replaceAll("\\s+", "_");
         String nombre = req.getNombre() == null ? "" : req.getNombre().trim();
         if (codigo.isEmpty() || nombre.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Código y nombre son obligatorios."));
         }
-        if (modalidadRepo.findByCodigo(codigo).isPresent()) {
+        if (modalityRepo.findByCodigo(codigo).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Ya existe una modalidad con ese código."));
         }
-        auditoriaService.marcarActorActual();
-        ModalidadTitulacion modalidad = modalidadRepo.save(ModalidadTitulacion.builder().codigo(codigo).nombre(nombre).build());
-        return ResponseEntity.ok(modalidad);
+        auditService.marcarActorActual();
+        ModalityTitulacion modality = modalityRepo.save(ModalityTitulacion.builder().codigo(codigo).nombre(nombre).build());
+        return ResponseEntity.ok(modality);
     }
 
     /**
-     * Renombra una modalidad, sin tocar su código.
+     * Renombra una modality, sin tocar su código.
      *
-     * @param id  modalidad a actualizar
+     * @param id  modality a update
      * @param req nuevo nombre
-     * @return 200 con la modalidad actualizada, 404 si no existe, o 400 si el nombre viene vacío
+     * @return 200 con la modality actualizada, 404 si no existe, o 400 si el nombre viene vacío
      */
     @PutMapping("/modalidades/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> actualizarModalidad(@PathVariable Short id, @RequestBody GuardarModalidadRequest req) {
-        auditoriaService.marcarActorActual();
-        ModalidadTitulacion modalidad = modalidadRepo.findById(id).orElse(null);
-        if (modalidad == null) {
+    public ResponseEntity<?> updateModality(@PathVariable Short id, @RequestBody SaveModalityRequest req) {
+        auditService.marcarActorActual();
+        ModalityTitulacion modality = modalityRepo.findById(id).orElse(null);
+        if (modality == null) {
             return ResponseEntity.notFound().build();
         }
         String nombre = req.getNombre() == null ? "" : req.getNombre().trim();
         if (nombre.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "El nombre no puede estar vacío."));
         }
-        modalidad.setNombre(nombre);
-        return ResponseEntity.ok(modalidadRepo.save(modalidad));
+        modality.setNombre(nombre);
+        return ResponseEntity.ok(modalityRepo.save(modality));
     }
 
     /**
-     * Elimina una modalidad de titulación.
+     * Elimina una modality de titulación.
      *
-     * @param id modalidad a eliminar
-     * @return 204 si se eliminó, 404 si no existe, o 400 si hay solicitudes asociadas
+     * @param id modality a delete
+     * @return 204 si se eliminó, 404 si no existe, o 400 si hay submissions asociadas
      */
     @DeleteMapping("/modalidades/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
-    public ResponseEntity<?> eliminarModalidad(@PathVariable Short id) {
-        if (!modalidadRepo.existsById(id)) {
+    public ResponseEntity<?> deleteModality(@PathVariable Short id) {
+        if (!modalityRepo.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
         try {
-            catalogoAdminService.eliminarModalidad(id);
+            catalogoAdminService.deleteModality(id);
             return ResponseEntity.noContent().build();
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "No se pudo eliminar: hay solicitudes u otros registros asociados a esta modalidad."));
@@ -374,7 +374,7 @@ public class CatalogoController {
     @PostMapping("/periodos-academicos")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> crearPeriodo(@RequestBody GuardarPeriodoRequest req) {
+    public ResponseEntity<?> createPeriod(@RequestBody SavePeriodRequest req) {
         String codigo = req.getCodigo() == null ? "" : req.getCodigo().trim().toUpperCase();
         String nombre = req.getNombre() == null ? "" : req.getNombre().trim();
         if (codigo.isEmpty() || nombre.isEmpty() || req.getFechaInicio() == null || req.getFechaFin() == null) {
@@ -383,23 +383,23 @@ public class CatalogoController {
         if (!req.getFechaFin().isAfter(req.getFechaInicio())) {
             return ResponseEntity.badRequest().body(Map.of("error", "La fecha de fin debe ser posterior a la fecha de inicio."));
         }
-        if (periodoAcademicoRepo.findByCodigo(codigo).isPresent()) {
+        if (periodAcademicoRepo.findByCodigo(codigo).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Ya existe un período académico con ese código."));
         }
-        auditoriaService.marcarActorActual();
-        PeriodoAcademico periodo = periodoAcademicoRepo.save(PeriodoAcademico.builder()
+        auditService.marcarActorActual();
+        PeriodAcademico period = periodAcademicoRepo.save(PeriodAcademico.builder()
                 .codigo(codigo).nombre(nombre)
                 .fechaInicio(req.getFechaInicio()).fechaFin(req.getFechaFin())
                 .activo(req.getActivo() != null && req.getActivo())
                 .build());
-        return ResponseEntity.ok(periodo);
+        return ResponseEntity.ok(period);
     }
 
     /**
      * Actualiza un período académico. Las fechas que no vengan en el cuerpo conservan su
-     * valor actual, y el rango resultante se vuelve a validar.
+     * valor actual, y el rango resultante se vuelve a validate.
      *
-     * @param id  período a actualizar
+     * @param id  período a update
      * @param req nombre (obligatorio) y, opcionalmente, fechas y estado activo
      * @return 200 con el período actualizado, 404 si no existe, o 400 si el nombre viene
      *         vacío o el rango de fechas resultante es inválido
@@ -407,45 +407,45 @@ public class CatalogoController {
     @PutMapping("/periodos-academicos/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> actualizarPeriodo(@PathVariable Integer id, @RequestBody GuardarPeriodoRequest req) {
-        auditoriaService.marcarActorActual();
-        PeriodoAcademico periodo = periodoAcademicoRepo.findById(id).orElse(null);
-        if (periodo == null) {
+    public ResponseEntity<?> updatePeriod(@PathVariable Integer id, @RequestBody SavePeriodRequest req) {
+        auditService.marcarActorActual();
+        PeriodAcademico period = periodAcademicoRepo.findById(id).orElse(null);
+        if (period == null) {
             return ResponseEntity.notFound().build();
         }
         String nombre = req.getNombre() == null ? "" : req.getNombre().trim();
         if (nombre.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "El nombre no puede estar vacío."));
         }
-        LocalDate inicio = req.getFechaInicio() != null ? req.getFechaInicio() : periodo.getFechaInicio();
-        LocalDate fin = req.getFechaFin() != null ? req.getFechaFin() : periodo.getFechaFin();
+        LocalDate inicio = req.getFechaInicio() != null ? req.getFechaInicio() : period.getFechaInicio();
+        LocalDate fin = req.getFechaFin() != null ? req.getFechaFin() : period.getFechaFin();
         if (!fin.isAfter(inicio)) {
             return ResponseEntity.badRequest().body(Map.of("error", "La fecha de fin debe ser posterior a la fecha de inicio."));
         }
-        periodo.setNombre(nombre);
-        periodo.setFechaInicio(inicio);
-        periodo.setFechaFin(fin);
+        period.setNombre(nombre);
+        period.setFechaInicio(inicio);
+        period.setFechaFin(fin);
         if (req.getActivo() != null) {
-            periodo.setActivo(req.getActivo());
+            period.setActivo(req.getActivo());
         }
-        return ResponseEntity.ok(periodoAcademicoRepo.save(periodo));
+        return ResponseEntity.ok(periodAcademicoRepo.save(period));
     }
 
     /**
      * Elimina un período académico.
      *
-     * @param id período a eliminar
-     * @return 204 si se eliminó, 404 si no existe, o 400 si hay estudiantes o convocatorias
+     * @param id período a delete
+     * @return 204 si se eliminó, 404 si no existe, o 400 si hay students o announcements
      *         asociadas
      */
     @DeleteMapping("/periodos-academicos/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
-    public ResponseEntity<?> eliminarPeriodo(@PathVariable Integer id) {
-        if (!periodoAcademicoRepo.existsById(id)) {
+    public ResponseEntity<?> deletePeriod(@PathVariable Integer id) {
+        if (!periodAcademicoRepo.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
         try {
-            catalogoAdminService.eliminarPeriodo(id);
+            catalogoAdminService.deletePeriod(id);
             return ResponseEntity.noContent().build();
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "No se pudo eliminar: hay estudiantes o convocatorias asociadas a este período."));

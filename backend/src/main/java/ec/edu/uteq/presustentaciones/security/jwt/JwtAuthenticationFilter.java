@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * El interceptor del frontend adjunta el header {@code Authorization: Bearer <token>} a
      * TODAS las peticiones mientras exista un token en localStorage, incluida la de login. Si
      * ese token está caducado, este filtro respondía 401 "Token expirado" y hacía {@code return}
-     * antes de que se ejecutara el handler de login: el usuario quedaba bloqueado sin poder
+     * antes de que se executea el handler de login: el appUser quedaba blockado sin poder
      * volver a entrar (solo se recuperaba borrando el localStorage a mano). Estos endpoints no
      * requieren autenticación previa, así que se saltan el filtro por completo.
      */
@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return path.contains("/auth/login")
                 || path.contains("/auth/refresh")
                 || path.contains("/auth/register")
-                // RF-05 (fase 6): mismo motivo que login -- quien pide recuperar o restablecer
+                // RF-05 (fase 6): mismo motivo que login -- quien pide recuperar o reset
                 // su contraseña puede tener un token vencido (o ninguno) en localStorage, y el
                 // interceptor del frontend lo adjunta igual a esta peticion.
                 || path.contains("/auth/recuperar")

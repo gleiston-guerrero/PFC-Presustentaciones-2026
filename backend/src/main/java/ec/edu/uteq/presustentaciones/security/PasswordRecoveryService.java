@@ -1,7 +1,7 @@
 package ec.edu.uteq.presustentaciones.security;
 
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.security.jwt.JwtTokenProvider;
 import ec.edu.uteq.presustentaciones.services.EmailService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>Nota honesta sobre el envío real de correo:</b> con {@code app.mail.enabled=false}
  * (valor por omisión), este servicio genera y guarda el token igual, y lo "envía" solo al log
- * ({@link EmailService#enviarRecuperacionPassword}) -- la entrega real del correo nunca se
+ * ({@link EmailService#sendRecuperacionPassword}) -- la entrega real del correo nunca se
  * verificó contra un servidor SMTP de verdad. El flujo completo (generación, caducidad, un solo
  * uso, revocación de sesiones, límite de tasa) sí es real y probado; ver el estado declarado de
  * RF-05 en el SRS.
@@ -39,7 +39,7 @@ public class PasswordRecoveryService {
     private static final long TTL_MINUTOS = 30;
     private static final String PREFIJO_TOKEN = "password_reset:";
 
-    private final UsuarioRepository usuarioRepository;
+    private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordPolicyValidator passwordPolicyValidator;
     private final EmailService emailService;
@@ -55,13 +55,13 @@ public class PasswordRecoveryService {
      * @param email email de la cuenta para la que se solicita recuperación
      */
     public void solicitarRecuperacion(String email) {
-        Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
-        if (usuario.isPresent()) {
+        Optional<AppUser> appUser = appUserRepository.findByEmail(email);
+        if (appUser.isPresent()) {
             String tokenPlano = UUID.randomUUID().toString() + UUID.randomUUID();
             String hash = sha256(tokenPlano);
-            redisTemplate.opsForValue().set(PREFIJO_TOKEN + hash, usuario.get().getEmail(),
+            redisTemplate.opsForValue().set(PREFIJO_TOKEN + hash, appUser.get().getEmail(),
                     TTL_MINUTOS, TimeUnit.MINUTES);
-            emailService.enviarRecuperacionPassword(usuario.get().getEmail(), tokenPlano);
+            emailService.sendRecuperacionPassword(appUser.get().getEmail(), tokenPlano);
         } else {
             // Trabajo equivalente (una escritura en Redis) para no filtrar la existencia de la
             // cuenta por el tiempo de respuesta; se descarta casi de inmediato.
@@ -78,19 +78,19 @@ public class PasswordRecoveryService {
      * @throws IllegalArgumentException token inválido, expirado o ya usado (400); o la nueva
      *         contraseña incumple RNF-06 (mensaje del propio {@link PasswordPolicyValidator})
      */
-    public void restablecer(String tokenPlano, String passwordNueva) {
+    public void reset(String tokenPlano, String passwordNueva) {
         String key = PREFIJO_TOKEN + sha256(tokenPlano);
         String email = redisTemplate.opsForValue().get(key);
         if (email == null) {
             throw new IllegalArgumentException("El enlace de recuperación es inválido o ya expiró.");
         }
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        AppUser appUser = appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("El enlace de recuperación es inválido o ya expiró."));
 
-        passwordPolicyValidator.validar(passwordNueva);
+        passwordPolicyValidator.validate(passwordNueva);
 
-        usuario.setPassword(passwordEncoder.encode(passwordNueva));
-        usuarioRepository.save(usuario);
+        appUser.setPassword(passwordEncoder.encode(passwordNueva));
+        appUserRepository.save(appUser);
 
         // Un solo uso: se borra ANTES de revocar sesiones, para que un reintento concurrente
         // con el mismo token nunca vea una ventana en la que el token siga "vivo".
@@ -99,9 +99,9 @@ public class PasswordRecoveryService {
         // A diferencia del cambio voluntario (RF-06), aquí se revocan TODAS las sesiones sin
         // excepción: una recuperación puede originarse en un compromiso real de la cuenta, no
         // en un cambio de rutina desde una sesión de confianza.
-        jwtTokenProvider.revokeAllUserTokens(usuario.getEmail());
+        jwtTokenProvider.revokeAllUserTokens(appUser.getEmail());
 
-        log.warn("Contraseña restablecida vía recuperación para el usuario: {}", usuario.getEmail());
+        log.warn("Contraseña restablecida vía recuperación para el usuario: {}", appUser.getEmail());
     }
 
     private static String sha256(String texto) {

@@ -30,7 +30,7 @@ class Phase4FeaturesTest {
         valueOperations = Mockito.mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         // Hallazgo real (2026-09-01): generateRefreshToken() ahora tambien usa opsForSet() para
-        // poder revocar todos los refresh tokens de un usuario (revokeAllUserTokens) -- sin este
+        // poder revocar todos los refresh tokens de un appUser (revokeAllUserTokens) -- sin este
         // mock, opsForSet() devuelve null (mock sin stub) y .add(...) lanza NullPointerException.
         setOperations = Mockito.mock(SetOperations.class);
         when(redisTemplate.opsForSet()).thenReturn(setOperations);

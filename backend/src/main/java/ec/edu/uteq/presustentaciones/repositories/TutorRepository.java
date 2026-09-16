@@ -11,19 +11,19 @@ import java.util.Optional;
 
 @Repository
 public interface TutorRepository extends JpaRepository<Tutor, Long> {
-    Optional<Tutor> findBySolicitudId(Long solicitudId);
-    List<Tutor> findByDocenteId(Long docenteId);
-    long countByDocenteIdAndEstado(Long docenteId, String estado);
+    Optional<Tutor> findBySubmissionId(Long submissionId);
+    List<Tutor> findByTeacherId(Long teacherId);
+    long countByTeacherIdAndEstado(Long teacherId, String estado);
 
-    List<Tutor> findBySolicitudEstudianteUsuarioId(Long usuarioId);
-    List<Tutor> findByDocenteUsuarioId(Long usuarioId);
+    List<Tutor> findBySubmissionStudentAppUserId(Long appUserId);
+    List<Tutor> findByTeacherAppUserId(Long appUserId);
 
     @Query(value = "SELECT * FROM presus.sp_obtener_estadisticas_tutores()", nativeQuery = true)
-    List<Object[]> obtenerEstadisticasTutoresSp();
+    List<Object[]> obtainEstadisticasTutoresSp();
 
-    /** Reportes: cuántas tutorías tiene asignadas cada docente (GROUP BY en la base). */
-    @Query("SELECT t.docente.id, COUNT(t) FROM Tutor t GROUP BY t.docente.id")
-    List<Object[]> contarTutoriasPorDocente();
+    /** Reportes: cuántas tutorías tiene asignadas cada teacher (GROUP BY en la base). */
+    @Query("SELECT t.teacher.id, COUNT(t) FROM Tutor t GROUP BY t.teacher.id")
+    List<Object[]> countTutoringsPorTeacher();
 
-    boolean existsBySolicitudIdAndDocenteUsuarioEmail(Long solicitudId, String email);
+    boolean existsBySubmissionIdAndTeacherAppUserEmail(Long submissionId, String email);
 }

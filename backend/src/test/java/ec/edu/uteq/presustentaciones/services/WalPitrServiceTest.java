@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
  * todo lo que es seguro probar sin invocar pg_basebackup real: el panel de estado (con sus
  * combinaciones de archivado activo/inactivo y base fisica presente/ausente), la limpieza
  * de WAL viejo, y el listado/eliminacion de bases fisicas sobre un directorio temporal.
- * generarBaseFisica() solo se prueba en su validacion previa a invocar el binario externo.
+ * generateBaseFisica() solo se prueba en su validacion previa a invocar el binario externo.
  */
 @ExtendWith(MockitoExtension.class)
 class WalPitrServiceTest {
@@ -72,7 +72,7 @@ class WalPitrServiceTest {
         return fila;
     }
 
-    private void crearBaseFisica(String nombre) throws IOException {
+    private void createBaseFisica(String nombre) throws IOException {
         Path base = tempDir.resolve("backups").resolve("bases").resolve(nombre);
         Files.createDirectories(base);
         Files.writeString(base.resolve("base.tar.gz"), "contenido");
@@ -106,7 +106,7 @@ class WalPitrServiceTest {
     @Test
     void estadoReportaPitrDisponibleConArchivadoActivoYBaseFisica() throws IOException {
         when(jdbc.queryForMap(anyString())).thenReturn(filaArchiver("on"));
-        crearBaseFisica("base_20260101_000000");
+        createBaseFisica("base_20260101_000000");
 
         EstadoWalDTO dto = service.estado();
 
@@ -188,52 +188,52 @@ class WalPitrServiceTest {
         assertTrue(Files.exists(ajeno));
     }
 
-    // ── listarBases / eliminarBase ───────────────────────────────────────────
+    // ── listBases / deleteBase ───────────────────────────────────────────
 
     @Test
-    void listarBasesDevuelveListaVaciaSiNoHayNinguna() {
-        assertEquals(List.of(), service.listarBases());
+    void listBasesDevuelveListaVaciaSiNoHayNinguna() {
+        assertEquals(List.of(), service.listBases());
     }
 
     @Test
-    void listarBasesEncuentraLasCarpetasBaseOrdenadasPorFechaDescendente() throws IOException {
-        crearBaseFisica("base_20260101_000000");
+    void listBasesEncuentraLasCarpetasBaseOrdenadasPorFechaDescendente() throws IOException {
+        createBaseFisica("base_20260101_000000");
         Path segunda = tempDir.resolve("backups").resolve("bases").resolve("base_20260201_000000");
         Files.createDirectories(segunda);
         Files.writeString(segunda.resolve("x.tar.gz"), "y");
         Files.setLastModifiedTime(segunda, java.nio.file.attribute.FileTime.from(java.time.Instant.now()));
 
-        List<BaseFisicaDTO> bases = service.listarBases();
+        List<BaseFisicaDTO> bases = service.listBases();
 
         assertEquals(2, bases.size());
         assertEquals("base_20260201_000000", bases.get(0).getNombre());
     }
 
     @Test
-    void eliminarBaseRechazaUnNombreInvalido() {
-        assertThrows(IllegalArgumentException.class, () -> service.eliminarBase("../etc/passwd"));
+    void deleteBaseRechazaUnNombreInvalido() {
+        assertThrows(IllegalArgumentException.class, () -> service.deleteBase("../etc/passwd"));
     }
 
     @Test
-    void eliminarBaseRechazaUnaBaseQueNoExiste() {
-        assertThrows(IllegalArgumentException.class, () -> service.eliminarBase("base_20260101_000000"));
+    void deleteBaseRechazaUnaBaseQueNoExiste() {
+        assertThrows(IllegalArgumentException.class, () -> service.deleteBase("base_20260101_000000"));
     }
 
     @Test
-    void eliminarBaseBorraLaCarpetaCompleta() throws IOException {
-        crearBaseFisica("base_20260101_000000");
+    void deleteBaseBorraLaCarpetaCompleta() throws IOException {
+        createBaseFisica("base_20260101_000000");
 
-        service.eliminarBase("base_20260101_000000");
+        service.deleteBase("base_20260101_000000");
 
         assertFalse(Files.exists(tempDir.resolve("backups").resolve("bases").resolve("base_20260101_000000")));
     }
 
-    // ── generarBaseFisica: solo la validacion previa al binario externo ──────
+    // ── generateBaseFisica: solo la validacion previa al binario externo ──────
 
     @Test
-    void generarBaseFisicaFallaTempranoSiLaUrlDeConexionNoEsInterpretable() {
+    void generateBaseFisicaFallaTempranoSiLaUrlDeConexionNoEsInterpretable() {
         ReflectionTestUtils.setField(service, "datasourceUrl", "no-es-una-url-jdbc");
 
-        assertThrows(IllegalStateException.class, () -> service.generarBaseFisica());
+        assertThrows(IllegalStateException.class, () -> service.generateBaseFisica());
     }
 }

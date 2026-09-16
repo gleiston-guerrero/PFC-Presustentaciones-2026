@@ -1,7 +1,7 @@
 package ec.edu.uteq.presustentaciones.security.service;
 
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,26 +20,26 @@ import static org.mockito.Mockito.when;
 class CustomUserDetailsServiceTest {
 
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private AppUserRepository appUserRepository;
 
     @InjectMocks
     private CustomUserDetailsService service;
 
     @Test
-    void lanzaUsernameNotFoundSiElUsuarioNoExiste() {
-        when(usuarioRepository.findByEmail("nadie@uteq.edu.ec")).thenReturn(Optional.empty());
+    void lanzaUsernameNotFoundSiElAppUserNoExiste() {
+        when(appUserRepository.findByEmail("nadie@uteq.edu.ec")).thenReturn(Optional.empty());
 
         assertThrows(UsernameNotFoundException.class, () -> service.loadUserByUsername("nadie@uteq.edu.ec"));
     }
 
     @Test
-    void devuelveUserDetailsHabilitadoParaUnUsuarioActivo() {
-        Usuario u = new Usuario();
+    void devuelveUserDetailsHabilitadoParaUnAppUserActivo() {
+        AppUser u = new AppUser();
         u.setEmail("docente@uteq.edu.ec");
         u.setPassword("hash-bcrypt");
-        u.setRol("DOCENTE");
+        u.setRole("DOCENTE");
         u.setActivo(true);
-        when(usuarioRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.of(u));
+        when(appUserRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.of(u));
 
         UserDetails details = service.loadUserByUsername("docente@uteq.edu.ec");
 
@@ -51,13 +51,13 @@ class CustomUserDetailsServiceTest {
     }
 
     @Test
-    void devuelveUserDetailsDeshabilitadoParaUnUsuarioInactivo() {
-        Usuario u = new Usuario();
+    void devuelveUserDetailsDeshabilitadoParaUnAppUserInactivo() {
+        AppUser u = new AppUser();
         u.setEmail("retirado@uteq.edu.ec");
         u.setPassword("hash");
-        u.setRol("ESTUDIANTE");
+        u.setRole("ESTUDIANTE");
         u.setActivo(false);
-        when(usuarioRepository.findByEmail("retirado@uteq.edu.ec")).thenReturn(Optional.of(u));
+        when(appUserRepository.findByEmail("retirado@uteq.edu.ec")).thenReturn(Optional.of(u));
 
         UserDetails details = service.loadUserByUsername("retirado@uteq.edu.ec");
 

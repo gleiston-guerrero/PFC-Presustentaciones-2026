@@ -1,9 +1,9 @@
 package ec.edu.uteq.presustentaciones.services;
 
-import ec.edu.uteq.presustentaciones.entities.SolicitudSupresion;
-import ec.edu.uteq.presustentaciones.entities.Usuario;
-import ec.edu.uteq.presustentaciones.repositories.SolicitudSupresionRepository;
-import ec.edu.uteq.presustentaciones.repositories.UsuarioRepository;
+import ec.edu.uteq.presustentaciones.entities.SubmissionSupresion;
+import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.repositories.SubmissionSupresionRepository;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,42 +20,42 @@ import static org.mockito.Mockito.*;
  */
 class SupresionDatosServiceTest {
 
-    private UsuarioRepository usuarioRepository;
-    private SolicitudSupresionRepository solicitudRepository;
+    private AppUserRepository appUserRepository;
+    private SubmissionSupresionRepository submissionRepository;
     private SupresionDatosService service;
 
     @BeforeEach
     void setUp() {
-        usuarioRepository = mock(UsuarioRepository.class);
-        solicitudRepository = mock(SolicitudSupresionRepository.class);
-        service = new SupresionDatosService(usuarioRepository, solicitudRepository);
+        appUserRepository = mock(AppUserRepository.class);
+        submissionRepository = mock(SubmissionSupresionRepository.class);
+        service = new SupresionDatosService(appUserRepository, submissionRepository);
         // save() devuelve lo que recibe, como un repositorio real
-        when(solicitudRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(submissionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
     @Test
-    void solicitarCreaLaSolicitudEnEstadoPendiente() {
-        when(usuarioRepository.existsById(5L)).thenReturn(true);
-        when(solicitudRepository.existsByUsuarioIdAndEstado(5L, "PENDIENTE")).thenReturn(false);
+    void solicitarCreaLaSubmissionEnEstadoPendiente() {
+        when(appUserRepository.existsById(5L)).thenReturn(true);
+        when(submissionRepository.existsByAppUserIdAndEstado(5L, "PENDIENTE")).thenReturn(false);
 
-        SolicitudSupresion solicitud = service.solicitar(5L);
+        SubmissionSupresion submission = service.solicitar(5L);
 
-        assertEquals(5L, solicitud.getUsuarioId());
-        assertEquals("PENDIENTE", solicitud.getEstado());
-        assertNotNull(solicitud.getFechaSolicitud());
+        assertEquals(5L, submission.getAppUserId());
+        assertEquals("PENDIENTE", submission.getEstado());
+        assertNotNull(submission.getFechaSubmission());
     }
 
     @Test
     void noSePuedeSolicitarDosVecesMientrasHayaUnaPendiente() {
-        when(solicitudRepository.existsByUsuarioIdAndEstado(5L, "PENDIENTE")).thenReturn(true);
+        when(submissionRepository.existsByAppUserIdAndEstado(5L, "PENDIENTE")).thenReturn(true);
 
         assertThrows(IllegalStateException.class, () -> service.solicitar(5L));
-        verify(solicitudRepository, never()).save(any());
+        verify(submissionRepository, never()).save(any());
     }
 
     @Test
-    void resolverAceptandoSeudonimizaAlTitularSinBorrarLaFila() {
-        Usuario titular = new Usuario();
+    void resolveAceptandoSeudonimizaAlTitularSinEraseLaFila() {
+        AppUser titular = new AppUser();
         titular.setId(5L);
         titular.setNombre("Ana");
         titular.setApellido("Perez");
@@ -63,22 +63,22 @@ class SupresionDatosServiceTest {
         titular.setTelefono("0999999999");
         titular.setActivo(true);
 
-        SolicitudSupresion solicitud = SolicitudSupresion.builder()
-                .id(1L).usuarioId(5L).estado("PENDIENTE").build();
-        when(solicitudRepository.findById(1L)).thenReturn(Optional.of(solicitud));
-        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(titular));
+        SubmissionSupresion submission = SubmissionSupresion.builder()
+                .id(1L).appUserId(5L).estado("PENDIENTE").build();
+        when(submissionRepository.findById(1L)).thenReturn(Optional.of(submission));
+        when(appUserRepository.findById(5L)).thenReturn(Optional.of(titular));
 
-        SolicitudSupresion resuelta = service.resolver(1L, true, 99L, "Solicitud legítima");
+        SubmissionSupresion resuelta = service.resolve(1L, true, 99L, "Solicitud legítima");
 
         assertEquals("RESUELTA", resuelta.getEstado());
         assertEquals("SEUDONIMIZACION", resuelta.getTipoResolucion());
         assertEquals(99L, resuelta.getResueltoPor());
         assertNotNull(resuelta.getFechaResolucion());
 
-        // El usuario NUNCA se borra -- se muta y se guarda, mismo id.
-        verify(usuarioRepository, never()).delete(any());
-        verify(usuarioRepository, never()).deleteById(any());
-        verify(usuarioRepository).save(titular);
+        // El appUser NUNCA se borra -- se muta y se guarda, mismo id.
+        verify(appUserRepository, never()).delete(any());
+        verify(appUserRepository, never()).deleteById(any());
+        verify(appUserRepository).save(titular);
         assertEquals(5L, titular.getId()); // el expediente enlazado a este id sigue siendo valido
         assertFalse(titular.getNombre().equals("Ana"));
         assertFalse(titular.getApellido().equals("Perez"));
@@ -88,36 +88,36 @@ class SupresionDatosServiceTest {
     }
 
     @Test
-    void resolverRechazandoNoTocaAlUsuario() {
-        SolicitudSupresion solicitud = SolicitudSupresion.builder()
-                .id(2L).usuarioId(5L).estado("PENDIENTE").build();
-        when(solicitudRepository.findById(2L)).thenReturn(Optional.of(solicitud));
+    void resolveRechazandoNoTocaAlAppUser() {
+        SubmissionSupresion submission = SubmissionSupresion.builder()
+                .id(2L).appUserId(5L).estado("PENDIENTE").build();
+        when(submissionRepository.findById(2L)).thenReturn(Optional.of(submission));
 
-        SolicitudSupresion resuelta = service.resolver(2L, false, 99L, "Proceso de titulación en curso");
+        SubmissionSupresion resuelta = service.resolve(2L, false, 99L, "Proceso de titulación en curso");
 
         assertEquals("RECHAZADA", resuelta.getEstado());
         assertEquals("RECHAZADA", resuelta.getTipoResolucion());
-        verify(usuarioRepository, never()).findById(any());
-        verify(usuarioRepository, never()).save(any());
+        verify(appUserRepository, never()).findById(any());
+        verify(appUserRepository, never()).save(any());
     }
 
     @Test
-    void noSePuedeResolverDosVeces() {
-        SolicitudSupresion yaResuelta = SolicitudSupresion.builder()
-                .id(3L).usuarioId(5L).estado("RESUELTA").build();
-        when(solicitudRepository.findById(3L)).thenReturn(Optional.of(yaResuelta));
+    void noSePuedeResolveDosVeces() {
+        SubmissionSupresion yaResuelta = SubmissionSupresion.builder()
+                .id(3L).appUserId(5L).estado("RESUELTA").build();
+        when(submissionRepository.findById(3L)).thenReturn(Optional.of(yaResuelta));
 
-        assertThrows(IllegalStateException.class, () -> service.resolver(3L, true, 99L, "x"));
-        verify(usuarioRepository, never()).save(any());
+        assertThrows(IllegalStateException.class, () -> service.resolve(3L, true, 99L, "x"));
+        verify(appUserRepository, never()).save(any());
     }
 
     @Test
-    void elRegistroDeLaSolicitudNuncaContieneElDatoSuprimido() {
-        // La entidad SolicitudSupresion (ver su clase) no tiene ningun campo de
-        // nombre/correo/telefono -- solo usuarioId. Esta prueba documenta esa garantia
-        // estructural: intentar guardar el dato ahi no compila.
-        SolicitudSupresion s = SolicitudSupresion.builder().usuarioId(5L).estado("PENDIENTE").build();
-        assertNotNull(s.getUsuarioId());
+    void elRegistroDeLaSubmissionNuncaContieneElDatoSuprimido() {
+        // La entidad SubmissionSupresion (ver su clase) no tiene ningun campo de
+        // nombre/correo/telefono -- solo appUserId. Esta prueba documenta esa garantia
+        // estructural: intentar save el dato ahi no compila.
+        SubmissionSupresion s = SubmissionSupresion.builder().appUserId(5L).estado("PENDIENTE").build();
+        assertNotNull(s.getAppUserId());
         // No existe s.getNombre()/getEmail()/getTelefono() -- la ausencia del getter es la prueba.
     }
 }
