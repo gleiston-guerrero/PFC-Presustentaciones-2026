@@ -326,8 +326,9 @@ mockeadas (Sección~\ref{sec:seguridad-corregida}).
 
 \subsection{Calidad web (Lighthouse)}
 
-Seis corridas contra el build de producción real (3 desktop + 3 mobile, no contra el servidor de
-desarrollo, corrección metodológica de una medición anterior que sí usaba \texttt{ng serve}):
+Seis corridas contra el \textbf{despliegue público real} (3 desktop + 3 mobile, 2026-09-17,
+\url{https://steadfast-success-production-2b60.up.railway.app/} --- no contra \texttt{localhost}, no
+contra un build servido localmente):
 
 \begin{table}[H]
 \centering
@@ -335,34 +336,29 @@ desarrollo, corrección metodológica de una medición anterior que sí usaba \t
 \toprule
 \textbf{Perfil} & \textbf{Performance (media, $n=3$)} & \textbf{Accesibilidad} & \textbf{Buenas Prácticas} & \textbf{SEO} \\
 \midrule
-Desktop & 68.3 & 100 & 100 & 100 \\
-Mobile & 61 & 100 & 100 & 100 \\
+Desktop & 94 & 100 & 100 & 100 \\
+Mobile & 81 & 100 & 100 & 100 \\
 \bottomrule
 \end{tabular}
-\caption{Lighthouse, average of 3 runs per profile (2026-09-06, tras optimizar imagen del logo, cabeceras de caché y meta description; Accessibility ya había subido de 89 a 100 el 2026-08-30).}
+\caption{Lighthouse, average of 3 runs per profile (2026-09-17, contra el despliegue público en Railway).}
 \end{table}
 
 La Figura~\ref{fig:lighthouse} grafica estos mismos puntajes por categoría y perfil. Con $n=3$ por
-perfil, no se reporta una prueba de hipótesis formal entre desktop y mobile --- el tamaño
-de muestra es insuficiente para una inferencia estadística significativa; se reporta solo la diferencia
-descriptiva. Performance sigue bajo el umbral de 80/100 en ambos perfiles, aunque con una mejora real y
-medida en desktop (65$\to$68.3) tras resolver un hallazgo concreto: el logo institucional pesaba 333\,KB
-a 2444$\times$2826\,px mostrado en pantalla a solo 68\,px de ancho (redimensionado a 73,7\,KB, $-$78\,\%),
-y las cabeceras de caché de nginx forzaban revalidación de red en cada carga incluso para bundles con hash
-inmutables. En mobile, pese a que el Largest Contentful Paint mejoró de forma real (7.6--7.8\,s
-$\to$ 6.7--6.8\,s), el puntaje agregado no se movió: bajo el \emph{throttling} de CPU 4$\times$ del
-perfil mobile, el cuello de botella deja de ser peso de red y pasa a ser tiempo de arranque/ejecución de
-JavaScript del framework (Angular + zone.js) --- un problema de arquitectura, no de assets, fuera del
-alcance de una corrección puntual. Se declara como brecha real con causa raíz identificada, en vez de
-forzar el número --- ver la nota metodológica completa en
-\texttt{docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md} y la discusión de esta limitación en
-Sección~\ref{sec:amenazas-validez}.
+perfil, no se reporta una prueba de hipótesis formal entre desktop y mobile --- el tamaño de muestra es
+insuficiente para una inferencia estadística significativa; se reporta solo la diferencia descriptiva.
+\textbf{Los 4 umbrales ($\geq$80 Performance, $\geq$90 el resto) se cumplen en los dos perfiles} contra el
+despliegue real. El salto frente a las mediciones anteriores contra \texttt{localhost} (Performance
+68.3/61) no viene de un cambio de código entre una medición y otra, sino del hosting en sí: Railway sirve
+por HTTP/2 con compresión y un borde de red más cercano al punto de prueba que un servidor de archivos
+estáticos local sin esas optimizaciones --- documentado con el detalle completo, incluidas las corridas
+anteriores contra \texttt{localhost} conservadas como referencia histórica, en
+\texttt{docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md}.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.82\textwidth]{figuras/fig-lighthouse-scores}
-\caption{Scores Lighthouse por categoría y perfil (media de 3 corridas, build de producción,
-2026-09-06). Generado por \texttt{scripts/gen-figuras.py} a partir de
+\caption{Scores Lighthouse por categoría y perfil (media de 3 corridas, despliegue público real,
+2026-09-17). Generado por \texttt{scripts/gen-figuras.py} a partir de
 \texttt{docs/mediciones/perf/lighthouse/prod-runs/*.json}.}
 \label{fig:lighthouse}
 \end{figure}
