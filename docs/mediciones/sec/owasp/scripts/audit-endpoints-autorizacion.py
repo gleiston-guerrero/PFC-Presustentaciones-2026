@@ -20,7 +20,7 @@ WRITE_VERBS = ("PostMapping", "PutMapping", "PatchMapping", "DeleteMapping")
 EXENTOS_CONOCIDOS = {
     ("AuthController", "login"), ("AuthController", "refresh"),
     ("AuthController", "logout"), ("AuthController", "recuperar"),
-    ("AuthController", "restablecer"),
+    ("AuthController", "reset"),
 }
 
 total = 0

@@ -241,6 +241,23 @@ Sin ninguna anotacion de autorizacion: 5
 OK: todos los endpoints sin @PreAuthorize son exentos conocidos y documentados.
 ```
 
+**Re-verificación (2026-09-17, re-verificación P8 del examen suspenso):** se volvió a correr el mismo
+script contra el código actual, después del trabajo de renombrado español→inglés de P4 de este mismo
+examen. Esa ronda de P4 renombró el método Java `AuthController.restablecer()` a `AuthController.reset()`
+(la ruta HTTP `/api/auth/restablecer` no cambió, solo el identificador interno — P4 nunca toca rutas/JSON),
+y esta lista de exentos, al estar codificada por **nombre de método** y no por ruta, quedó desactualizada:
+el script pasó de `OK` a `FALLO: 1 endpoint(s) sin autorizacion y sin justificacion conocida` señalando
+`AuthController.reset` como inesperado. **Es un hallazgo real, no solo una cita vieja** — se corrigió
+actualizando la entrada `("AuthController", "restablecer")` a `("AuthController", "reset")` en
+`EXENTOS_CONOCIDOS` dentro del propio script. Re-corrido tras el fix: **102 endpoints de escritura
+totales (misma cifra), 5 exentos, los 5 justificados, `OK`.** También se corrió en limpio
+`AppUserControllerTest` (la clase quedó renombrada de `UsuarioControllerTest` por el mismo P4, igual que
+el método `actualizarPerfilRechazaEditarElPerfilDeOtroUsuario` → `updatePerfilRechazaEditarElPerfilDeOtroAppUser`
+citado arriba): **23/23 pruebas, 0 fallos**, incluyendo el 403 de editar el perfil ajeno y el 200 del
+propio. Y se confirmó leyendo el archivo actual que `MeController` sigue con `@PreAuthorize("isAuthenticated()")`
+a nivel de clase (no tiene ningún endpoint de escritura propio — solo `GET /api/me/permisos` — así que
+el criterio de cierre lo cubre igual: ningún endpoint del controlador queda sin autorización declarativa).
+
 **Verificado:** CORS restringido explícitamente a `http://localhost:4200` y `http://localhost:3000` (`SecurityConfig` + `WebConfig`, más `@CrossOrigin` por controlador) — configurado en 3 lugares distintos que hay que mantener sincronizados si se agrega un origen nuevo (riesgo de mantenimiento, no de seguridad activa). CSRF deshabilitado deliberadamente (correcto para una API JWT stateless sin cookies de sesión). Sesión configurada como `STATELESS`.
 
 **Hallado y corregido (2026-08-29):** `nginx.conf` declaraba `X-Frame-Options`/`X-Content-Type-Options`/`Content-Security-Policy`/`Permissions-Policy` a nivel `server{}`, lo que hacía que nginx los añadiera también a las respuestas proxied de `/api/v1/` y `/actuator/` — **encima** de los que Spring Security ya agrega para esas mismas rutas, verificado real con `curl -D -` (headers duplicados en la respuesta). Por la especificación de CSP, cuando el navegador recibe dos cabeceras `Content-Security-Policy`, aplica la **intersección** de ambas: la política más laxa del backend (`connect-src` con `localhost:4200`/websockets, necesaria para el frontend en dev) quedaba silenciosamente recortada por la más estricta de nginx (`connect-src 'self'`). Corregido moviendo esas cabeceras exclusivamente a `location /` (la única ruta que nginx sirve directamente, sin backend detrás) — verificado real: tras el fix, `curl -D -` contra `/api/v1/auth/login` muestra un único `Content-Security-Policy`, el del backend con su `connect-src` completo.
