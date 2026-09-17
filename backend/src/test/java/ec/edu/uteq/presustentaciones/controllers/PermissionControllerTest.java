@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
  * la salvaguarda que impide dejar al sistema sin ningún role capaz de gestionar permissions.
  *
  * Ese es el caso crítico que se cubre aquí: si se acepta remove ROLES_PERMISOS_GESTIONAR
- * del último role que lo tiene, nadie puede volver a assignlo desde la interfaz y el
+ * del último role que lo tiene, nadie puede volver a asignarlo desde la interfaz y el
  * sistema queda blockado sin más salida que tocar la base de datos a mano.
  */
 @ExtendWith(MockitoExtension.class)

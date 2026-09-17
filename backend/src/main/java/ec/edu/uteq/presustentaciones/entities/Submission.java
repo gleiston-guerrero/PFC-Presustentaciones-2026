@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * sp_generate_reporte_defensas (backend/src/main/resources/db/migration/V2__stored_procedures.sql)
  * arma el reporte consolidado de defensas por program cruzando submission/student/appUsers/
  * schedule/room/evaluations -- invocado vía SubmissionRepository (JPA 2.1
- * @NamedStoredProcedureQuery, Fase 3 / Criterio P1).
+ * {@code @NamedStoredProcedureQuery}, Fase 3 / Criterio P1).
  */
 @NamedStoredProcedureQuery(
         name = "Solicitud.generarReporteDefensas",

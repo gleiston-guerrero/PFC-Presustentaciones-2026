@@ -535,7 +535,7 @@ public class BackupService {
     // ── Download / restore / delete ────────────────────────────────────
 
     /**
-     * Lee el contenido crudo de un backup, para downloadlo.
+     * Lee el contenido crudo de un backup, para descargarlo.
      *
      * @param nombre nombre del archivo de backup
      * @return el contenido completo del archivo

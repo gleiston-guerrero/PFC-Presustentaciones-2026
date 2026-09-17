@@ -62,7 +62,7 @@ public interface PanelistService {
 
     /**
      * Sugiere teachers candidatos a panelist para una submission (excluyendo al tutor asignado y a
-     * quienes ya tengan conflicto de horario), sin assignlos todavía.
+     * quienes ya tengan conflicto de horario), sin asignarlos todavía.
      *
      * @param submissionId id de la submission
      * @param cantidad    número máximo de teachers a sugerir

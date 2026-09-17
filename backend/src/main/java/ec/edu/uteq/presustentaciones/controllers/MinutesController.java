@@ -94,7 +94,7 @@ public class MinutesController {
     }
 
     /**
-     * Vista en línea del PDF del minutes, para openlo en el navegador sin downloadlo.
+     * Vista en línea del PDF del minutes, para abrirlo en el navegador sin descargarlo.
      *
      * @param minutesId minutes cuyo PDF se muestra
      * @return 200 con el PDF y cabecera inline

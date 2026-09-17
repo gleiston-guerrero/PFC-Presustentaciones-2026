@@ -20,10 +20,10 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 
     /**
      * ERR-02: la tabla teacher tiene 9,807 filas -- /api/teachers (findAll sin Pageable) traía
-     * todo de una vez y el <select> con un <option> por fila congelaba el navegador al openlo.
-     * Búsqueda de texto libre (nombre/apellido/área de especialidad) + paginado, mismo patrón
-     * que AppUserRepository.searchPaginado, para alimentar un combobox con typeahead en vez del
-     * <select> nativo.
+     * todo de una vez y el {@code <select>} con un {@code <option>} por fila congelaba el
+     * navegador al abrirlo. Búsqueda de texto libre (nombre/apellido/área de especialidad) +
+     * paginado, mismo patrón que AppUserRepository.searchPaginado, para alimentar un combobox
+     * con typeahead en vez del {@code <select>} nativo.
      */
     @Query(value = "SELECT d FROM Teacher d JOIN FETCH d.appUser u " +
            "WHERE :q IS NULL OR :q = '' " +

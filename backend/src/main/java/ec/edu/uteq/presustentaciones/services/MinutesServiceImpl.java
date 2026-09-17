@@ -769,7 +769,7 @@ public class MinutesServiceImpl implements MinutesService {
         // Validate que el appUser tenga permissions (ya sea admin, student dueño, panelist o tutor)
         validateAcceso(minutes);
         
-        // Si hay un archivo físico, intentar deletelo
+        // Si hay un archivo físico, intentar eliminarlo
         if (minutes.getArchivoPdf() != null) {
             Path path = Paths.get(minutesDir, minutes.getArchivoPdf());
             try {

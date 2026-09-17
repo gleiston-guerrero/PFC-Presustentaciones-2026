@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
  * distinguible de "sin permiso" (403 de {@code GlobalExceptionHandler.handleAccessDenied}) --
  * el frontend necesita saber si debe reautenticar (expirado) o simplemente no mostrar la
  * acción (sin permission). El comportamiento ya existía en {@code JwtAuthenticationFilter}; esta
- * prueba solo lo cubre, sin changelo.
+ * prueba solo lo cubre, sin cambiarlo.
  */
 class JwtAuthenticationFilterTest {
 

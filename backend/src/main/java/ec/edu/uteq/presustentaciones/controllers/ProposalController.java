@@ -81,7 +81,7 @@ public class ProposalController {
 
     /**
      * RF-02: Recalcula el SHA-256 del archivo en disco y lo compara con el registrado al
-     * uploadlo, para detectar alteraciones posteriores.
+     * subirlo, para detectar alteraciones posteriores.
      *
      * @param submissionId submission cuyo proposal se verifica
      * @return 200 con el resultado de la comparacion de hashes

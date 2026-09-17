@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+"""Variante de javadoc-scan.py que cuenta, ademas de metodos public concretos (con cuerpo),
+tambien CONSTRUCTORES public y METODOS DE INTERFAZ (abstractos, sin cuerpo, implicitamente
+public) -- la misma metodologia "AST, con Javadoc completo" que uso el ing en su evaluacion
+integral (2026-09-17), que dio 534/768 (69,5%) contra el 436-438/465 (93,8-94,2%) de la
+metodologia mas angosta de javadoc-scan.py (solo metodos concretos con cuerpo). Este script
+existe para verificar esa cifra de forma independiente, no para reemplazar al otro -- ambas
+metodologias son legitimas, miden universos distintos.
+
+Uso: python scripts/javadoc-scan-amplio.py [ruta a backend/src/main/java] [--list-missing]"""
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(sys.argv[1]) if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else Path("backend/src/main/java")
+
+UNCHECKED_HINTS = {
+    "RuntimeException", "IllegalArgumentException", "IllegalStateException",
+    "NullPointerException", "UnsupportedOperationException",
+}
+
+# Metodo concreto public con cuerpo (clase o interfaz con "default"/"static")
+METHOD_RE = re.compile(
+    r'^\s*(?:@\w+(?:\([^)]*\))?\s*)*'
+    r'public\s+(?:static\s+|final\s+|abstract\s+|synchronized\s+|default\s+)*'
+    r'(?!class\b|interface\b|enum\b|record\b)'
+    r'(?:<[^>]+>\s*)?'
+    r'(?P<ret>[\w<>\[\],\s\.\?]+?)\s+'
+    r'(?P<name>\w+)\s*\((?P<params>[^;{]*)\)\s*(?:throws\s+(?P<throws>[\w,\s\.]+))?\s*\{',
+    re.MULTILINE,
+)
+
+# Constructor public: "public NombreClase(...) {" -- ret y name son el mismo token (no hay
+# tipo de retorno separado), por eso no lo agarra METHOD_RE.
+CONSTRUCTOR_RE = re.compile(
+    r'^\s*(?:@\w+(?:\([^)]*\))?\s*)*'
+    r'public\s+(?P<name>\w+)\s*\((?P<params>[^;{]*)\)\s*(?:throws\s+(?P<throws>[\w,\s\.]+))?\s*\{',
+    re.MULTILINE,
+)
+
+# Metodo abstracto de interfaz: termina en ";", sin cuerpo, sin "static"/"default"/"private".
+# Dentro de una interfaz es public por defecto aunque no lleve la palabra.
+INTERFACE_METHOD_RE = re.compile(
+    r'^\s*(?:@\w+(?:\([^)]*\))?\s*)*'
+    r'(?!static\b|default\b|private\b)'
+    r'(?!class\b|interface\b|enum\b|record\b)'
+    r'(?:<[^>]+>\s*)?'
+    r'(?P<ret>[\w<>\[\],\s\.\?]+?)\s+'
+    r'(?P<name>\w+)\s*\((?P<params>[^;{]*)\)\s*(?:throws\s+(?P<throws>[\w,\s\.]+))?\s*;',
+    re.MULTILINE,
+)
+
+def parse_param_names(params_str):
+    params_str = params_str.strip()
+    if not params_str:
+        return []
+    depth = 0
+    parts = []
+    cur = ""
+    for ch in params_str:
+        if ch in "<(":
+            depth += 1
+        elif ch in ">)":
+            depth -= 1
+        if ch == "," and depth == 0:
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    parts.append(cur)
+    names = []
+    for p in parts:
+        p = p.strip()
+        if not p:
+            continue
+        p = re.sub(r'^(final\s+)?(?:@\w+(?:\([^)]*\))?\s*)*', '', p).strip()
+        tokens = p.replace('...', ' ').split()
+        if tokens:
+            names.append(tokens[-1].lstrip('[]'))
+    return names
+
+def extract_javadoc_block(text, start_idx):
+    lines_before = text[:start_idx].splitlines()
+    j = len(lines_before) - 1
+    while j >= 0 and (lines_before[j].strip().startswith('@') or lines_before[j].strip() == ''):
+        j -= 1
+    if j < 0 or not lines_before[j].strip().endswith('*/'):
+        return None
+    k = j
+    block_lines = []
+    while k >= 0:
+        block_lines.append(lines_before[k])
+        if lines_before[k].strip().startswith('/**'):
+            break
+        k -= 1
+    else:
+        return None
+    if not lines_before[k].strip().startswith('/**'):
+        return None
+    return '\n'.join(reversed(block_lines))
+
+def is_complete(block, param_names, ret_type, throws_types, is_constructor=False):
+    if block is None:
+        return False, "sin bloque /** */"
+    body_lines = [l.strip().lstrip('*').strip() for l in block.splitlines()]
+    desc_lines = [l for l in body_lines if l and not l.startswith('@') and l not in ('/**', '*/')]
+    if not desc_lines:
+        return False, "sin descripcion"
+    missing = []
+    for p in param_names:
+        if not re.search(rf'@param\s+{re.escape(p)}\b', block):
+            missing.append(f"@param {p}")
+    ret_type_clean = (ret_type or "").strip()
+    if not is_constructor and ret_type_clean not in ("void",) and '@return' not in block:
+        missing.append("@return")
+    for t in throws_types:
+        t = t.strip().split('.')[-1]
+        if not t or t in UNCHECKED_HINTS or t.endswith("RuntimeException"):
+            continue
+        if not re.search(rf'@throws\s+{re.escape(t)}\b', block) and not re.search(rf'@exception\s+{re.escape(t)}\b', block):
+            missing.append(f"@throws {t}")
+    if missing:
+        return False, "faltan: " + ", ".join(missing)
+    return True, "ok"
+
+def class_name_of(text, idx):
+    before = text[:idx]
+    m = None
+    for mm in re.finditer(r'\b(?:class|interface|enum|record)\s+(\w+)', before):
+        m = mm
+    return m.group(1) if m else None
+
+results = []
+
+for f in ROOT.rglob('*.java'):
+    text = f.read_text(encoding='utf-8', errors='replace')
+    is_interface_file = bool(re.search(r'\binterface\s+\w+', text))
+    seen = set()
+
+    for m in METHOD_RE.finditer(text):
+        span = m.span()
+        if span[0] in seen:
+            continue
+        seen.add(span[0])
+        name = m.group('name')
+        ret = m.group('ret').strip()
+        params = parse_param_names(m.group('params'))
+        throws = m.group('throws').split(',') if m.group('throws') else []
+        block = extract_javadoc_block(text, span[0])
+        ok, reason = is_complete(block, params, ret, throws)
+        line_no = text[:span[0]].count('\n') + 1
+        results.append((str(f.relative_to(ROOT)), name, 'metodo', ok, reason, line_no))
+
+    for m in CONSTRUCTOR_RE.finditer(text):
+        span = m.span()
+        if span[0] in seen:
+            continue
+        name = m.group('name')
+        cname = class_name_of(text, span[0])
+        if cname is None or name != cname:
+            continue  # no es constructor, es un metodo que METHOD_RE ya pudo haber saltado
+        seen.add(span[0])
+        params = parse_param_names(m.group('params'))
+        throws = m.group('throws').split(',') if m.group('throws') else []
+        block = extract_javadoc_block(text, span[0])
+        ok, reason = is_complete(block, params, None, throws, is_constructor=True)
+        line_no = text[:span[0]].count('\n') + 1
+        results.append((str(f.relative_to(ROOT)), name, 'constructor', ok, reason, line_no))
+
+    if is_interface_file:
+        for m in INTERFACE_METHOD_RE.finditer(text):
+            span = m.span()
+            if span[0] in seen:
+                continue
+            seen.add(span[0])
+            name = m.group('name')
+            ret = m.group('ret').strip()
+            params = parse_param_names(m.group('params'))
+            throws = m.group('throws').split(',') if m.group('throws') else []
+            block = extract_javadoc_block(text, span[0])
+            ok, reason = is_complete(block, params, ret, throws)
+            line_no = text[:span[0]].count('\n') + 1
+            results.append((str(f.relative_to(ROOT)), name, 'interfaz', ok, reason, line_no))
+
+total = len(results)
+documented = sum(1 for r in results if r[3])
+by_kind = {}
+for r in results:
+    k = r[2]
+    by_kind.setdefault(k, [0, 0])
+    by_kind[k][1] += 1
+    if r[3]:
+        by_kind[k][0] += 1
+
+print(f"Total (metodos public + constructores public + metodos de interfaz): {total}")
+print(f"Con Javadoc COMPLETO: {documented} ({documented/total*100:.1f}%)" if total else "sin elementos")
+for k, (doc, tot) in sorted(by_kind.items()):
+    print(f"  {k}: {doc}/{tot} ({doc/tot*100:.1f}%)")
+need = int(total*0.9) + (0 if total*0.9 == int(total*0.9) else 1)
+print(f"Meta 90%: {need} documentados (faltan {max(0, need-documented)} mas)")
+
+if '--list-missing' in sys.argv:
+    by_file = {}
+    for fpath, name, kind, ok, reason, line in results:
+        if not ok:
+            by_file.setdefault(fpath, []).append((name, kind, line, reason))
+    for fpath in sorted(by_file, key=lambda k: -len(by_file[k])):
+        print(f"\n{fpath} ({len(by_file[fpath])} sin doc completo):")
+        for name, kind, line, reason in sorted(by_file[fpath], key=lambda x: x[2]):
+            print(f"  L{line}: {name} [{kind}]  [{reason}]")

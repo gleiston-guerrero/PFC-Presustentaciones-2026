@@ -46,7 +46,9 @@ echo
 
 echo "=== P3 -- Javadoc ==="
 python scripts/javadoc-scan.py || fail "P3: javadoc-scan.py fallo"
-warn "P3: mvn javadoc:javadoc solo pasa porque doclint esta desactivado (pom.xml, commit 2b9ba89); 5 errores reales sin corregir"
+python scripts/javadoc-scan-amplio.py || fail "P3: javadoc-scan-amplio.py fallo"
+ok "P3: doclint reactivado en pom.xml, 5 errores reales corregidos (mvn javadoc:javadoc pasa sin apagar el chequeo)"
+fail "P3: bajo AST amplio (metodos+constructores+interfaces) el real es ~69.8%, no llega al 90%"
 echo
 
 echo "=== P4 -- Nombres en espanol ==="

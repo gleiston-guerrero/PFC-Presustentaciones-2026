@@ -99,25 +99,47 @@ falso — el commit que la guía revisó (`f3d1ff4`, 13-sep) es anterior al comm
 
 **Criterio:** 90% o más de los métodos públicos con Javadoc completo y `mvn javadoc:javadoc` sin error.
 
-**Comando:**
+**Comandos:**
 ```bash
-python scripts/javadoc-scan.py
+python scripts/javadoc-scan.py            # metodos concretos con cuerpo (metodologia angosta)
+python scripts/javadoc-scan-amplio.py     # + constructores + metodos de interfaz (metodologia del ing)
+cd backend && ./mvnw -q javadoc:javadoc   # doclint reactivado, ya no desactivado
 ```
 
-**Salida real (2026-09-17):**
+**Salida real (2026-09-17, doclint ya reactivado):**
 ```
+$ python scripts/javadoc-scan.py
 Total metodos publicos detectados: 465
 Con Javadoc COMPLETO: 438 (94.2%)
-Incompletos/sin doc: 27
-Meta 90%: 419 documentados (faltan 0 mas)
+
+$ python scripts/javadoc-scan-amplio.py
+Total (metodos public + constructores public + metodos de interfaz): 768
+Con Javadoc COMPLETO: 536 (69.8%)
+  constructor: 0/15 (0.0%)
+  interfaz: 98/288 (34.0%)
+  metodo: 438/465 (94.2%)
+
+$ cd backend && ./mvnw -q javadoc:javadoc
+(sin salida = exit 0, 0 errores)
 ```
 
-**Veredicto: 🟡 Parcial.** El porcentaje (94.2%) supera el umbral. Pero `mvn javadoc:javadoc` solo sale
-con éxito porque el commit `2b9ba89` agregó `<doclint>none</doclint>` al `pom.xml`, que apaga la
-verificación estricta de Javadoc en vez de corregirla — hay 5 errores reales de Javadoc todavía sin
-corregir debajo de esa bandera (`Student.java:15`, `TeacherRepository.java:23`, entre otros). El
-criterio pide "sin error", no "sin error porque se desactivó el chequeo de errores". **No resuelto en
-esta ronda** — reactivar `doclint` y corregir los 5 errores reales queda pendiente.
+**Veredicto: 🟡 Parcial, con 2 de 3 defectos corregidos de verdad y uno sin cerrar.**
+1. **Corregido:** se quitó `<doclint>none</doclint>` de `backend/pom.xml` (ya no se apaga el chequeo) y
+   se corrigieron los 5 errores reales: `Student.java`/`Submission.java` (texto técnico como
+   `RETURNS<tipo>` / `@NamedStoredProcedureQuery` interpretado como tag HTML/Javadoc, envuelto en
+   `{@code}`) y `TeacherRepository.java` (`<select>`/`<option>` literales, mismo arreglo). `mvn
+   javadoc:javadoc` ahora pasa con doclint completo, no por tenerlo apagado.
+2. **Corregido en 9 archivos** (el ing citó 1): la barrida de renombrado de P4 corrompió comentarios en
+   prosa donde un verbo español con pronombre clítico (`abrirlo`, `descargarlo`, `subirlo`, `eliminarlo`,
+   `crearlo`, `asignarlo(s)`, `cambiarlo`) quedó a medio traducir (`openlo`, `downloadlo`, `uploadlo`,
+   `deletelo`, `createlo`, `assignlo(s)`, `changelo`) — corregidos todos, verificado con una barrida de
+   25 verbos que no encontró más casos.
+3. **No corregido — disputa numérica confirmada, no resuelta:** contando también constructores y
+   métodos de interfaz (la metodología del ing), el porcentaje real es **69.8%** (536/768),
+   prácticamente igual a su 69.5% (534/768) — **por debajo del 90%**. Completar Javadoc en ~156
+   elementos más para llegar al umbral es un trabajo real y grande, pendiente de decisión explícita.
+   El sub-hallazgo "164 comentarios son solo etiquetas" no se pudo reproducir con estas dos
+   herramientas — no descartado, no verificado.
 
 ---
 
