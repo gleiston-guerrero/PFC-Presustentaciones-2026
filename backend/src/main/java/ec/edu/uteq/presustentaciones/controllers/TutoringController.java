@@ -87,7 +87,7 @@ public class TutoringController {
      */
     @GetMapping("/{tutorId}/resumen")
     public ResponseEntity<?> obtainResumen(@PathVariable Long tutorId,
-                                            @RequestParam(required = false) Long appUserId) {
+                                            @RequestParam(name = "usuarioId", required = false) Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
             TutoringResumenDTO resumen = tutoringService.obtainResumen(tutorId, realAppUserId);
@@ -130,7 +130,7 @@ public class TutoringController {
     @PreAuthorize("@permissionService.tienePermission(authentication, 'TUTORIA_GESTIONAR')")
     public ResponseEntity<?> createFaseConObservacion(@PathVariable Long tutorId,
                                                      @RequestParam String observacion,
-                                                     @RequestParam(required = false) Long tutorAppUserId) {
+                                                     @RequestParam(name = "tutorUsuarioId", required = false) Long tutorAppUserId) {
         try {
             Long realTutorAppUserId = obtainAppUserAutenticado().getId();
             TutoringFaseDTO fase = tutoringService.createFaseConObservacion(tutorId, realTutorAppUserId, observacion);
@@ -152,7 +152,7 @@ public class TutoringController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> uploadPdfCorregido(@PathVariable Long faseId,
                                                @RequestParam("archivo") MultipartFile archivo,
-                                               @RequestParam(required = false) Long studentAppUserId) {
+                                               @RequestParam(name = "estudianteUsuarioId", required = false) Long studentAppUserId) {
         try {
             Long realStudentAppUserId = obtainAppUserAutenticado().getId();
             TutoringFaseDTO fase = tutoringService.uploadPdfCorregido(faseId, archivo, realStudentAppUserId);
@@ -173,7 +173,7 @@ public class TutoringController {
     @PostMapping("/fases/{faseId}/aprobar")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'TUTORIA_GESTIONAR')")
     public ResponseEntity<?> approveFase(@PathVariable Long faseId,
-                                         @RequestParam(required = false) Long tutorAppUserId,
+                                         @RequestParam(name = "tutorUsuarioId", required = false) Long tutorAppUserId,
                                          @RequestParam(required = false) String comentario) {
         try {
             Long realTutorAppUserId = obtainAppUserAutenticado().getId();
@@ -217,7 +217,7 @@ public class TutoringController {
     @PutMapping("/fases/{faseId}/leer")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> marcarMensajesLeidos(@PathVariable Long faseId,
-                                                  @RequestParam(required = false) Long appUserId) {
+                                                  @RequestParam(name = "usuarioId", required = false) Long appUserId) {
         try {
             Long realAppUserId = obtainAppUserAutenticado().getId();
             tutoringService.marcarMensajesLeidos(faseId, realAppUserId);

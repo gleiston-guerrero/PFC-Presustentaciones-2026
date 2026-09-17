@@ -61,8 +61,8 @@ public class TutorController {
      */
     @PostMapping("/asignar")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
-    public ResponseEntity<Tutor> assign(@RequestParam Long submissionId,
-                                         @RequestParam Long teacherId) {
+    public ResponseEntity<Tutor> assign(@RequestParam(name = "solicitudId") Long submissionId,
+                                         @RequestParam(name = "docenteId") Long teacherId) {
         try {
             return ResponseEntity.ok(tutorService.assignTutor(submissionId, teacherId));
         } catch (RuntimeException e) {

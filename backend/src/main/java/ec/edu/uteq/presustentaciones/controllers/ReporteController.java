@@ -247,7 +247,7 @@ public class ReporteController {
     public ResponseEntity<?> resumen(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-            @RequestParam(required = false) String program) {
+            @RequestParam(name = "carrera", required = false) String program) {
         return ResponseEntity.ok(reporteService.resumen(desde, hasta, program));
     }
 
@@ -263,7 +263,7 @@ public class ReporteController {
     public ResponseEntity<?> submissionsPorEstado(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-            @RequestParam(required = false) String program) {
+            @RequestParam(name = "carrera", required = false) String program) {
         return ResponseEntity.ok(reporteService.submissionsPorEstado(desde, hasta, program));
     }
 

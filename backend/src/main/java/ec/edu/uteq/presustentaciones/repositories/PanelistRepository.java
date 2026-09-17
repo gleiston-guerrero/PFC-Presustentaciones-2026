@@ -23,8 +23,8 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * que el lote completo se confirme o revierta como una unidad.
      */
     @Procedure(procedureName = "sp_asignar_jurado_masivo")
-    void spAssignPanelistMasivo(@Param("p_submission_id") Long submissionId,
-                                @Param("p_teacher_id") Long teacherId,
+    void spAssignPanelistMasivo(@Param("p_solicitud_id") Long submissionId,
+                                @Param("p_docente_id") Long teacherId,
                                 @Param("p_rol_codigo") String roleCodigo);
 
     @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE s.id = :submissionId")
@@ -41,8 +41,8 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * solape con el horario dado.
      */
     @Procedure(name = "Jurado.validarConflictoJurado")
-    Boolean validateConflictoPanelist(@Param("p_submission_id") Long submissionId,
-                                    @Param("p_teacher_id") Long teacherId,
+    Boolean validateConflictoPanelist(@Param("p_solicitud_id") Long submissionId,
+                                    @Param("p_docente_id") Long teacherId,
                                     @Param("p_fecha_inicio") LocalDateTime fechaInicio,
                                     @Param("p_duracion_min") Integer duracionMin,
                                     @Param("p_disponible") Boolean disponibleInicial);
@@ -82,8 +82,8 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * @param role role
      */
     void spAssignPanelistMasivo(
-            @Param("p_submission_ids") Long[] submissionIds,
-            @Param("p_teacher_ids") Long[] teacherIds,
+            @Param("p_solicitud_ids") Long[] submissionIds,
+            @Param("p_docente_ids") Long[] teacherIds,
             @Param("p_rol") String role
     );
 

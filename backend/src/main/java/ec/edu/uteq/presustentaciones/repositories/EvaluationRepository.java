@@ -41,5 +41,5 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
      * nota_final/resultado en esta misma tabla. Fase 3 / Criterio P1.
      */
     @Procedure(name = "Evaluacion.calcularPromedioEvaluacion")
-    List<PromedioEvaluationResult> calculatePromedioEvaluation(@Param("p_submission_id") Long submissionId);
+    List<PromedioEvaluationResult> calculatePromedioEvaluation(@Param("p_solicitud_id") Long submissionId);
 }

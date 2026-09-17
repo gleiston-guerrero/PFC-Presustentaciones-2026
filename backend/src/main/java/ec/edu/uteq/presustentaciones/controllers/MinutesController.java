@@ -66,7 +66,7 @@ public class MinutesController {
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTA_FIRMAR')")
     public ResponseEntity<?> signMinutes(
             @PathVariable Long minutesId,
-            @RequestParam String role,
+            @RequestParam(name = "rol") String role,
             @RequestParam(required = false) String observacion) {
         try {
             Minutes minutes = minutesService.signMinutes(minutesId, role, observacion);
@@ -165,7 +165,7 @@ public class MinutesController {
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTAS_VER')")
     public ResponseEntity<?> search(
             @RequestParam(required = false) String estado,
-            @RequestParam(required = false) String program,
+            @RequestParam(name = "carrera", required = false) String program,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
             @RequestParam(required = false) String q,

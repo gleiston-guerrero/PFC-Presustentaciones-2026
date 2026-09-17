@@ -38,8 +38,8 @@ public class ScheduleController {
      */
     @PostMapping("/crear")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'CRONOGRAMA_GESTIONAR')")
-    public ResponseEntity<?> create(@RequestParam Long submissionId,
-                                   @RequestParam Long roomId,
+    public ResponseEntity<?> create(@RequestParam(name = "solicitudId") Long submissionId,
+                                   @RequestParam(name = "salaId") Long roomId,
                                    @RequestParam LocalDate fecha,
                                    @RequestParam LocalTime hora) {
         try {

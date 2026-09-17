@@ -22,7 +22,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      * Submission.java) -- reporte consolidado multi-tabla por program. Fase 3 / Criterio P1.
      */
     @Procedure(name = "Solicitud.generarReporteDefensas")
-    List<ReporteDefensaResult> generateReporteDefensas(@Param("p_program") String program);
+    List<ReporteDefensaResult> generateReporteDefensas(@Param("p_carrera") String program);
 
     /** Carga submissions con student+appUser en un solo query — evita LazyInitializationException */
     @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u ORDER BY s.fechaRegistro DESC")

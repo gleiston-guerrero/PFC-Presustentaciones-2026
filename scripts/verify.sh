@@ -58,7 +58,10 @@ if [ -d backend/target/classes ]; then
 else
   warn "P4: backend/target/classes no existe -- corre 'cd backend && ./mvnw -q test-compile' antes para el conteo completo (javap)"
 fi
-fail "P4: DISPUTA ABIERTA -- nuestro conteo (~0.6% metodos) contradice fuertemente el AST del ing (72.2%); no resuelto"
+ok "P4: 5 llamadas a procedimientos almacenados con parametro roto corregidas, probado con CALL directo contra Postgres real"
+ok "P4: 18 @RequestParam con nombre de wire roto corregidos en 10 controladores (verificado contra cada llamada Angular real)"
+ok "P4: 7 campos de DTO/entidad sin @JsonProperty corregidos (no exhaustivo -- 20 DTOs sin ninguno, se revisaron los de mayor riesgo)"
+fail "P4: DISPUTA NUMERICA ABIERTA -- nuestro conteo (~0.6% metodos) contradice fuertemente el AST del ing (72.2%); no resuelto"
 echo
 
 echo "=== P8 -- Autorizacion de endpoints de escritura ==="

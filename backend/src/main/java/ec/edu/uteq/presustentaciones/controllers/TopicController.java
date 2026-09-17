@@ -65,8 +65,8 @@ public class TopicController {
      * @return el ResponseEntity<List<TopicPropuestoDTO>> correspondiente
      */
     public ResponseEntity<List<TopicPropuestoDTO>> explorar(
-            @RequestParam(required = false) Integer programId,
-            @RequestParam(required = false) Integer lineInvestigacionId,
+            @RequestParam(name = "carreraId", required = false) Integer programId,
+            @RequestParam(name = "lineaInvestigacionId", required = false) Integer lineInvestigacionId,
             @RequestParam(required = false) Integer areaId,
             @RequestParam(required = false) String nivelDificultad) {
         Long studentId = studentActualIdOrNull();

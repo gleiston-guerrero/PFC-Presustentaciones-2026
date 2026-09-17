@@ -40,6 +40,7 @@ public class AppUser {
 
     /** Correo donde llegan las notifications del sistema (puede ser distinto al de login) */
     @Column(name = "email_notificaciones")
+    @JsonProperty("emailNotificaciones")
     private String emailNotifications;
 
     @ManyToOne(fetch = FetchType.EAGER)

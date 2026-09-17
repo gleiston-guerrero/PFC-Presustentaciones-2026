@@ -40,7 +40,7 @@ public class ResourceTitulacionController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ResourceTitulacionDTO>> list(
-            @RequestParam(required = false) Integer programId) {
+            @RequestParam(name = "carreraId", required = false) Integer programId) {
         Integer efectivo = programId;
         if (efectivo == null) {
             Long studentId = appUserActual.studentIdOrNull();

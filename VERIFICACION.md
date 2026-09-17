@@ -172,18 +172,60 @@ Metodos totales (incl. Lombok, excl. constructores/sinteticos): 3581
 Metodos con palabra en espanol: 23 (0.6%)
 ```
 
-**Veredicto: 🔴 Disputa abierta, sin resolver.** Nuestra medición (0.6% de métodos en español, contando
-también lo que Lombok genera) está muy por debajo del 5%. El ing, con su propio análisis AST, reportó
-**72.2% de métodos en español (39.7% solo en `src/main`)** — una diferencia enorme sobre el mismo
-código. Ninguna de las dos cifras se descarta aquí: es un desacuerdo de metodología de conteo que no se
-resolvió en esta ronda (candidatos a explicar la diferencia: qué cuenta como "palabra en español" —
-nuestro diccionario es una lista cerrada de raíces de dominio, no cualquier palabra española —, si se
-cuentan variables locales y campos además de tipos/métodos, y si se cuenta contenido de comentarios).
-**Regresión funcional real, tampoco resuelta:** 28 DTOs y 45 `@RequestParam` cambiaron su nombre de
-campo JSON sin actualizar el frontend Angular correspondiente (ej. `evaluar-ponderado` espera
-`submissionId`/`notaPanelist`, Angular sigue enviando `solicitudId`/`notaJurado`), y las
-`@NamedStoredProcedureQuery` declaran `p_solicitud_id` mientras los repositorios pasan
-`p_submission_id` — inferencia fuerte de fallo en ejecución real, no verificado end-to-end todavía.
+**Veredicto: 🔴 disputa numérica sin resolver + 🟢 regresiones funcionales confirmadas y corregidas de
+verdad, con prueba directa contra la base real.**
+
+**Regresiones — ya no son "inferencia fuerte de fallo", son fallos confirmados y corregidos:**
+
+1. **Procedimientos almacenados (5 llamadas rotas), probado con `CALL` directo contra Postgres real:**
+   `EvaluationRepository.calculatePromedioEvaluation`, `PanelistRepository.spAssignPanelistMasivo`
+   (las 2 sobrecargas), `PanelistRepository.validateConflictoPanelist` y
+   `SubmissionRepository.generateReporteDefensas` pasaban `@Param` con el nombre nuevo en inglés
+   (`p_submission_id`, `p_teacher_id`, `p_program`) mientras el procedimiento real en Postgres sigue
+   declarando el parámetro en español (`p_solicitud_id`, `p_docente_id`, `p_carrera`). Prueba directa:
+   ```
+   CALL presus.sp_calcular_promedio_evaluacion(p_submission_id => 1);
+   ERROR: procedure ... does not exist -- HINT: No procedure matches the given name and argument types.
+   CALL presus.sp_calcular_promedio_evaluacion(p_solicitud_id => 1);
+   -- funciona
+   ```
+   Las 5 llamadas se corrigieron para usar el nombre real del parámetro (que sí se mantiene en español,
+   correcto según la regla de P4 sobre identificadores nativos de base de datos).
+
+2. **`@RequestParam` (18 endpoints en 10 controladores), verificado cruzando cada llamada HTTP real de
+   Angular contra la firma Java:** confirmado el ejemplo exacto que citó el ing
+   (`evaluar-ponderado` espera `submissionId`/`notaPanelist`, Angular envía `solicitudId`/`notaJurado`)
+   y 17 más de la misma clase (`docenteId`→`teacherId`, `rol`→`role`, `salaId`→`roomId`,
+   `carreraId`/`carrera`→`programId`/`program`, `usuarioId`→`appUserId`, `lineaId`→`lineId`, etc., en
+   `EvaluationController`, `PanelistController`, `TutorController`, `ScheduleController`,
+   `TutoringController`, `TopicController`, `ResourceTitulacionController`, `CatalogoController`,
+   `ReporteController`, `MinutesController`). Corregido agregando `@RequestParam(name = "...")` con el
+   nombre real que Angular ya envía, sin tocar el frontend — mismo principio que ya usaba
+   `@JsonProperty` para el cuerpo JSON, aplicado aquí a query params.
+
+3. **Campos de DTO/entidad sin `@JsonProperty` (7 encontrados, no necesariamente todos):**
+   `PerfilRequest`/`AppUser.emailNotifications` (Angular lee/escribe `emailNotificaciones` — el
+   formulario de "editar mi perfil" no guardaba ni mostraba el correo de notificaciones),
+   `TutoringFaseDTO.archivoPdfStudent` (Angular espera `archivoPdfEstudiante`),
+   `TutoringResumenDTO.tituloTopic`/`nombreStudent`/`estadoTutoring` (Angular espera
+   `tituloTema`/`nombreEstudiante`/`estadoTutoria`), `TrackingDTO.porcentajeProgress` (Angular espera
+   `porcentajeProgreso`). Corregidos con `@JsonProperty`. **No exhaustivo:** de 48 DTOs, 20 no tenían
+   ningún `@JsonProperty`; se revisaron los de mayor riesgo cruzando contra los modelos/servicios
+   Angular reales, no los 48 uno por uno — quedan candidatos sin revisar.
+
+Verificado que compila, `mvn javadoc:javadoc` sigue limpio, y la suite completa sigue en verde
+(804/804 tests, 0 fallos) después de todos estos cambios.
+
+**Disputa numérica de fondo, sigue sin resolver:** nuestra medición (0.6% de métodos en español,
+contando lo que Lombok genera) está muy por debajo del 5%; el ing reportó 72.2%. Un dato nuevo: para
+**tipos**, ambos contamos el mismo denominador exacto (339) — descarta que sea un desacuerdo sobre qué
+archivos incluir. Se probó una hipótesis concreta: contar cuántos nombres de clase contienen alguna
+palabra corta española (`de`, `la`, `el`, `en`, `con`, `por`, `que`...) **como subcadena, sin respetar
+límites de palabra** — con esa regla, **88.8% de los 269 tipos de `src/main`** "contienen español"
+(`LoginResponse`, `OpenApiConfig`, `NotificationRepository`, `BackupController` todos caen, por
+contener `es`, `en`, `no`, `con`). Esto no prueba qué hace la herramienta del ing, pero muestra que una
+metodología de subcadena ingenua sobre texto en inglés produce cifras en el mismo orden de magnitud
+que reportó — queda como hipótesis razonada, no como hecho confirmado, sin acceso a su herramienta real.
 
 ---
 

@@ -43,13 +43,13 @@ public class EvaluationController {
     @PostMapping("/evaluar-ponderado")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_CALIFICAR')")
     public ResponseEntity<?> evaluarPonderado(
-            @RequestParam Long submissionId,
-            @RequestParam Long rubricId,
+            @RequestParam(name = "solicitudId") Long submissionId,
+            @RequestParam(name = "rubricaId") Long rubricId,
             @RequestParam Double notaInstructor,
-            @RequestParam Double notaPanelist,
+            @RequestParam(name = "notaJurado") Double notaPanelist,
             @RequestParam String observaciones,
-            @RequestParam(defaultValue = "60.0") Double pesoInstructor,
-            @RequestParam(defaultValue = "40.0") Double pesoPanelist) {
+            @RequestParam(name = "pesoInstructor", defaultValue = "60.0") Double pesoInstructor,
+            @RequestParam(name = "pesoJurado", defaultValue = "40.0") Double pesoPanelist) {
         try {
             EvaluationFinal e = evaluationService.evaluarSubmission(
                     submissionId, rubricId,
@@ -73,8 +73,8 @@ public class EvaluationController {
      */
     @PostMapping("/evaluar")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_CALIFICAR')")
-    public EvaluationFinal evaluar(@RequestParam Long submissionId,
-                              @RequestParam Long rubricId,
+    public EvaluationFinal evaluar(@RequestParam(name = "solicitudId") Long submissionId,
+                              @RequestParam(name = "rubricaId") Long rubricId,
                               @RequestParam Double notaFinal,
                               @RequestParam String observaciones) {
         return evaluationService.evaluarSubmission(submissionId, rubricId, notaFinal, observaciones);

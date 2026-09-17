@@ -1,5 +1,6 @@
 package ec.edu.uteq.presustentaciones.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ public class TutoringFaseDTO {
     private String estado;
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaAprobacion;
+    @JsonProperty("archivoPdfEstudiante")
     private String archivoPdfStudent;
     private Long tamanoPdfBytes;
     private List<TutoringMensajeDTO> mensajes;

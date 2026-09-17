@@ -76,7 +76,7 @@ public class CatalogoController {
      */
     @GetMapping("/areas-tematicas")
     public ResponseEntity<List<AreaTematica>> listAreasTematicas(
-            @RequestParam(required = false) Integer lineId) {
+            @RequestParam(name = "lineaId", required = false) Integer lineId) {
         if (lineId != null) {
             return ResponseEntity.ok(areaTematicaRepo.findByLineInvestigacionId(lineId));
         }

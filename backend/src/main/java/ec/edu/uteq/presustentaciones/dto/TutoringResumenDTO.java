@@ -10,11 +10,14 @@ public class TutoringResumenDTO {
     private Long tutorId;
     @JsonProperty("solicitudId")
     private Long submissionId;
+    @JsonProperty("tituloTema")
     private String tituloTopic;
+    @JsonProperty("nombreEstudiante")
     private String nombreStudent;
     private String nombreTutor;
     private long totalFases;
     private long fasesAprobadas;
+    @JsonProperty("estadoTutoria")
     private String estadoTutoring;
     private long mensajesNoLeidos;
     @JsonProperty("solicitudSuspendida")

@@ -46,9 +46,9 @@ public class PanelistController {
     @PostMapping("/asignar")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
     public ResponseEntity<?> assignPanelist(
-            @RequestParam Long submissionId,
-            @RequestParam Long teacherId,
-            @RequestParam String role) {
+            @RequestParam(name = "solicitudId") Long submissionId,
+            @RequestParam(name = "docenteId") Long teacherId,
+            @RequestParam(name = "rol") String role) {
         try {
             Panelist j = panelistService.assignPanelist(submissionId, teacherId, role);
             return ResponseEntity.ok(ResponseWrapper.success(j, "Jurado asignado exitosamente"));
@@ -136,8 +136,8 @@ public class PanelistController {
     @PostMapping("/tutor/asignar")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
     public ResponseEntity<?> assignTutor(
-            @RequestParam Long submissionId,
-            @RequestParam Long teacherId) {
+            @RequestParam(name = "solicitudId") Long submissionId,
+            @RequestParam(name = "docenteId") Long teacherId) {
         try {
             Tutor t = panelistService.assignTutor(submissionId, teacherId);
             return ResponseEntity.ok(ResponseWrapper.success(t, "Tutor asignado exitosamente"));
