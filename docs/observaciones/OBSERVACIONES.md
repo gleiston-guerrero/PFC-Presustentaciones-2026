@@ -196,7 +196,7 @@ activo, y la suite completa sigue en verde (`mvn test`: 804 tests: la única fal
 preexistente dependiente del orden/estado de archivos temporales compartidos —no relacionado con este
 cambio, que solo agrega comentarios—, confirmado corriendo esa clase sola: 16/16, 0 fallos). Con esto,
 los 3 defectos que señaló el ing sobre P3 quedan corregidos, no solo documentados. Commit de este
-trabajo: (siguiente commit).
+trabajo: `6aea088`.
 
 **Resumen de cierre (actualizado 2026-09-11, fase 4):** de las 25 observaciones acumuladas en las tres
 entregas, 22 están ✅ resueltas, 1 está 🟡 parcial (OBS-23) y 2 siguen ❌ pendientes (OBS-24, OBS-25) —
