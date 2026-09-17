@@ -450,7 +450,8 @@ equipo. Esto no se puede cerrar con más documentación — depende de que esa c
 
 De los 12 puntos: **7 ✅ Cumple** (P2, P3, P5, P6, P7, P8, P9 — cada uno con al menos un defecto menor
 declarado), **4 🟡 Parcial** (P1, P4, P10, P12 — con una brecha real sin cerrar cada uno) y **1 🔴
-disputa numérica abierta sin resolver** (P4, superpuesto con su propio 🟡 por la regresión funcional).
+disputa numérica abierta sin resolver** (P4 — las regresiones funcionales que causó ya se corrigieron y
+verificaron; lo que queda abierto es solo la disputa de cuántos nombres siguen en español).
 Ningún punto se declaró "resuelto" para inflar este resumen; varios de los que ya estaban cerrados en
 `OBSERVACIONES.md` antes de esta evaluación quedan aquí con matices que esa bitácora, por ser narrativa
 y cronológica, no siempre deja igual de visibles a primera vista.
