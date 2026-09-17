@@ -127,8 +127,8 @@ multi-tabla, versionados vía Flyway en \texttt{backend/src/main/resources/db/mi
 
 El Listado~\ref{lst:sp-firmar-acta} muestra uno de esos procedimientos, \texttt{sp\_firmar\_acta\_digital}
 (firma digital multi-actor de actas), y el Listado~\ref{lst:acta-service-firma} el método
-\texttt{ActaServiceImpl.firmarActa()} que lo invoca vía JPA 2.1 \texttt{@Procedure}
-(\texttt{ActaRepository.firmarActaDigital}).
+\texttt{MinutesServiceImpl.signMinutes()} que lo invoca vía JPA 2.1 \texttt{@Procedure}
+(\texttt{MinutesRepository.signMinutesDigital}).
 
 \begin{lstlisting}[language=SQL,style=codigobase,caption={\texttt{sp\_firmar\_acta\_digital}: procedimiento almacenado PL/pgSQL (migracion V10).},label={lst:sp-firmar-acta}]
 CREATE OR REPLACE PROCEDURE presus.sp_firmar_acta_digital(
@@ -165,25 +165,25 @@ $$ LANGUAGE plpgsql;
 \end{lstlisting}
 
 \begin{lstlisting}[language=Java,style=codigobase,caption={Invocacion real desde Java (repositorio JPA 2.1 \texttt{@Procedure} y servicio que lo llama).},label={lst:acta-service-firma}]
-// ActaRepository.java
+// MinutesRepository.java
 @Procedure(procedureName = "presus.sp_firmar_acta_digital")
-void firmarActaDigital(@Param("p_acta_id") Long actaId,
-                        @Param("p_rol") String rol,
+void signMinutesDigital(@Param("p_acta_id") Long minutesId,
+                        @Param("p_rol") String role,
                         @Param("p_observacion") String observacion);
 
-// ActaServiceImpl.java
+// MinutesServiceImpl.java
 @Override
 @Transactional
-public Acta firmarActa(Long actaId, String rol, String observacion) {
-    // ... validacion de rol y de que el usuario autenticado es
+public Minutes signMinutes(Long minutesId, String role, String observacion) {
+    // ... validacion de rol y de que el appUser autenticado es
     // el presidente/vocal/tutor correspondiente (omitido por espacio) ...
 
     // Persiste la firma via sp_firmar_acta_digital (Fase 3 / Criterio P1) -- el
-    // procedimiento es la fuente de verdad de firmada_*/fecha_firma_*/observaciones_acta;
+    // procedimiento es la fuente de verdad de firmada_*/fecha_firma_*/observaciones_minutes;
     // se refresca la entidad para que el resto del metodo vea lo que el SP
     // realmente persistio, en vez de sobreescribirlo con el save() final.
-    actaRepository.firmarActaDigital(actaId, rolNormalizado, observacion);
-    entityManager.refresh(acta);
+    minutesRepository.signMinutesDigital(minutesId, roleNormalizado, observacion);
+    entityManager.refresh(minutes);
 
     acta.actualizarEstadoFirma();
     // ... notificacion al estudiante y persistencia final (omitido) ...

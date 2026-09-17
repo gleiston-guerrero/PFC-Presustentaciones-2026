@@ -141,15 +141,15 @@ verificado end-to-end contra el backend real en Docker con los usuarios de demos
 COORDINADOR, DOCENTE, ESTUDIANTE) y cubierto con pruebas automatizadas nuevas:
 
 \begin{enumerate}[nosep]
-    \item \textbf{IDOR de lectura en Evaluaciones/Anteproyectos:} \texttt{EvaluacionController},
-    \texttt{EvaluacionJuradoController}, \texttt{RubricaEvaluacionController} y
+    \item \textbf{IDOR de lectura en Evaluaciones/Anteproyectos:} \texttt{EvaluationController},
+    \texttt{EvaluationPanelistController}, \texttt{RubricEvaluationController} y
     \texttt{AnteproyectoController} exponían notas, observaciones de tribunal y el PDF del anteproyecto
     de cualquier estudiante a cualquier usuario autenticado que cambiara el id en la URL --- sin ninguna
     verificación de pertenencia. Corregido con un servicio compartido
     (\texttt{SolicitudAccessService}) que exige ser el estudiante dueño, un jurado o tutor asignado, o
     tener el permiso administrativo correspondiente; 403 verificado en vivo.
-    \item \textbf{IDOR de escritura en registro de notas de jurado:} \texttt{EvaluacionJuradoService} y
-    \texttt{RubricaEvaluacionService} permitían que un docente-jurado registrara una nota \emph{a nombre
+    \item \textbf{IDOR de escritura en registro de notas de jurado:} \texttt{EvaluationPanelistService} y
+    \texttt{RubricEvaluationService} permitían que un docente-jurado registrara una nota \emph{a nombre
     de otro} jurado cambiando el \texttt{juradoId}; ahora se exige que el docente autenticado sea
     realmente ese jurado (o tenga permiso administrativo).
     \item \textbf{IDOR en perfil de docentes:} \texttt{GET /api/v1/docentes/usuario/\{usuarioId\}}
@@ -162,7 +162,7 @@ COORDINADOR, DOCENTE, ESTUDIANTE) y cubierto con pruebas automatizadas nuevas:
     el acta oficial de su propia defensa. Corregido exigiendo el permiso administrativo
     \texttt{ACTAS\_GESTIONAR}, igual que el resto de acciones administrativas del mismo controlador.
     \item \textbf{Mass-assignment en registro y creación de usuarios:} \texttt{AuthController.register()}
-    y \texttt{UsuarioController.crear()} recibían la entidad \texttt{Usuario} completa del cliente; un
+    y \texttt{AppUserController.create()} recibían la entidad \texttt{AppUser} completa del cliente; un
     \texttt{id} de un usuario ya existente en el body hacía que Spring Data JPA ejecutara
     \texttt{merge()} en vez de \texttt{persist()}, \textbf{sobrescribiendo silenciosamente esa fila}
     (potencialmente la del propio ADMIN) en vez de crear un usuario nuevo. Corregido reutilizando un
@@ -276,9 +276,9 @@ un problema de entorno --- lo que ejercitó ese controlador con más profundidad
 exigido en líneas \emph{y} en ramas. Los servicios quedan en 70.22\,\% de líneas (2,245/3,197) y
 54.48\,\% de ramas (717/1,316): superan el umbral en líneas pero no en ramas, a diferencia del estado del
 06-09. Los servicios se habían cerrado antes con 164 pruebas nuevas en
-8 clases (\texttt{EstudianteService}, \texttt{TutorServiceImpl}, \texttt{RubricaEvaluacionServiceImpl},
-\texttt{JuradoServiceImpl}, \texttt{SolicitudServiceImpl}, \texttt{TutoriaServiceImpl},
-\texttt{CronogramaServiceImpl}, \texttt{ActaServiceImpl}), priorizando las clases con más ramas sin
+8 clases (\texttt{StudentService}, \texttt{TutorServiceImpl}, \texttt{RubricEvaluationServiceImpl},
+\texttt{PanelistServiceImpl}, \texttt{SubmissionServiceImpl}, \texttt{TutoringServiceImpl},
+\texttt{ScheduleServiceImpl}, \texttt{MinutesServiceImpl}), priorizando las clases con más ramas sin
 ejercitar sobre las más fáciles de cubrir. Ambas rondas de pruebas verifican comportamiento real y no
 sólo delegación: comprobaciones de propiedad del recurso (un estudiante no puede abrir ni enviar la
 solicitud de otro), la salvaguarda que impide dejar al sistema sin ningún rol capaz de gestionar permisos,
@@ -289,10 +289,10 @@ servicios, y la generación real de PDF con iText (incluida la del acta digital,
 La cifra de controladores del 11-09 volvió a erosionarse por el mismo efecto de denominador: las fases
 3-7 de seguridad del SRS v1.0.1, agregadas después de ese cierre, sumaron código de producción sin
 pruebas propias, bajándola a 69.57\,\%/54.40\,\% (líneas/ramas) --- verificado de forma independiente
-sobre el commit de cierre del plazo. De los 31 controladores, \texttt{UsuarioController} (78 líneas sin
+sobre el commit de cierre del plazo. De los 31 controladores, \texttt{AppUserController} (78 líneas sin
 ejercitar) y \texttt{BackupController} (40 líneas) eran los que más pesaban sin tener ningún test
-dedicado. Se agregaron \texttt{UsuarioControllerTest} (23 pruebas, cubre el control de propiedad real vía
-\texttt{esUsuarioActual}/\texttt{esUsuarioActualOAdmin}, no sólo el permiso \texttt{USUARIOS\_GESTIONAR})
+dedicado. Se agregaron \texttt{AppUserControllerTest} (23 pruebas, cubre el control de propiedad real vía
+\texttt{esAppUserActual}/\texttt{esAppUserActualOAdmin}, no sólo el permiso \texttt{USUARIOS\_GESTIONAR})
 y \texttt{BackupControllerTest} (19 pruebas, los 17 endpoints protegidos por \texttt{BACKUPS\_GESTIONAR}
 a nivel de clase), llegando a \textbf{79.01\,\% de líneas (990/1,253) y 80.34\,\% de ramas (286/356)} ---
 con margen real sobre el umbral de 70\,\% en vez de al filo.
@@ -329,7 +329,7 @@ de tests nuevos reales: entre otros, 20 tests para el módulo de autorización c
 IDOR (\texttt{SolicitudAccessServiceTest}, 8 tests, y casos permitido/IDOR/admin en los 4 servicios
 afectados), 6 para el mass-assignment de registro de usuarios, 7 para el control de acceso de docentes, y
 12 para dos controladores que tenían servicio probado pero 0\,\% de cobertura propia
-(\texttt{RecursoTitulacionController}, \texttt{EvaluacionJuradoController}). Además, el proyecto ya
+(\texttt{ResourceTitulacionController}, \texttt{EvaluationPanelistController}). Además, el proyecto ya
 cuenta con dos clases de prueba de integración real contra PostgreSQL (\texttt{@SpringBootTest} +
 \texttt{@AutoConfigureTestDatabase(replace = NONE)}, sin mocking del repositorio):
 \texttt{PreSustentacionesApplicationTests} y \texttt{TemaPropuestoRepositoryIntegrationTest} (8 tests) ---
