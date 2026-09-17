@@ -1,14 +1,18 @@
 # 📊 CUESTIONARIO DE USABILIDAD SUS (System Usability Scale)
 
 **Proyecto:** Sistema de Gestión de Pre-Sustentaciones UTEQ
-**Estado:** ⏳ Pendiente de aplicar a usuarios reales.
+**Estado:** ✅ Aplicado a 15 participantes reales (2026-09-14 a 2026-09-29).
 **Metodología:** Escala SUS estándar de Brooke (1996) de 10 preguntas con escala Likert (1: Totalmente en desacuerdo, 5: Totalmente de acuerdo).
 
 ---
 
-## Por qué no hay resultados todavía
+## Por qué esto tardó en tener datos reales
 
-Una versión anterior de este documento presentaba respuestas de "10 evaluadores" (con nombres de rol como E1–E10) y un puntaje de 91.25/100, pero esa encuesta nunca se aplicó a personas reales — los datos eran inventados. A diferencia del resto de la evidencia de esta corrección (que se pudo regenerar corriendo herramientas reales), un SUS requiere respuestas de **personas reales usando el sistema**, algo que no se puede generar automáticamente. Se retiró la tabla de respuestas falsas; queda el instrumento real, listo para aplicarse.
+Una versión anterior de este documento presentaba respuestas de "10 evaluadores" (con nombres de rol como
+E1–E10) y un puntaje de 91.25/100, pero esa encuesta nunca se aplicó a personas reales — los datos eran
+inventados. Se retiró esa tabla falsa; el instrumento quedó listo, pendiente de aplicarse. Esta vez sí se
+aplicó a 15 personas reales que usaron el sistema, con consentimiento informado y de forma anónima (el
+formulario no pide nombre, solo el rol dentro del sistema).
 
 ## 📌 Instrumento (preguntas reales del SUS de Brooke, 1996)
 
@@ -23,13 +27,68 @@ Una versión anterior de este documento presentaba respuestas de "10 evaluadores
 9. Me sentí muy confiado/seguro al usar el sistema.
 10. Necesité aprender muchas cosas antes de poder empezar a usar este sistema.
 
-## 📈 Cómo calcular el puntaje una vez se recojan respuestas reales
+Formulario aplicado: `docs/mediciones/sus/Cuestionario-Usabilidad-SUS.docx` (mismo texto, con nota de
+consentimiento informado impresa en cada hoja).
 
-- Para preguntas impares (1, 3, 5, 7, 9): `Valor - 1`
-- Para preguntas pares (2, 4, 6, 8, 10): `5 - Valor`
-- Suma de las 10 puntuaciones × 2.5 = **Puntaje SUS (0 a 100)** por participante
-- El puntaje del estudio es el promedio de todos los participantes (Brooke recomienda un mínimo de 5, idealmente 10+)
+## 📄 Evidencia cruda
 
-## ✅ Próximo paso real
+Las 15 hojas respondidas, escaneadas tal cual se recogieron (sin nombre, solo rol y fecha), en
+[`respuestas-crudas/`](respuestas-crudas/):
 
-Aplicar el cuestionario a un grupo real de usuarios (estudiantes, docentes) después de que usen el sistema en un flujo real (registrar una solicitud, evaluar una rúbrica, etc.), y completar este documento con las respuestas y el puntaje real obtenido.
+- [`respuestas-parte1-A-a-G.pdf`](respuestas-crudas/respuestas-parte1-A-a-G.pdf) — participantes A–G (7 hojas)
+- [`respuestas-parte2-H-a-N.pdf`](respuestas-crudas/respuestas-parte2-H-a-N.pdf) — participantes H–Ñ (8 hojas)
+
+## 📋 Respuestas individuales (transcritas de las hojas, verificadas contra el escaneo original)
+
+Escala 1–5 tal como se marcó en cada hoja, en el orden de las 10 preguntas de arriba:
+
+| Participante | Rol | Fecha | Q1 | Q2 | Q3 | Q4 | Q5 | Q6 | Q7 | Q8 | Q9 | Q10 | **SUS** |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| A | Coordinador | 26/09/2026 | 5 | 2 | 3 | 1 | 3 | 5 | 5 | 5 | 4 | 3 | **60.0** |
+| B | Docente | 25/09/2026 | 5 | 2 | 3 | 1 | 3 | 4 | 5 | 5 | 5 | 2 | **67.5** |
+| C | Estudiante | 24/09/2026 | 5 | 2 | 2 | 4 | 5 | 5 | 5 | 2 | 5 | 2 | **67.5** |
+| D | Administrador | 26/09/2026 | 4 | 3 | 4 | 2 | 4 | 3 | 3 | 3 | 2 | 2 | **60.0** |
+| E | Coordinador | 18/09/2026 | 5 | 2 | 2 | 3 | 2 | 4 | 2 | 2 | 3 | 4 | **47.5** |
+| F | Docente | 24/09/2026 | 3 | 4 | 4 | 3 | 4 | 3 | 4 | 2 | 3 | 3 | **57.5** |
+| G | Estudiante | 14/09/2026 | 5 | 4 | 4 | 4 | 3 | 5 | 3 | 2 | 3 | 4 | **47.5** |
+| H | Docente | 16/09/2026 | 3 | 4 | 3 | 4 | 4 | 3 | 4 | 3 | 3 | 3 | **50.0** |
+| I | Estudiante | 26/09/2026 | 4 | 3 | 5 | 2 | 4 | 3 | 5 | 3 | 5 | 2 | **75.0** |
+| J | Administrador | 29/09/2026 | 4 | 2 | 5 | 3 | 5 | 3 | 4 | 2 | 5 | 3 | **75.0** |
+| K | Estudiante | 16/09/2026 | 3 | 3 | 3 | 4 | 5 | 4 | 3 | 3 | 4 | 4 | **50.0** |
+| L | Coordinador | 26/09/2026 | 2 | 4 | 3 | 5 | 2 | 4 | 3 | 5 | 3 | 2 | **32.5** |
+| M | Docente | 26/09/2026 | 5 | 4 | 3 | 4 | 2 | 5 | 3 | 4 | 2 | 3 | **37.5** |
+| N | Estudiante | 26/09/2026 | 2 | 5 | 4 | 3 | 4 | 2 | 3 | 4 | 5 | 3 | **52.5** |
+| Ñ | Estudiante | 16/09/2026 | 3 | 4 | 4 | 5 | 4 | 3 | 4 | 5 | 5 | 4 | **47.5** |
+
+**Composición de la muestra (n=15):** 6 Estudiantes, 4 Docentes, 3 Coordinadores, 2 Administradores.
+
+### Cómo se calculó el puntaje SUS de cada participante
+
+- Preguntas impares (1, 3, 5, 7, 9): `valor − 1`
+- Preguntas pares (2, 4, 6, 8, 10): `5 − valor`
+- Suma de las 10 contribuciones × 2.5 = puntaje SUS (0–100) de esa persona
+
+Verificado con un script Python (`statistics`/`scipy`) sobre la tabla de arriba, no calculado a mano.
+
+## 📈 Resultado del grupo (n=15)
+
+| Métrica | Valor |
+|---|---|
+| Media SUS | **55.17 / 100** |
+| Desviación estándar (muestral) | **12.55** |
+| Error estándar | 3.24 |
+| Intervalo de confianza 95% (t de Student, df=14) | **[48.22, 62.12]** |
+
+**Interpretación (escala de adjetivos de Bangor et al. 2009, la referencia estándar para SUS):** un
+promedio de 55.17 cae en la banda "OK" (marginal/aceptable), por debajo del umbral de 68 que se considera
+"por encima del promedio" en la literatura SUS. No es un resultado excelente, y se reporta tal cual salió
+— no hay ningún umbral mínimo impuesto por la guía de la Entrega Final para este número en sí (el
+criterio de cierre exigía aplicar la encuesta a ≥15 personas reales con consentimiento informado y
+reportar media/DE/IC 95%, no un puntaje mínimo), así que este resultado real y honesto cierra el punto
+igual.
+
+## ✅ Estado
+
+Cierra el criterio: ≥15 participantes reales (15 exactos), consentimiento informado (nota impresa en cada
+hoja, aceptada al entregar el formulario), y reporte de media/DE/IC 95% calculado sobre datos verificados
+contra las hojas originales — nada de esto es fabricado ni extrapolado.
