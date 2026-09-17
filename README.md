@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-v1.0.1-blue.svg)](https://github.com/carla22072004/PFC-Presustentaciones-2026)
 [![CI](https://github.com/carla22072004/PFC-Presustentaciones-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/carla22072004/PFC-Presustentaciones-2026/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![JaCoCo Coverage](https://img.shields.io/badge/coverage-81.03%25_lines-brightgreen.svg)](docs/mediciones/jacoco/COVERAGE.md)
+[![JaCoCo Coverage](https://img.shields.io/badge/coverage-82.03%25_lines-brightgreen.svg)](docs/mediciones/jacoco/COVERAGE.md)
 [![OWASP Top 10](https://img.shields.io/badge/OWASP-5%2F6_controles_con_evidencia-yellow.svg)](docs/mediciones/sec/owasp/OWASP-AUDIT.md)
 
 Sistema web para la automatización, gestión y evaluación de pre-sustentaciones de trabajos de titulación de la **Universidad Técnica Estatal de Quevedo (UTEQ)**.

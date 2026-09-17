@@ -249,6 +249,39 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
+                    <!-- Hallazgo real (re-verificacion P2, examen suspenso 2026-09-17): el ing senalo
+                         que no existia ninguna regla que impusiera el 70% de cobertura, es decir, el
+                         umbral se verificaba a mano, no como gate. Se agrega aqui, en la fase "test"
+                         (la misma que corre "./mvnw test", el comando real que usa
+                         .github/workflows/ci.yml), para que el build falle de verdad si la cobertura
+                         cae por debajo del 70% en lineas o en ramas, a nivel de bundle (global), en vez
+                         de quedar como un numero que solo se lee despues de generado el reporte. -->
+                    <execution>
+                        <id>jacoco-check</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 

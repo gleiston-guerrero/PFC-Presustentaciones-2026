@@ -3,18 +3,29 @@
 **⚠️ Actualización (2026-09-17, examen suspenso, P2):** el ing revisó el informe y citó 69.99 %
 líneas / 54.67 % ramas como "la corrida de cierre" — esa cifra es la del párrafo
 `2026-09-11-cierre-limpio` en `Informe-Final/secciones/10-evaluacion-empirica.tex`, una medición
-**intermedia**, no la de cierre real (que ya era, en ese mismo informe, 82.10 %/73.49 %, párrafo de más
-abajo — quedó fácil de leer como si 70.00 %/54.67 % fuera la cifra final por cómo está ordenado el
-texto). Re-verificado hoy con `make test` (804 tests, 0 fallos) tras todo el trabajo de renombrado P4 y
-el resto del examen suspenso: **82.17 % líneas (4024/4897) / 73.49 % ramas (1483/2018)**, prácticamente
-idéntico al 09-15 (la diferencia de 3 tests entre 801 y 804 no mueve la cifra de forma perceptible).
-Reporte crudo versionado en
-[`docs/mediciones/jacoco/2026-09-17-cierre-examen-suspenso/`](2026-09-17-cierre-examen-suspenso/). El
-informe (`10-evaluacion-empirica.tex`) se corrigió para poner esta cifra de cierre bien arriba de la
-sección, antes de la narrativa histórica, para que no se vuelva a leer un número intermedio como final.
+**intermedia**, correctamente citada por la guía porque era la cifra vigente en el commit que revisó
+(`f3d1ff4`, 13-sep). **Corrección de una afirmación anterior de esta misma nota:** aquí se decía que el
+informe "ya tenía" 82.10 %/73.49 % en ese mismo momento — eso es cronológicamente falso, y el ing lo
+señaló en su evaluación integral del 17-sep. El párrafo del 82.10 % se agregó en el commit `2b9ba89`
+(15-sep), **dos días después** de `f3d1ff4` — no existía cuando se generó la guía, verificado con
+`git merge-base --is-ancestor f3d1ff4 2b9ba89`. Re-verificado hoy con una corrida limpia de una sola
+sesión (`cd backend && ./mvnw clean test`, sin nada acumulado): **804/804 tests, 0 fallos — 82.03 %
+líneas (4017/4897) / 73.49 % ramas (1483/2018)**, prácticamente idéntico al snapshot anterior de 71
+sesiones acumuladas (82.17 %/73.49 %). Reporte crudo versionado en
+[`docs/mediciones/jacoco/2026-09-17-corrida-limpia-unica-sesion/`](2026-09-17-corrida-limpia-unica-sesion/)
+(el de [`2026-09-17-cierre-examen-suspenso/`](2026-09-17-cierre-examen-suspenso/) se conserva, pero
+acumulaba 71 sesiones de ejecución, no es una corrida limpia única). El informe
+(`10-evaluacion-empirica.tex`) se corrigió para poner esta cifra de cierre bien arriba de la sección,
+antes de la narrativa histórica, para que no se vuelva a leer un número intermedio como final. **Nota
+real sobre el margen:** ~2.4 de los 3.49 puntos de margen en ramas vienen de los `equals`/`hashCode`
+generados por Lombok en `security.dto` — que, como documenta la entrada del 2026-09-11 más abajo, se
+cubrieron **deliberadamente con `EqualsVerifier`** como parte de esa ronda de cierre, no por accidente;
+sin ese paquete la cobertura de ramas sería 71.09 %, todavía sobre el umbral pero con margen mucho más
+ajustado. Se agregó además una regla `jacoco:check` (≥70 % líneas y ramas) en la fase `test` de
+`pom.xml`, para que esto sea un gate real de `./mvnw test`, no solo un número que se lee después.
 
-**Cómo se generó:** `cd backend && ./mvnw clean verify` (JaCoCo corre en la fase `test` vía `jacoco-maven-plugin`, ver `backend/pom.xml`).
-**Reporte crudo archivado (XML + CSV):** [`docs/mediciones/jacoco/2026-09-17-cierre-examen-suspenso/`](2026-09-17-cierre-examen-suspenso/) — **cifra de cierre vigente**, corrida con `make test` sobre Postgres/Redis reales en Docker (**804 tests / 0 fallos / 0 errores**). [`2026-09-15-cobertura-global-70/`](2026-09-15-cobertura-global-70/) (801 tests, misma cifra en la práctica), [`2026-09-13-cobertura-controladores/`](2026-09-13-cobertura-controladores/), [`2026-09-11-cierre-limpio/`](2026-09-11-cierre-limpio/), [`2026-09-11-controllers-70/`](2026-09-11-controllers-70/), [`2026-09-11-fase1-must/`](2026-09-11-fase1-must/), [`2026-09-06-servicios/`](2026-09-06-servicios/), [`2026-09-05-cierre/`](2026-09-05-cierre/) y `2026-09-05/` son corridas previas; `2026-08-30/`, `2026-08-29/` y `2026-08-17/` se conservan como snapshots históricos. El reporte también se regenera y publica como artefacto en el job `backend` de [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) en cada push.
+**Cómo se generó:** `cd backend && ./mvnw clean test` (JaCoCo corre en la fase `test` vía `jacoco-maven-plugin`, que ahora también incluye la regla `check`; ver `backend/pom.xml`).
+**Reporte crudo archivado (XML + CSV):** [`docs/mediciones/jacoco/2026-09-17-corrida-limpia-unica-sesion/`](2026-09-17-corrida-limpia-unica-sesion/) — **cifra de cierre vigente**, corrida limpia de una sola sesión con `mvn clean test` sobre Postgres/Redis reales en Docker (**804 tests / 0 fallos / 0 errores**), `jacoco:check` en verde. [`2026-09-17-cierre-examen-suspenso/`](2026-09-17-cierre-examen-suspenso/) (misma cifra en la práctica, pero acumulaba 71 sesiones de ejecución), [`2026-09-15-cobertura-global-70/`](2026-09-15-cobertura-global-70/) (801 tests, misma cifra en la práctica), [`2026-09-13-cobertura-controladores/`](2026-09-13-cobertura-controladores/), [`2026-09-11-cierre-limpio/`](2026-09-11-cierre-limpio/), [`2026-09-11-controllers-70/`](2026-09-11-controllers-70/), [`2026-09-11-fase1-must/`](2026-09-11-fase1-must/), [`2026-09-06-servicios/`](2026-09-06-servicios/), [`2026-09-05-cierre/`](2026-09-05-cierre/) y `2026-09-05/` son corridas previas; `2026-08-30/`, `2026-08-29/` y `2026-08-17/` se conservan como snapshots históricos. El reporte también se regenera y publica como artefacto en el job `backend` de [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) en cada push.
 **Última actualización:** 2026-09-15 — el examen suspenso exige ≥70 % **global** (líneas y ramas, no solo en `controllers`) recalculado desde el `jacoco.xml` versionado; la corrida de cierre del 09-13 daba 71.46 %/53.82 % global, con ramas muy por debajo. Primera pasada: se cubrieron los paquetes con más ramas sin ejercitar y cero test dedicado — `security.dto` (188 ramas al 0 %, los `equals`/`hashCode` generados por Lombok, con `EqualsVerifier`); `BackupService` (162 ramas) y `WalPitrService` (90 ramas), la lógica de respaldos/WAL sin ningún test propio; `BackupScheduler` (30 ramas); `PermisoService` (solo cubría `tienePermiso`, no `permisosDe`/`esPropioDocente`); y `JwtTokenProvider` (36.8 % — refresh tokens y blacklist en Redis, con `StringRedisTemplate` mockeado, incluido el fail-closed de RNF-04). Eso dejó 71.90 % de ramas — por encima del umbral pero al filo para el gusto del equipo, así que se hizo una segunda pasada sobre lo que quedaba: `EstadoTiempoRealController` y `AnteproyectoController` (0 % cada uno, sin ningún test); `EmailService` y `AuditoriaService` (0 % cada uno).
 
 Cifras de esta corrida (801/801 tests, 0 fallos): **global 82.10 % líneas (4020/4897) / 73.49 % ramas (1483/2018)** — 12 y 3.5 puntos por encima del umbral del 70 % respectivamente. `controllers` 84.2 % / 85.1 %; `services` 82.7 % / 67.3 %; `security` (incluye `security.jwt` al 98.0 %/89.1 % y `security.dto` al 96.6 %/96.8 %) 81.6 % / 71.9 %.

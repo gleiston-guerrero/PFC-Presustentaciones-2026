@@ -55,11 +55,13 @@ implícito (brecha ya reconocida, no subsanada).
 
 **Criterio:** 70% o más en líneas y en ramas, recalculado desde el `jacoco.xml` versionado.
 
-**Comando:**
+**Comandos:**
 ```bash
+# Corrida limpia de una sola sesion (elimina el defecto de "71 sesiones acumuladas")
+cd backend && ./mvnw -q clean test
 python -c "
 import xml.etree.ElementTree as ET
-tree = ET.parse('docs/mediciones/jacoco/2026-09-17-cierre-examen-suspenso/jacoco.xml')
+tree = ET.parse('docs/mediciones/jacoco/2026-09-17-corrida-limpia-unica-sesion/jacoco.xml')
 root = tree.getroot()
 for c in root.findall('counter'):
     if c.get('type') in ('LINE','BRANCH'):
@@ -68,17 +70,28 @@ for c in root.findall('counter'):
 "
 ```
 
-**Salida real (2026-09-17):**
+**Salida real (2026-09-17, corrida limpia desde cero):**
 ```
+804 tests, 0 failures, 0 errors
+BUILD SUCCESS (jacoco:check paso -- ver pom.xml)
 BRANCH: 1483/2018 (73.49%)
-LINE: 4024/4897 (82.17%)
+LINE: 4017/4897 (82.03%)
 ```
 
-**Veredicto: ✅ Cumple**, con dos defectos declarados por el ing y no corregidos todavía: (1) el
-`jacoco.xml` citado acumula 71 sesiones de ejecución, no es el resultado de una corrida limpia única;
-(2) una parte real del margen sobre el 70% viene de `equals`/`hashCode` generados por Lombok, no de
-lógica de negocio nueva. No existe una regla `check` de Maven/JaCoCo que imponga el 70% automáticamente
-en CI — el umbral se verifica manualmente, no se aplica como gate.
+**Veredicto: ✅ Cumple**, con los 3 defectos que señaló el ing verificados y 2 de los 3 corregidos de
+verdad esta vez (no solo documentados): (1) **corregido** — el `jacoco.xml` de 71 sesiones se conserva
+como snapshot anterior, pero la cifra que aplica ahora sale de una corrida limpia única
+(`docs/mediciones/jacoco/2026-09-17-corrida-limpia-unica-sesion/`), prácticamente idéntica (82.03% vs
+82.17%); (2) **corregido** — se agregó una regla `jacoco:check` (BUNDLE, LINE y BRANCH ≥70%) en la fase
+`test` de `backend/pom.xml`, la misma fase que corre `./mvnw test` en CI: el build ahora falla de verdad
+si la cobertura cae del umbral; (3) **verificado con precisión exacta, no corregido** — sin los métodos
+`equals`/`hashCode` de Lombok (concentrados en `security/dto/*`, un paquete que la exclusión de JaCoCo
+no cubre), la cobertura de ramas baja de 73.49% a **71.09%** (2.40 puntos de diferencia, coincide con la
+cifra del ing) — sigue pasando el umbral, con margen más ajustado. **Corrección adicional real:** el
+párrafo del informe que decía "el 82.10% ya estaba ahí cuando se escribió la guía" era cronológicamente
+falso — el commit que la guía revisó (`f3d1ff4`, 13-sep) es anterior al commit que agregó esa cifra
+(`2b9ba89`, 15-sep), verificado con `git merge-base --is-ancestor`. Corregido en el informe y en
+`OBSERVACIONES.md` (OBS-28).
 
 ---
 

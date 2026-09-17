@@ -29,18 +29,19 @@ print(f'n={n} media={mean:.2f} DE={sd:.2f} IC95=[{mean-m:.2f},{mean+m:.2f}]')
 warn "P1: solo 4/15 respuestas tienen fecha verificable -- ver docs/mediciones/sus/SUS-RESULTS.md"
 echo
 
-echo "=== P2 -- Cobertura (jacoco.xml versionado) ==="
+echo "=== P2 -- Cobertura (jacoco.xml de la corrida limpia de una sola sesion) ==="
 python -c "
 import xml.etree.ElementTree as ET
-tree = ET.parse('docs/mediciones/jacoco/2026-09-17-cierre-examen-suspenso/jacoco.xml')
+tree = ET.parse('docs/mediciones/jacoco/2026-09-17-corrida-limpia-unica-sesion/jacoco.xml')
 root = tree.getroot()
 for c in root.findall('counter'):
     if c.get('type') in ('LINE','BRANCH'):
         covered=int(c.get('covered')); missed=int(c.get('missed')); total=covered+missed
         print(f\"{c.get('type')}: {covered}/{total} ({covered/total*100:.2f}%)\")
 " || fail "P2: no se pudo parsear jacoco.xml"
-warn "P2: corrida sin regla 'check' que imponga el 70% en CI; ese jacoco.xml acumula 71 sesiones"
-echo "  (mvn test / JaCoCo real: correr 'make test' -- requiere Postgres/Redis, no se corre aqui)"
+ok "P2: regla jacoco:check (>=70% LINE y BRANCH, fase test) agregada en backend/pom.xml -- corre con './mvnw test'"
+warn "P2: ~2.4 de los 3.49 puntos de margen en ramas vienen de equals/hashCode de Lombok en security/dto/* (fuera de la exclusion de JaCoCo)"
+echo "  (para regenerar esta corrida: cd backend && ./mvnw -q clean test -- requiere Postgres/Redis, no se corre aqui)"
 echo
 
 echo "=== P3 -- Javadoc ==="

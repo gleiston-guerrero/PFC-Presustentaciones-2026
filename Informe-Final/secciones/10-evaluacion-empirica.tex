@@ -239,20 +239,36 @@ completo (las diez preguntas y la fórmula de cálculo) se documenta en el Anexo
 
 \subsection{Cobertura de código}
 
-\textbf{Cifra de cierre definitiva (2026-09-17, la que aplica para el umbral del 70\,\%):}
-\textbf{82.17\,\% de líneas (4,024/4,897) y 73.49\,\% de ramas (1,483/2,018)} a nivel global, sobre 804
-pruebas automatizadas reales (\texttt{make test} sobre Postgres/Redis reales en Docker, 0 fallos, 0
-errores), recalculado directamente desde
-\texttt{docs/mediciones/jacoco/2026-09-17-cierre-examen-suspenso/jacoco.xml} (versionado en el
-repositorio). Supera el umbral del 70\,\% en líneas \emph{y} en ramas, con margen real (más de 12 y 3.5
-puntos respectivamente). El resto de esta sección documenta el historial de cómo se llegó hasta acá --- se
-conserva sin reescribir por trazabilidad, pero el párrafo con el bloque \textbf{82.10\,\%/73.49\,\%} más
-abajo (801 pruebas, 2026-09-15) ya era, de hecho, la cifra correcta de cierre en el momento en que se
-escribió; el párrafo siguiente, con \textbf{70.00\,\%/54.67\,\%} (2026-09-11), es una medición
-\emph{intermedia} anterior en esa misma historia, no la cifra final --- quedó etiquetada
-``cierre-limpio'' de forma confusa, lo que se presta a leerla como la cifra definitiva sin llegar al
-párrafo que la supera más abajo. Esa es la causa real de por qué una lectura del informe podía citar
-69.99\,\%/54.67\,\% como si fuera el cierre.
+\textbf{Cifra de cierre definitiva (2026-09-17, la que aplica para el umbral del 70\,\%), corrida limpia
+de una sola sesión:} \textbf{82.03\,\% de líneas (4,017/4,897) y 73.49\,\% de ramas (1,483/2,018)} a
+nivel global, sobre 804 pruebas automatizadas reales (\texttt{mvn clean test} sobre Postgres/Redis reales
+en Docker, 0 fallos, 0 errores, una sola corrida desde cero, sin sesiones acumuladas), recalculado
+directamente desde
+\texttt{docs/mediciones/jacoco/2026-09-17-corrida-limpia-unica-sesion/jacoco.xml} (versionado en el
+repositorio). Desde esta misma ronda se agregó además una regla \texttt{jacoco:check} en \texttt{pom.xml}
+(fase \texttt{test}, la que corre \texttt{./mvnw test} en CI) que hace fallar el build si la cobertura
+cae del 70\,\% en líneas o en ramas --- pasó en esta corrida. Un snapshot anterior
+(\texttt{docs/mediciones/jacoco/2026-09-17-cierre-examen-suspenso/}, 82.17\,\%/73.49\,\%) acumulaba 71
+sesiones de ejecución en vez de una sola corrida limpia; se conserva sin borrar por trazabilidad, pero la
+cifra que aplica es la de arriba. Nota real sobre el margen de ramas: unos 2.4 de los 3.49 puntos por
+encima del umbral vienen de que \texttt{equals}/\texttt{hashCode} generados por Lombok en
+\texttt{security/dto/*} (un paquete que la exclusión de JaCoCo del \texttt{pom.xml} no cubre, solo
+excluye \texttt{ec/edu/uteq/presustentaciones/dto/**}) están bien probados --- sin ese efecto, la
+cobertura de ramas sería 71.09\,\%, todavía por encima del umbral pero con un margen mucho más ajustado
+(ver \texttt{docs/observaciones/OBSERVACIONES.md}, OBS-28, para el cálculo completo). Supera el umbral
+del 70\,\% en líneas \emph{y} en ramas, con margen real (más de 12 y 1 puntos respectivamente, siendo
+conservadores sobre el efecto de Lombok). El resto de esta sección documenta el historial de cómo se
+llegó hasta acá --- se conserva sin reescribir por trazabilidad. \textbf{Corrección de una afirmación
+anterior de este mismo párrafo:} decía que el bloque de \textbf{82.10\,\%/73.49\,\%} de más abajo (801
+pruebas, 2026-09-15) "ya era, de hecho, la cifra correcta de cierre en el momento en que se escribió" la
+guía del examen suspenso, y que por eso una lectura de esa guía podía citar 69.99\,\%/54.67\,\% "sin
+llegar al párrafo que la supera". Eso es cronológicamente falso y así lo señaló el ingeniero: el commit
+que la guía revisó (\texttt{f3d1ff4}, 13 de septiembre) es \emph{anterior} al commit que agregó el
+párrafo del 82.10\,\% (\texttt{2b9ba89}, 15 de septiembre) --- verificado con
+\texttt{git merge-base --is-ancestor f3d1ff4 2b9ba89}. La cifra del 82.10\,\% \emph{no existía todavía}
+cuando se generó la guía; se agregó dos días después, en trabajo posterior. El párrafo con
+\textbf{70.00\,\%/54.67\,\%} (2026-09-11) sí es una medición \emph{intermedia} real en esa historia, y
+la guía la citó correctamente porque, en el commit que revisó, esa era la cifra vigente.
 
 JaCoCo sobre 576 pruebas automatizadas reales (2026-09-11, \texttt{mvn clean verify} sobre Postgres/Redis
 reales en Docker, \textbf{0 fallos, 0 errores}, ver \texttt{docs/mediciones/jacoco/2026-09-11-cierre-limpio/}):
