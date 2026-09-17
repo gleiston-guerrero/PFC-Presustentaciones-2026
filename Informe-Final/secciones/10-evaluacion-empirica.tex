@@ -211,15 +211,36 @@ sustituye una revisión manual dirigida del modelo de autorización por recurso.
 
 \subsection{Usabilidad}
 
-\textbf{Sin datos reales.} El instrumento SUS \cite{brooke1996} está listo
-(\texttt{docs/mediciones/sus/SUS-RESULTS.md}), pero no se ha aplicado a participantes reales. Una versión
-anterior de este proyecto afirmaba un puntaje de usabilidad con evaluadores inexistentes --- esos datos eran
-fabricados y fueron retirados explícitamente (detalle completo en \texttt{docs/mediciones/sus/SUS-RESULTS.md}).
-No se reporta ninguna cifra de usabilidad en este informe
-porque no existe ninguna medición real que reportar. El protocolo completo (las diez preguntas y la
-fórmula de cálculo) se documenta en el Anexo B (Sección~\ref{anexo:sus}).
+Instrumento SUS \cite{brooke1996} de diez ítems, aplicado el 2026-09-17 a \textbf{15 participantes reales}
+del sistema (6 estudiantes, 4 docentes, 3 coordinadores, 2 administradores), de forma anónima y con
+consentimiento informado impreso en el propio formulario. Las 15 respuestas crudas están versionadas en
+\texttt{docs/mediciones/sus/sus-respuestas.csv}, con las 15 hojas escaneadas originales como evidencia en
+\texttt{docs/mediciones/sus/respuestas-crudas/}. Puntaje calculado con la fórmula estándar de Brooke y
+verificado con \texttt{Python} (\texttt{statistics}/\texttt{scipy}) directamente sobre el CSV:
+\textbf{media 55.17/100, desviación estándar 12.55, intervalo de confianza 95\,\% [48.22, 62.12]}
+($n=15$). Según la escala de interpretación de Bangor et al. (2009), un promedio de 55.17 cae en la banda
+``OK''/marginal, por debajo del umbral de 68 que se considera por encima del promedio en la literatura
+SUS --- se reporta la cifra real sin maquillar, ninguna respuesta fue inventada ni ajustada. Una versión
+anterior de este proyecto afirmaba un puntaje con evaluadores inexistentes --- esos datos eran fabricados
+y fueron retirados explícitamente (detalle en \texttt{docs/mediciones/sus/SUS-RESULTS.md}). El protocolo
+completo (las diez preguntas y la fórmula de cálculo) se documenta en el Anexo B (Sección~\ref{anexo:sus}).
 
 \subsection{Cobertura de código}
+
+\textbf{Cifra de cierre definitiva (2026-09-17, la que aplica para el umbral del 70\,\%):}
+\textbf{82.17\,\% de líneas (4,024/4,897) y 73.49\,\% de ramas (1,483/2,018)} a nivel global, sobre 804
+pruebas automatizadas reales (\texttt{make test} sobre Postgres/Redis reales en Docker, 0 fallos, 0
+errores), recalculado directamente desde
+\texttt{docs/mediciones/jacoco/2026-09-17-cierre-examen-suspenso/jacoco.xml} (versionado en el
+repositorio). Supera el umbral del 70\,\% en líneas \emph{y} en ramas, con margen real (más de 12 y 3.5
+puntos respectivamente). El resto de esta sección documenta el historial de cómo se llegó hasta acá --- se
+conserva sin reescribir por trazabilidad, pero el párrafo con el bloque \textbf{82.10\,\%/73.49\,\%} más
+abajo (801 pruebas, 2026-09-15) ya era, de hecho, la cifra correcta de cierre en el momento en que se
+escribió; el párrafo siguiente, con \textbf{70.00\,\%/54.67\,\%} (2026-09-11), es una medición
+\emph{intermedia} anterior en esa misma historia, no la cifra final --- quedó etiquetada
+``cierre-limpio'' de forma confusa, lo que se presta a leerla como la cifra definitiva sin llegar al
+párrafo que la supera más abajo. Esa es la causa real de por qué una lectura del informe podía citar
+69.99\,\%/54.67\,\% como si fuera el cierre.
 
 JaCoCo sobre 576 pruebas automatizadas reales (2026-09-11, \texttt{mvn clean verify} sobre Postgres/Redis
 reales en Docker, \textbf{0 fallos, 0 errores}, ver \texttt{docs/mediciones/jacoco/2026-09-11-cierre-limpio/}):
