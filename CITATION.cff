@@ -25,11 +25,17 @@ authors:
     affiliation: "Universidad Técnica Estatal de Quevedo"
     orcid: "https://orcid.org/0009-0004-5561-1391"
 title: "Sistema de Gestión de Pre-Sustentaciones de Titulación UTEQ"
-version: "1.0.1"
-date-released: "2026-09-06"
-url: "https://github.com/carla22072004/PFC-Presustentaciones-2026"
-repository-code: "https://github.com/carla22072004/PFC-Presustentaciones-2026"
+version: "1.1.0"
+date-released: "2026-09-17"
+url: "https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026"
+repository-code: "https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026"
 doi: "10.5281/zenodo.22445216"
+# NOTA REAL (P9, examen suspenso 2026-09-17): el DOI de arriba archiva el snapshot de v1.0.1
+# (6 sep 2026) -- v1.1.0 (este cierre, tag Git v1.1.0) todavia no tiene su propio snapshot en
+# Zenodo. Archivar una version nueva requiere una accion manual del equipo en zenodo.org (no se
+# detecto integracion automatica GitHub->Zenodo en este repositorio, p. ej. un .zenodo.json), asi
+# que no se fabrica aqui un DOI nuevo que nadie verifico. El DOI citado sigue siendo real y
+# verificable, solo que corresponde a v1.0.1, no a v1.1.0.
 # DOI de concepto (resuelve siempre a la ultima version): 10.5281/zenodo.21988563
 # Version anterior v1.0.0 (2026-08-17): DOI 10.5281/zenodo.21988564 -- ver docs/ZENODO.md
 keywords:
