@@ -1,6 +1,6 @@
 # Makefile para despliegue, verificación y reproducción del entorno PFC-UTEQ
 
-.PHONY: help up down restart logs ps clean all build test bench audit docs pdf wait-backend
+.PHONY: help up down restart logs ps clean all build test bench audit docs pdf wait-backend verify
 
 help:
 	@echo "Comandos disponibles:"
@@ -16,6 +16,11 @@ help:
 	@echo "  make audit       - Corre SpotBugs/find-sec-bugs (SQL dinamico) + npm audit"
 	@echo "  make docs        - Regenera las figuras de docs/mediciones/perf/figuras/ y valida la matriz de trazabilidad"
 	@echo "  make pdf         - Compila Informe-Final/informe-final.tex a PDF (requiere latexmk/MiKTeX o TeX Live)"
+	@echo "  make verify      - Re-corre las verificaciones de VERIFICACION.md que no requieren Docker"
+	@echo "                     (SUS, JaCoCo, Javadoc, nombres en espanol, autorizacion de endpoints,"
+	@echo "                     etiqueta v1.1.0, cifras de P11, commits vacios de P12) e imprime OK/WARN/FAIL"
+	@echo "                     por punto. No reemplaza 'make test'/Lighthouse/k6 para los puntos que"
+	@echo "                     dependen de la topologia completa -- ver VERIFICACION.md."
 	@echo "  make all         - Objetivo de reproducibilidad (Criterio R1): desde una clonacion limpia,"
 	@echo "                     construye, levanta todos los contenedores, espera a que las migraciones"
 	@echo "                     Flyway se apliquen, corre tests + benchmarks + auditoria + reportes, y"
@@ -90,6 +95,10 @@ pdf:
 	@echo "Compilando el PDF del SRS (docs/requisitos/SRS-v1.0.1.tex)..."
 	cd docs/requisitos && latexmk -pdf -interaction=nonstopmode -halt-on-error SRS-v1.0.1.tex
 	@echo "PDF generado: docs/requisitos/SRS-v1.0.1.pdf"
+
+verify:
+	@echo "Verificacion reproducible (VERIFICACION.md) -- partes que no requieren Docker levantado..."
+	@sh scripts/verify.sh
 
 ## --- Objetivo de reproducibilidad end-to-end (Fase 10, Criterio R1) ---
 

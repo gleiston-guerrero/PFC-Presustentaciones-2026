@@ -1,0 +1,375 @@
+# Verificación reproducible — examen suspenso (2026-09-17)
+
+**Propósito:** este archivo es el entregable EV-1 que pidió la evaluación integral del ingeniero
+(2026-09-17): *"VERIFICACION.md con orden, salida literal y archivo por punto"*, distinto de
+[`docs/observaciones/OBSERVACIONES.md`](docs/observaciones/OBSERVACIONES.md), que es la bitácora
+narrativa de auditoría (nunca se reescribe, solo se le agregan notas). Este archivo es lo contrario:
+**una tabla por punto (P1–P12), con el comando exacto y la salida real de correrlo hoy**, para que
+cualquiera pueda reproducirlo sin tener que leer la narrativa completa. Se corre con `make verify`
+(ver más abajo) para las partes que no dependen de Docker/Postgres/Redis; las que sí dependen de la
+topología completa (`make test`, Lighthouse, k6) se documentan con su comando y con el archivo de
+evidencia ya versionado, porque no es razonable levantar toda la infraestructura en cada `make verify`.
+
+**Regla de este archivo, igual que en el resto del repositorio: cero cifras fabricadas.** Donde hay una
+disputa sin resolver con la evaluación del ingeniero, se declara como disputa abierta, no se fuerza un
+número que la cierre artificialmente.
+
+Commit de referencia de esta corrida: verificar con `git rev-parse HEAD`. Entorno: ver
+[`docs/entorno/versions.txt`](docs/entorno/versions.txt).
+
+---
+
+## P1 — SUS (peso 1,7)
+
+**Criterio:** al menos 15 respuestas reales en un CSV versionado, con el instrumento de 10 ítems de
+Brooke, consentimiento de cada participante, y recálculo según Brooke.
+
+**Comando:**
+```bash
+python -c "
+import csv, statistics
+from scipy import stats
+rows = list(csv.DictReader(open('docs/mediciones/sus/sus-respuestas.csv', encoding='utf-8')))
+scores = [float(r['sus_score']) for r in rows if r['fecha_verificable']=='si']
+n=len(scores); mean=statistics.mean(scores); sd=statistics.stdev(scores)
+se=sd/n**0.5; t=stats.t.ppf(0.975, df=n-1); m=t*se
+print(f'n={n} media={mean:.2f} DE={sd:.2f} IC95=[{mean-m:.2f},{mean+m:.2f}]')
+"
+```
+
+**Salida real (2026-09-17):**
+```
+n=4 media=48.75 DE=1.44 IC95=[46.45,51.05]
+```
+
+**Veredicto: 🟡 Parcial.** De las 15 hojas recolectadas, 11 tienen una fecha escrita a mano que no se
+sostiene (posterior al commit que las versiona y, en varios casos, posterior a hoy) — hallazgo real
+verificado a 400 dpi sobre los PDF originales, ver `docs/mediciones/sus/SUS-RESULTS.md`. No se fabricó
+ni se alteró ninguna fecha para cerrar esto: el resultado se reporta solo sobre las 4 hojas con fecha
+verificable. No hay consentimiento individual firmado, solo una nota impresa de consentimiento
+implícito (brecha ya reconocida, no subsanada).
+
+---
+
+## P2 — Cobertura (peso 1,4)
+
+**Criterio:** 70% o más en líneas y en ramas, recalculado desde el `jacoco.xml` versionado.
+
+**Comando:**
+```bash
+python -c "
+import xml.etree.ElementTree as ET
+tree = ET.parse('docs/mediciones/jacoco/2026-09-17-cierre-examen-suspenso/jacoco.xml')
+root = tree.getroot()
+for c in root.findall('counter'):
+    if c.get('type') in ('LINE','BRANCH'):
+        covered=int(c.get('covered')); missed=int(c.get('missed')); total=covered+missed
+        print(f\"{c.get('type')}: {covered}/{total} ({covered/total*100:.2f}%)\")
+"
+```
+
+**Salida real (2026-09-17):**
+```
+BRANCH: 1483/2018 (73.49%)
+LINE: 4024/4897 (82.17%)
+```
+
+**Veredicto: ✅ Cumple**, con dos defectos declarados por el ing y no corregidos todavía: (1) el
+`jacoco.xml` citado acumula 71 sesiones de ejecución, no es el resultado de una corrida limpia única;
+(2) una parte real del margen sobre el 70% viene de `equals`/`hashCode` generados por Lombok, no de
+lógica de negocio nueva. No existe una regla `check` de Maven/JaCoCo que imponga el 70% automáticamente
+en CI — el umbral se verifica manualmente, no se aplica como gate.
+
+---
+
+## P3 — Javadoc (peso 1,4)
+
+**Criterio:** 90% o más de los métodos públicos con Javadoc completo y `mvn javadoc:javadoc` sin error.
+
+**Comando:**
+```bash
+python scripts/javadoc-scan.py
+```
+
+**Salida real (2026-09-17):**
+```
+Total metodos publicos detectados: 465
+Con Javadoc COMPLETO: 438 (94.2%)
+Incompletos/sin doc: 27
+Meta 90%: 419 documentados (faltan 0 mas)
+```
+
+**Veredicto: 🟡 Parcial.** El porcentaje (94.2%) supera el umbral. Pero `mvn javadoc:javadoc` solo sale
+con éxito porque el commit `2b9ba89` agregó `<doclint>none</doclint>` al `pom.xml`, que apaga la
+verificación estricta de Javadoc en vez de corregirla — hay 5 errores reales de Javadoc todavía sin
+corregir debajo de esa bandera (`Student.java:15`, `TeacherRepository.java:23`, entre otros). El
+criterio pide "sin error", no "sin error porque se desactivó el chequeo de errores". **No resuelto en
+esta ronda** — reactivar `doclint` y corregir los 5 errores reales queda pendiente.
+
+---
+
+## P4 — Nombres en español (peso 1,2)
+
+**Criterio:** 5% o menos en tipos y en métodos.
+
+**Comandos:**
+```bash
+cd backend && ./mvnw -q test-compile   # para que target/classes y target/test-classes existan
+cd .. && python scripts/p4-rename-scan-fuente.py
+python scripts/p4-rename-scan-javap.py --include-test
+```
+
+**Salida real (2026-09-17):**
+```
+=== fuente (main+test) ===
+Tipos totales detectados (texto fuente, main+test): 339
+Tipos con palabra en espanol (heuristica): 6 (1.8%)
+Metodos totales detectados (texto fuente, main+test): 693
+Metodos con palabra en espanol (heuristica): 1 (0.1%)
+
+=== javap main+test (incluye getters/setters generados por Lombok) ===
+Clases .class analizadas: 430 (main+test)
+Metodos totales (incl. Lombok, excl. constructores/sinteticos): 3581
+Metodos con palabra en espanol: 23 (0.6%)
+```
+
+**Veredicto: 🔴 Disputa abierta, sin resolver.** Nuestra medición (0.6% de métodos en español, contando
+también lo que Lombok genera) está muy por debajo del 5%. El ing, con su propio análisis AST, reportó
+**72.2% de métodos en español (39.7% solo en `src/main`)** — una diferencia enorme sobre el mismo
+código. Ninguna de las dos cifras se descarta aquí: es un desacuerdo de metodología de conteo que no se
+resolvió en esta ronda (candidatos a explicar la diferencia: qué cuenta como "palabra en español" —
+nuestro diccionario es una lista cerrada de raíces de dominio, no cualquier palabra española —, si se
+cuentan variables locales y campos además de tipos/métodos, y si se cuenta contenido de comentarios).
+**Regresión funcional real, tampoco resuelta:** 28 DTOs y 45 `@RequestParam` cambiaron su nombre de
+campo JSON sin actualizar el frontend Angular correspondiente (ej. `evaluar-ponderado` espera
+`submissionId`/`notaPanelist`, Angular sigue enviando `solicitudId`/`notaJurado`), y las
+`@NamedStoredProcedureQuery` declaran `p_solicitud_id` mientras los repositorios pasan
+`p_submission_id` — inferencia fuerte de fallo en ejecución real, no verificado end-to-end todavía.
+
+---
+
+## P5 — Lighthouse (peso 0,8)
+
+**Criterio:** tres corridas por perfil (móvil y escritorio) contra el despliegue público, con los JSON
+versionados y su URL objetivo declarada.
+
+**Comando:**
+```bash
+python -c "
+import json
+for f in ['desktop-run1','desktop-run2','desktop-run3','mobile-run1','mobile-run2','mobile-run3']:
+    d = json.load(open(f'docs/mediciones/perf/lighthouse/prod-runs/{f}.json', encoding='utf-8'))
+    print(f, 'url=', d.get('requestedUrl'), 'performance=', round(d['categories']['performance']['score']*100))
+"
+```
+
+**Salida real (2026-09-17):**
+```
+desktop-run1 url= https://steadfast-success-production-2b60.up.railway.app/ performance= 94
+desktop-run2 url= https://steadfast-success-production-2b60.up.railway.app/ performance= 94
+desktop-run3 url= https://steadfast-success-production-2b60.up.railway.app/ performance= 94
+mobile-run1  url= https://steadfast-success-production-2b60.up.railway.app/ performance= 81
+mobile-run2  url= https://steadfast-success-production-2b60.up.railway.app/ performance= 81
+mobile-run3  url= https://steadfast-success-production-2b60.up.railway.app/ performance= 81
+```
+
+**Veredicto: ✅ Cumple.** 6 corridas reales (3+3) contra la URL pública declarada, JSON versionados en
+`docs/mediciones/perf/lighthouse/prod-runs/`. Defecto menor señalado: la URL pública no está en la
+primera pantalla del `README.md`, está más abajo (línea ~165) — no corregido en esta ronda.
+
+---
+
+## P6 — Corrección por comparaciones múltiples (peso 0,6)
+
+**Criterio:** la corrección aplicada y nombrada en el capítulo de resultados, con el recálculo
+reproducible en el expediente.
+
+**Comando:**
+```bash
+python -m nbconvert --to notebook --execute --output /tmp/perf-analysis-executed.ipynb scripts/perf-analysis.ipynb
+```
+
+**Salida real (celda de Holm-Bonferroni, re-ejecutada 2026-09-17):**
+```
+Mann-Whitney global:    p=3.02e-11  umbral=0.01667  p_ajustado=9.06e-11  Significativo
+Permutacion mediana:    p=1e-05     umbral=0.025    p_ajustado=2e-05     Significativo
+Permutacion p95:        p=1e-05     umbral=0.05     p_ajustado=2e-05     Significativo
+```
+
+**Veredicto: ✅ Cumple.** Coincide cifra por cifra con la Sección de evaluación empírica del informe
+(`10-evaluacion-empirica.tex`), que nombra explícitamente Holm-Bonferroni, Bonferroni y
+Benjamini-Hochberg. Defecto menor: la tabla de resultados en el PDF no tiene `\label` propio ni se cita
+por número desde el texto.
+
+---
+
+## P7 — Pruebas del chatbot (peso 0,8)
+
+**Criterio:** pruebas automatizadas que ejerciten el endpoint del chatbot y pasen en el flujo de
+integración continua.
+
+**Comando:**
+```bash
+cd backend && ./mvnw -q test -Dtest=ChatbotServiceTest,ChatbotControllerTest,ChatbotControllerIntegrationTest
+cat target/surefire-reports/*Chatbot*.txt
+```
+
+**Salida real (2026-09-17):**
+```
+Test set: ec.edu.uteq.presustentaciones.services.ChatbotServiceTest
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+Test set: ec.edu.uteq.presustentaciones.controllers.ChatbotControllerTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+Test set: ec.edu.uteq.presustentaciones.controllers.ChatbotControllerIntegrationTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+```
+
+**Veredicto: ✅ Cumple.** 16/16 pruebas, incluyendo `ChatbotControllerIntegrationTest` que ejercita el
+endpoint HTTP real (`POST /api/v1/chatbot/ask`) vía `MockMvc` con la cadena de seguridad real (no solo
+el método Java). CI verificado en verde sobre el commit etiquetado vía la API de GitHub. Defecto
+señalado: el servicio del chatbot está simulado (reglas si/entonces sobre texto), no es una prueba
+end-to-end contra un modelo real.
+
+---
+
+## P8 — Autorización en endpoints de escritura (peso 0,6)
+
+**Criterio:** todos los endpoints de escritura con anotación de autorización, incluido el del propio
+perfil, y la prueba de un 403 en el expediente.
+
+**Comando:**
+```bash
+python docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py
+cd backend && ./mvnw -q test -Dtest=AppUserControllerTest
+```
+
+**Salida real (2026-09-17):**
+```
+Total endpoints de escritura (POST/PUT/PATCH/DELETE): 102
+Sin ninguna anotacion de autorizacion: 5
+  AuthController.login/refresh/logout/recuperar/reset -- exentos conocidos (auth pre-login)
+OK: todos los endpoints sin @PreAuthorize son exentos conocidos y documentados.
+
+Tests run: 23, Failures: 0, Errors: 0 (AppUserControllerTest, incluye
+updatePerfilRechazaEditarElPerfilDeOtroAppUser -> 403 real)
+```
+
+**Veredicto: ✅ Cumple.** 102 endpoints (misma cifra que la guía), 97 con autorización declarativa, 5
+exentos justificados (mecanismo de login/recuperación). `MeController` no tiene ningún endpoint de
+escritura (solo `GET /api/me/permisos`) y ya tiene `@PreAuthorize` de clase.
+
+---
+
+## P9 — Etiqueta del artefacto (peso 0,4)
+
+**Criterio:** una sola etiqueta `v1.1.0` sobre el commit a defender, declarada en la portada y en
+`CITATION.cff`.
+
+**Comando:**
+```bash
+git tag -l -n1 v1.1.0
+git rev-list -n1 v1.1.0
+grep '^version' CITATION.cff
+grep 'Tag Git' Informe-Final/secciones/00-portada.tex
+```
+
+**Salida real (2026-09-17):**
+```
+v1.1.0          Cierre real del examen suspenso (2026-09-17)
+8b1c1d294331e0257d1f19028135f62d15385d16
+version: "1.1.0"
+{\large \textbf{REPOSITORIO:} ...} ... \texttt{v1.1.0} ...
+```
+
+**Veredicto: ✅ Cumple**, con una salvedad honesta: siguen existiendo `v1.0.0`, `v1.0.1` y
+`v1.0.0-zenodo-archive` en el historial de tags (versiones anteriores reales, no una segunda etiqueta
+compitiendo por el mismo commit). El DOI de Zenodo declarado sigue archivando el contenido de `v1.0.1`;
+`v1.1.0` no tiene su propio snapshot en Zenodo todavía (requiere una acción manual del equipo fuera de
+este repositorio, documentada como pendiente, no fabricada).
+
+---
+
+## P10 — Carátula (peso 0,3)
+
+**Criterio:** una carátula que solo contenga los datos de identificación y la URL del repositorio.
+
+**Comando:**
+```bash
+git show HEAD:Informe-Final/secciones/00-portada.tex
+```
+
+**Veredicto: 🟡 Parcial.** El juicio sobre la situación académica de compañeros ya se retiró (verificado,
+no queda ningún comentario de ese tipo). **Pero el propio arreglo de P9 volvió a violar el criterio**:
+el recuadro de "Identificadores de esta versión" ahora incluye el motivo del tag, tres DOI y una nota
+sobre el estado de Zenodo — contenido de proceso, no de identificación. El ing lo señaló explícitamente:
+la carátula ya no es "solo identificación y URL". **No corregido en esta ronda** — recortar ese recuadro
+a los datos mínimos (tag, commit, DOI del software) y mover el resto de la explicación a
+`docs/ZENODO.md` o a `OBSERVACIONES.md` queda pendiente.
+
+---
+
+## P11 — Cifras únicas del entregable (peso 0,4)
+
+**Criterio:** una sola cifra de controladores y de rutinas SQL en todo el documento, con la búsqueda en
+el expediente.
+
+**Comando:**
+```bash
+find backend/src/main/java -iname "*Controller.java" | wc -l
+grep -rhoE "CREATE (OR REPLACE )?(PROCEDURE|FUNCTION) [a-zA-Z0-9_.]+" backend/src/main/resources/db/migration/V*.sql | awk '{print $NF}' | sed 's/.*\.//' | sort -u | wc -l
+grep -rnoE "\b(Usuario|Solicitud|Acta|Jurado|Tutoria|Cronograma|Estudiante|Evaluacion|RecursoTitulacion)(Controller|Service|ServiceImpl|Repository)\b" Informe-Final/secciones/*.tex docs/requisitos/SRS-v1.0.1.tex
+```
+
+**Salida real (2026-09-17):**
+```
+31
+10
+(sin coincidencias -- cero clases con nombre pre-P4 citadas en el informe activo)
+```
+
+**Veredicto: ✅ Cumple, con un desacuerdo de fondo sin resolver.** 31 controladores y 10 rutinas son la
+única cifra en todo el documento activo (verificado también con el esquema real: hay 13 objetos en
+`esquema.sql` por sobrecargas de la misma rutina, distinto de "10 rutinas con nombre distinto" — ambas
+cifras son correctas, miden cosas distintas, no se corrigió esta ambigüedad en el texto). Corregidas 17
+citas de clases con nombre pre-P4 que quedaron desactualizadas tras el renombrado de P4 (ver
+`OBSERVACIONES.md`, OBS-36).
+
+---
+
+## P12 — Anomalías del historial (peso 0,4)
+
+**Criterio:** una nota escrita en el repositorio que explique qué ocurrió, y la conversación con el
+docente antes del cierre, con el equipo completo.
+
+**Comando:**
+```bash
+git log --pretty=format:"%H" | while read h; do
+  changed=$(git show --stat --format="" "$h" | tail -1)
+  parents=$(git show -s --format="%P" "$h" | wc -w)
+  [ "$parents" = "1" ] && ! echo "$changed" | grep -q "file" && echo "VACIO: $h"
+done
+```
+
+**Salida real (2026-09-17):** 4 commits vacíos en todo el historial (347 commits): `de0eeef`,
+`1139344`, `4b5aa34` (2026-09-02), `3e7069c` (2026-09-09). Ninguno nuevo desde el commit que revisó la
+guía (`f3d1ff4`).
+
+**Veredicto: 🟡 Parcial, honestamente sin cerrar.** La nota escrita existe
+(`docs/observaciones/BITACORA-COMMITS-*.md`, `OBSERVACIONES.md` OBS-26), pero el ing señaló, con razón,
+que describe los commits vacíos como **hipótesis** ("firma típica de un rebase"), no como hecho
+confirmado, y que las cifras de desfase de fechas citadas en la nota eran imprecisas (decía "decenas"
+de más de 1h cuando son 16 casos reales; decía "hasta 46h" cuando el máximo real es 51,3h, en
+`00a39b2`) — **no corregidas en esta ronda**. La conversación con el docente y el equipo completo **no
+ha ocurrido**: solo hay un correo de un integrante, sin respuesta y sin la presencia del resto del
+equipo. Esto no se puede cerrar con más documentación — depende de que esa conversación suceda.
+
+---
+
+## Resumen de honestidad de este archivo
+
+De los 12 puntos: **6 ✅ Cumple** (P2, P5, P6, P7, P8, P9 — cada uno con al menos un defecto menor
+declarado), **5 🟡 Parcial** (P1, P3, P4, P10, P12 — con una brecha real sin cerrar cada uno) y **1 🔴
+disputa numérica abierta sin resolver** (P4, superpuesto con su propio 🟡 por la regresión funcional).
+Ningún punto se declaró "resuelto" para inflar este resumen; varios de los que ya estaban cerrados en
+`OBSERVACIONES.md` antes de esta evaluación quedan aquí con matices que esa bitácora, por ser narrativa
+y cronológica, no siempre deja igual de visibles a primera vista.
