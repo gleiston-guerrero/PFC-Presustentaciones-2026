@@ -211,18 +211,30 @@ sustituye una revisión manual dirigida del modelo de autorización por recurso.
 
 \subsection{Usabilidad}
 
-Instrumento SUS \cite{brooke1996} de diez ítems, aplicado el 2026-09-17 a \textbf{15 participantes reales}
-del sistema (6 estudiantes, 4 docentes, 3 coordinadores, 2 administradores), de forma anónima y con
-consentimiento informado impreso en el propio formulario. Las 15 respuestas crudas están versionadas en
-\texttt{docs/mediciones/sus/sus-respuestas.csv}, con las 15 hojas escaneadas originales como evidencia en
+\textbf{Hallazgo real (2026-09-17) y tratamiento honesto:} de las 15 hojas físicas recolectadas para el
+instrumento SUS \cite{brooke1996}, 11 tienen una fecha escrita a mano posterior al commit que las
+versiona (\texttt{f51db75}, 2026-09-16) y, en varios casos, posterior incluso al día en que se escribe
+este párrafo --- una fecha que una hoja física no puede tener. Verificado ampliando el campo de fecha a
+alta resolución sobre los PDF originales: el dígito no admite otra lectura. Este informe **no** recalcula
+el resultado de cierre sobre las 15 respuestas: se reporta únicamente sobre las 4 que tienen fecha
+verificable (2026-09-17 o anterior), y las otras 11 quedan declaradas pendientes de confirmar, no
+fabricadas ni descartadas. Detalle completo en \texttt{docs/mediciones/sus/SUS-RESULTS.md}.
+
+Instrumento SUS de diez ítems, aplicado a \textbf{15 participantes} del sistema, de forma anónima y con
+una nota de consentimiento informado impresa en el propio formulario (sin firma individual --- brecha
+declarada). Las 15 respuestas crudas están versionadas en \texttt{docs/mediciones/sus/sus-respuestas.csv}
+(con una columna \texttt{fecha\_verificable}), con las 15 hojas escaneadas originales, sin modificar, en
 \texttt{docs/mediciones/sus/respuestas-crudas/}. Puntaje calculado con la fórmula estándar de Brooke y
-verificado con \texttt{Python} (\texttt{statistics}/\texttt{scipy}) directamente sobre el CSV:
-\textbf{media 55.17/100, desviación estándar 12.55, intervalo de confianza 95\,\% [48.22, 62.12]}
-($n=15$). Según la escala de interpretación de Bangor et al. (2009), un promedio de 55.17 cae en la banda
-``OK''/marginal, por debajo del umbral de 68 que se considera por encima del promedio en la literatura
-SUS --- se reporta la cifra real sin maquillar, ninguna respuesta fue inventada ni ajustada. Una versión
-anterior de este proyecto afirmaba un puntaje con evaluadores inexistentes --- esos datos eran fabricados
-y fueron retirados explícitamente (detalle en \texttt{docs/mediciones/sus/SUS-RESULTS.md}). El protocolo
+verificado con \texttt{Python} (\texttt{statistics}/\texttt{scipy}) directamente sobre el CSV, filtrando
+por fecha verificable antes de calcular:
+\textbf{media 48.75/100, desviación estándar 1.44, intervalo de confianza 95\,\% [46.45, 51.05]}
+($n=4$: participantes G, H, K, Ñ, fechados 14 y 16 de septiembre de 2026). Según la escala de
+interpretación de Bangor et al. (2009), un promedio de 48.75 cae por debajo de la banda ``OK''/marginal
+--- un resultado bajo, aunque con una muestra demasiado pequeña para generalizar con confianza. Una
+versión anterior de este proyecto afirmaba un puntaje con evaluadores inexistentes --- esos datos eran
+fabricados y fueron retirados explícitamente; este mismo instrumento tuvo después un segundo problema de
+integridad de datos (las 11 fechas no verificables de arriba), tratado de la misma forma: declarando la
+brecha en vez de maquillarla (detalle en \texttt{docs/mediciones/sus/SUS-RESULTS.md}). El protocolo
 completo (las diez preguntas y la fórmula de cálculo) se documenta en el Anexo B (Sección~\ref{anexo:sus}).
 
 \subsection{Cobertura de código}
