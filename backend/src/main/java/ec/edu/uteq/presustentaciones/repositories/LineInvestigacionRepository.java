@@ -9,6 +9,16 @@ import java.util.Optional;
 
 @Repository
 public interface LineInvestigacionRepository extends JpaRepository<LineInvestigacion, Integer> {
+    /**
+     * Busca el/los registro(s) con codigo.
+     * @param codigo codigo
+     * @return el registro si existe, vacío si no
+     */
     Optional<LineInvestigacion> findByCodigo(String codigo);
+    /**
+     * Busca el/los registro(s) con faculty id.
+     * @param facultyId facultyId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<LineInvestigacion> findByFacultyId(Integer facultyId);
 }

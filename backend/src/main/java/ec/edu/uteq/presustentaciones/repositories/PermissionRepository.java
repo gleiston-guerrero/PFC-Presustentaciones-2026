@@ -13,13 +13,27 @@ import java.util.List;
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission, Short> {
 
+    /**
+     * Devuelve todos los registros con o der by categoria asc nombre asc.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Permission> findAllByOrderByCategoriaAscNombreAsc();
 
+    /**
+     * Busca el/los registro(s) con codigo in.
+     * @param codigos codigos
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Permission> findByCodigoIn(List<String> codigos);
 
     @Query(value = "SELECT rp.rol_id FROM presus.rol_permisos rp " +
             "JOIN presus.permisos p ON p.id = rp.permiso_id " +
             "WHERE p.codigo = :codigo", nativeQuery = true)
+    /**
+     * Find role ids con permission.
+     * @param codigo codigo
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Short> findRoleIdsConPermission(@Param("codigo") String codigo);
 
     /**
@@ -35,11 +49,22 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
             "  JOIN presus.usuarios u ON u.rol_id = rp.rol_id " +
             "  WHERE u.email = :email AND p.codigo = :codigo" +
             ")", nativeQuery = true)
+    /**
+     * App user tiene permission.
+     * @param email email
+     * @param codigo codigo
+     * @return true si se cumple la condición, false si no
+     */
     boolean appUserTienePermission(@Param("email") String email, @Param("codigo") String codigo);
 
     @Query(value = "SELECT p.codigo FROM presus.permisos p " +
             "JOIN presus.rol_permisos rp ON rp.permiso_id = p.id " +
             "WHERE rp.rol_id = :roleId", nativeQuery = true)
+    /**
+     * Find codigos por role.
+     * @param roleId roleId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<String> findCodigosPorRole(@Param("roleId") Short roleId);
 
     /**
@@ -52,15 +77,29 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
             "JOIN presus.rol_permisos rp ON rp.permiso_id = p.id " +
             "JOIN presus.usuarios u ON u.rol_id = rp.rol_id " +
             "WHERE u.email = :email", nativeQuery = true)
+    /**
+     * Find codigos por email.
+     * @param email email
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<String> findCodigosPorEmail(@Param("email") String email);
 
     @Modifying
     @Transactional
     @Query(value = "DELETE FROM presus.rol_permisos WHERE rol_id = :roleId", nativeQuery = true)
+    /**
+     * Delete permissions de role.
+     * @param roleId roleId
+     */
     void deletePermissionsDeRole(@Param("roleId") Short roleId);
 
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO presus.rol_permisos (rol_id, permiso_id) VALUES (:roleId, :permissionId) ON CONFLICT DO NOTHING", nativeQuery = true)
+    /**
+     * Assign permission.
+     * @param roleId roleId
+     * @param permissionId permissionId
+     */
     void assignPermission(@Param("roleId") Short roleId, @Param("permissionId") Short permissionId);
 }

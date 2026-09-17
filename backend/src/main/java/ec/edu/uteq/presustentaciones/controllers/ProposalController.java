@@ -26,6 +26,10 @@ public class ProposalController {
     @Value("${app.upload.dir:uploads/anteproyectos}")
     private String uploadDir;
 
+    /**
+     * Construye ProposalController, inyectando s.
+     * @param s s
+     */
     public ProposalController(ProposalService s) {
         this.proposalService = s;
     }

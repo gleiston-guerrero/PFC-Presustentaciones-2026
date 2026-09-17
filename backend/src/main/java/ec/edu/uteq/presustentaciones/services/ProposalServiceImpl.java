@@ -43,6 +43,14 @@ public class ProposalServiceImpl implements ProposalService {
     @Value("${app.upload.dir:uploads/anteproyectos}")
     private String uploadDir;
 
+    /**
+     * Construye ProposalServiceImpl, inyectando ar, sr, ns, ur, sas.
+     * @param ar ar
+     * @param sr sr
+     * @param ns ns
+     * @param ur ur
+     * @param sas sas
+     */
     public ProposalServiceImpl(ProposalRepository ar, SubmissionRepository sr,
                                    NotificationService ns, AppUserRepository ur,
                                    SubmissionAccessService sas) {

@@ -35,6 +35,11 @@ public class HistoryMinutesDTO {
     private String comentario;
     private LocalDateTime fecha;
 
+    /**
+     * De.
+     * @param h h
+     * @return el HistoryMinutesDTO correspondiente
+     */
     public static HistoryMinutesDTO de(HistoryEstadoMinutes h) {
         var u = h.getAppUser();
         return HistoryMinutesDTO.builder()

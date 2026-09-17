@@ -83,6 +83,11 @@ public class EvaluationCriterio {
         registradoEn = LocalDateTime.now();
     }
 
+    /**
+     * Get observacion por rango.
+     * @param scale scale
+     * @return el valor encontrado, o null si no existe
+     */
     public static String getObservacionPorRango(int scale) {
         if (scale >= 67) {
             return "Excelente. Cumple satisfactoriamente con los requisitos y objetivos del criterio establecido.";
@@ -93,6 +98,11 @@ public class EvaluationCriterio {
         }
     }
 
+    /**
+     * Get rango descripcion.
+     * @param scale scale
+     * @return el valor encontrado, o null si no existe
+     */
     public static String getRangoDescripcion(int scale) {
         if (scale >= 67) {
             return "ALTO";

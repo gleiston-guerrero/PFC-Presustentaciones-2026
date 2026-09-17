@@ -8,5 +8,10 @@ import java.util.Optional;
 
 @Repository
 public interface ModalityTitulacionRepository extends JpaRepository<ModalityTitulacion, Short> {
+    /**
+     * Busca el/los registro(s) con codigo.
+     * @param codigo codigo
+     * @return el registro si existe, vacío si no
+     */
     Optional<ModalityTitulacion> findByCodigo(String codigo);
 }

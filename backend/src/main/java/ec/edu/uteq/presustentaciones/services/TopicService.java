@@ -21,17 +21,47 @@ public interface TopicService {
     /** Detalle de un topic propuesto. */
     TopicPropuestoDTO obtainDetalle(Integer topicPropuestoId);
 
+    /**
+     * Save topic student.
+     * @param studentId studentId
+     * @param topicPropuestoId topicPropuestoId
+     */
     void saveTopicStudent(Long studentId, Integer topicPropuestoId);
 
+    /**
+     * Remove topic guardado.
+     * @param studentId studentId
+     * @param topicPropuestoId topicPropuestoId
+     */
     void removeTopicGuardado(Long studentId, Integer topicPropuestoId);
 
+    /**
+     * Obtain topics guardados.
+     * @param studentId studentId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<TopicPropuestoDTO> obtainTopicsGuardados(Long studentId);
 
     // ── Gestión del catálogo (permission ORIENTACION_CATALOGO_GESTIONAR) ─────────
 
+    /**
+     * Create.
+     * @param request request
+     * @return el TopicPropuestoDTO correspondiente
+     */
     TopicPropuestoDTO create(SaveTopicPropuestoRequest request);
 
+    /**
+     * Update.
+     * @param topicPropuestoId topicPropuestoId
+     * @param request request
+     * @return el TopicPropuestoDTO correspondiente
+     */
     TopicPropuestoDTO update(Integer topicPropuestoId, SaveTopicPropuestoRequest request);
 
+    /**
+     * Delete.
+     * @param topicPropuestoId topicPropuestoId
+     */
     void delete(Integer topicPropuestoId);
 }

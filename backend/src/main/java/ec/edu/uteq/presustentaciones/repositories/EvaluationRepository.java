@@ -13,11 +13,26 @@ import java.util.Optional;
 @Repository
 public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
     @Query("SELECT ev FROM Evaluation ev JOIN ev.submission s JOIN s.student e WHERE e.id = :studentId")
+    /**
+     * Busca el/los registro(s) con student id.
+     * @param studentId studentId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Evaluation> findByStudentId(@Param("studentId") Long studentId);
 
     @Query("SELECT ev FROM Evaluation ev JOIN ev.submission s JOIN s.student e JOIN e.appUser u WHERE u.id = :appUserId")
+    /**
+     * Busca el/los registro(s) con app user id.
+     * @param appUserId appUserId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Evaluation> findByAppUserId(@Param("appUserId") Long appUserId);
 
+    /**
+     * Busca el/los registro(s) con submission id.
+     * @param submissionId submissionId
+     * @return el registro si existe, vacío si no
+     */
     Optional<Evaluation> findBySubmissionId(Long submissionId);
 
     /**

@@ -6,6 +6,11 @@ package ec.edu.uteq.presustentaciones.security;
  * {@code 503}, nunca en el {@code 500} genérico ni en dejar pasar la petición sin límite.
  */
 public class RateLimiterUnavailableException extends RuntimeException {
+    /**
+     * Construye RateLimiterUnavailableException, inyectando message, cause.
+     * @param message message
+     * @param cause cause
+     */
     public RateLimiterUnavailableException(String message, Throwable cause) {
         super(message, cause);
     }

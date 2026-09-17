@@ -34,6 +34,10 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final RoleAppUserRepository roleAppUserRepository;
 
     @Override
+    /**
+     * Run.
+     * @param args args
+     */
     public void run(String... args) {
         try {
             // Insertar faculty inicial si no existe

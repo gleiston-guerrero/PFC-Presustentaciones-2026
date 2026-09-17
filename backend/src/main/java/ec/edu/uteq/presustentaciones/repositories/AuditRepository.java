@@ -31,6 +31,15 @@ public interface AuditRepository extends JpaRepository<Audit, Long> {
            "AND (:texto IS NULL OR :texto = '' " +
            "     OR LOWER(a.appUserNombre) LIKE LOWER(CONCAT('%', :texto, '%')) " +
            "     OR LOWER(a.tabla) LIKE LOWER(CONCAT('%', :texto, '%')))")
+    /**
+     * Search con filtros.
+     * @param tabla tabla
+     * @param accion accion
+     * @param appUserId appUserId
+     * @param texto texto
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     Page<Audit> searchConFiltros(@Param("tabla") String tabla,
                                       @Param("accion") String accion,
                                       @Param("appUserId") Long appUserId,

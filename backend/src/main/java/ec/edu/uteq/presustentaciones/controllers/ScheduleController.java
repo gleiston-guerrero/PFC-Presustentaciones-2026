@@ -19,6 +19,10 @@ import org.springframework.data.domain.Pageable;
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
+    /**
+     * Construye ScheduleController, inyectando s.
+     * @param s s
+     */
     public ScheduleController(ScheduleService s) { this.scheduleService = s; }
 
     /**

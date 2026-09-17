@@ -50,6 +50,11 @@ public class ProgressTitulacionServiceImpl implements ProgressTitulacionService 
 
     @Override
     @Transactional(readOnly = true)
+    /**
+     * Obtain.
+     * @param studentId studentId
+     * @return el ProgressTitulacionDTO correspondiente
+     */
     public ProgressTitulacionDTO obtain(Long studentId) {
         String json = progressRepository.findByStudentId(studentId)
                 .map(ProgressStudent::getPasosJson)
@@ -59,6 +64,12 @@ public class ProgressTitulacionServiceImpl implements ProgressTitulacionService 
 
     @Override
     @Transactional
+    /**
+     * Update.
+     * @param studentId studentId
+     * @param cambios cambios
+     * @return el ProgressTitulacionDTO correspondiente
+     */
     public ProgressTitulacionDTO update(Long studentId, Map<String, Boolean> cambios) {
         ProgressStudent progress = progressRepository.findByStudentId(studentId)
                 .orElseGet(() -> createVacio(studentId));

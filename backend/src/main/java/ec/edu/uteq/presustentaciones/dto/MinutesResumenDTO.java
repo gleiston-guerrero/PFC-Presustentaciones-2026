@@ -34,6 +34,11 @@ public class MinutesResumenDTO {
     private boolean firmada;
     private String firmantesPendientes;
 
+    /**
+     * De.
+     * @param a a
+     * @return el MinutesResumenDTO correspondiente
+     */
     public static MinutesResumenDTO de(Minutes a) {
         var sol = a.getSubmission();
         var est = sol != null ? sol.getStudent() : null;

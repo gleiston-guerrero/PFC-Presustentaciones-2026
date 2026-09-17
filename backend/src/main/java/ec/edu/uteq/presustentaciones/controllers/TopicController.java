@@ -56,6 +56,14 @@ public class TopicController {
     @GetMapping
     @PreAuthorize("@permisoService.tienePermiso(authentication, 'ORIENTACION_TEMAS_VER') " +
             "or @permisoService.tienePermiso(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
+    /**
+     * Explorar.
+     * @param programId programId
+     * @param lineInvestigacionId lineInvestigacionId
+     * @param areaId areaId
+     * @param nivelDificultad nivelDificultad
+     * @return el ResponseEntity<List<TopicPropuestoDTO>> correspondiente
+     */
     public ResponseEntity<List<TopicPropuestoDTO>> explorar(
             @RequestParam(required = false) Integer programId,
             @RequestParam(required = false) Integer lineInvestigacionId,
@@ -73,6 +81,11 @@ public class TopicController {
     @GetMapping("/{topicId}")
     @PreAuthorize("@permisoService.tienePermiso(authentication, 'ORIENTACION_TEMAS_VER') " +
             "or @permisoService.tienePermiso(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
+    /**
+     * Detalle.
+     * @param topicId topicId
+     * @return el ResponseEntity<TopicPropuestoDTO> correspondiente
+     */
     public ResponseEntity<TopicPropuestoDTO> detalle(@PathVariable Integer topicId) {
         return ResponseEntity.ok(topicService.obtainDetalle(topicId));
     }

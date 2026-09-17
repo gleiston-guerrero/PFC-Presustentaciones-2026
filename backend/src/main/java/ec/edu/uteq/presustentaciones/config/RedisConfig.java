@@ -23,6 +23,11 @@ import java.util.Map;
 public class RedisConfig {
 
     @Bean
+    /**
+     * Cache manager.
+     * @param connectionFactory connectionFactory
+     * @return el CacheManager correspondiente
+     */
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         // El ObjectMapper por defecto de GenericJackson2JsonRedisSerializer no trae
         // registrado el módulo de fechas de Java 8 (JavaTimeModule): cualquier valor

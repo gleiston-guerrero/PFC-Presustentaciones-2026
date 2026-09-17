@@ -8,5 +8,10 @@ import java.util.Optional;
 
 @Repository
 public interface EstadoScheduleRepository extends JpaRepository<EstadoSchedule, Short> {
+    /**
+     * Busca el/los registro(s) con codigo.
+     * @param codigo codigo
+     * @return el registro si existe, vacío si no
+     */
     Optional<EstadoSchedule> findByCodigo(String codigo);
 }

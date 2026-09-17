@@ -14,8 +14,17 @@ import java.util.Optional;
 @Repository
 public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 
+    /**
+     * Busca el/los registro(s) con disponible true.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Teacher> findByDisponibleTrue();
 
+    /**
+     * Busca el/los registro(s) con app user id.
+     * @param appUserId appUserId
+     * @return el registro si existe, vacío si no
+     */
     Optional<Teacher> findByAppUserId(Long appUserId);
 
     /**
@@ -35,12 +44,26 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
            "OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(d.areaEspecialidad) LIKE LOWER(CONCAT('%', :q, '%'))")
+    /**
+     * Search paginado.
+     * @param q q
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     Page<Teacher> searchPaginado(@Param("q") String q, Pageable pageable);
 
     @Query("SELECT d FROM Teacher d WHERE d.disponible = true ORDER BY d.cargaHorariaSemanal ASC")
+    /**
+     * Find disponibles ordenados por carga.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Teacher> findDisponiblesOrdenadosPorCarga();
 
     @Query("SELECT d FROM Teacher d ORDER BY d.cargaHorariaSemanal ASC")
+    /**
+     * Find todos ordenados por carga.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Teacher> findTodosOrdenadosPorCarga();
 
     /** Reportes: nombre de un conjunto acotado de teachers (los que participan en el process). */

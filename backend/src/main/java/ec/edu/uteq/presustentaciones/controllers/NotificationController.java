@@ -17,6 +17,10 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
+    /**
+     * Construye NotificationController, inyectando notificationService.
+     * @param notificationService notificationService
+     */
     public NotificationController(NotificationService notificationService) {
         this.notificationService = notificationService;
     }

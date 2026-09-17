@@ -23,6 +23,11 @@ public class TeacherController {
     private final TeacherRepository teacherRepository;
     private final AppUserActualService appUserActualService;
 
+    /**
+     * Construye TeacherController, inyectando teacherRepository, appUserActualService.
+     * @param teacherRepository teacherRepository
+     * @param appUserActualService appUserActualService
+     */
     public TeacherController(TeacherRepository teacherRepository, AppUserActualService appUserActualService) {
         this.teacherRepository = teacherRepository;
         this.appUserActualService = appUserActualService;

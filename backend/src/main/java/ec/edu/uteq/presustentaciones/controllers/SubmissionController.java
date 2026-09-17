@@ -25,6 +25,12 @@ public class SubmissionController {
     private final AppUserRepository appUserRepository;
     private final PermissionService permissionService;
 
+    /**
+     * Construye SubmissionController, inyectando submissionService, appUserRepository, permissionService.
+     * @param submissionService submissionService
+     * @param appUserRepository appUserRepository
+     * @param permissionService permissionService
+     */
     public SubmissionController(SubmissionService submissionService, AppUserRepository appUserRepository,
                                PermissionService permissionService) {
         this.submissionService = submissionService;

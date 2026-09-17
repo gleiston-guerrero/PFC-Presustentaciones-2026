@@ -11,8 +11,19 @@ import java.util.List;
 @Repository
 public interface TopicPropuestoRepository extends JpaRepository<TopicPropuesto, Integer> {
 
+    /**
+     * Busca el/los registro(s) con program id.
+     * @param programId programId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<TopicPropuesto> findByProgramId(Integer programId);
 
+    /**
+     * Busca el/los registro(s) con program id y line investigacion id.
+     * @param programId programId
+     * @param lineInvestigacionId lineInvestigacionId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<TopicPropuesto> findByProgramIdAndLineInvestigacionId(Integer programId, Integer lineInvestigacionId);
 
     /**
@@ -37,6 +48,14 @@ public interface TopicPropuestoRepository extends JpaRepository<TopicPropuesto, 
               AND (:nivel IS NULL OR LOWER(t.nivelDificultad) = LOWER(CAST(:nivel AS string)))
             ORDER BY t.titulo ASC
             """)
+    /**
+     * Search con filtros.
+     * @param programId programId
+     * @param lineId lineId
+     * @param areaId areaId
+     * @param nivelDificultad nivelDificultad
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<TopicPropuesto> searchConFiltros(@Param("programId") Integer programId,
                                          @Param("lineId") Integer lineId,
                                          @Param("areaId") Integer areaId,
@@ -49,5 +68,10 @@ public interface TopicPropuestoRepository extends JpaRepository<TopicPropuesto, 
             LEFT JOIN FETCH t.area
             WHERE t.id = :id
             """)
+    /**
+     * Busca el/los registro(s) con id con catalogos.
+     * @param id id
+     * @return el java.util.Optional<TopicPropuesto> correspondiente
+     */
     java.util.Optional<TopicPropuesto> findByIdConCatalogos(@Param("id") Integer id);
 }

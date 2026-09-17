@@ -16,6 +16,10 @@ import java.util.stream.Collectors;
 public class CustomWebMvcRegistrations implements WebMvcRegistrations {
 
     @Override
+    /**
+     * Get request mapping handler mapping.
+     * @return el RequestMappingHandlerMapping correspondiente
+     */
     public RequestMappingHandlerMapping getRequestMappingHandlerMapping() {
         return new RequestMappingHandlerMapping() {
             @Override

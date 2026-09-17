@@ -28,6 +28,11 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
                                 @Param("p_rol_codigo") String roleCodigo);
 
     @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE s.id = :submissionId")
+    /**
+     * Busca el/los registro(s) con submission id.
+     * @param submissionId submissionId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Panelist> findBySubmissionId(@Param("submissionId") Long submissionId);
 
     /**
@@ -43,17 +48,39 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
                                     @Param("p_disponible") Boolean disponibleInicial);
 
     @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE d.id = :teacherId")
+    /**
+     * Busca el/los registro(s) con teacher id.
+     * @param teacherId teacherId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Panelist> findByTeacherId(@Param("teacherId") Long teacherId);
 
     @Query("SELECT COUNT(j) FROM Panelist j WHERE j.teacher.id = :teacherId AND j.submission.estado.codigo != 'RECHAZADA'")
+    /**
+     * Count asignaciones activas by teacher.
+     * @param teacherId teacherId
+     * @return la cantidad de registros
+     */
     long countAsignacionesActivasByTeacher(Long teacherId);
 
     @Query("SELECT j FROM Panelist j JOIN j.teacher d JOIN d.appUser u " +
            "WHERE j.submission.id = :submissionId AND u.id = :appUserId")
+    /**
+     * Busca el/los registro(s) con submission id y app user id.
+     * @param submissionId submissionId
+     * @param appUserId appUserId
+     * @return el registro si existe, vacío si no
+     */
     Optional<Panelist> findBySubmissionIdAndAppUserId(@Param("submissionId") Long submissionId, 
                                                     @Param("appUserId") Long appUserId);
 
     @org.springframework.data.jpa.repository.query.Procedure(procedureName = "presus.sp_asignar_jurado_masivo")
+    /**
+     * Sp assign panelist masivo.
+     * @param submissionIds submissionIds
+     * @param teacherIds teacherIds
+     * @param role role
+     */
     void spAssignPanelistMasivo(
             @Param("p_submission_ids") Long[] submissionIds,
             @Param("p_teacher_ids") Long[] teacherIds,
@@ -64,13 +91,27 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
     @Query("SELECT d.id, u.nombre, u.apellido, COUNT(j) " +
            "FROM Panelist j JOIN j.teacher d JOIN d.appUser u " +
            "GROUP BY d.id, u.nombre, u.apellido")
+    /**
+     * Count asignaciones por teacher.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Object[]> countAsignacionesPorTeacher();
 
     /** Minutes totalmente firmadas de pre-sustentaciones donde el teacher fue panelist. */
     @Query("SELECT j.teacher.id, COUNT(DISTINCT a.id) " +
            "FROM Minutes a, Panelist j WHERE j.submission = a.submission AND a.firmada = true " +
            "GROUP BY j.teacher.id")
+    /**
+     * Count minutes firmadas por teacher.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Object[]> countMinutesFirmadasPorTeacher();
 
+    /**
+     * Indica si existe algún registro con submission id y teacher app user email.
+     * @param submissionId submissionId
+     * @param email email
+     * @return true si se cumple la condición, false si no
+     */
     boolean existsBySubmissionIdAndTeacherAppUserEmail(Long submissionId, String email);
 }

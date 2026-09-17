@@ -24,6 +24,10 @@ public class PanelistController {
 
     private final PanelistService panelistService;
 
+    /**
+     * Construye PanelistController, inyectando panelistService.
+     * @param panelistService panelistService
+     */
     public PanelistController(PanelistService panelistService) {
         this.panelistService = panelistService;
     }

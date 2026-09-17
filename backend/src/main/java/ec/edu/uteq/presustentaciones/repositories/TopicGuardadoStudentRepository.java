@@ -21,15 +21,42 @@ public interface TopicGuardadoStudentRepository extends JpaRepository<TopicGuard
             WHERE g.student.id = :studentId
             ORDER BY g.fechaGuardado DESC
             """)
+    /**
+     * Busca el/los registro(s) con student id o der by fecha guardado desc.
+     * @param studentId studentId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<TopicGuardadoStudent> findByStudentIdOrderByFechaGuardadoDesc(@Param("studentId") Long studentId);
 
+    /**
+     * Busca el/los registro(s) con student id.
+     * @param studentId studentId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<TopicGuardadoStudent> findByStudentId(Long studentId);
 
+    /**
+     * Indica si existe algún registro con student id y topic propuesto id.
+     * @param studentId studentId
+     * @param topicPropuestoId topicPropuestoId
+     * @return true si se cumple la condición, false si no
+     */
     boolean existsByStudentIdAndTopicPropuestoId(Long studentId, Integer topicPropuestoId);
 
     @Modifying
+    /**
+     * Elimina los registros con student id y topic propuesto id.
+     * @param studentId studentId
+     * @param topicPropuestoId topicPropuestoId
+     * @return la cantidad de registros
+     */
     int deleteByStudentIdAndTopicPropuestoId(Long studentId, Integer topicPropuestoId);
 
     @Query("SELECT g.topicPropuesto.id FROM TopicGuardadoStudent g WHERE g.student.id = :studentId")
+    /**
+     * Find topic ids by student id.
+     * @param studentId studentId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Integer> findTopicIdsByStudentId(@Param("studentId") Long studentId);
 }

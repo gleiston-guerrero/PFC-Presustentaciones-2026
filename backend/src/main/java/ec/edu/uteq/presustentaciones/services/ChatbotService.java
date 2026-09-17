@@ -12,6 +12,11 @@ import java.util.List;
 @Service
 public class ChatbotService {
 
+    /**
+     * Process message.
+     * @param request request
+     * @return el ChatResponse correspondiente
+     */
     public ChatResponse processMessage(ChatRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {

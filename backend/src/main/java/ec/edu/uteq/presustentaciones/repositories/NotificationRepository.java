@@ -14,15 +14,36 @@ import java.util.List;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
     @Query(value = "SELECT n FROM Notification n JOIN FETCH n.appUser", countQuery = "SELECT COUNT(n) FROM Notification n")
+    /**
+     * Find all.
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     Page<Notification> findAll(Pageable pageable);
 
     @Query("SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.fecha DESC")
+    /**
+     * Busca el/los registro(s) con app user id o der by fecha desc.
+     * @param appUserId appUserId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Notification> findByAppUserIdOrderByFechaDesc(@Param("appUserId") Long appUserId);
 
     @Query(value = "SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.fecha DESC",
            countQuery = "SELECT COUNT(n) FROM Notification n WHERE n.appUser.id = :appUserId")
+    /**
+     * Busca el/los registro(s) con app user id o der by fecha desc.
+     * @param appUserId appUserId
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     Page<Notification> findByAppUserIdOrderByFechaDesc(@Param("appUserId") Long appUserId, Pageable pageable);
 
+    /**
+     * Cuenta los registros con app user id y leida false.
+     * @param appUserId appUserId
+     * @return la cantidad de registros
+     */
     long countByAppUserIdAndLeidaFalse(Long appUserId);
 
     /**

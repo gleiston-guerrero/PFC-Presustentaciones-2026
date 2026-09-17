@@ -16,12 +16,28 @@ public class ResponseWrappingAdvice implements ResponseBodyAdvice<Object> {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
+    /**
+     * Supports.
+     * @param returnType returnType
+     * @param converterType converterType
+     * @return true si se cumple la condición, false si no
+     */
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
         // No aplicar si el tipo de retorno ya es ResponseWrapper o es un tipo de archivo
         return !ResponseWrapper.class.isAssignableFrom(returnType.getParameterType());
     }
 
     @Override
+    /**
+     * Before body write.
+     * @param body body
+     * @param returnType returnType
+     * @param selectedContentType selectedContentType
+     * @param selectedConverterType selectedConverterType
+     * @param request request
+     * @param response response
+     * @return el Object correspondiente
+     */
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request, ServerHttpResponse response) {

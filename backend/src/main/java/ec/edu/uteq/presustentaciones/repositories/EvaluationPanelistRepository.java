@@ -10,9 +10,26 @@ import java.util.Optional;
 @Repository
 public interface EvaluationPanelistRepository extends JpaRepository<EvaluationPanelist, Long> {
     
+    /**
+     * Busca el/los registro(s) con submission id y panelist id.
+     * @param submissionId submissionId
+     * @param panelistId panelistId
+     * @return el registro si existe, vacío si no
+     */
     Optional<EvaluationPanelist> findBySubmissionIdAndPanelistId(Long submissionId, Long panelistId);
     
+    /**
+     * Busca el/los registro(s) con submission id.
+     * @param submissionId submissionId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<EvaluationPanelist> findBySubmissionId(Long submissionId);
     
+    /**
+     * Indica si existe algún registro con submission id y panelist id.
+     * @param submissionId submissionId
+     * @param panelistId panelistId
+     * @return true si se cumple la condición, false si no
+     */
     boolean existsBySubmissionIdAndPanelistId(Long submissionId, Long panelistId);
 }

@@ -7,5 +7,10 @@ import java.util.Optional;
 
 @Repository
 public interface ProposalRepository extends JpaRepository<Proposal, Long> {
+    /**
+     * Busca el/los registro(s) con submission id.
+     * @param submissionId submissionId
+     * @return el registro si existe, vacío si no
+     */
     Optional<Proposal> findBySubmissionId(Long submissionId);
 }

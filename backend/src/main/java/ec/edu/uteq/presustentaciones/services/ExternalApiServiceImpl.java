@@ -25,6 +25,9 @@ public class ExternalApiServiceImpl implements ExternalApiService {
 
     private final WebClient webClient;
 
+    /**
+     * Construye ExternalApiServiceImpl sin dependencias inyectadas.
+     */
     public ExternalApiServiceImpl() {
         HttpClient httpClient = HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
@@ -41,6 +44,10 @@ public class ExternalApiServiceImpl implements ExternalApiService {
 
     @Override
     @org.springframework.cache.annotation.Cacheable(value = "universidades", key = "'ecuador'")
+    /**
+     * Get universities of ecuador.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     public List<UniversityDto> getUniversitiesOfEcuador() {
         log.info("Iniciando consumo de API externa de universidades de Hipo Labs...");
         try {

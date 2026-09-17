@@ -10,9 +10,24 @@ public interface ResourceTitulacionService {
     /** Resources visibles para una program (los generales + los de esa program). null = todos. */
     List<ResourceTitulacionDTO> list(Integer programId);
 
+    /**
+     * Create.
+     * @param request request
+     * @return el ResourceTitulacionDTO correspondiente
+     */
     ResourceTitulacionDTO create(SaveResourceRequest request);
 
+    /**
+     * Update.
+     * @param id id
+     * @param request request
+     * @return el ResourceTitulacionDTO correspondiente
+     */
     ResourceTitulacionDTO update(Integer id, SaveResourceRequest request);
 
+    /**
+     * Delete.
+     * @param id id
+     */
     void delete(Integer id);
 }

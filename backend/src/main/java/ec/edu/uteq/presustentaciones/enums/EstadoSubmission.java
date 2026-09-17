@@ -11,6 +11,11 @@ public enum EstadoSubmission {
     CALIFICADA,
     COMPLETADA;
 
+    /**
+     * Es suspendible.
+     * @param estado estado
+     * @return true si se cumple la condición, false si no
+     */
     public static boolean esSuspendible(EstadoSubmission estado) {
         return estado != null 
             && estado != COMPLETADA 
@@ -18,6 +23,10 @@ public enum EstadoSubmission {
             && estado != RECHAZADA;
     }
 
+    /**
+     * Es suspendible.
+     * @return true si se cumple la condición, false si no
+     */
     public boolean esSuspendible() {
         return esSuspendible(this);
     }

@@ -24,6 +24,11 @@ public class TutorController {
     private final TutorService tutorService;
     private final AppUserRepository appUserRepository;
 
+    /**
+     * Construye TutorController, inyectando tutorService, appUserRepository.
+     * @param tutorService tutorService
+     * @param appUserRepository appUserRepository
+     */
     public TutorController(TutorService tutorService, AppUserRepository appUserRepository) {
         this.tutorService = tutorService;
         this.appUserRepository = appUserRepository;

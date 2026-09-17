@@ -35,6 +35,9 @@ public class PasswordPolicyValidator {
 
     private final Set<String> comunes;
 
+    /**
+     * Construye PasswordPolicyValidator sin dependencias inyectadas.
+     */
     public PasswordPolicyValidator() {
         this.comunes = Collections.unmodifiableSet(loadComunes());
     }

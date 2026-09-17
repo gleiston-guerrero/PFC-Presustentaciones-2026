@@ -25,6 +25,10 @@ public class MinutesController {
 
     private final MinutesService minutesService;
 
+    /**
+     * Construye MinutesController, inyectando minutesService.
+     * @param minutesService minutesService
+     */
     public MinutesController(MinutesService minutesService) {
         this.minutesService = minutesService;
     }

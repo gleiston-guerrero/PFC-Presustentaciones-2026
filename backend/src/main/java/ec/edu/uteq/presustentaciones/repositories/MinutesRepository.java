@@ -16,10 +16,20 @@ import java.util.Optional;
 @Repository
 public interface MinutesRepository extends JpaRepository<Minutes, Long> {
     @Query("SELECT a FROM Minutes a JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE s.id = :submissionId")
+    /**
+     * Busca el/los registro(s) con submission id.
+     * @param submissionId submissionId
+     * @return el registro si existe, vacío si no
+     */
     Optional<Minutes> findBySubmissionId(@Param("submissionId") Long submissionId);
 
     @Query(value = "SELECT a FROM Minutes a JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u",
            countQuery = "SELECT COUNT(a) FROM Minutes a")
+    /**
+     * Find all.
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     Page<Minutes> findAll(Pageable pageable);
 
     /** Detalle de un minutes con submission + student + appUser + estado en un solo query. */
@@ -38,6 +48,12 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
            countQuery = "SELECT COUNT(DISTINCT a) FROM Minutes a JOIN a.submission s " +
             "WHERE EXISTS (SELECT 1 FROM Panelist j WHERE j.submission = s AND j.teacher.appUser.email = :email) " +
             "   OR EXISTS (SELECT 1 FROM Tutor t WHERE t.submission = s AND t.teacher.appUser.email = :email)")
+    /**
+     * Find mis minutes.
+     * @param email email
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     Page<Minutes> findMisMinutes(@Param("email") String email, Pageable pageable);
 
     /** ¿Es el appUser tutor o panelist de la submission de esta minutes? (control de acceso del teacher). */
@@ -45,6 +61,12 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
             "EXISTS (SELECT 1 FROM Panelist j WHERE j.submission = s AND j.teacher.appUser.email = :email) " +
             "OR EXISTS (SELECT 1 FROM Tutor t WHERE t.submission = s AND t.teacher.appUser.email = :email) " +
             "OR s.student.appUser.email = :email)")
+    /**
+     * Es participante.
+     * @param minutesId minutesId
+     * @param email email
+     * @return true si se cumple la condición, false si no
+     */
     boolean esParticipante(@Param("minutesId") Long minutesId, @Param("email") String email);
 
     /**
@@ -73,6 +95,16 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
             "AND (:q IS NULL OR :q = '' OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
             "     OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', :q, '%')) " +
             "     OR LOWER(s.tituloTopic) LIKE LOWER(CONCAT('%', :q, '%')))")
+    /**
+     * Search con filtros.
+     * @param estado estado
+     * @param program program
+     * @param desde desde
+     * @param hasta hasta
+     * @param q q
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     Page<Minutes> searchConFiltros(@Param("estado") String estado,
                                 @Param("program") String program,
                                 @Param("desde") LocalDate desde,
@@ -81,13 +113,28 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
                                 Pageable pageable);
 
     // ── Agregados para reportes (COUNT en la base, nunca en memoria) ──────────
+    /**
+     * Cuenta los registros con estado codigo.
+     * @param codigo codigo
+     * @return la cantidad de registros
+     */
     long countByEstadoCodigo(String codigo);
 
+    /**
+     * Cuenta los registros con firmada false.
+     * @return la cantidad de registros
+     */
     long countByFirmadaFalse();
 
     @Query("SELECT a.estado.codigo AS codigo, COUNT(a) AS total FROM Minutes a " +
            "WHERE a.fechaGeneracion >= :desde AND a.fechaGeneracion <= :hasta " +
            "GROUP BY a.estado.codigo")
+    /**
+     * Count por estado.
+     * @param desde desde
+     * @param hasta hasta
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Object[]> countPorEstado(@Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 
     /** Invoca sp_sign_minutes_digital (PROCEDURE). Fase 3 / Criterio P1. */

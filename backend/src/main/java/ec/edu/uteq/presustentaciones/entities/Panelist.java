@@ -68,6 +68,10 @@ public class Panelist {
         asignadoEn = LocalDateTime.now();
     }
 
+    /**
+     * Get role.
+     * @return el valor encontrado, o null si no existe
+     */
     public String getRole() {
         return rolePanelist != null ? rolePanelist.getCodigo() : null;
     }

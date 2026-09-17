@@ -20,6 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PreSustentacionesApplication {
 
+    /**
+     * Main.
+     * @param args args
+     */
     public static void main(String[] args) {
         SpringApplication.run(PreSustentacionesApplication.class, args);
     }

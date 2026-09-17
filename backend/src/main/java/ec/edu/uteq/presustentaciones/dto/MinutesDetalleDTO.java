@@ -62,6 +62,12 @@ public class MinutesDetalleDTO {
         private boolean confirmado;
     }
 
+    /**
+     * De.
+     * @param a a
+     * @param panelists panelists
+     * @return el MinutesDetalleDTO correspondiente
+     */
     public static MinutesDetalleDTO de(Minutes a, List<Panelist> panelists) {
         var sol = a.getSubmission();
         var est = sol != null ? sol.getStudent() : null;

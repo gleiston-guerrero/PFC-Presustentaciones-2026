@@ -8,5 +8,10 @@ import java.util.List;
 
 @Repository
 public interface AreaTematicaRepository extends JpaRepository<AreaTematica, Integer> {
+    /**
+     * Busca el/los registro(s) con line investigacion id.
+     * @param lineId lineId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<AreaTematica> findByLineInvestigacionId(Integer lineId);
 }

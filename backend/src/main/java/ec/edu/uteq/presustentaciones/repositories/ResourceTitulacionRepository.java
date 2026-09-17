@@ -17,8 +17,17 @@ public interface ResourceTitulacionRepository extends JpaRepository<ResourceTitu
             WHERE :programId IS NULL OR c IS NULL OR c.id = :programId
             ORDER BY r.categoria ASC, r.titulo ASC
             """)
+    /**
+     * List visibles para program.
+     * @param programId programId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<ResourceTitulacion> listVisiblesParaProgram(@Param("programId") Integer programId);
 
     @Query("SELECT r FROM ResourceTitulacion r LEFT JOIN FETCH r.program ORDER BY r.categoria ASC, r.titulo ASC")
+    /**
+     * List todos.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<ResourceTitulacion> listTodos();
 }

@@ -18,6 +18,10 @@ public class EvaluationController {
 
     private final EvaluationService evaluationService;
 
+    /**
+     * Construye EvaluationController, inyectando evaluationService.
+     * @param evaluationService evaluationService
+     */
     public EvaluationController(EvaluationService evaluationService) {
         this.evaluationService = evaluationService;
     }

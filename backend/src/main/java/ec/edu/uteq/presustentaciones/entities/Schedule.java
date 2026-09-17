@@ -89,6 +89,10 @@ public class Schedule {
         }
     }
     
+    /**
+     * Get fecha fin.
+     * @return el LocalDateTime correspondiente
+     */
     public LocalDateTime getFechaFin() {
         return fechaInicio.plusMinutes(duracionMin);
     }

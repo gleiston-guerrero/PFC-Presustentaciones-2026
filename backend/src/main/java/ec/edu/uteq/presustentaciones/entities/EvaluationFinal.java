@@ -72,6 +72,9 @@ public class EvaluationFinal {
         }
     }
 
+    /**
+     * Calculate nota final.
+     */
     public void calculateNotaFinal() {
         if (notaInstructor != null && notaPanelistPromedio != null) {
             this.notaFinal = (notaInstructor * pesoInstructor)

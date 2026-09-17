@@ -9,6 +9,18 @@ import java.util.Optional;
 
 @Repository
 public interface EvaluatorRepository extends JpaRepository<Evaluator, Long> {
+    /**
+     * Busca el/los registro(s) con submission id.
+     * @param submissionId submissionId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<Evaluator> findBySubmissionId(Long submissionId);
+    /**
+     * Busca el/los registro(s) con submission id y teacher id y tipo evaluator codigo.
+     * @param submissionId submissionId
+     * @param teacherId teacherId
+     * @param tipoEvaluatorCodigo tipoEvaluatorCodigo
+     * @return el registro si existe, vacío si no
+     */
     Optional<Evaluator> findBySubmissionIdAndTeacherIdAndTipoEvaluatorCodigo(Long submissionId, Long teacherId, String tipoEvaluatorCodigo);
 }

@@ -47,6 +47,15 @@ public class TutoringServiceImpl implements TutoringService {
     @Value("${app.upload.dir:uploads/anteproyectos}")
     private String uploadDirProposals;
 
+    /**
+     * Construye TutoringServiceImpl, inyectando tutorRepository, tutoringFaseRepository, tutoringMensajeRepository, appUserRepository, proposalRepository, notificationService.
+     * @param tutorRepository tutorRepository
+     * @param tutoringFaseRepository tutoringFaseRepository
+     * @param tutoringMensajeRepository tutoringMensajeRepository
+     * @param appUserRepository appUserRepository
+     * @param proposalRepository proposalRepository
+     * @param notificationService notificationService
+     */
     public TutoringServiceImpl(TutorRepository tutorRepository,
                               TutoringFaseRepository tutoringFaseRepository,
                               TutoringMensajeRepository tutoringMensajeRepository,

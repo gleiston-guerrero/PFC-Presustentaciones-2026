@@ -94,6 +94,9 @@ public class Evaluation {
     private Rubric rubric;
 
     // ── Método helper para calculate nota final ───────────────────────────────
+    /**
+     * Calculate nota final.
+     */
     public void calculateNotaFinal() {
         if (notaInstructor != null && notaPanelist != null) {
             this.notaFinal = (notaInstructor * pesoInstructor / 100.0)
