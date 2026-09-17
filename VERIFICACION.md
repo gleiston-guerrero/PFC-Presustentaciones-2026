@@ -254,9 +254,12 @@ mobile-run2  url= https://steadfast-success-production-2b60.up.railway.app/ perf
 mobile-run3  url= https://steadfast-success-production-2b60.up.railway.app/ performance= 81
 ```
 
-**Veredicto: ✅ Cumple.** 6 corridas reales (3+3) contra la URL pública declarada, JSON versionados en
-`docs/mediciones/perf/lighthouse/prod-runs/`. Defecto menor señalado: la URL pública no está en la
-primera pantalla del `README.md`, está más abajo (línea ~165) — no corregido en esta ronda.
+**Veredicto: ✅ Cumple, defecto corregido.** 6 corridas reales (3+3) contra la URL pública declarada,
+JSON versionados en `docs/mediciones/perf/lighthouse/prod-runs/`. Re-verificado hoy: el despliegue
+sigue en línea (`/actuator/health` → 200, frontend → 200), scores sin cambio (desktop 94, mobile 81).
+Defecto que señaló el ing (la URL pública no estaba en la primera pantalla del `README.md`, estaba en
+la línea ~169) — **corregido**: se agregó una línea destacada con la URL justo después de la
+descripción del proyecto, antes de cualquier otra sección.
 
 ---
 

@@ -9,6 +9,10 @@
 
 Sistema web para la automatización, gestión y evaluación de pre-sustentaciones de trabajos de titulación de la **Universidad Técnica Estatal de Quevedo (UTEQ)**.
 
+🌐 **Despliegue público real:** https://steadfast-success-production-2b60.up.railway.app —
+`/actuator/health` responde 200; es la URL contra la que se corrieron las 6 mediciones Lighthouse
+(ver la tabla más abajo).
+
 ## Integrantes / Autores
 - Alava Alvarado, Jean Pierre
 - Moncayo Loor, Xavier Alejandro
