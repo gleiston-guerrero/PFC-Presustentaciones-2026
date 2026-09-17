@@ -1,18 +1,27 @@
 # DEPLOYMENT.md — Despliegue en producción (criterio P5)
 
-## ⚠️ Estado real a la fecha de este documento (2026-08-17)
+## ✅ Estado real actualizado (2026-09-17): desplegado y verificado
 
-**El sistema todavía NO está desplegado públicamente.** Este documento deja lista la configuración,
-probada localmente, para que el despliegue sea un procedimiento corto y reproducible — pero la creación
-de la cuenta en el proveedor y el clic de "Deploy" son acciones que requieren la identidad real de un
-integrante del equipo (correo, y eventualmente una tarjeta si se supera el trial gratuito) y **no se
-pueden generar de forma automatizada**. Ver el estado real actualizado en la sección final de este
-archivo antes de la defensa.
+**El sistema está desplegado públicamente en Railway**, bajo la cuenta de Railway del equipo
+(`carla22072004`, proyecto `spectacular-education`). Ambos servicios en el mismo proyecto:
 
-**No se declara ninguna URL pública en el `README.md` hasta que exista de verdad y responda con HTTPS
-válido** — declarar una URL que no responde el día de la evaluación reprueba automáticamente el
-criterio P5 sin importar el resto de la documentación, así que es preferible no declarar nada hasta que
-esté confirmado.
+- **Backend:** https://pfc-presustentaciones-2026-production.up.railway.app —
+  `/actuator/health` verificado devolviendo `200 {"status":"UP",...}` con DB/Redis/disco/ping en `UP`.
+- **Frontend:** https://steadfast-success-production-2b60.up.railway.app — HTTPS válido (certificado
+  automático de Railway), carga correctamente, y un login real (usuario Administrador) fue probado de
+  punta a punta contra el backend real, confirmando conexión sin bloqueo de CORS.
+- **Lighthouse contra la URL pública real** (no `localhost`): 3 corridas desktop + 3 mobile,
+  JSON versionados en [`docs/mediciones/perf/lighthouse/prod-runs/`](../mediciones/perf/lighthouse/prod-runs/),
+  ver [`LIGHTHOUSE-REPORT.md`](../mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md) para el detalle. Los 4
+  umbrales de la guía se cumplen en los dos perfiles.
+
+**Nota técnica real encontrada durante el despliegue:** la integración GitHub↔Railway estaba rota porque
+el repositorio cambió de dueño (de `carla22072004` a `gleiston-guerrero`) y ningún colaborador tiene
+permisos de administrador en el repo nuevo para reautorizar la GitHub App de Railway. Se resolvió
+desplegando por CLI (`railway up`, sube el código directo sin pasar por GitHub) en vez de por integración
+automática — ver [`docs/observaciones/OBSERVACIONES.md`](../observaciones/OBSERVACIONES.md) (OBS-25) para
+el detalle completo, incluida la corrección de un `dockerfilePath`/`rootDirectory` mal configurado en
+ambos servicios que causaba el fallo real de build.
 
 ## Proveedor elegido: Railway
 

@@ -164,14 +164,24 @@ Para re-correr el escaneo OWASP ZAP (no cubierto por `make audit`, requiere Dock
 
 ## Despliegue Público (Producción)
 
-**Estado:** el sistema **aún no está desplegado públicamente** — ver
-[`docs/despliegue/DEPLOYMENT.md`](docs/despliegue/DEPLOYMENT.md) para el proveedor elegido (Railway), el
-procedimiento paso a paso y el estado real actualizado. Esta sección se completará con la URL pública y
-la confirmación de HTTPS válido en cuanto el despliegue esté confirmado — **no se declara una URL que no
-se haya verificado funcionando**, porque una URL pública inactiva el día de la evaluación reprueba
-automáticamente el criterio P5 sin importar el resto de la documentación.
+**Estado:** desplegado y verificado en Railway (2026-09-17).
 
-**Usuarios de demostración** (una vez desplegado, para que el tribunal entre sin registrarse): existe un usuario con rol **Coordinador** (acceso a asignación de jurados, cronograma, reportes) y otro con rol **Administrador** (gestión de usuarios y catálogos), ambos sembrados por `PreSustentacionesApplication.initDemoData()`. Las credenciales de ambos se entregan al tribunal junto con el enlace de despliegue en el informe de entrega — no se publican en este README para evitar dejarlas expuestas en el historial público del repositorio.
+- **Frontend:** https://steadfast-success-production-2b60.up.railway.app — HTTPS válido, carga y el login
+  conecta correctamente con el backend real (verificado en navegador, sin bloqueo de CORS).
+- **Backend:** https://pfc-presustentaciones-2026-production.up.railway.app —
+  `/actuator/health` responde `200 {"status":"UP"}` con DB (PostgreSQL), Redis, disco y ping en `UP`.
+- **Lighthouse contra esta URL real** (no `localhost`): ver
+  [`docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md`](docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md) —
+  Performance 94/100 desktop y 81/100 mobile (ambos ≥80), Accessibility/Best Practices/SEO en 100/100 en
+  los dos perfiles.
+- Procedimiento completo y detalle técnico del despliegue en
+  [`docs/despliegue/DEPLOYMENT.md`](docs/despliegue/DEPLOYMENT.md).
+
+**Usuarios de demostración** (para que el tribunal entre sin registrarse): existe un usuario **Administrador**
+(`admin@uteq.edu.ec`) verificado funcionando contra el despliegue real el 2026-09-17 (login real, no
+simulado). Su contraseña, y las de los demás roles de demostración (Coordinador, Docente, Estudiante), se
+entregan al tribunal junto con el enlace de despliegue en el informe de entrega — no se publican en este
+README para evitar dejarlas expuestas en el historial público del repositorio.
 
 ---
 
@@ -186,7 +196,7 @@ automáticamente el criterio P5 sin importar el resto de la documentación.
 | **Checklist INCOSE + elicitación** | [`docs/checklists/INCOSE-REQUIREMENTS.md`](docs/checklists/INCOSE-REQUIREMENTS.md) / [`docs/requisitos/elicitacion/`](docs/requisitos/elicitacion/) | 9 características INCOSE × 12 RF + 6 de conjunto; evidencia real de técnicas de elicitación (2/5 con evidencia documentada). |
 | **Bitácora de requisitos** | [`docs/requisitos/CHANGELOG-REQ.md`](docs/requisitos/CHANGELOG-REQ.md) | Cambios entre SRS v0.9.0-rc y v1.0.0, tasa de estabilidad calculada. |
 | **Despliegue & Docker** | [`Makefile`](Makefile) / [`docker-compose.yml`](docker-compose.yml) | `make up/down/restart/logs/ps/clean` + `make build/test/bench/audit/docs/pdf`, y **`make all`**: el objetivo de reproducibilidad end-to-end del Criterio R1 (Fase 10) — desde una clonación limpia levanta todos los contenedores, espera a que las migraciones Flyway se apliquen, corre tests + benchmarks + auditoría + reportes, y compila el PDF final, saliendo con código 0 solo si todo funcionó. Verificado real: `docker compose down -v && docker compose up -d --build` sobre un volumen de Postgres limpio llega a healthy, y `make pdf` compila el informe de 40 páginas sin errores. Imágenes ancladas por digest SHA-256. Guion para el video de demostración: [`docs/entorno/VIDEO-DEMO-SCRIPT.md`](docs/entorno/VIDEO-DEMO-SCRIPT.md) (✅ [video grabado](https://drive.google.com/file/d/1Qi5-PW55kQmecrN3RNWKiIcxRcNXCQDR/view)). |
-| **Despliegue en producción** | [`docs/despliegue/`](docs/despliegue/) | `DEPLOYMENT.md` (proveedor y procedimiento), `RUNBOOK.md` (arranque/apagado/rotación), `BACKUP.md` (respaldo diario automatizado vía GitHub Actions). Estado real: aún no desplegado — ver detalle. |
+| **Despliegue en producción** | [`docs/despliegue/`](docs/despliegue/) | `DEPLOYMENT.md` (proveedor y procedimiento), `RUNBOOK.md` (arranque/apagado/rotación), `BACKUP.md` (respaldo diario automatizado vía GitHub Actions). Estado real: **desplegado en Railway y verificado** (2026-09-17) — ver [Despliegue Público](#despliegue-público-producción) arriba. |
 | **Procedencia de datos** | [`docs/mediciones/DATA-PROVENANCE.md`](docs/mediciones/DATA-PROVENANCE.md) | Mapea cada cifra citada en el informe a su archivo crudo y comando de origen. |
 | **Versiones del entorno** | [`docs/entorno/versions.txt`](docs/entorno/versions.txt) | Versiones exactas de Docker, JDK, Node, Angular CLI y k6 usadas para generar la evidencia. Regenerable con [`scripts/gen-versions.sh`](scripts/gen-versions.sh); el job `entorno` de [`ci.yml`](.github/workflows/ci.yml) publica su propia copia como artefacto en cada push. |
 | **Checklists metodológicos** | [`docs/checklists/`](docs/checklists/) | Autoevaluación honesta contra Ralph 2021 (General + Engineering Research + Benchmarking), PRISMA 2020 (evaluado contra el procedimiento de búsqueda real del capítulo de trabajos relacionados), Runeson & Höst (no aplica — el proyecto es DSR+GQM, no estudio de caso), INCOSE y FAIR. |
@@ -197,7 +207,7 @@ automáticamente el criterio P5 sin importar el resto de la documentación.
 | **Escaneo OWASP ZAP** | [`docs/mediciones/sec/zap/`](docs/mediciones/sec/zap/) | Reporte HTML/JSON de la corrida real (plan de automatización `zap.yaml`), re-verificada 2026-08-29; corrida anterior conservada como `*.PREVIOUS.*`. |
 | **Análisis estático** | [`docs/mediciones/sec/static-analysis/STATIC-ANALYSIS.md`](docs/mediciones/sec/static-analysis/STATIC-ANALYSIS.md) | SpotBugs + find-sec-bugs: 233 hallazgos reales (actualizado 2026-08-29; 189 en la corrida del 17-08), 0 de SQL dinámico. |
 | **Usabilidad SUS** | [`docs/mediciones/sus/SUS-RESULTS.md`](docs/mediciones/sus/SUS-RESULTS.md) | Instrumento SUS listo; pendiente de aplicar a usuarios reales. |
-| **Lighthouse Frontend** | [`docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md`](docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md) | 6 corridas reales contra build de producción (3 desktop + 3 mobile, 2026-09-06): Rendimiento 68.3/61 (desktop subió desde 65 al redimensionar un logo de 333 KB mostrado a 68px, y corregir cabeceras de caché de nginx), Accesibilidad 100, Buenas Prácticas 100, SEO 100 (era 91, faltaba meta description). Rendimiento en mobile sigue bajo el umbral de 80 — causa raíz identificada y verificada: tiempo de ejecución de JS bajo el *throttling* de CPU 4× de Lighthouse mobile, no peso de assets (ver nota metodológica). |
+| **Lighthouse Frontend** | [`docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md`](docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md) | 6 corridas reales contra el **despliegue público real** (3 desktop + 3 mobile, 2026-09-17, no `localhost`): Performance **94/100 desktop, 81/100 mobile** (ambos ≥80 ✅), Accessibility 100, Best Practices 100, SEO 100 en los dos perfiles. Los 4 umbrales de la guía se cumplen. Mediciones anteriores contra `localhost` (2026-08-17 a 2026-09-06, con la investigación real de rendimiento que motivó las optimizaciones de imagen/caché/SEO) se conservan como histórico en el reporte — no satisfacían el criterio de "contra el despliegue público". |
 | **Arquitectura C4** | [`docs/arquitectura/README.md`](docs/arquitectura/README.md) | Diagramas de Arquitectura Modelo C4 (Niveles 1 Contexto, 2 Contenedores, 3 Componentes). |
 | **Registros ADR** | [`docs/adr/`](docs/adr/) | 7 Registros de Decisiones Arquitectónicas (ADR-001 a ADR-007). ADR-005 documenta el control de acceso por permisos dinámicos que reemplazó al RBAC estático descrito originalmente en ADR-004 (seguridad OWASP). ADR-006 (separación CRUD/SP) y ADR-007 (despliegue) se renumeraron el 2026-09-01 para coincidir con los temas específicos que la guía de la Entrega Final exige en esos dos números — mismo contenido, solo cambió el orden. |
 | **Taxonomía CRediT** | [`CONTRIBUTORS.md`](CONTRIBUTORS.md) | Asignación explícita de roles CRediT para los 4 integrantes del grupo universitario. |

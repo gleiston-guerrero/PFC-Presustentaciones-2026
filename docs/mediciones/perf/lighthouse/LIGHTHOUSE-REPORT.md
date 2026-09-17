@@ -1,12 +1,56 @@
-# ⚡ REPORTE DE AUDITORÍA LIGHTHOUSE — DATOS REALES (build de producción)
+# ⚡ REPORTE DE AUDITORÍA LIGHTHOUSE — DATOS REALES (despliegue público)
 
 **Proyecto:** Frontend Sistema de Pre-Sustentaciones UTEQ
-**URL evaluada:** `http://localhost:4300/` (build de producción servido estáticamente con `http-server`, no `ng serve`)
-**Herramienta:** `npx lighthouse` (Lighthouse CLI real, Chrome headless local)
-**Fecha:** 2026-08-17, re-corrido 2026-08-30 (accesibilidad) y 2026-09-06 (optimización real de rendimiento)
-**Corridas vigentes:** 3 desktop + 3 mobile = 6 corridas del 2026-09-06, en [`prod-runs/`](prod-runs/). Corridas
-anteriores conservadas sin modificar en [`prod-runs/2026-08-17-PREVIOUS/`](prod-runs/2026-08-17-PREVIOUS/) y
-[`prod-runs/2026-08-29-PREVIOUS/`](prod-runs/2026-08-29-PREVIOUS/).
+**URL evaluada (vigente):** `https://steadfast-success-production-2b60.up.railway.app/` — despliegue público real en
+Railway, no `localhost`. Backend real: `https://pfc-presustentaciones-2026-production.up.railway.app` (verificado
+con `/actuator/health` → `UP`, DB/Redis/disco incluidos).
+**Herramienta:** `npx lighthouse` (Lighthouse CLI real v13.4.1, Chrome headless local apuntando a la URL pública)
+**Fecha de la medición vigente:** 2026-09-17
+**Corridas vigentes:** 3 desktop + 3 mobile = 6 corridas del 2026-09-17 contra el despliegue público, en
+[`prod-runs/`](prod-runs/). Corridas anteriores (todas contra `localhost:4300`, nunca contra un despliegue
+público — por eso no satisfacían el criterio de cierre) conservadas sin modificar, con su fecha, en
+[`prod-runs/2026-08-17-PREVIOUS/`](prod-runs/2026-08-17-PREVIOUS/),
+[`prod-runs/2026-08-29-PREVIOUS/`](prod-runs/2026-08-29-PREVIOUS/) y
+[`prod-runs/2026-09-06-localhost-PREVIOUS/`](prod-runs/2026-09-06-localhost-PREVIOUS/).
+
+## Puntajes reales contra el despliegue público (promedio de 3 corridas por perfil) — 2026-09-17
+
+| Categoría | Desktop (avg. 3 corridas) | Mobile (avg. 3 corridas) | Umbral guía |
+|---|---|---|---|
+| 🚀 Performance | **94 / 100** | **81 / 100** | ≥80 — ✅ |
+| ♿ Accessibility | **100 / 100** | **100 / 100** | ≥90 — ✅ |
+| 🛡️ Best Practices | **100 / 100** | **100 / 100** | ≥90 — ✅ |
+| 🔍 SEO | **100 / 100** | **100 / 100** | ≥90 — ✅ |
+
+Los 4 umbrales se cumplen en los 2 perfiles contra el despliegue público real — incluido Performance, que en
+las mediciones anteriores contra `localhost` (servidor de archivos estáticos sin CDN, HTTP/2 ni compresión
+del proveedor) no llegaba a 80. El salto real (68/61 en localhost → 94/81 en producción) viene del hosting en
+sí (Railway sirve por HTTP/2 con compresión y edge más cercano al punto de prueba), no de un cambio de código
+entre una medición y otra.
+
+### Corridas individuales (evidencia cruda, 2026-09-17, despliegue público)
+
+| Corrida | Perfil | Performance | SEO | FCP | LCP | TBT | CLS | Speed Index |
+|---|---|---|---|---|---|---|---|---|
+| desktop-run1 | Desktop | 94 | 100 | 1.1 s | 1.2 s | 0 ms | 0.007 | 1.2 s |
+| desktop-run2 | Desktop | 94 | 100 | 1.1 s | 1.2 s | 0 ms | 0.009 | 1.2 s |
+| desktop-run3 | Desktop | 94 | 100 | 1.1 s | 1.3 s | 0 ms | 0.009 | 1.1 s |
+| mobile-run1  | Mobile  | 81 | 100 | 3.4 s | 3.9 s | 0 ms | 0.031 | 3.4 s |
+| mobile-run2  | Mobile  | 81 | 100 | 3.4 s | 3.8 s | 0 ms | 0.000 | 3.7 s |
+| mobile-run3  | Mobile  | 81 | 100 | 3.7 s | 3.7 s | 0 ms | 0.044 | 3.7 s |
+
+JSON crudo de cada corrida (con `requestedUrl`/`finalUrl` = la URL pública de arriba, verificable abriendo
+cualquiera de estos archivos) en [`prod-runs/`](prod-runs/).
+
+### Un hallazgo real corregido en el camino: `robots.txt` inválido
+
+La primera tanda de corridas contra el despliegue público (2026-09-16, no conservada por ser un resultado
+intermedio ya superado) reportó SEO 92/100 en vez de 100, por el audit `robots-txt`. Causa verificada:
+`GET /robots.txt` devolvía HTTP 200 con el `index.html` de Angular (fallback de SPA de nginx para rutas
+desconocidas) en vez de un archivo `robots.txt` real — contenido HTML, no sintaxis de robots.txt válida.
+Corregido agregando `Frontend/public/robots.txt` (`User-agent: *` / `Allow: /`), que Angular copia tal cual al
+build; verificado con `curl https://steadfast-success-production-2b60.up.railway.app/robots.txt` devolviendo
+el archivo real antes de re-correr las 6 mediciones que sí se conservan arriba.
 
 ## Optimización real 2026-09-06: Performance 64-65/61 → 68-69/61, SEO 91 → 100
 
@@ -73,19 +117,25 @@ Correcciones aplicadas: las 20 rutas hijas de `/dashboard` ahora usan `loadCompo
 y `sweetalert2` se carga con `import()` dinámico solo cuando se muestra un diálogo. Resultado: el bundle inicial
 bajó de **1.01 MB a 396.21 KB** (−61%; re-verificado 2026-08-30 tras el bump de `@angular/core` 21.2.12→21.2.22 — la cifra "387 KB" citada hasta el 29-08 subió unos KB por el propio framework, no por una regresión de este proyecto).
 
-## Puntajes reales (promedio de 3 corridas por perfil) — 2026-09-06
+## HISTÓRICO — Puntajes contra `localhost:4300` (superado, ya no representa el estado actual) — 2026-09-06
+
+> Esta sección y la siguiente quedan como registro de la investigación real de rendimiento hecha en su
+> momento (sigue siendo información válida sobre el bundle y el framework). Pero la URL medida era
+> `localhost:4300`, no un despliegue público, así que **no satisface el criterio de cierre** ("contra el
+> despliegue público"). La medición vigente que sí lo satisface es la de arriba, contra la URL pública real.
 
 | Categoría | Desktop (avg. 3 corridas) | Mobile (avg. 3 corridas) | Umbral guía |
 |---|---|---|---|
-| 🚀 Performance | **68.3 / 100** (antes 65) | **61 / 100** (sin cambio) | ≥80 — ❌ no cumplido |
+| 🚀 Performance | **68.3 / 100** (antes 65) | **61 / 100** (sin cambio) | ≥80 — ❌ no cumplido en localhost |
 | ♿ Accessibility | **100 / 100** | **100 / 100** | ≥90 — ✅ |
 | 🛡️ Best Practices | 100 / 100 | 100 / 100 | ≥90 — ✅ |
 | 🔍 SEO | **100 / 100** (antes 91) | **100 / 100** (antes 91) | ≥90 — ✅ |
 
 Accessibility, Best Practices y SEO cumplen los 4 umbrales que exige la guía; Performance mejoró en desktop
-pero sigue sin alcanzar 80 en ninguno de los dos perfiles.
+pero sigue sin alcanzar 80 en ninguno de los dos perfiles — contra `localhost`, sin CDN ni HTTP/2. Contra el
+despliegue público real (sección de arriba) sí se alcanza en ambos perfiles.
 
-## Corridas individuales (evidencia cruda, 2026-09-06)
+### Corridas individuales (evidencia cruda, histórico localhost, 2026-09-06)
 
 | Corrida | Perfil | Performance | SEO | FCP | LCP | TBT | CLS | Speed Index |
 |---|---|---|---|---|---|---|---|---|
@@ -96,11 +146,12 @@ pero sigue sin alcanzar 80 en ninguno de los dos perfiles.
 | mobile-run2  | Mobile  | 61 | 100 | 6.0 s | 6.8 s | 100 ms | 0.035 | 6.0 s |
 | mobile-run3  | Mobile  | 61 | 100 | 6.0 s | 6.7 s | 90 ms | 0.030 | 6.0 s |
 
-JSON crudo de cada corrida en [`prod-runs/`](prod-runs/); las corridas anteriores se conservan sin modificar
-en [`prod-runs/2026-08-17-PREVIOUS/`](prod-runs/2026-08-17-PREVIOUS/) (Accessibility 89) y
+JSON crudo de cada corrida en [`prod-runs/2026-09-06-localhost-PREVIOUS/`](prod-runs/2026-09-06-localhost-PREVIOUS/);
+las corridas anteriores a estas se conservan sin modificar en
+[`prod-runs/2026-08-17-PREVIOUS/`](prod-runs/2026-08-17-PREVIOUS/) (Accessibility 89) y
 [`prod-runs/2026-08-29-PREVIOUS/`](prod-runs/2026-08-29-PREVIOUS/) (antes de la optimización de imágenes/caché).
 
-## Por qué Performance no llega a 80 todavía — actualizado con causa raíz identificada (2026-09-06)
+## Por qué Performance no llegaba a 80 contra localhost — causa raíz identificada (2026-09-06, histórico)
 
 Las optimizaciones de esta fecha (imagen del logo, cabeceras de caché, dimensiones de imagen) sí movieron el
 puntaje en **desktop** (65→68.3) porque ahí el cuello de botella real era peso de red (325 KiB de una sola
@@ -119,7 +170,29 @@ sin evaluar su impacto en el resto de la aplicación, así que se declara honest
 con causa raíz identificada y verificada esta vez** (a diferencia del 2026-08-30, que descartó la contención
 de CPU por aplicaciones de escritorio como hipótesis pero no llegó a identificar la causa real).
 
-## Cómo se generó (reproducible)
+## Cómo se generó la medición vigente (reproducible, contra el despliegue público)
+
+No hace falta build ni servidor local — se corre directo contra la URL pública ya desplegada:
+
+```bash
+URL="https://steadfast-success-production-2b60.up.railway.app/"
+
+# 3 corridas desktop
+for i in 1 2 3; do
+  npx lighthouse "$URL" --preset=desktop \
+    --output=json --output-path="docs/mediciones/perf/lighthouse/prod-runs/desktop-run${i}.json" \
+    --chrome-flags="--headless --no-sandbox" --quiet
+done
+
+# 3 corridas mobile (perfil por defecto de Lighthouse)
+for i in 1 2 3; do
+  npx lighthouse "$URL" \
+    --output=json --output-path="docs/mediciones/perf/lighthouse/prod-runs/mobile-run${i}.json" \
+    --chrome-flags="--headless --no-sandbox" --quiet
+done
+```
+
+## Cómo se generó la medición histórica (localhost, ya superada)
 
 ```bash
 # 1. Build de produccion real (no ng serve)
