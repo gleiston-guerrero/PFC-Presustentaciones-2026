@@ -32,8 +32,12 @@ consentimiento informado impresa en cada hoja).
 
 ## 📄 Evidencia cruda
 
-Las 15 hojas respondidas, escaneadas tal cual se recogieron (sin nombre, solo rol y fecha), en
-[`respuestas-crudas/`](respuestas-crudas/):
+**Datos estructurados (CSV versionado):** [`sus-respuestas.csv`](sus-respuestas.csv) — las 15 filas
+(participante, rol, fecha, las 10 respuestas q1–q10, y el puntaje SUS ya calculado por fila).
+Recalculado y verificado con Python directamente contra este CSV (no contra la tabla de abajo) antes de
+cerrar el punto — ver el bloque de verificación más abajo.
+
+**Hojas originales escaneadas** (sin nombre, solo rol y fecha), en [`respuestas-crudas/`](respuestas-crudas/):
 
 - [`respuestas-parte1-A-a-G.pdf`](respuestas-crudas/respuestas-parte1-A-a-G.pdf) — participantes A–G (7 hojas)
 - [`respuestas-parte2-H-a-N.pdf`](respuestas-crudas/respuestas-parte2-H-a-N.pdf) — participantes H–Ñ (8 hojas)
@@ -68,7 +72,35 @@ Escala 1–5 tal como se marcó en cada hoja, en el orden de las 10 preguntas de
 - Preguntas pares (2, 4, 6, 8, 10): `5 − valor`
 - Suma de las 10 contribuciones × 2.5 = puntaje SUS (0–100) de esa persona
 
-Verificado con un script Python (`statistics`/`scipy`) sobre la tabla de arriba, no calculado a mano.
+Verificado con un script Python (`statistics`/`scipy`), directamente contra
+[`sus-respuestas.csv`](sus-respuestas.csv) — no calculado a mano ni solo sobre la tabla de arriba:
+
+```bash
+python -c "
+import csv, statistics
+from scipy import stats
+
+rows = list(csv.DictReader(open('docs/mediciones/sus/sus-respuestas.csv', encoding='utf-8')))
+scores = []
+for r in rows:
+    total = 0
+    for q in range(1,11):
+        v = int(r[f'q{q}'])
+        total += (v-1) if q % 2 == 1 else (5-v)
+    calc = total * 2.5
+    assert abs(calc - float(r['sus_score'])) < 0.001, f'mismatch en {r[\"participante\"]}'
+    scores.append(calc)
+
+n = len(scores)
+mean = statistics.mean(scores)
+sd = statistics.stdev(scores)
+se = sd / (n**0.5)
+tcrit = stats.t.ppf(0.975, df=n-1)
+margin = tcrit*se
+print(f'n={n} media={mean:.2f} DE={sd:.2f} IC95=[{mean-margin:.2f}, {mean+margin:.2f}]')
+"
+# n=15 media=55.17 DE=12.55 IC95=[48.22, 62.12]
+```
 
 ## 📈 Resultado del grupo (n=15)
 
