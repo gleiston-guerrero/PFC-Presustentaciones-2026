@@ -430,13 +430,32 @@ punto. Se deja constancia explícita aquí para que no se olvide antes de la ent
 git show HEAD:Informe-Final/secciones/00-portada.tex
 ```
 
-**Veredicto: 🟡 Parcial.** El juicio sobre la situación académica de compañeros ya se retiró (verificado,
-no queda ningún comentario de ese tipo). **Pero el propio arreglo de P9 volvió a violar el criterio**:
-el recuadro de "Identificadores de esta versión" ahora incluye el motivo del tag, tres DOI y una nota
-sobre el estado de Zenodo — contenido de proceso, no de identificación. El ing lo señaló explícitamente:
-la carátula ya no es "solo identificación y URL". **No corregido en esta ronda** — recortar ese recuadro
-a los datos mínimos (tag, commit, DOI del software) y mover el resto de la explicación a
-`docs/ZENODO.md` o a `OBSERVACIONES.md` queda pendiente.
+**Veredicto (ronda anterior): 🟡 Parcial.** El juicio sobre la situación académica de compañeros ya se
+retiró (verificado, no queda ningún comentario de ese tipo). **Pero el propio arreglo de P9 volvió a
+violar el criterio**: el recuadro de "Identificadores de esta versión" ahora incluía el motivo del tag,
+tres DOI y una nota sobre el estado de Zenodo — contenido de proceso, no de identificación.
+
+**Re-verificado y corregido hoy (evaluación integral 2026-09-17):** el ing confirmó exactamente el
+mismo defecto con dos síntomas concretos, verificados aquí contra el PDF real antes de tocar nada
+(`Read` sobre `informe-final.pdf`, páginas 1–3): (1) la URL del repositorio se desbordaba a una página 2
+casi en blanco — causa raíz real: el espaciado vertical fijo de la carátula (`\\[1.2cm]`, `\\[1.5cm]`,
+etc.) sumaba más que `\textheight` (carta, márgenes de 1in), así que el último elemento (REPOSITORIO)
+no cabía y se empujaba solo a la página 2; (2) la página 3 abría con el recuadro `\fbox` completo:
+commit de cierre, "Motivo del tag" citando textualmente "el ing lo señaló como P9", tres DOI y "Nota
+real sobre el DOI" — narrativa de proceso del examen, no datos de identificación.
+
+**Corregido:** en `Informe-Final/secciones/00-portada.tex` se (a) redujo el espaciado vertical fijo de
+la carátula para que quepa completa en una sola página, incluida la URL del repositorio, y (b) se
+eliminó por completo el recuadro `\fbox` de "Identificadores de esta versión" (commit, motivo del tag,
+tres DOI, nota sobre Zenodo) — ese contenido de proceso no vuelve a aparecer en ningún lugar del informe
+impreso. La carátula ahora contiene únicamente: universidad, facultad, carrera, asignatura, título del
+trabajo, la línea compacta "Informe Final — Tag v1.1.0" (que sigue satisfaciendo el criterio original de
+P9 de declarar el tag en la portada), autores con ORCID, docente-director, fecha y la URL del
+repositorio. Los identificadores técnicos (commit, DOI) siguen documentados donde corresponde —
+`CITATION.cff`, `README.md` y `VERIFICACION.md`/`OBSERVACIONES.md` — sin duplicarlos como narrativa en
+el PDF. Recompilado con `latexmk -pdf`: sin errores, 68 páginas (antes 67 con la carátula rota que
+generaba una página casi en blanco); verificado visualmente que la carátula cabe completa en la página 1
+y que la página 2 pasa directo al Resumen.
 
 ---
 
