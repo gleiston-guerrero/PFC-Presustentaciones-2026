@@ -539,7 +539,7 @@ done
 `1139344`, `4b5aa34` (2026-09-02), `3e7069c` (2026-09-09). Ninguno nuevo desde el commit que revisó la
 guía (`f3d1ff4`).
 
-**Veredicto: 🟡 Parcial, honestamente sin cerrar.** La nota escrita existe
+**Veredicto (ronda anterior): 🟡 Parcial, honestamente sin cerrar.** La nota escrita existe
 (`docs/observaciones/BITACORA-COMMITS-*.md`, `OBSERVACIONES.md` OBS-26), pero el ing señaló, con razón,
 que describe los commits vacíos como **hipótesis** ("firma típica de un rebase"), no como hecho
 confirmado, y que las cifras de desfase de fechas citadas en la nota eran imprecisas (decía "decenas"
@@ -548,14 +548,47 @@ de más de 1h cuando son 16 casos reales; decía "hasta 46h" cuando el máximo r
 ha ocurrido**: solo hay un correo de un integrante, sin respuesta y sin la presencia del resto del
 equipo. Esto no se puede cerrar con más documentación — depende de que esa conversación suceda.
 
+**Re-verificado hoy (evaluación integral 2026-09-17). Sigue 🟡 Parcial — el mismo punto sigue sin
+poder cerrarse del todo, por la misma razón: no depende solo del equipo.** El ing repitió el hallazgo
+con el detalle exacto de la imprecisión, y esta vez sí se corrigió lo que sí depende de nosotros:
+
+- **Empíricamente re-confirmadas las dos cifras** que el ing señaló como incorrectas:
+  `git log --format="%H %at %ct" | awk '...'` sobre el historial completo da exactamente **16** commits
+  con más de 1 hora de desfase entre `AuthorDate` y `CommitDate` (no "decenas"), y el máximo real es
+  **51,33 horas**, en `00a39b2` (autor `2026-09-09 00:50:42 +0000`, commit `2026-09-10 23:10:46 -0500`),
+  no "hasta 46h". **Corregido en `OBSERVACIONES.md` (OBS-26)**, que citaba las cifras incorrectas — se
+  reemplazaron por las cifras reales, con nota explícita de que fueron corregidas en esta ronda (no se
+  reescribe la fila original, se anota encima, siguiendo el patrón de auditoría de este archivo).
+- **El lenguaje de hipótesis ("firma típica de un rebase") se deja intacto, a propósito.** No es un
+  defecto a corregir: git no registra en ningún objeto del historial *por qué* una fecha de autor y de
+  commit difieren — solo se puede inferir el mecanismo por el patrón de las fechas, nunca confirmarlo
+  como hecho. Convertir esa hipótesis en una afirmación categórica sería fabricar certeza que no existe,
+  el mismo tipo de dato inventado que las reglas de esta guía prohíben en la dirección contraria.
+- **La "conversación con el docente y el equipo completo" sigue sin existir, confirmado de nuevo hoy.**
+  Releída la evidencia completa (`evidencia-correo-2026-09-13-punto1.png`): es un correo de un solo
+  integrante (Alava Alvarado) al docente, sin respuesta a la fecha de esta nota, sin copia ni presencia
+  de los otros tres integrantes del equipo. El propio correo, además, atribuye los tres commits vacíos
+  del 2 de septiembre a "otra compañera" (la autora de esos commits según `git log`, Zamora Arias) —
+  una afirmación que el propio análisis técnico de `BITACORA-COMMITS-2026-09-02.md` no sostiene como
+  hecho: la nota técnica explica el patrón como una probable reescritura/rebase mecánica al cierre de
+  una sesión de trabajo, no como una acción atribuible a una persona específica. **Esto no es algo que
+  se pueda corregir escribiendo más documentación:** es una atribución hecha por un integrante real
+  sobre otra integrante real, en un correo ya enviado, sin que ella ni el resto del equipo hayan
+  podido responder. No se altera el correo (es evidencia histórica ya enviada) ni se decide aquí si la
+  atribución es justa — eso le corresponde al equipo y al docente, no a esta verificación. Se deja
+  constancia explícita de la discrepancia entre lo que el correo insinúa y lo que la propia nota técnica
+  del equipo sostiene, para que quien lea esto no confunda una hipótesis mecánica con una acusación.
+
 ---
 
 ## Resumen de honestidad de este archivo
 
-De los 12 puntos: **7 ✅ Cumple** (P2, P3, P5, P6, P7, P8, P9 — cada uno con al menos un defecto menor
-declarado), **4 🟡 Parcial** (P1, P4, P10, P12 — con una brecha real sin cerrar cada uno) y **1 🔴
-disputa numérica abierta sin resolver** (P4 — las regresiones funcionales que causó ya se corrigieron y
-verificaron; lo que queda abierto es solo la disputa de cuántos nombres siguen en español).
-Ningún punto se declaró "resuelto" para inflar este resumen; varios de los que ya estaban cerrados en
-`OBSERVACIONES.md` antes de esta evaluación quedan aquí con matices que esa bitácora, por ser narrativa
-y cronológica, no siempre deja igual de visibles a primera vista.
+**Actualizado tras cerrar P9, P10 y P11 (evaluación integral 2026-09-17).** De los 12 puntos: **9 ✅
+Cumple** (P2, P3, P5, P6, P7, P8, P9, P10, P11 — cada uno con al menos un defecto menor declarado) y
+**3 🟡 Parcial** (P1, P4, P12 — con una brecha real sin cerrar cada uno; P4 además con una disputa
+numérica abierta sin resolver: las regresiones funcionales que causó ya se corrigieron y verificaron,
+lo que queda abierto es solo cuántos nombres siguen en español). Ningún punto se declaró "resuelto" para
+inflar este resumen; varios de los que ya estaban cerrados en `OBSERVACIONES.md` antes de esta
+evaluación quedan aquí con matices que esa bitácora, por ser narrativa y cronológica, no siempre deja
+igual de visibles a primera vista. **P12 en particular no puede pasar a ✅ con más documentación:**
+depende de una conversación real con el docente y el equipo completo que todavía no ha ocurrido.
