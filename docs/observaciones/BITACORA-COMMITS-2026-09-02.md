@@ -79,3 +79,14 @@ ingeniero. Lo que dependía del equipo para este punto — identificar el origen
 preguntar directamente en vez de asumir, y dejar constancia fechada del intento — está hecho; lo que
 falta (la respuesta/conversación en sí) depende exclusivamente del ingeniero, según su propio
 criterio de cierre, y no es algo que el equipo pueda completar unilateralmente.
+
+**Por qué el correo es de un solo integrante (nota aclaratoria, P12, evaluación integral
+2026-09-17):** este examen suspenso lo está cursando y sustentando Alava Alvarado en solitario. Los
+otros tres integrantes originales del equipo (Moncayo Loor, Zamora Arias, Barreto Rosado) reprobaron
+la materia en el período regular y no están trabajando en las observaciones de esta ronda de
+recuperación — no es que se les haya dejado fuera de la conversación con el ingeniero ni que se
+ausentaran de algo que debían responder: la recuperación, tal como está planteada, ya no es un
+trabajo de equipo activo. Por esto mismo el correo del 2026-09-13 solo puede tener un remitente, y por
+la misma razón "otra compañera" en ese correo se refiere únicamente a quién aparece como autora en
+`git log` de esos tres commits (un hecho verificable, no una acusación) — no hay forma de pedirle una
+aclaración directa a esa persona en el marco de este examen, porque ya no participa en él.

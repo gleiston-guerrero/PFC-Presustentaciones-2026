@@ -578,6 +578,15 @@ con el detalle exacto de la imprecisión, y esta vez sí se corrigió lo que sí
   atribución es justa — eso le corresponde al equipo y al docente, no a esta verificación. Se deja
   constancia explícita de la discrepancia entre lo que el correo insinúa y lo que la propia nota técnica
   del equipo sostiene, para que quien lea esto no confunda una hipótesis mecánica con una acusación.
+- **Aclaración importante (misma fecha, tras confirmar con el autor de este examen):** el correo es de
+  un solo integrante porque este examen suspenso lo está cursando y sustentando Alava Alvarado **en
+  solitario**. Los otros tres integrantes originales del equipo (Moncayo Loor, Zamora Arias, Barreto
+  Rosado) reprobaron la materia en el período regular y no están trabajando en las observaciones de
+  esta ronda de recuperación. Esto cambia cómo debe leerse "sin presencia del resto del equipo": no es
+  una ausencia irregular ni una decisión unilateral que excluyó a los demás de una conversación que
+  debían tener — la recuperación, tal como está planteada, ya no es un trabajo de equipo activo, así
+  que una "conversación con el equipo completo" no es estructuralmente posible en este momento. Anotado
+  también en `BITACORA-COMMITS-2026-09-02.md`.
 
 ---
 

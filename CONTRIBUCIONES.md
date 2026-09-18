@@ -24,6 +24,13 @@ Jean30042|jeanalavaalavarado@gmail.com
 
 Un único autor, sin excepción, en los 30+ commits de esta ronda.
 
+**Por qué (aclaración P12, evaluación integral 2026-09-17):** este examen suspenso lo está cursando y
+sustentando Álava Alvarado en solitario. Los otros tres integrantes originales del equipo (Moncayo
+Loor, Zamora Arias, Barreto Rosado) reprobaron la materia en el período regular y no están trabajando
+en las observaciones de esta ronda de recuperación — no es que se hayan desentendido de un trabajo que
+seguía siendo colectivo, es que la recuperación, tal como está planteada, ya no lo es. Ver también
+[`docs/observaciones/BITACORA-COMMITS-2026-09-02.md`](docs/observaciones/BITACORA-COMMITS-2026-09-02.md).
+
 | Punto | Peso | Commit(s) de cierre real | Autor (`git log`) |
 |---|---|---|---|
 | P1 (SUS) | 1,7 | `f51db75`, `70035fa`, `8488d06` | Álava Alvarado |
