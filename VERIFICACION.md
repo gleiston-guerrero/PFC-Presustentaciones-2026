@@ -310,11 +310,15 @@ Test set: ec.edu.uteq.presustentaciones.controllers.ChatbotControllerIntegration
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
 ```
 
-**Veredicto: ✅ Cumple.** 16/16 pruebas, incluyendo `ChatbotControllerIntegrationTest` que ejercita el
-endpoint HTTP real (`POST /api/v1/chatbot/ask`) vía `MockMvc` con la cadena de seguridad real (no solo
-el método Java). CI verificado en verde sobre el commit etiquetado vía la API de GitHub. Defecto
-señalado: el servicio del chatbot está simulado (reglas si/entonces sobre texto), no es una prueba
-end-to-end contra un modelo real.
+**Veredicto: ✅ Cumple, defecto ya declarado explícitamente en el informe, nada que corregir.** Re-corrido
+hoy: 16/16 pruebas, incluyendo `ChatbotControllerIntegrationTest` que ejercita el endpoint HTTP real
+(`POST /api/v1/chatbot/ask`) vía `MockMvc` con la cadena de seguridad real. Re-verificado CI vía la API
+de GitHub (`GET /commits/8b1c1d2/check-runs`): job `Backend` → `completed`/`success`. El "defecto"
+señalado (el servicio del chatbot está simulado, no es una prueba end-to-end contra un modelo real) ya
+está declarado explícitamente en el propio informe
+(`Informe-Final/secciones/09-implementacion.tex:122`: *"No es un modelo de lenguaje:
+`ChatbotService` implementa un enrutador de intenciones por palabras clave"*) — no es una omisión que
+corregir, es una limitación real y ya transparente del diseño.
 
 ---
 
