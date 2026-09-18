@@ -17,9 +17,14 @@ WRITE_VERBS = ("PostMapping", "PutMapping", "PatchMapping", "DeleteMapping")
 
 # Endpoints deliberadamente públicos (mecanismo de autenticación/recuperación en sí
 # mismo): no pueden exigir sesión previa. Documentados en OWASP-AUDIT.md.
+# La clave es el nombre del método JAVA, no la ruta HTTP. El renombrado de P4
+# (2026-09-18) cambió `recuperar` por `recover` y este script lo detectó como un
+# endpoint sin autorización y sin justificación -- correctamente, porque para él
+# era un nombre nuevo. La ruta no cambió: sigue siendo @PostMapping("/recuperar"),
+# verificado contra el commit anterior al renombrado. Solo se actualiza la clave.
 EXENTOS_CONOCIDOS = {
     ("AuthController", "login"), ("AuthController", "refresh"),
-    ("AuthController", "logout"), ("AuthController", "recuperar"),
+    ("AuthController", "logout"), ("AuthController", "recover"),
     ("AuthController", "reset"),
 }
 
