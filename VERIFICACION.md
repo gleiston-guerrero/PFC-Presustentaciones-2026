@@ -402,6 +402,23 @@ compitiendo por el mismo commit). El DOI de Zenodo declarado sigue archivando el
 `v1.1.0` no tiene su propio snapshot en Zenodo todavía (requiere una acción manual del equipo fuera de
 este repositorio, documentada como pendiente, no fabricada).
 
+**Re-verificado hoy (evaluación integral 2026-09-17), sin cambios de código:** el hallazgo del ing sobre
+P9 describe exactamente lo que `OBS-35` ya había corregido en la ronda anterior de este mismo examen —
+`git tag -l -n1 v1.1.0` sigue devolviendo la misma etiqueta anotada, `CITATION.cff` sigue con
+`version: "1.1.0"`, y `00-portada.tex` sigue declarando el tag y el commit de cierre. No se tocó nada
+porque no hay nada roto que corregir en la declaración en sí.
+
+**Hallazgo real, no pedido por el ing, encontrado al re-verificar:** `git rev-list v1.1.0..HEAD --count`
+da **22** — desde que se creó el tag `v1.1.0` (commit `8b1c1d2`, cierre de la ronda anterior) se
+agregaron 22 commits nuevos en esta misma ronda (P1, P2, P3, P4, P5, P6, P7, P8 de la evaluación
+integral). Es decir, el mismo problema que `v1.1.0` vino a resolver para `v1.0.1` (la etiqueta quedó
+por detrás del último commit real) **ya está volviendo a ocurrir**, mecánicamente, por el propio hecho
+de ir cerrando puntos uno por uno. **Decisión técnica:** no se mueve el tag ahora — hacerlo aquí
+significaría re-etiquetar de nuevo después de P10 y P12, repitiendo el mismo desfase cada vez. Se
+mantiene la misma disciplina que ya documentó `OBS-35`: el re-etiquetado (`v1.1.1` o mover `v1.1.0`) se
+hace una sola vez, al cierre real de *toda* esta ronda de revisión (después de P10 y P12), no punto a
+punto. Se deja constancia explícita aquí para que no se olvide antes de la entrega final.
+
 ---
 
 ## P10 — Carátula (peso 0,3)
