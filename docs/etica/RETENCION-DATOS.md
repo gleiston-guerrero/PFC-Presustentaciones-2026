@@ -39,7 +39,7 @@ resolución aceptada **seudonimiza**, no borra:
 
 El **id** del usuario nunca cambia, así que el expediente académico (solicitudes, actas,
 evaluaciones) sigue enlazado correctamente — solo deja de estar asociado a un nombre o correo
-identificable. Implementación: `SupresionDatosService#resolver` (backend).
+identificable. Implementación: `ErasureDataService#resolver` (backend).
 
 **Paradoja resuelta:** el registro de la propia solicitud (`presus.solicitud_supresion`) no
 guarda ningún dato personal del titular, solo su `usuario_id` — que sigue siendo una referencia

@@ -2,14 +2,14 @@
 
 > Añadido en la rama `feature/reportes-y-historial-actas`. Migración **V19**.
 > Extiende lo existente (no reemplaza): el flujo de firma del acta, la auditoría
-> genérica de V15 y el `ReporteController` de PDFs siguen igual.
+> genérica de V15 y el `ReportController` de PDFs siguen igual.
 
 ## 1. Reportes (COORDINADOR / ADMINISTRADOR)
 
 Permiso: **`REPORTES_VER`** (id 18, de V13 — ADMIN y COORDINADOR ya lo tenían).
 Todo se calcula con `COUNT` / `GROUP BY` en PostgreSQL vía JPQL — nunca se cargan
-tablas completas en memoria. Se añadió `ReporteService` / `ReporteServiceImpl`
-y se **extendió** `ReporteController` (los endpoints PDF previos no se tocaron).
+tablas completas en memoria. Se añadió `ReportService` / `ReportServiceImpl`
+y se **extendió** `ReportController` (los endpoints PDF previos no se tocaron).
 
 | Método | Endpoint | Descripción | Filtros |
 |---|---|---|---|
@@ -127,7 +127,7 @@ control por propiedad en el backend.
 
 ## 6. Tests
 
-- `ReporteServiceImplTest` (nuevo, 4 casos): mapeo `Object[]`→DTO, relleno de estados
+- `ReportServiceImplTest` (nuevo, 4 casos): mapeo `Object[]`→DTO, relleno de estados
   faltantes con 0, combinación de actividad por docente, cálculo de totales/en proceso.
 - `ActaServiceImplTest` (ampliado, +7 casos, se conservan los 15 previos):
   IDOR en `obtenerDetalle`, acceso de COORDINADOR vía permiso, `cambiarEstado` registra

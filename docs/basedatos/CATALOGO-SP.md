@@ -114,7 +114,7 @@ CREATE OR REPLACE PROCEDURE presus.sp_generar_reporte_defensas(
 * **Parámetros:** `p_carrera` (IN, VARCHAR) · `p_resultado` (INOUT, refcursor) — filas: `solicitud_id`, `estudiante_nombre`, `expediente`, `titulo_tema`, `estado_solicitud`, `fecha_defensa`, `sala_nombre`, `nota_final`.
 * **Tablas que afecta (solo lectura):** `presus.solicitud`, `presus.estudiante`, `presus.usuarios`, `presus.estados_solicitud`, `presus.cronograma`, `presus.sala`, `presus.evaluaciones`.
 * **Invocación real desde Java** (`Solicitud.java` + `SolicitudRepository.java`), mismo patrón `@NamedStoredProcedureQuery` + `ParameterMode.REF_CURSOR` que el anterior.
-* **Flujo real:** `GET /api/v1/reportes/defensas?carrera=...` en `ReporteController` (`@Transactional(readOnly = true)`, requerido por el mismo motivo del refcursor).
+* **Flujo real:** `GET /api/v1/reportes/defensas?carrera=...` en `ReportController` (`@Transactional(readOnly = true)`, requerido por el mismo motivo del refcursor).
 * **Verificado real:** `GET /api/v1/reportes/defensas?carrera=Software` → `200`, con `expediente` y `notaFinal` ya calculados por los otros dos procedimientos, confirmando el cruce real entre los 6 SPs.
 * **Prueba unitaria (2026-08-29):** `SolicitudServiceImplTest.testGenerarReporteDefensasSPMapeaCadaColumnaDeLaFilaCruda` — confirma que cada posición del `Object[]` crudo se mapea a la clave correcta (protege contra un cambio de orden de columnas en el SP que rompería el mapeo sin que ningún test lo detectara).
 

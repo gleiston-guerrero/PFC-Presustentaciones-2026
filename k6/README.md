@@ -9,7 +9,7 @@ Una versión anterior de `run1-summary.json`, `run2-summary.json` y `run3-summar
 `run1-summary.json` y `run2-summary.json` tuvieron **0 éxitos / 2938 fallos (100%)** en el check
 `"status is 200 or 401"` — el script de esa época hacía login en cada iteración contra
 `/api/auth/login` (sin versionar) y apuntaba a `/catalogos/carreras`, un endpoint que **nunca
-existió** en el backend (`CatalogoController` solo expone `/modalidades`, `/convocatorias` y
+existió** en el backend (`CatalogController` solo expone `/modalidades`, `/convocatorias` y
 `/convocatoria-activa`). No se depuran ni se sobrescriben estos dos archivos — quedan como
 evidencia real de un fallo real, ya diagnosticado (ver sección siguiente) y corregido en `run3`
 en adelante. **No se usan para ninguna estadística ni figura de rendimiento**: `scripts/gen-figuras.py`
@@ -22,7 +22,7 @@ Entre las corridas 1-2 y las corridas 3-5 el backend cambió de forma que rompe 
 
 1. **Versionado dinámico (`/api/v1/`)**: `/api/auth/login` sin versión ahora devuelve 403. `BASE_URL` se actualizó a `http://localhost:8080/api/v1`.
 2. **Rate limiting en login** (6 intentos/60s → 429): el script original hacía login en **cada iteración**. Con 50 VUs concurrentes eso agota el límite casi de inmediato — el primer intento de corrida 3 con el script viejo dio **99.8% de fallos**, todos por rate limiting, no por falta de capacidad. Esa corrida se conserva como evidencia de que el rate limiter funciona: [`rate-limiter-evidence-run.json`](rate-limiter-evidence-run.json). El script se rediseñó con un `setup()` de k6 que hace **un solo login** y reutiliza el token; las iteraciones prueban el flujo real de un usuario ya autenticado.
-3. **Endpoint inexistente**: el script original apuntaba a `/api/catalogos/carreras`, que **nunca existió** en el backend (`CatalogoController` solo expone `/modalidades`, `/convocatorias` y `/convocatoria-activa`). Como la petición iba sin token, siempre devolvía 403 antes de llegar al enrutador, por lo que el 404 real nunca se notó. Se corrigió a `/catalogos/modalidades` (endpoint real) y se agregó `/universidades` (el endpoint con caché Redis, Requisito E2) para ejercitar más superficie de la API.
+3. **Endpoint inexistente**: el script original apuntaba a `/api/catalogos/carreras`, que **nunca existió** en el backend (`CatalogController` solo expone `/modalidades`, `/convocatorias` y `/convocatoria-activa`). Como la petición iba sin token, siempre devolvía 403 antes de llegar al enrutador, por lo que el 404 real nunca se notó. Se corrigió a `/catalogos/modalidades` (endpoint real) y se agregó `/universidades` (el endpoint con caché Redis, Requisito E2) para ejercitar más superficie de la API.
 
 ## Cómo se ejecutaron (runs 3-7, las 5 válidas)
 

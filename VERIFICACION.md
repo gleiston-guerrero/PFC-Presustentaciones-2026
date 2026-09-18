@@ -334,8 +334,8 @@ cd backend && ./mvnw javadoc:javadoc              # 0 errores, doclint activo
    y 17 más de la misma clase (`docenteId`→`teacherId`, `rol`→`role`, `salaId`→`roomId`,
    `carreraId`/`carrera`→`programId`/`program`, `usuarioId`→`appUserId`, `lineaId`→`lineId`, etc., en
    `EvaluationController`, `PanelistController`, `TutorController`, `ScheduleController`,
-   `TutoringController`, `TopicController`, `ResourceTitulacionController`, `CatalogoController`,
-   `ReporteController`, `MinutesController`). Corregido agregando `@RequestParam(name = "...")` con el
+   `TutoringController`, `TopicController`, `ResourceDegreeController`, `CatalogController`,
+   `ReportController`, `MinutesController`). Corregido agregando `@RequestParam(name = "...")` con el
    nombre real que Angular ya envía, sin tocar el frontend — mismo principio que ya usaba
    `@JsonProperty` para el cuerpo JSON, aplicado aquí a query params.
 
@@ -570,14 +570,14 @@ endpoints (misma cifra que la guía), 97 con autorización declarativa, 5 exento
 `AppUserControllerTest:329` (`updatePerfilRechazaEditarElPerfilDeOtroAppUser`), sigue pasando.
 
 **"14 endpoints de escritura solo exigen `isAuthenticated()`":** confirmado exacto (`AppUserController`
-×2, `AuthController.changePassword`, `ChatbotController.askChatbot`, `EstadoTiempoRealController`,
+×2, `AuthController.changePassword`, `ChatbotController.askChatbot`, `StatusLiveController`,
 `NotificationController` ×3, `ProposalController.send`, `SubmissionController` ×2,
 `TutoringController` ×3) — no es una brecha: los 14 son endpoints de auto-servicio que resuelven la
 identidad desde el JWT (nunca desde un id recibido del cliente), el mismo patrón ya auditado y
 documentado en `OWASP-AUDIT.md` (A05:2021, corrección del 2026-09-11).
 
 **Hallazgo real no pedido, encontrado revisando la lista de arriba:** al primero intentar contar estos
-14 automáticamente, 9 endpoints de `CatalogoController` (crear/editar/eliminar facultad, program,
+14 automáticamente, 9 endpoints de `CatalogController` (crear/editar/eliminar facultad, program,
 modalidad, período académico) aparecían con la misma bandera — pero **sí tienen** un permiso específico
 (`CARRERAS_GESTIONAR`) declarado vía una constante `@PreAuthorize(PERMISO_GESTIONAR)`. Al inspeccionar
 esa constante: `"@permisoService.tienePermiso(authentication, 'CARRERAS_GESTIONAR')"` — el bean real se
