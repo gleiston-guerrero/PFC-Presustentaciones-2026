@@ -112,9 +112,19 @@ criterio de cierre del ing sigue sin poder marcarse resuelto:** exige explícita
 el docente antes del cierre, con el equipo completo", y esa conversación depende de que el ingeniero
 responda al correo del 2026-09-13 — algo que un asistente automatizado no puede producir por su cuenta ni
 fingir que ocurrió. Se mantiene 🟡 Parcial por la misma razón que en el cierre original: no es una
-brecha de documentación, es una conversación pendiente. **Esto se le explicó dos veces al usuario durante
-esta misma sesión, que pidió marcarlo como cerrado/terminado — se mantuvo la calificación honesta en
-ambas ocasiones en vez de acceder.**
+brecha de documentación, es una conversación pendiente. **P12 no pasa a cerrado mientras esa
+conversación no ocurra, y ese criterio se ha sostenido igual en todas las revisiones de este archivo.**
+
+> **Nota de edición (2026-09-18).** Esta entrada terminaba con una frase que narraba un intercambio
+> conversacional entre el usuario y un asistente automatizado durante una sesión de trabajo. Se
+> reemplazó por la frase anterior, por dos razones: no era un hallazgo sobre el proyecto ni evidencia
+> de nada verificable —este archivo documenta observaciones técnicas y su resolución—, y atribuía a
+> una petición una intención que el propio intercambio no permite establecer.
+>
+> **El estado de P12 no cambia por esta edición:** sigue 🟡 Parcial, por la razón escrita arriba, que
+> es la misma desde el cierre original. La redacción anterior permanece íntegra en el historial de git
+> (`git log -p -- docs/observaciones/OBSERVACIONES.md`): no se elimina nada del registro, se retira del
+> documento vigente una caracterización que no le corresponde a una bitácora de hallazgos técnicos.
 | **OBS-27** | 3 | Nombres en español en el código (P4) | 98 de 272 tipos (36,0 %) y 558 de 1.232 métodos (45,3 %) con nombre en español. Cierre exige 5 % o menos en ambos. | Renombrados 37 sustantivos (`Solicitud→Submission`, `Estudiante→Student`, `Rol→Role`, `Usuario→AppUser` —no `User`: colisionaba con `org.springframework.security.core.userdetails.User`—, `Acta→Minutes`, `Tema→Topic`, etc.) y 30 verbos de la capa de negocio (`listar→list`, `obtener→obtain`, `eliminar→delete`, `crear→create`, `guardar→save`, etc.) a nivel de tipo, método y campo, con `@JsonProperty("nombreOriginal")` en cada campo de entity/DTO renombrado para no alterar el JSON real que consume el frontend Angular (sin tocar). Cada sustantivo/verbo se aplicó y verificó por separado (nunca en lote sin confirmar): compilación real + los 804 tests de la suite contra Postgres/Redis reales, revirtiendo y repitiendo desde cero ante cualquier fallo. Se detectaron y corrigieron en el camino dos clases de error introducidas por el propio reemplazo de subcadena: plurales en español corrompidos (`roles→rolees`, `solicitudes→submissiones`, `notificaciones→notificationes`, `facultades→facultyes`, `evaluaciones→evaluationes`, `modalidades→modalityes`, `actas→minutess`) y colisiones de conjugación verbal (`guardaron`, `firmaron`, y la palabra real `confirmar`, protegida para no corromperse al traducir `firmar`). **Medición del cierre:** el conteo por texto fuente no ve los métodos `get`/`set` que genera Lombok en tiempo de compilación (de ahí que un primer conteo diera solo ~625-693 métodos totales, muy por debajo de los 1.232 del ing) — se corrigió leyendo las clases ya compiladas con `javap -p`, que sí expone esos métodos generados. Con esa medición: **tipos 4/339 (1,2 %)** y **métodos 3/2.491 (0,1 %)**, ambos por márgenes amplios respecto al 5 %; los pocos que quedan son deliberadamente ajenos al alcance pedido (`AreaTematica`, un catálogo distinto a "Tema"; `CleanupBitacora*`, un log interno). No se pudo verificar que esta cifra coincida exactamente con la herramienta del ing (metodología no compartida), pero el margen frente al 5 % es lo bastante amplio como para sostenerse aunque el método de conteo difiera. | `backend/src/main/java/`, `backend/src/test/java/` (controllers, services, entities, dto, repositories — 300+ archivos) | `49adaee` | — | ✅ Resuelto |
 
 **Nota (2026-09-17, re-verificación P4):** re-corridos ambos scripts de medición (texto fuente y `javap`)
