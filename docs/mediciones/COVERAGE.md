@@ -19,17 +19,17 @@ Una versión anterior de este documento (y el badge de `README.md`) afirmaba `>6
 | Clase | Líneas cubiertas |
 |---|---|
 | `security.jwt.JwtTokenProvider` | 27/27 (100%) |
-| `services.UsuarioServiceImpl` | 34/50 (68%) |
+| `services.AppUserServiceImpl` | 34/50 (68%) |
 | `entities.Usuario` | 12/18 |
-| `services.RubricaEvaluacionServiceImpl` (`calcularNotaTribunal`) | 9/199 |
+| `services.RubricEvaluationServiceImpl` (`calcularNotaTribunal`) | 9/199 |
 
 ## Suite actual (15 pruebas, todas en verde)
 
 - `PreSustentacionesApplicationTests` — smoke test de arranque del contexto Spring.
 - `JwtTokenProviderTest` — generación/validación de JWT.
-- `UsuarioServiceImplTest` — CRUD de usuarios, encriptado de contraseña con BCrypt, asignación de `rolUsuario`, rechazo de email duplicado.
-- `RubricaEvaluacionServiceImplTest` — cálculo real del promedio de notas del tribunal (`calcularNotaTribunal`), incluyendo redondeo a 2 decimales y caso sin evaluaciones.
+- `AppUserServiceImplTest` — CRUD de usuarios, encriptado de contraseña con BCrypt, asignación de `rolUsuario`, rechazo de email duplicado.
+- `RubricEvaluationServiceImplTest` — cálculo real del promedio de notas del tribunal (`calcularNotaTribunal`), incluyendo redondeo a 2 decimales y caso sin evaluaciones.
 
 ## Por qué es baja y qué falta
 
-El backend tiene 21 controladores y ~20 servicios; solo 2 servicios tienen pruebas unitarias reales. La cobertura baja es honesta, no un fallo de ejecución: refleja que la mayoría de la lógica (controladores REST, generación de PDF, procedimientos almacenados, flujo de tutorías/actas) todavía no tiene pruebas automatizadas. Ampliar esta suite (especialmente `SolicitudServiceImpl`, con las reglas de transición de estados) es el trabajo pendiente más valioso para la siguiente entrega.
+El backend tiene 21 controladores y ~20 servicios; solo 2 servicios tienen pruebas unitarias reales. La cobertura baja es honesta, no un fallo de ejecución: refleja que la mayoría de la lógica (controladores REST, generación de PDF, procedimientos almacenados, flujo de tutorías/actas) todavía no tiene pruebas automatizadas. Ampliar esta suite (especialmente `SubmissionServiceImpl`, con las reglas de transición de estados) es el trabajo pendiente más valioso para la siguiente entrega.

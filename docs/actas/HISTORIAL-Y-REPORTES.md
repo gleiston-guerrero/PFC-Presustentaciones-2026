@@ -42,12 +42,12 @@ GENERADA ─▶ REVISADA ─▶ FINALIZADA
 ```
 
 - Backfill de V19: acta con `firmada = true` → **FINALIZADA**; el resto → **GENERADA**.
-- Cuando la última firma completa el acta, `ActaServiceImpl.firmarActa` la pasa a
+- Cuando la última firma completa el acta, `MinutesServiceImpl.firmarActa` la pasa a
   **FINALIZADA** y registra el evento (además de dejar la solicitud en `COMPLETADA`,
   que ya hacía).
 - `OBSERVADA` y `ANULADA` exigen **motivo**.
 
-### 2.2 Endpoints (extienden `ActaController`, prefijo `/api/v1/actas`)
+### 2.2 Endpoints (extienden `MinutesController`, prefijo `/api/v1/actas`)
 
 | Método | Endpoint | Permiso | Notas |
 |---|---|---|---|
@@ -64,7 +64,7 @@ y lo asigna a ADMIN y COORDINADOR.
 
 ### 2.3 Control de acceso (backend, no solo UI)
 
-`ActaServiceImpl.validarAcceso(acta)`:
+`MinutesServiceImpl.validarAcceso(acta)`:
 1. `ROLE_ADMIN` → acceso total.
 2. `ACTAS_VER` / `ACTAS_GESTIONAR` (permiso dinámico) → COORDINADOR/ADMIN.
 3. En otro caso: solo si el usuario es el **estudiante dueño**, un **jurado** o el
@@ -78,7 +78,7 @@ aunque se conozca el ID.
 Dos capas, ambas en PostgreSQL:
 
 1. **`presus.historial_estados_acta`** (V19) — timeline de dominio que escribe
-   `ActaServiceImpl`. Columnas: `acta_id`, `estado_anterior_id`, `estado_nuevo_id`,
+   `MinutesServiceImpl`. Columnas: `acta_id`, `estado_anterior_id`, `estado_nuevo_id`,
    `usuario_id`, `rol_usuario`, `accion` (`CREAR` / `CAMBIO_ESTADO` / `FIRMA_COMPLETA`),
    `comentario`, `fecha_cambio`. FKs a `actas`, `estados_acta`, `usuarios`.
    V19 siembra un evento `CREAR` por cada acta existente.
@@ -129,7 +129,7 @@ control por propiedad en el backend.
 
 - `ReportServiceImplTest` (nuevo, 4 casos): mapeo `Object[]`→DTO, relleno de estados
   faltantes con 0, combinación de actividad por docente, cálculo de totales/en proceso.
-- `ActaServiceImplTest` (ampliado, +7 casos, se conservan los 15 previos):
+- `MinutesServiceImplTest` (ampliado, +7 casos, se conservan los 15 previos):
   IDOR en `obtenerDetalle`, acceso de COORDINADOR vía permiso, `cambiarEstado` registra
   historial, transición no permitida, motivo obligatorio, historial ordenado,
   delegación de `listarMisActas`.

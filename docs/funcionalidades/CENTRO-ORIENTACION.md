@@ -4,7 +4,7 @@
 > (corrección del permiso `ORIENTACION_TEMAS_VER`) y **V23** (semilla de recursos).
 > Extiende lo existente: reutiliza los catálogos de `carreras`,
 > `lineas_investigacion` y `areas_tematicas` y el sistema de permisos dinámicos
-> de V13 (`PermisoService.tienePermiso`).
+> de V13 (`PermissionService.tienePermiso`).
 
 ## 1. Objetivo
 
@@ -35,7 +35,7 @@ Guardar / quitar / listar la lista personal **no** usa un permiso: es exclusivo 
 rol `ESTUDIANTE` (`@PreAuthorize("hasRole('ESTUDIANTE')")`) y opera **siempre sobre
 el estudiante autenticado** — el id se resuelve desde el JWT, nunca llega por la URL.
 
-## 4. Endpoints (`TemaController`)
+## 4. Endpoints (`TopicController`)
 
 Base: `/api/v1/orientacion/temas`
 
@@ -54,7 +54,7 @@ Base: `/api/v1/orientacion/temas`
 Errores estandarizados por `GlobalExceptionHandler`: `IllegalArgumentException` → 400,
 `IllegalStateException` → **409** (nuevo handler), `AccessDeniedException` → 403.
 
-### Recursos de titulación (`RecursoTitulacionController`)
+### Recursos de titulación (`ResourceDegreeController`)
 
 Base: `/api/v1/orientacion/recursos`
 
@@ -65,7 +65,7 @@ Base: `/api/v1/orientacion/recursos`
 | PUT | `/{id}` | `ORIENTACION_CATALOGO_GESTIONAR` | Actualiza un recurso. |
 | DELETE | `/{id}` | `ORIENTACION_CATALOGO_GESTIONAR` | Elimina un recurso. |
 
-### Ruta de titulación / progreso (`ProgresoTitulacionController`)
+### Ruta de titulación / progreso (`ProgressDegreeController`)
 
 Base: `/api/v1/orientacion/progreso` — solo rol `ESTUDIANTE`, siempre sobre sí mismo.
 
@@ -74,7 +74,7 @@ Base: `/api/v1/orientacion/progreso` — solo rol `ESTUDIANTE`, siempre sobre s�
 | GET | `/` | Catálogo fijo de 8 pasos con el flag de completado de cada uno + `porcentaje`. |
 | PUT | `/` | Body `{ "pasos": { "clave_paso": true/false } }`. Fusiona con lo guardado; ignora claves fuera del catálogo. |
 
-El catálogo de pasos vive en `ProgresoTitulacionServiceImpl.CATALOGO` (no en BD): la
+El catálogo de pasos vive en `ProgressDegreeServiceImpl.CATALOGO` (no en BD): la
 tabla solo guarda `{clave: bool}` en `pasos_json`.
 
 ## 5. Frontend
@@ -114,14 +114,14 @@ confirmación. Reutiliza la paleta y el modo oscuro del proyecto.
 
 ## 9. Pruebas
 
-- `TemaServiceImplTest` (16): filtros, marcado de guardados, detalle inexistente,
+- `TopicServiceImplTest` (16): filtros, marcado de guardados, detalle inexistente,
   guardar duplicado (409), quitar inexistente, mapeo de DTO, y CRUD del catálogo
   (recorte de campos, carrera/área inexistentes, área que no pertenece a la línea,
   editar/eliminar inexistente).
-- `TemaControllerTest` (10): resolución del estudiante desde el token, códigos de
+- `TopicControllerTest` (10): resolución del estudiante desde el token, códigos de
   estado, rechazo sin perfil de estudiante, y delegación del CRUD.
-- `RecursoTitulacionServiceImplTest` (7): listar general vs por carrera, crear con
+- `ResourceDegreeServiceImplTest` (7): listar general vs por carrera, crear con
   y sin carrera, carrera/recurso inexistente, eliminar.
-- `ProgresoTitulacionServiceImplTest` (5): estado vacío, cálculo de porcentaje,
+- `ProgressDegreeServiceImplTest` (5): estado vacío, cálculo de porcentaje,
   fusión de cambios, claves fuera de catálogo ignoradas, estudiante inexistente.
-- `ProgresoTitulacionControllerTest` (2): el id del estudiante sale del token.
+- `ProgressDegreeControllerTest` (2): el id del estudiante sale del token.

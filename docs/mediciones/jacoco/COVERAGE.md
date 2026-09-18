@@ -26,7 +26,7 @@ ajustado. Se agregó además una regla `jacoco:check` (≥70 % líneas y ramas) 
 
 **Cómo se generó:** `cd backend && ./mvnw clean test` (JaCoCo corre en la fase `test` vía `jacoco-maven-plugin`, que ahora también incluye la regla `check`; ver `backend/pom.xml`).
 **Reporte crudo archivado (XML + CSV):** [`docs/mediciones/jacoco/2026-09-17-corrida-limpia-unica-sesion/`](2026-09-17-corrida-limpia-unica-sesion/) — **cifra de cierre vigente**, corrida limpia de una sola sesión con `mvn clean test` sobre Postgres/Redis reales en Docker (**804 tests / 0 fallos / 0 errores**), `jacoco:check` en verde. [`2026-09-17-cierre-examen-suspenso/`](2026-09-17-cierre-examen-suspenso/) (misma cifra en la práctica, pero acumulaba 71 sesiones de ejecución), [`2026-09-15-cobertura-global-70/`](2026-09-15-cobertura-global-70/) (801 tests, misma cifra en la práctica), [`2026-09-13-cobertura-controladores/`](2026-09-13-cobertura-controladores/), [`2026-09-11-cierre-limpio/`](2026-09-11-cierre-limpio/), [`2026-09-11-controllers-70/`](2026-09-11-controllers-70/), [`2026-09-11-fase1-must/`](2026-09-11-fase1-must/), [`2026-09-06-servicios/`](2026-09-06-servicios/), [`2026-09-05-cierre/`](2026-09-05-cierre/) y `2026-09-05/` son corridas previas; `2026-08-30/`, `2026-08-29/` y `2026-08-17/` se conservan como snapshots históricos. El reporte también se regenera y publica como artefacto en el job `backend` de [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) en cada push.
-**Última actualización:** 2026-09-15 — el examen suspenso exige ≥70 % **global** (líneas y ramas, no solo en `controllers`) recalculado desde el `jacoco.xml` versionado; la corrida de cierre del 09-13 daba 71.46 %/53.82 % global, con ramas muy por debajo. Primera pasada: se cubrieron los paquetes con más ramas sin ejercitar y cero test dedicado — `security.dto` (188 ramas al 0 %, los `equals`/`hashCode` generados por Lombok, con `EqualsVerifier`); `BackupService` (162 ramas) y `WalPitrService` (90 ramas), la lógica de respaldos/WAL sin ningún test propio; `BackupScheduler` (30 ramas); `PermisoService` (solo cubría `tienePermiso`, no `permisosDe`/`esPropioDocente`); y `JwtTokenProvider` (36.8 % — refresh tokens y blacklist en Redis, con `StringRedisTemplate` mockeado, incluido el fail-closed de RNF-04). Eso dejó 71.90 % de ramas — por encima del umbral pero al filo para el gusto del equipo, así que se hizo una segunda pasada sobre lo que quedaba: `StatusLiveController` y `AnteproyectoController` (0 % cada uno, sin ningún test); `EmailService` y `AuditoriaService` (0 % cada uno).
+**Última actualización:** 2026-09-15 — el examen suspenso exige ≥70 % **global** (líneas y ramas, no solo en `controllers`) recalculado desde el `jacoco.xml` versionado; la corrida de cierre del 09-13 daba 71.46 %/53.82 % global, con ramas muy por debajo. Primera pasada: se cubrieron los paquetes con más ramas sin ejercitar y cero test dedicado — `security.dto` (188 ramas al 0 %, los `equals`/`hashCode` generados por Lombok, con `EqualsVerifier`); `BackupService` (162 ramas) y `WalPitrService` (90 ramas), la lógica de respaldos/WAL sin ningún test propio; `BackupScheduler` (30 ramas); `PermissionService` (solo cubría `tienePermiso`, no `permisosDe`/`esPropioDocente`); y `JwtTokenProvider` (36.8 % — refresh tokens y blacklist en Redis, con `StringRedisTemplate` mockeado, incluido el fail-closed de RNF-04). Eso dejó 71.90 % de ramas — por encima del umbral pero al filo para el gusto del equipo, así que se hizo una segunda pasada sobre lo que quedaba: `StatusLiveController` y `ProposalController` (0 % cada uno, sin ningún test); `EmailService` y `AuditService` (0 % cada uno).
 
 Cifras de esta corrida (801/801 tests, 0 fallos): **global 82.10 % líneas (4020/4897) / 73.49 % ramas (1483/2018)** — 12 y 3.5 puntos por encima del umbral del 70 % respectivamente. `controllers` 84.2 % / 85.1 %; `services` 82.7 % / 67.3 %; `security` (incluye `security.jwt` al 98.0 %/89.1 % y `security.dto` al 96.6 %/96.8 %) 81.6 % / 71.9 %.
 
@@ -36,7 +36,7 @@ El `jacoco-maven-plugin` **excluye** de la medición `config/**`, `entities/**`,
 `PreSustentacionesApplication` (ver `<excludes>` en `backend/pom.xml`). Es decir, los porcentajes de
 abajo se calculan sobre los paquetes donde vive la lógica: `controllers`, `services`, `security` y
 `enums`. Consecuencia práctica verificada en esta corrida: las dos pruebas de integración contra
-PostgreSQL (`PreSustentacionesApplicationTests`, `TemaPropuestoRepositoryIntegrationTest`) **no mueven
+PostgreSQL (`PreSustentacionesApplicationTests`, `TopicProposedRepositoryIntegrationTest`) **no mueven
 la cifra**, porque el código que ejercitan de forma exclusiva —arranque del contexto, configuración,
 entidades y repositorios— está fuera del alcance medido. Se deja anotado para que nadie interprete
 como sospechoso que la cifra sea idéntica con y sin esas dos clases.
@@ -54,13 +54,13 @@ Antes de esta fecha, `ChatbotController`, `ChatbotService` y `ReportServiceImpl`
 | Tests / archivos | 109 / 15 | 228 / 29 | 395 / 40 | **559 / 48** |
 
 **Tanto `controllers` como `services` superan ahora el umbral del 70 % en líneas y en ramas** — las dos
-capas más grandes del backend. `services` llegó ahí con 164 pruebas nuevas en 8 clases (`EstudianteService`,
-`TutorServiceImpl`, `RubricaEvaluacionServiceImpl`, `JuradoServiceImpl`, `SolicitudServiceImpl`,
-`TutoriaServiceImpl`, `CronogramaServiceImpl`, `ActaServiceImpl`, `ChatbotService`), priorizando las
+capas más grandes del backend. `services` llegó ahí con 164 pruebas nuevas en 8 clases (`StudentService`,
+`TutorServiceImpl`, `RubricEvaluationServiceImpl`, `PanelistServiceImpl`, `SubmissionServiceImpl`,
+`TutoringServiceImpl`, `ScheduleServiceImpl`, `MinutesServiceImpl`, `ChatbotService`), priorizando las
 clases con más ramas sin ejercitar en vez de las más fáciles de cubrir. Las pruebas cubren comportamiento
 real —validaciones de negocio, transiciones de estado, control de acceso por rol, manejo de excepciones
-de notificación, incluso operaciones reales de archivo con `@TempDir` para `ActaServiceImpl`/
-`TutoriaServiceImpl`— no solo llamadas de delegación.
+de notificación, incluso operaciones reales de archivo con `@TempDir` para `MinutesServiceImpl`/
+`TutoringServiceImpl`— no solo llamadas de delegación.
 
 ### Desglose por paquete (cierre 2026-09-13), para el criterio P1 de la guía de la Entrega Final
 
@@ -83,18 +83,18 @@ arriba), así que la comparación más honesta es paquete por paquete tal como e
 2026-09-06) quedó desactualizada por código nuevo agregado sin prueba dedicada entre el 6 y el 11 de
 septiembre — la corrida `2026-09-11-fase1-must` ya la medía en 69.47 % de líneas, 0.53 puntos bajo el
 umbral. Se cerró agregando prueba a los dos únicos controladores sin ninguna (`MeController`,
-`ExternalApiController`) y a tres endpoints sin ejercitar en otros dos (`AuditoriaController#/tablas`,
-`DocenteController#/disponibles` y `#/paginado`). Al corregir después los 8 fallos preexistentes de
-`SolicitudControllerTest` (ver nota de cabecera), ese controlador quedó ejercitado con más profundidad y
+`ExternalApiController`) y a tres endpoints sin ejercitar en otros dos (`AuditController#/tablas`,
+`TeacherController#/disponibles` y `#/paginado`). Al corregir después los 8 fallos preexistentes de
+`SubmissionControllerTest` (ver nota de cabecera), ese controlador quedó ejercitado con más profundidad y
 la cifra subió otro poco, a 71.05 %/76.47 % (ver [`2026-09-11-cierre-limpio/`](2026-09-11-cierre-limpio/)).
 
 **Nota (2026-09-13):** esa cifra del 09-11 volvió a bajar del umbral (69.57 %/54.40 % líneas/ramas,
 medido de forma independiente sobre el commit `24cf208`) porque las fases 3-7 de seguridad del SRS
 v1.0.1, agregadas después del cierre del 09-11, sumaron código de producción sin pruebas propias — el
 mismo patrón de denominador creciendo más rápido que la cobertura que ya se había visto entre el 17 y
-el 29 de agosto (ver más abajo). De los 31 controladores, `UsuarioController` (78 líneas sin ejercitar)
+el 29 de agosto (ver más abajo). De los 31 controladores, `AppUserController` (78 líneas sin ejercitar)
 y `BackupController` (40 líneas) eran los que más pesaban sin tener ningún test dedicado — se
-agregaron `UsuarioControllerTest` (23 tests, cubre el control de propiedad real vía
+agregaron `AppUserControllerTest` (23 tests, cubre el control de propiedad real vía
 `esUsuarioActual`/`esUsuarioActualOAdmin`, no solo el permiso `USUARIOS_GESTIONAR`) y
 `BackupControllerTest` (19 tests, los 17 endpoints protegidos por `BACKUPS_GESTIONAR` a nivel de
 clase). Resultado: 79.01 %/80.34 %, con margen real sobre el umbral en vez de al filo — ver
@@ -116,8 +116,8 @@ valor real — se deja igual a propósito, en vez de inflar el porcentaje con te
 
 *(Entrada histórica, 2026-09-05, superada por las actualizaciones de arriba — se conserva sin editar
 como registro de en qué momento se cerró cada hueco):* La cobertura global subió porque se agregaron 119
-tests nuevos reales en 14 clases (`RubricaEvaluacionServiceImplTest`, `EvaluacionJuradoServiceTest`,
-`EvaluacionServiceImplTest`, `UsuarioServiceImplTest`, `ReportServiceImplTest` y otras — 228 tests / 29
+tests nuevos reales en 14 clases (`RubricEvaluationServiceImplTest`, `EvaluationPanelistServiceTest`,
+`EvaluationServiceImplTest`, `AppUserServiceImplTest`, `ReportServiceImplTest` y otras — 228 tests / 29
 archivos en total hoy, frente a 109/15 el 30-08), no por un cambio de denominador favorable.
 `ChatbotController` y `ChatbotService` seguían en 0% en ese momento (sin test dedicado ninguno de los
 dos), así que bajaban el promedio del paquete de controladores; ambos ya tienen test propio desde el
@@ -141,14 +141,14 @@ Una versión anterior de este documento (y el badge de `README.md`) afirmaba `>6
 | 2026-09-05 (cierre, +158 tests de controladores) | 60.48% (12,674 / 20,957) | 63.17% (2,454 / 3,885) | 45.75% (722 / 1,578) | 395 tests / 40 archivos |
 | **2026-09-06 (+164 tests de servicios, actual)** | — | **81.03%** (3,148 / 3,885) | **64.39%** (1,016 / 1,578) | **559 tests / 48 archivos** |
 
-**El porcentaje bajó del 17-08 al 29-08 (fila intermedia) aunque el número absoluto de instrucciones/líneas cubiertas subió** (3,169→3,290 instrucciones, 716→743 líneas): entre esas dos fechas se agregó código de producción real (nuevos módulos/controladores) sin tests proporcionales, así que el denominador creció más rápido que la cobertura. Después se agregaron 31 tests reales nuevos (`PermisoServiceTest`, `NotificacionServiceImplTest`, `EvaluacionJuradoServiceTest`, `ActaServiceImplTest`) cubriendo 4 clases de servicio que tenían 0% — subiendo la cobertura de líneas 8.9 puntos porcentuales de una vez. El salto del 29-08 al 30-08 (37.06%→38.88% líneas) **no** viene de tests nuevos (el número de tests/archivos no cambió) sino de que `PreSustentacionesApplicationTests` dejó de ser un `assertTrue(true)` y ahora levanta el contexto real de Spring (ver Fase 20/README), lo que ejecuta código de inicialización de beans que antes nunca corría bajo test. La cobertura de ramas (23.06%) no cambió — el contexto de Spring no ejerce ramas condicionales de lógica de negocio, solo construcción de objetos. **No se alcanza el objetivo de ≥60/70% declarado en la guía** — sigue habiendo controllers y varias clases de servicio con 0% (`EstudianteService`, `EvaluacionServiceImpl`, `TutorServiceImpl`, etc.); esta ronda priorizó agregar cobertura real y útil sobre inflar la cifra, y la brecha restante queda declarada explícitamente en vez de maquillada. No se ocultó ninguna caída — es la cifra real de `./mvnw test`, verificable en [`2026-08-30/jacoco.csv`](2026-08-30/jacoco.csv).
+**El porcentaje bajó del 17-08 al 29-08 (fila intermedia) aunque el número absoluto de instrucciones/líneas cubiertas subió** (3,169→3,290 instrucciones, 716→743 líneas): entre esas dos fechas se agregó código de producción real (nuevos módulos/controladores) sin tests proporcionales, así que el denominador creció más rápido que la cobertura. Después se agregaron 31 tests reales nuevos (`PermissionServiceTest`, `NotificationServiceImplTest`, `EvaluationPanelistServiceTest`, `MinutesServiceImplTest`) cubriendo 4 clases de servicio que tenían 0% — subiendo la cobertura de líneas 8.9 puntos porcentuales de una vez. El salto del 29-08 al 30-08 (37.06%→38.88% líneas) **no** viene de tests nuevos (el número de tests/archivos no cambió) sino de que `PreSustentacionesApplicationTests` dejó de ser un `assertTrue(true)` y ahora levanta el contexto real de Spring (ver Fase 20/README), lo que ejecuta código de inicialización de beans que antes nunca corría bajo test. La cobertura de ramas (23.06%) no cambió — el contexto de Spring no ejerce ramas condicionales de lógica de negocio, solo construcción de objetos. **No se alcanza el objetivo de ≥60/70% declarado en la guía** — sigue habiendo controllers y varias clases de servicio con 0% (`StudentService`, `EvaluationServiceImpl`, `TutorServiceImpl`, etc.); esta ronda priorizó agregar cobertura real y útil sobre inflar la cifra, y la brecha restante queda declarada explícitamente en vez de maquillada. No se ocultó ninguna caída — es la cifra real de `./mvnw test`, verificable en [`2026-08-30/jacoco.csv`](2026-08-30/jacoco.csv).
 
 ## Clases nuevas cubiertas por los tests agregados en la Fase 3
 
 | Clase | Qué cubre | Motivo |
 |---|---|---|
-| `services/SolicitudServiceImplTest` (11 tests) | `crearSolicitud`, `crearSolicitudPorUsuario` (incluye la llamada real a `sp_generar_codigo_expediente`), reglas de transición `CREADA→ENVIADA→APROBADA/RECHAZADA`, y las reglas de `suspenderSolicitud` | Identificada como prioridad #1 en la versión anterior de este documento — era la clase de reglas de negocio más importante sin ninguna prueba |
-| `services/CronogramaServiceImplTest` (4 tests) | Prerrequisitos (tribunal completo, tutoría completada) y la validación cruzada `sp_validar_conflicto_jurado` recién conectada (Fase 3) — incluye el caso de conflicto real (docente ya asignado en horario solapado) | No existía ninguna prueba de este servicio; además es el único punto del código que invoca el procedimiento de validación cruzada, así que sin este test esa conexión quedaba sin cubrir |
+| `services/SubmissionServiceImplTest` (11 tests) | `crearSolicitud`, `crearSolicitudPorUsuario` (incluye la llamada real a `sp_generar_codigo_expediente`), reglas de transición `CREADA→ENVIADA→APROBADA/RECHAZADA`, y las reglas de `suspenderSolicitud` | Identificada como prioridad #1 en la versión anterior de este documento — era la clase de reglas de negocio más importante sin ninguna prueba |
+| `services/ScheduleServiceImplTest` (4 tests) | Prerrequisitos (tribunal completo, tutoría completada) y la validación cruzada `sp_validar_conflicto_jurado` recién conectada (Fase 3) — incluye el caso de conflicto real (docente ya asignado en horario solapado) | No existía ninguna prueba de este servicio; además es el único punto del código que invoca el procedimiento de validación cruzada, así que sin este test esa conexión quedaba sin cubrir |
 
 ## Clases con mejor cobertura real
 
@@ -158,18 +158,18 @@ Una versión anterior de este documento (y el badge de `README.md`) afirmaba `>6
 | `security/dto/LoginResponse` | 9/11 | 82% |
 | `security/RateLimiterService` | 9/11 | 82% |
 | `security/jwt/JwtAuthenticationFilter` | 18/23 | 78% |
-| `services/AnteproyectoServiceImpl` | 69/96 | 72% |
-| `services/TutoriaServiceImpl` | 171/243 | 70% |
+| `services/ProposalServiceImpl` | 69/96 | 72% |
+| `services/TutoringServiceImpl` | 171/243 | 70% |
 | `services/ExternalApiServiceImpl` | 32/47 | 68% |
-| `services/UsuarioServiceImpl` | 34/50 | 68% |
+| `services/AppUserServiceImpl` | 34/50 | 68% |
 | `security/jwt/JwtTokenProvider` | 57/87 | 66% |
-| `services/SolicitudServiceImpl` | 108/166 | 65% |
+| `services/SubmissionServiceImpl` | 108/166 | 65% |
 | `security/RateLimitingFilter` | 11/18 | 61% |
-| `services/JuradoServiceImpl` | 101/191 | 53% |
-| `services/CronogramaServiceImpl` | 49/102 | 48% |
+| `services/PanelistServiceImpl` | 101/191 | 53% |
+| `services/ScheduleServiceImpl` | 49/102 | 48% |
 
 ## Clases sin cobertura real o con cobertura baja (candidatas para próxima iteración)
 
-*(Entrada histórica del 2026-08-29, cuando la cobertura global rondaba el 20%; ver la nota de cierre 2026-09-13 arriba para el estado vigente — `UsuarioController` y `BackupController`, los dos que más pesaban aquí, ya tienen test dedicado.)* `UsuarioController` (7%), `GlobalExceptionHandler` (31%), `AuthController` (32%), y la mayoría de los 31 controladores REST no tenían tests dedicados en ese momento — la suite de entonces se concentraba en `services/` y `security/`, que es donde vive la lógica de negocio y la superficie de riesgo de seguridad. Los controladores estaban cubiertos indirectamente por `AuthControllerIntegrationTest` (`@WebMvcTest`), pero no exhaustivamente. (Actualizado 2026-08-29: `EvaluacionServiceImpl.calcularPromedioSp` y `ActaServiceImpl` ya tenían test unitario dedicado — ver `docs/basedatos/CATALOGO-SP.md`.)
+*(Entrada histórica del 2026-08-29, cuando la cobertura global rondaba el 20%; ver la nota de cierre 2026-09-13 arriba para el estado vigente — `AppUserController` y `BackupController`, los dos que más pesaban aquí, ya tienen test dedicado.)* `AppUserController` (7%), `GlobalExceptionHandler` (31%), `AuthController` (32%), y la mayoría de los 31 controladores REST no tenían tests dedicados en ese momento — la suite de entonces se concentraba en `services/` y `security/`, que es donde vive la lógica de negocio y la superficie de riesgo de seguridad. Los controladores estaban cubiertos indirectamente por `AuthControllerIntegrationTest` (`@WebMvcTest`), pero no exhaustivamente. (Actualizado 2026-08-29: `EvaluationServiceImpl.calcularPromedioSp` y `MinutesServiceImpl` ya tenían test unitario dedicado — ver `docs/basedatos/CATALOGO-SP.md`.)
 
 El umbral objetivo declarado en la autoevaluación de Unidad IV era ≥60% — sigue sin alcanzarse, pero la trayectoria real (0% → 2.83% → 22.70% en instrucciones) documenta progreso genuino en vez de una cifra estática inventada.

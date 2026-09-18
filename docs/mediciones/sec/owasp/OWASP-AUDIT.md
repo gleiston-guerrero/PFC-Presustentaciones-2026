@@ -40,7 +40,7 @@ TOKEN=$(curl -s -X POST $API/auth/login \
 ### A01 — Broken Access Control (comprobación de propiedad y de permiso)
 
 ```bash
-# 1. Perfil de OTRO docente (el IDOR corregido en DocenteController)
+# 1. Perfil de OTRO docente (el IDOR corregido en TeacherController)
 curl -s -o /dev/null -w "HTTP %{http_code}\n" -H "Authorization: Bearer $TOKEN" $API/docentes/usuario/1
 # 2. Listado global de solicitudes (exige el permiso SOLICITUDES_REVISAR)
 curl -s -o /dev/null -w "HTTP %{http_code}\n" -H "Authorization: Bearer $TOKEN" $API/solicitudes
@@ -175,17 +175,17 @@ Una sola `Content-Security-Policy` (no dos, como antes de la corrección del 29-
 
 ## A01:2021 — Broken Access Control
 
-**Hallado (corregido):** `UsuarioController` no tenía ninguna anotación `@PreAuthorize` — cualquier usuario autenticado (de cualquier rol) podía listar/crear/editar/desactivar/eliminar usuarios vía `/api/usuarios/**`, incluyendo asignar el rol `ADMIN` a cualquier cuenta. Corregido: los endpoints de gestión ahora requieren `hasRole('ADMIN')`; `GET /{id}` y `PATCH /{id}/perfil` verifican que el `id` corresponda al usuario autenticado (resuelto desde el JWT, no desde el parámetro de la URL) salvo que quien pide sea ADMIN.
+**Hallado (corregido):** `AppUserController` no tenía ninguna anotación `@PreAuthorize` — cualquier usuario autenticado (de cualquier rol) podía listar/crear/editar/desactivar/eliminar usuarios vía `/api/usuarios/**`, incluyendo asignar el rol `ADMIN` a cualquier cuenta. Corregido: los endpoints de gestión ahora requieren `hasRole('ADMIN')`; `GET /{id}` y `PATCH /{id}/perfil` verifican que el `id` corresponda al usuario autenticado (resuelto desde el JWT, no desde el parámetro de la URL) salvo que quien pide sea ADMIN.
 
 **Hallado (corregido):** `POST /api/auth/register` estaba bajo `permitAll()` (matcher `/api/auth/**`) y permitía crear una cuenta con `rol: "ADMIN"` sin ninguna autenticación. No lo usa ningún componente del frontend. Corregido: ahora requiere `hasRole('ADMIN')`.
 
 **Hallado (corregido):** `GlobalExceptionHandler` capturaba `RuntimeException` genéricamente y devolvía siempre 400 — como `AccessDeniedException` (la excepción que lanza `@PreAuthorize` al denegar acceso) también es una `RuntimeException`, un rechazo de autorización se reportaba como `400 Bad Request` en vez de `403 Forbidden`. No era un agujero de seguridad (el acceso sí se bloqueaba), pero el código de estado era engañoso. Se agregó un `@ExceptionHandler(AccessDeniedException.class)` específico que devuelve 403.
 
-**Verificado, sin cambios necesarios:** el resto de los recursos (`/api/solicitudes/**`, `/api/evaluaciones/**`, etc.) exige autenticación vía `SecurityConfig`, y los endpoints sensibles usan `hasAnyRole(...)` a nivel de método. Los controladores que actúan "en nombre del usuario actual" (p. ej. `SolicitudController.crearPorUsuario`) ya resuelven el usuario desde el JWT en vez de confiar en un ID recibido del cliente — ese patrón es el que se replicó al corregir `UsuarioController`.
+**Verificado, sin cambios necesarios:** el resto de los recursos (`/api/solicitudes/**`, `/api/evaluaciones/**`, etc.) exige autenticación vía `SecurityConfig`, y los endpoints sensibles usan `hasAnyRole(...)` a nivel de método. Los controladores que actúan "en nombre del usuario actual" (p. ej. `SubmissionController.crearPorUsuario`) ya resuelven el usuario desde el JWT en vez de confiar en un ID recibido del cliente — ese patrón es el que se replicó al corregir `AppUserController`.
 
 ## A02:2021 — Cryptographic Failures
 
-**Hallado (corregido):** `UsuarioServiceImpl.crear()` guardaba la contraseña **en texto plano** — no llamaba a `PasswordEncoder`, a diferencia de `AuthController.register()` que sí lo hacía. Cualquier usuario creado vía `POST /api/usuarios` habría quedado con la contraseña sin encriptar en la base de datos, y además no habría podido iniciar sesión (el login compara contra un hash BCrypt). Corregido: se inyectó `PasswordEncoder` y se encripta antes de guardar.
+**Hallado (corregido):** `AppUserServiceImpl.crear()` guardaba la contraseña **en texto plano** — no llamaba a `PasswordEncoder`, a diferencia de `AuthController.register()` que sí lo hacía. Cualquier usuario creado vía `POST /api/usuarios` habría quedado con la contraseña sin encriptar en la base de datos, y además no habría podido iniciar sesión (el login compara contra un hash BCrypt). Corregido: se inyectó `PasswordEncoder` y se encripta antes de guardar.
 
 **Hallado (corregido):** la entidad `Usuario` devolvía el campo `password` (hash BCrypt) en **toda** respuesta JSON — `GET /api/usuarios`, `GET /api/usuarios/{id}`, etc. — porque los controladores serializan la entidad JPA directamente. Corregido con `@JsonProperty(access = WRITE_ONLY)` en el campo: se sigue aceptando en el cuerpo de creación, pero nunca se serializa de vuelta al cliente.
 
@@ -211,11 +211,11 @@ Una sola `Content-Security-Policy` (no dos, como antes de la corrección del 29-
 clase y contando sus endpoints `POST`/`PUT`/`PATCH`/`DELETE` sin anotación de método, quedaban 7 sin
 ninguna forma de autorización declarativa (los 3 endpoints públicos de `AuthController` --- `login`,
 `refresh`, `logout` --- se excluyen deliberadamente: son el propio mecanismo de autenticación y no deben
-requerir sesión previa): `AnteproyectoController#enviar`, `SolicitudController#crearPorUsuario` y
-`#enviar`, `TutoriaController#subirPdfCorregido`, `#enviarMensaje` y `#marcarMensajesLeidos`, y
-`UsuarioController#actualizarPerfil`. Los 7 ya resolvían la identidad real desde el JWT (ignorando
+requerir sesión previa): `ProposalController#enviar`, `SubmissionController#crearPorUsuario` y
+`#enviar`, `TutoringController#subirPdfCorregido`, `#enviarMensaje` y `#marcarMensajesLeidos`, y
+`AppUserController#actualizarPerfil`. Los 7 ya resolvían la identidad real desde el JWT (ignorando
 cualquier id de usuario en el path/query) o comprobaban la propiedad del recurso en el cuerpo del método
-(mismo patrón defensivo que `DocenteController`/`ChatbotController`); les faltaba solo la anotación
+(mismo patrón defensivo que `TeacherController`/`ChatbotController`); les faltaba solo la anotación
 declarativa. Se agregó `@PreAuthorize("isAuthenticated()")` a los 7, mismo nivel que ya usan
 `ChatbotController` y los demás controladores de auto-servicio, sin cambiar su comportamiento (la regla
 global de `SecurityConfig` ya exigía sesión) pero haciendo explícito en el propio endpoint lo que antes
@@ -225,7 +225,7 @@ solo garantizaba la configuración global.
 
 **Re-auditoría completa (2026-09-16, examen suspenso P8):** se repitió la barrida del 2026-09-11 sobre el estado actual del código, contando explícitamente cada endpoint `POST`/`PUT`/`PATCH`/`DELETE` de todos los controladores y si tiene alguna forma de `@PreAuthorize`/`@Secured` (de clase o de método) — reproducible con
 [`docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py`](scripts/audit-endpoints-autorizacion.py)
-(`python docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py`, corrido real, salida transcrita abajo). Resultado: **102 endpoints de escritura totales**, misma cifra que reporta la guía del examen suspenso. De esos 102, **0 quedan sin alguna forma de `@PreAuthorize`**, salvo los 5 endpoints de `AuthController` (`login`, `refresh`, `logout`, `recuperar`, `restablecer`) que son deliberadamente públicos: son el propio mecanismo de autenticación/recuperación y no pueden exigir sesión previa; los protege el `permitAll()` de `SecurityConfig` junto con `RateLimitingFilter`, no `@PreAuthorize`. El endpoint del propio perfil (`PATCH /api/usuarios/{id}/perfil`, `UsuarioController`) tiene tanto la anotación (`@PreAuthorize("isAuthenticated()")`, agregada en el cierre del 2026-09-11) como una comprobación explícita de propiedad del recurso que devuelve 403 si el id del path no coincide con el usuario autenticado — probado end-to-end con MockMvc real en `UsuarioControllerTest#actualizarPerfilRechazaEditarElPerfilDeOtroUsuario` (verificado pasando: `mockMvc.perform(patch("/api/v1/usuarios/99/perfil")...).andExpect(status().isForbidden())`, más `#actualizarPerfilPermiteAlPropioUsuario` para el camino positivo).
+(`python docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py`, corrido real, salida transcrita abajo). Resultado: **102 endpoints de escritura totales**, misma cifra que reporta la guía del examen suspenso. De esos 102, **0 quedan sin alguna forma de `@PreAuthorize`**, salvo los 5 endpoints de `AuthController` (`login`, `refresh`, `logout`, `recuperar`, `restablecer`) que son deliberadamente públicos: son el propio mecanismo de autenticación/recuperación y no pueden exigir sesión previa; los protege el `permitAll()` de `SecurityConfig` junto con `RateLimitingFilter`, no `@PreAuthorize`. El endpoint del propio perfil (`PATCH /api/usuarios/{id}/perfil`, `AppUserController`) tiene tanto la anotación (`@PreAuthorize("isAuthenticated()")`, agregada en el cierre del 2026-09-11) como una comprobación explícita de propiedad del recurso que devuelve 403 si el id del path no coincide con el usuario autenticado — probado end-to-end con MockMvc real en `AppUserControllerTest#actualizarPerfilRechazaEditarElPerfilDeOtroUsuario` (verificado pasando: `mockMvc.perform(patch("/api/v1/usuarios/99/perfil")...).andExpect(status().isForbidden())`, más `#actualizarPerfilPermiteAlPropioUsuario` para el camino positivo).
 
 ```
 $ python docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py
@@ -251,7 +251,7 @@ el script pasó de `OK` a `FALLO: 1 endpoint(s) sin autorizacion y sin justifica
 actualizando la entrada `("AuthController", "restablecer")` a `("AuthController", "reset")` en
 `EXENTOS_CONOCIDOS` dentro del propio script. Re-corrido tras el fix: **102 endpoints de escritura
 totales (misma cifra), 5 exentos, los 5 justificados, `OK`.** También se corrió en limpio
-`AppUserControllerTest` (la clase quedó renombrada de `UsuarioControllerTest` por el mismo P4, igual que
+`AppUserControllerTest` (la clase quedó renombrada de `AppUserControllerTest` por el mismo P4, igual que
 el método `actualizarPerfilRechazaEditarElPerfilDeOtroUsuario` → `updatePerfilRechazaEditarElPerfilDeOtroAppUser`
 citado arriba): **23/23 pruebas, 0 fallos**, incluyendo el 403 de editar el perfil ajeno y el 200 del
 propio. Y se confirmó leyendo el archivo actual que `MeController` sigue con `@PreAuthorize("isAuthenticated()")`
@@ -292,8 +292,8 @@ Corrido con `./mvnw com.github.spotbugs:spotbugs-maven-plugin:4.8.6.4:spotbugs`,
 | `SPRING_ENDPOINT` | 160 | Informativa | Sin acción (marca cada endpoint REST, no es una vulnerabilidad) |
 | `CRLF_INJECTION_LOGS` | 52 | Baja/Media | Abierto — logs con `Logger.info(fmt, objetoUsuario)` podrían permitir forjar entradas de log si el objeto contiene `\r\n`; mitigación: usar un `encoder` de logging que escape saltos de línea |
 | `IMPROPER_UNICODE` | 11 | Baja | Abierto — comparaciones/transformaciones de String sin especificar `Locale` |
-| `PATH_TRAVERSAL_IN` | 9 | Media | Abierto — `Paths.get()` en `ActaServiceImpl`, `AnteproyectoServiceImpl`, `TutoriaServiceImpl` construye rutas de archivo a partir de datos que en última instancia vienen de la base de datos (IDs `Long`, no strings de usuario libres) — riesgo real bajo pero sin validación explícita de que la ruta resultante permanezca dentro del directorio esperado |
-| `UNSAFE_HASH_EQUALS` | 0 | Media | **Corregido el 17-08, confirmado que se mantiene el 29-08** — `AnteproyectoServiceImpl.verificarIntegridad()` comparaba hashes SHA-256 con `String.equals()` (vulnerable a timing attack); se cambió a `MessageDigest.isEqual()` |
+| `PATH_TRAVERSAL_IN` | 9 | Media | Abierto — `Paths.get()` en `MinutesServiceImpl`, `ProposalServiceImpl`, `TutoringServiceImpl` construye rutas de archivo a partir de datos que en última instancia vienen de la base de datos (IDs `Long`, no strings de usuario libres) — riesgo real bajo pero sin validación explícita de que la ruta resultante permanezca dentro del directorio esperado |
+| `UNSAFE_HASH_EQUALS` | 0 | Media | **Corregido el 17-08, confirmado que se mantiene el 29-08** — `ProposalServiceImpl.verificarIntegridad()` comparaba hashes SHA-256 con `String.equals()` (vulnerable a timing attack); se cambió a `MessageDigest.isEqual()` |
 | `SPRING_CSRF_PROTECTION_DISABLED` | 1 | Informativa | Sin acción — deshabilitado deliberadamente por ser API JWT stateless (ver A05) |
 
 4. La mitigación CSRF se delega al uso de tokens JWT sin cookies (en cabecera `Authorization`) y validación estricta de CORS.

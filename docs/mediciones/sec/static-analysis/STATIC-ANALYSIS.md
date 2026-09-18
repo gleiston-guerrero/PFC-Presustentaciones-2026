@@ -31,8 +31,8 @@ confirmando que el fix del 17-08 se mantiene.
 | `SPRING_ENDPOINT` | 121 → 160 | Informativa | Sin acción — marca cada endpoint REST como tal, no es una vulnerabilidad |
 | `CRLF_INJECTION_LOGS` | 44 → 52 | Baja/Media | Abierto — `Logger.info(fmt, objetoDeUsuario)` podría permitir forjar entradas de log si el objeto serializado contiene `\r\n` |
 | `IMPROPER_UNICODE` | 13 → 11 | Baja | Abierto — comparaciones/transformaciones de `String` sin especificar `Locale` explícito |
-| `PATH_TRAVERSAL_IN` | 9 → 9 | Media | Abierto — `Paths.get()` en `ActaServiceImpl`, `AnteproyectoServiceImpl`, `TutoriaServiceImpl` construye rutas a partir de datos que en última instancia vienen de la BD (IDs `Long`), sin validación explícita de que la ruta resultante quede dentro del directorio esperado |
-| `UNSAFE_HASH_EQUALS` | 1 → 0 | Media | **Corregido 2026-08-17, confirmado que se mantiene el 2026-08-29** — `AnteproyectoServiceImpl.verificarIntegridad()` comparaba hashes SHA-256 con `String.equals()` (vulnerable a timing attack); se cambió a `MessageDigest.isEqual()` |
+| `PATH_TRAVERSAL_IN` | 9 → 9 | Media | Abierto — `Paths.get()` en `MinutesServiceImpl`, `ProposalServiceImpl`, `TutoringServiceImpl` construye rutas a partir de datos que en última instancia vienen de la BD (IDs `Long`), sin validación explícita de que la ruta resultante quede dentro del directorio esperado |
+| `UNSAFE_HASH_EQUALS` | 1 → 0 | Media | **Corregido 2026-08-17, confirmado que se mantiene el 2026-08-29** — `ProposalServiceImpl.verificarIntegridad()` comparaba hashes SHA-256 con `String.equals()` (vulnerable a timing attack); se cambió a `MessageDigest.isEqual()` |
 | `SPRING_CSRF_PROTECTION_DISABLED` | 1 → 1 | Informativa | Sin acción — CSRF deshabilitado deliberadamente por ser API JWT stateless |
 
 ## Próximos pasos recomendados (no corregidos en esta ronda)

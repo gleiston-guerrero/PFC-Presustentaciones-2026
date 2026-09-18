@@ -20,23 +20,23 @@ la propia aplicación ("Gestionar Roles" / "Gestionar Permisos", ya construidas 
 
 Reemplazar los `@PreAuthorize("hasRole(...)")`/`hasAnyRole(...)` fijos por un único punto de
 verificación dinámico: `@PreAuthorize("@permisoService.tienePermiso(authentication, 'CODIGO_PERMISO')")`
-en cada endpoint protegido. `PermisoService.tienePermiso()` consulta directamente
+en cada endpoint protegido. `PermissionService.tienePermiso()` consulta directamente
 `presus.rol_permisos` ⋈ `presus.permisos` ⋈ `presus.usuarios` (ver
-`PermisoRepository.usuarioTienePermiso`, SQL nativo) contra el email del usuario autenticado y el
+`PermissionRepository.usuarioTienePermiso`, SQL nativo) contra el email del usuario autenticado y el
 código de permiso exigido — no contra el JWT, que deliberadamente **no** lleva permisos, solo
 identidad, para que un cambio de permisos aplique de inmediato sin esperar a que el usuario vuelva a
 iniciar sesión.
 
 Migraciones Flyway: `V11__roles_y_privilegios.sql` (roles de conexión a BD, no confundir con roles de
 aplicación), `V13__permisos_roles_dinamicos.sql` (tablas `permisos`/`rol_permisos`, semilla de 18
-permisos), `V14` (ajustes). Endpoints reales: `PermisoController` (CRUD de permisos) y `RolController`
+permisos), `V14` (ajustes). Endpoints reales: `PermissionController` (CRUD de permisos) y `RoleController`
 (asignación de permisos a roles), consumidos por los módulos "Gestionar Roles"/"Gestionar Permisos"
 del frontend.
 
 ## Consecuencias
 
 - **Positivas:** cambiar qué rol tiene qué permiso es una operación de datos (vía la propia UI de
-  administración), no un despliegue de código; un único punto de verificación (`PermisoService`)
+  administración), no un despliegue de código; un único punto de verificación (`PermissionService`)
   reemplaza decenas de anotaciones dispersas, reduciendo el riesgo de que un endpoint nuevo se
   olvide de proteger correctamente; auditable — `permisos`/`rol_permisos` son tablas normales,
   consultables y versionadas por Flyway, no constantes en el bytecode.

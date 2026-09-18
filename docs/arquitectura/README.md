@@ -63,28 +63,28 @@ graph TD
     subgraph "Spring Boot Backend Container"
         SecurityFilter["🔐 JwtAuthenticationFilter<br/>(Token and Cookie Validation)"]
         AuthController["🎮 AuthController<br/>(Login, Register, Refresh)"]
-        SolicitudController["🎮 SolicitudController<br/>(Request CRUD)"]
-        EvaluacionController["🎮 EvaluacionController<br/>(Rubric Scoring)"]
-        ActaController["🎮 ActaController<br/>(Signatures and PDF)"]
+        SubmissionController["🎮 SubmissionController<br/>(Request CRUD)"]
+        EvaluationController["🎮 EvaluationController<br/>(Rubric Scoring)"]
+        MinutesController["🎮 MinutesController<br/>(Signatures and PDF)"]
 
-        SolicitudService["🛠️ SolicitudServiceImpl<br/>(Request Business Logic)"]
-        EvaluacionService["🛠️ EvaluacionServiceImpl<br/>(Evaluation Business Logic)"]
-        ActaService["🛠️ ActaServiceImpl<br/>(Minutes Business Logic)"]
+        SubmissionService["🛠️ SubmissionServiceImpl<br/>(Request Business Logic)"]
+        EvaluationService["🛠️ EvaluationServiceImpl<br/>(Evaluation Business Logic)"]
+        MinutesService["🛠️ MinutesServiceImpl<br/>(Minutes Business Logic)"]
 
         JPARepositories["📦 Spring Data JPA Repositories<br/>(Elementary CRUD)"]
         StoredProcedures["🗄️ PL/pgSQL Stored Procedures<br/>(sp_calcular_promedio, sp_generar_reporte)"]
     end
 
     SecurityFilter --> AuthController
-    SecurityFilter --> SolicitudController
-    SecurityFilter --> EvaluacionController
-    SecurityFilter --> ActaController
+    SecurityFilter --> SubmissionController
+    SecurityFilter --> EvaluationController
+    SecurityFilter --> MinutesController
 
-    SolicitudController --> SolicitudService
-    EvaluacionController --> EvaluacionService
-    ActaController --> ActaService
+    SubmissionController --> SubmissionService
+    EvaluationController --> EvaluationService
+    MinutesController --> MinutesService
 
-    SolicitudService --> JPARepositories
-    EvaluacionService --> StoredProcedures
-    ActaService --> StoredProcedures
+    SubmissionService --> JPARepositories
+    EvaluationService --> StoredProcedures
+    MinutesService --> StoredProcedures
 ```

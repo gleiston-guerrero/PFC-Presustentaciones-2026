@@ -44,7 +44,7 @@ académico, por obligación legal), y cómo se resuelve la tensión entre depura
 
 **Hallazgos que quedan cerrados en esta fase (2026-09-11):** de los cuatro criterios de RNF-19,
 tres — la tabla de retención publicada, la depuración automática de la bitácora
-(`DepuracionBitacoraScheduler`) y el procedimiento de supresión con seudonimización
+(`CleanupLogScheduler`) y el procedimiento de supresión con seudonimización
 (`ErasureDataService`) — quedan construidos y probados. El cuarto (consentimientos firmados
 conservados ≥ 2 años) ya estaba declarado como política en la sección 3 de este documento desde
 antes; no se fabrica ningún formulario firmado que no exista para "completar" el criterio. Con

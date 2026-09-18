@@ -7,27 +7,27 @@ Este es tu proyecto COMPLETO con Spring Security y JWT funcionando correctamente
 ### Archivos Corregidos:
 
 **13 Repositorios** (UUID → Long):
-- ActaRepository
-- AnteproyectoRepository
-- CronogramaRepository
-- DocenteRepository
-- EstudianteRepository
-- EvaluacionRepository
-- JuradoRepository
-- NotificacionRepository
-- RubricaRepository
-- SalaRepository
-- SolicitudRepository
+- MinutesRepository
+- ProposalRepository
+- ScheduleRepository
+- TeacherRepository
+- StudentRepository
+- EvaluationRepository
+- PanelistRepository
+- NotificationRepository
+- RubricRepository
+- RoomRepository
+- SubmissionRepository
 - TutorRepository
-- UsuarioRepository
+- AppUserRepository
 
 **6 Servicios** (UUID → Long, campos corregidos):
-- IUsuarioService + UsuarioServiceImpl
-- NotificacionService + NotificacionServiceImpl
-- SolicitudService + SolicitudServiceImpl
+- IAppUserService + AppUserServiceImpl
+- NotificationService + NotificationServiceImpl
+- SubmissionService + SubmissionServiceImpl
 
 **1 Controlador**:
-- UsuarioController (UUID → Long)
+- AppUserController (UUID → Long)
 
 **Archivos de Seguridad Nuevos** (7 archivos):
 - `security/jwt/JwtTokenProvider.java` - Generación y validación JWT
@@ -168,18 +168,18 @@ presustentaciones-uteq-fixed/
 ├── src/main/java/ec/edu/uteq/presustentaciones/
 │   ├── controllers/
 │   │   ├── AuthController.java     ⭐ NUEVO
-│   │   ├── UsuarioController.java  ✅ CORREGIDO
+│   │   ├── AppUserController.java  ✅ CORREGIDO
 │   │   └── ... (otros 6 controladores originales)
 │   ├── services/
-│   │   ├── IUsuarioService.java         ✅ CORREGIDO
-│   │   ├── UsuarioServiceImpl.java      ✅ CORREGIDO
-│   │   ├── NotificacionService.java     ✅ CORREGIDO
-│   │   ├── NotificacionServiceImpl.java ✅ CORREGIDO
-│   │   ├── SolicitudService.java        ✅ CORREGIDO
-│   │   ├── SolicitudServiceImpl.java    ✅ CORREGIDO
+│   │   ├── IAppUserService.java         ✅ CORREGIDO
+│   │   ├── AppUserServiceImpl.java      ✅ CORREGIDO
+│   │   ├── NotificationService.java     ✅ CORREGIDO
+│   │   ├── NotificationServiceImpl.java ✅ CORREGIDO
+│   │   ├── SubmissionService.java        ✅ CORREGIDO
+│   │   ├── SubmissionServiceImpl.java    ✅ CORREGIDO
 │   │   └── ... (otros servicios originales)
 │   ├── repositories/
-│   │   ├── UsuarioRepository.java       ✅ CORREGIDO (13 en total)
+│   │   ├── AppUserRepository.java       ✅ CORREGIDO (13 en total)
 │   │   └── ... (todos corregidos UUID → Long)
 │   ├── entities/
 │   │   └── ... (13 entidades originales SIN cambios)

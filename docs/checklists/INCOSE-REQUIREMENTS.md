@@ -33,7 +33,7 @@ Leyenda: ✅ Cumple · 🟡 Cumple parcialmente · 🔴 No cumple
 **Notas sobre los 🔴 y patrones recurrentes:**
 
 - **RF-03 "No ambiguo" = 🔴**: "3 docentes jurados" en el enunciado original no aclara si es un mínimo
-  o un valor exacto. El código sí fija la regla (exactamente 3, ver `JuradoServiceImpl`), pero la
+  o un valor exacto. El código sí fija la regla (exactamente 3, ver `PanelistServiceImpl`), pero la
   redacción del requisito por sí sola sigue siendo ambigua — no se corrigió la prosa del requisito en
   esta ronda, solo se documentó el hallazgo.
 - **"Conforme" = 🟡 en los 12**: ningún requisito usa lenguaje normativo tipo "shall" — todos están en
@@ -59,7 +59,7 @@ Leyenda: ✅ Cumple · 🟡 Cumple parcialmente · 🔴 No cumple
 | **Consistente** (sin contradicciones internas) | ✅ | Se corrigió en esta fase una inconsistencia real: `SRS.md` v0.9.0-rc numeraba HU-04/HU-05 de forma distinta a `matriz.csv` (HU-04 significaba "Evaluación" en un documento y "Cronograma" en el otro) — resuelto adoptando la numeración de `matriz.csv` (más completa) como canónica en v1.0.0 |
 | **Factible** (implementable con los recursos reales) | ✅ | Los 12 están implementados y funcionando (verificado end-to-end en la Fase 5) |
 | **Comprensible** (lenguaje claro para todos los interesados) | ✅ | Formato Connextra + Gherkin es deliberadamente más legible para stakeholders no técnicos que notación formal |
-| **Verificable como conjunto** (existe una forma de confirmar que el conjunto se cumplió) | 🟢 | Ver `matriz.csv` v1.0.0: **8/8 requisitos Must tienen prueba automatizada real (100%, actualizado 2026-08-29** tras agregar `ActaServiceImplTest.java`, el último que faltaba). El criterio D0R exige 100% — se cumple para los Must; a nivel de los 12 requisitos totales del sistema (incluyendo Could/Should) es 9/12 (75%): RF-08, RF-09 y RF-10 siguen sin prueba dedicada, declarado explícitamente, no se afirma 100% general |
+| **Verificable como conjunto** (existe una forma de confirmar que el conjunto se cumplió) | 🟢 | Ver `matriz.csv` v1.0.0: **8/8 requisitos Must tienen prueba automatizada real (100%, actualizado 2026-08-29** tras agregar `MinutesServiceImplTest.java`, el último que faltaba). El criterio D0R exige 100% — se cumple para los Must; a nivel de los 12 requisitos totales del sistema (incluyendo Could/Should) es 9/12 (75%): RF-08, RF-09 y RF-10 siguen sin prueba dedicada, declarado explícitamente, no se afirma 100% general |
 | **Acotado** (el alcance no crece sin control) | ✅ | El conjunto pasó de 5 HU formalizadas (v0.9.0-rc) a 12 (v1.0.0) por una razón concreta y única: completar lo que `matriz.csv` ya asumía que existía, no por expansión de alcance no planificada — ver `CHANGELOG-REQ.md` |
 
 ## Conclusión

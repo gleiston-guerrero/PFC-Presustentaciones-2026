@@ -44,7 +44,7 @@ identificable. Implementación: `ErasureDataService#resolver` (backend).
 **Paradoja resuelta:** el registro de la propia solicitud (`presus.solicitud_supresion`) no
 guarda ningún dato personal del titular, solo su `usuario_id` — que sigue siendo una referencia
 válida después de la seudonimización, no el dato suprimido en sí. Ver
-`SupresionDatosServiceTest#elRegistroDeLaSolicitudNuncaContieneElDatoSuprimido`.
+`ErasureDataServiceTest#elRegistroDeLaSolicitudNuncaContieneElDatoSuprimido`.
 
 Una solicitud puede **rechazarse** en vez de aceptarse (p. ej. si el titular tiene un proceso de
 titulación en curso que exige poder identificarlo mientras dure) — el rechazo también queda
@@ -58,7 +58,7 @@ automáticamente lo que exceda el período de retención declarado arriba (2 añ
 borrado expuesta como endpoint rompería RNF-18 para cerrar RNF-19.
 
 **Resolución:** la depuración corre como tarea programada del sistema
-(`DepuracionBitacoraScheduler`, `@Scheduled`, sin ningún controlador ni endpoint asociado),
+(`CleanupLogScheduler`, `@Scheduled`, sin ningún controlador ni endpoint asociado),
 igual que `BackupScheduler` ya hace para la retención de respaldos. No es una vía por la que un
 usuario -ni siquiera un Administrador vía API- pueda borrar entradas a demanda: es la política de
 retención, ya declarada en este documento, aplicándose sola, mensualmente. Cada corrida deja

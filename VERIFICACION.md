@@ -353,12 +353,12 @@ Encontró **23 contratos rotos en 10 DTOs**:
 | `EvaluationPanelistDTO` | `nombrePanelist` | `nombrePanelist` | `nombreJurado` |
 | `EvaluationPanelistDTO` | `rolePanelist` | `rolPanelist` ← *anotado, pero al nombre equivocado* | `rolJurado` |
 | `EvaluationRubricResponse` | `nombrePanelist`, `notaTotalPanelist`, `rolePanelist` | 3 nombres en inglés | `nombreJurado`, `notaTotalJurado`, `rolJurado` |
-| `MinutesDetalleDTO` | `tituloTopic`, `observacionesMinutes` | idem | `tituloTema`, `observacionesActa` |
-| `MiStudentTutoradoDTO` | `tituloTopic`, `estadoTutoring`, `estadoSubmissionCodigo`, `estadoSubmissionNombre` | idem | `tituloTema`, `estadoTutoria`, `estadoSolicitudCodigo`, `estadoSolicitudNombre` |
-| `ObservacionesSubmissionDTO` | `tituloTopic`, `nombreStudent`, `nombrePanelist`, `notaPanelist` | idem | `tituloTema`, `nombreEstudiante`, `nombreJurado`, `notaJurado` |
-| `ReporteResumenDTO` | `totalSubmissions`, `totalMinutes`, `sustentacionesPorPeriod` | idem | `totalSolicitudes`, `totalActas`, `sustentacionesPorPeriodo` |
-| `EstadoBackupsDTO` | `ultimoBackup`, `ultimoBackupHace`, `totalBackups` | idem | `ultimoRespaldo`, `ultimoRespaldoHace`, `totalRespaldos` |
-| `ReporteActividadTeacherDTO` | `comoPanelist` | `comoPanelist` | `comoJurado` |
+| `MinutesDetailDTO` | `tituloTopic`, `observacionesMinutes` | idem | `tituloTema`, `observacionesActa` |
+| `MyStudentTuteeDTO` | `tituloTopic`, `estadoTutoring`, `estadoSubmissionCodigo`, `estadoSubmissionNombre` | idem | `tituloTema`, `estadoTutoria`, `estadoSolicitudCodigo`, `estadoSolicitudNombre` |
+| `ObservationsSubmissionDTO` | `tituloTopic`, `nombreStudent`, `nombrePanelist`, `notaPanelist` | idem | `tituloTema`, `nombreEstudiante`, `nombreJurado`, `notaJurado` |
+| `ReportSummaryDTO` | `totalSubmissions`, `totalMinutes`, `sustentacionesPorPeriod` | idem | `totalSolicitudes`, `totalActas`, `sustentacionesPorPeriodo` |
+| `StatusBackupsDTO` | `ultimoBackup`, `ultimoBackupHace`, `totalBackups` | idem | `ultimoRespaldo`, `ultimoRespaldoHace`, `totalRespaldos` |
+| `ReportActivityTeacherDTO` | `comoPanelist` | `comoPanelist` | `comoJurado` |
 
 **El más grave es el primero, y es exactamente el flujo que el ing pidió demostrar en vivo**
 (solicitud #3: *"demostrar el flujo de evaluación ponderada y la asignación de jurado desde el
@@ -389,8 +389,8 @@ a salir con código 0.
 3. **Campos de DTO/entidad sin `@JsonProperty` (7 encontrados en la ronda del 17-sep):**
    `PerfilRequest`/`AppUser.emailNotifications` (Angular lee/escribe `emailNotificaciones` — el
    formulario de "editar mi perfil" no guardaba ni mostraba el correo de notificaciones),
-   `TutoringFaseDTO.archivoPdfStudent` (Angular espera `archivoPdfEstudiante`),
-   `TutoringResumenDTO.tituloTopic`/`nombreStudent`/`estadoTutoring` (Angular espera
+   `TutoringPhaseDTO.archivoPdfStudent` (Angular espera `archivoPdfEstudiante`),
+   `TutoringSummaryDTO.tituloTopic`/`nombreStudent`/`estadoTutoring` (Angular espera
    `tituloTema`/`nombreEstudiante`/`estadoTutoria`), `TrackingDTO.porcentajeProgress` (Angular espera
    `porcentajeProgreso`). Corregidos con `@JsonProperty`. **No exhaustivo:** de 48 DTOs, 20 no tenían
    ningún `@JsonProperty`; se revisaron los de mayor riesgo cruzando contra los modelos/servicios
@@ -724,7 +724,7 @@ tres detalles nuevos, verificados uno por uno:
    multilínea (no de una sola línea, ver punto 4) sobre `Informe-Final/secciones/*.tex` completo: **no
    hay ningún "30 controladores" vigente** — ya se había corregido en la ronda anterior (`OBS-36`,
    commit `6282d50`, antes de que se generara este PDF de evaluación integral). Confirmado también que
-   no quedan citas de `UsuarioController`/`EvaluacionController` en ningún documento activo.
+   no quedan citas de `AppUserController`/`EvaluationController` en ningún documento activo.
 3. **"El SRS desglosa '8 procedimientos y 2 funciones', que no cuadra con el código":** confirmado
    exacto — `docs/requisitos/SRS-v1.0.1.tex:339` decía literalmente eso. El desglose real por nombre es
    7 procedimientos y 3 funciones (10 rutinas); por objeto del esquema materializado son 8 `PROCEDURE` +

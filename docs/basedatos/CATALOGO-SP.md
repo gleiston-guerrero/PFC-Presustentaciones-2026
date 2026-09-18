@@ -81,7 +81,7 @@ CREATE OR REPLACE PROCEDURE presus.sp_calcular_promedio_evaluacion(
 ```
 * **Parámetros:** `p_solicitud_id` (IN, BIGINT) · `p_resultado` (INOUT, refcursor) — filas: `solicitud_id BIGINT`, `nota_final DOUBLE PRECISION`, `estado_resultado VARCHAR`.
 * **Tablas que afecta:** lee `presus.evaluaciones_criterio` y `presus.evaluaciones`; escribe (`UPDATE`) `presus.evaluaciones`.
-* **Invocación real desde Java** (`Evaluacion.java` + `EvaluacionRepository.java`):
+* **Invocación real desde Java** (`Evaluacion.java` + `EvaluationRepository.java`):
 ```java
 @NamedStoredProcedureQuery(
     name = "Evaluacion.calcularPromedioEvaluacion",
@@ -95,9 +95,9 @@ CREATE OR REPLACE PROCEDURE presus.sp_calcular_promedio_evaluacion(
 @Procedure(name = "Evaluacion.calcularPromedioEvaluacion")
 List<PromedioEvaluacionResult> calcularPromedioEvaluacion(@Param("p_solicitud_id") Long solicitudId);
 ```
-* **Flujo real:** `EvaluacionServiceImpl.calcularPromedioSp()` (`@Transactional`), expuesto en `POST /api/v1/evaluaciones/{solicitudId}/calcular-promedio`.
+* **Flujo real:** `EvaluationServiceImpl.calcularPromedioSp()` (`@Transactional`), expuesto en `POST /api/v1/evaluaciones/{solicitudId}/calcular-promedio`.
 * **Verificado real** (2026-08-17, contra Docker): `POST /api/v1/evaluaciones/1/calcular-promedio` → `200 {"solicitudId":1,"notaFinal":4.2,"estadoResultado":"REPROBADO"}`.
-* **Prueba unitaria (2026-08-29):** `EvaluacionServiceImplTest` — cubre la fila base creada automáticamente si no existe, la reutilización si ya existe, y el caso en que el procedimiento no devuelve filas. Antes de esta fecha solo estaba verificado manualmente (brecha declarada explícitamente en `docs/mediciones/jacoco/COVERAGE.md`).
+* **Prueba unitaria (2026-08-29):** `EvaluationServiceImplTest` — cubre la fila base creada automáticamente si no existe, la reutilización si ya existe, y el caso en que el procedimiento no devuelve filas. Antes de esta fecha solo estaba verificado manualmente (brecha declarada explícitamente en `docs/mediciones/jacoco/COVERAGE.md`).
 
 ---
 
@@ -113,10 +113,10 @@ CREATE OR REPLACE PROCEDURE presus.sp_generar_reporte_defensas(
 ```
 * **Parámetros:** `p_carrera` (IN, VARCHAR) · `p_resultado` (INOUT, refcursor) — filas: `solicitud_id`, `estudiante_nombre`, `expediente`, `titulo_tema`, `estado_solicitud`, `fecha_defensa`, `sala_nombre`, `nota_final`.
 * **Tablas que afecta (solo lectura):** `presus.solicitud`, `presus.estudiante`, `presus.usuarios`, `presus.estados_solicitud`, `presus.cronograma`, `presus.sala`, `presus.evaluaciones`.
-* **Invocación real desde Java** (`Solicitud.java` + `SolicitudRepository.java`), mismo patrón `@NamedStoredProcedureQuery` + `ParameterMode.REF_CURSOR` que el anterior.
+* **Invocación real desde Java** (`Solicitud.java` + `SubmissionRepository.java`), mismo patrón `@NamedStoredProcedureQuery` + `ParameterMode.REF_CURSOR` que el anterior.
 * **Flujo real:** `GET /api/v1/reportes/defensas?carrera=...` en `ReportController` (`@Transactional(readOnly = true)`, requerido por el mismo motivo del refcursor).
 * **Verificado real:** `GET /api/v1/reportes/defensas?carrera=Software` → `200`, con `expediente` y `notaFinal` ya calculados por los otros dos procedimientos, confirmando el cruce real entre los 6 SPs.
-* **Prueba unitaria (2026-08-29):** `SolicitudServiceImplTest.testGenerarReporteDefensasSPMapeaCadaColumnaDeLaFilaCruda` — confirma que cada posición del `Object[]` crudo se mapea a la clave correcta (protege contra un cambio de orden de columnas en el SP que rompería el mapeo sin que ningún test lo detectara).
+* **Prueba unitaria (2026-08-29):** `SubmissionServiceImplTest.testGenerarReporteDefensasSPMapeaCadaColumnaDeLaFilaCruda` — confirma que cada posición del `Object[]` crudo se mapea a la clave correcta (protege contra un cambio de orden de columnas en el SP que rompería el mapeo sin que ningún test lo detectara).
 
 ---
 
@@ -139,16 +139,16 @@ CREATE OR REPLACE PROCEDURE presus.sp_asignar_jurado_masivo(
   - `p_rol_codigo` (VARCHAR): código de `roles_jurado` (`'PRESIDENTE'`, `'VOCAL'`, `'SECRETARIO'`).
 * **Tablas que afecta:** lee `presus.roles_jurado`; escribe (`INSERT ... ON CONFLICT DO UPDATE`) `presus.miembros_tribunal`.
 * **Manejo de Errores:** `RAISE EXCEPTION` si el código de rol no existe en `roles_jurado`; la FK de `miembros_tribunal` rechaza `docente_id`/`solicitud_id` inexistentes.
-* **Invocación real desde Java JPA** (`JuradoRepository.java`):
+* **Invocación real desde Java JPA** (`PanelistRepository.java`):
 ```java
 @Procedure(procedureName = "sp_asignar_jurado_masivo")
 void spAsignarJuradoMasivo(@Param("p_solicitud_id") Long solicitudId,
                             @Param("p_docente_id") Long docenteId,
                             @Param("p_rol_codigo") String rolCodigo);
 ```
-Invocado desde `JuradoServiceImpl.asignarJuradoMasivo(List<Long>, List<Long>, String)`, anotado `@Transactional`, expuesto en `POST /api/v1/jurados/asignar-masivo` (roles `ADMIN`/`COORDINADOR`).
+Invocado desde `PanelistServiceImpl.asignarJuradoMasivo(List<Long>, List<Long>, String)`, anotado `@Transactional`, expuesto en `POST /api/v1/jurados/asignar-masivo` (roles `ADMIN`/`COORDINADOR`).
 * **Prueba de control transaccional (verificada manualmente):** lote de 2 pares donde el primero es válido y el segundo viola la FK de `docente_id` → el `INSERT` del primer par se ejecuta pero, al fallar el segundo, Spring revierte la transacción completa; se confirmó que **ningún** registro del lote queda en `miembros_tribunal`.
-* **Prueba unitaria (2026-08-29):** `JuradoServiceImplTest` — cubre el rechazo por longitud de arreglos distinta, que el procedimiento se invoca una vez por par, y que una excepción a mitad de lote detiene el `for` sin intentar los pares restantes (el rollback real de la fila ya insertada lo hace `@Transactional`, no el bucle Java).
+* **Prueba unitaria (2026-08-29):** `PanelistServiceImplTest` — cubre el rechazo por longitud de arreglos distinta, que el procedimiento se invoca una vez por par, y que una excepción a mitad de lote detiene el `for` sin intentar los pares restantes (el rollback real de la fila ya insertada lo hace `@Transactional`, no el bucle Java).
 
 ---
 
@@ -165,14 +165,14 @@ CREATE OR REPLACE PROCEDURE presus.sp_firmar_acta_digital(
 ```
 * **Parámetros:** `p_acta_id` (IN, BIGINT) · `p_rol` (IN, VARCHAR — `PRESIDENTE`/`VOCAL_1`/`VOCAL_2`/`TUTOR`, alineado con la convención real del resto del backend) · `p_observacion` (IN, TEXT, opcional).
 * **Tablas que afecta:** `UPDATE presus.actas` (columnas `firmada_*`, `fecha_firma_*`, y **agrega** una línea a `observaciones_acta` — un campo que la implementación Java anterior nunca escribía).
-* **Invocación real desde Java** (`ActaRepository.java`):
+* **Invocación real desde Java** (`MinutesRepository.java`):
 ```java
 @Procedure(procedureName = "presus.sp_firmar_acta_digital")
 void firmarActaDigital(@Param("p_acta_id") Long actaId, @Param("p_rol") String rol, @Param("p_observacion") String observacion);
 ```
-* **Flujo real:** `ActaServiceImpl.firmarActa()` invoca el SP y luego `entityManager.refresh(acta)` para que el resto del flujo (cambio de estado a `COMPLETADA`, regeneración de PDF) vea lo que el procedimiento realmente persistió. Expuesto en `POST /api/v1/actas/firmar/{actaId}`.
+* **Flujo real:** `MinutesServiceImpl.firmarActa()` invoca el SP y luego `entityManager.refresh(acta)` para que el resto del flujo (cambio de estado a `COMPLETADA`, regeneración de PDF) vea lo que el procedimiento realmente persistió. Expuesto en `POST /api/v1/actas/firmar/{actaId}`.
 * **Verificado real:** firma de PRESIDENTE → `200`, con `observacionesActa: "\n[PRESIDENTE]: Todo correcto"` confirmado en la respuesta.
-* **Prueba unitaria (2026-08-29):** `ActaServiceImplTest` — cubre rol inválido, firma parcial (no completa la solicitud), firma completa (las 4 firmas → transición a `COMPLETADA` + regeneración real de PDF con iText contra un directorio temporal), y que un fallo en la notificación no interrumpe la firma.
+* **Prueba unitaria (2026-08-29):** `MinutesServiceImplTest` — cubre rol inválido, firma parcial (no completa la solicitud), firma completa (las 4 firmas → transición a `COMPLETADA` + regeneración real de PDF con iText contra un directorio temporal), y que un fallo en la notificación no interrumpe la firma.
 
 ---
 
@@ -190,16 +190,16 @@ CREATE OR REPLACE PROCEDURE presus.sp_validar_conflicto_jurado(
 )
 ```
 * **Tablas que afecta (solo lectura):** `presus.miembros_tribunal`, `presus.cronograma`.
-* **Invocación real desde Java** (`Jurado.java` + `JuradoRepository.java`):
+* **Invocación real desde Java** (`Jurado.java` + `PanelistRepository.java`):
 ```java
 @Procedure(name = "Jurado.validarConflictoJurado")
 Boolean validarConflictoJurado(@Param("p_solicitud_id") Long solicitudId, @Param("p_docente_id") Long docenteId,
                                 @Param("p_fecha_inicio") LocalDateTime fechaInicio, @Param("p_duracion_min") Integer duracionMin,
                                 @Param("p_disponible") Boolean disponibleInicial);
 ```
-* **Flujo real:** `CronogramaServiceImpl.crearCronograma()` lo llama para cada jurado ya asignado antes de guardar el cronograma; si algún docente tiene conflicto, se rechaza con un mensaje explícito.
+* **Flujo real:** `ScheduleServiceImpl.crearCronograma()` lo llama para cada jurado ya asignado antes de guardar el cronograma; si algún docente tiene conflicto, se rechaza con un mensaje explícito.
 * **Verificado real:** (a) creación de cronograma con 3 jurados sin conflictos previos → `200`; (b) prueba directa por SQL (`CALL` con un docente ya ocupado en un horario solapado) → `p_disponible = f`, confirmando también la rama de conflicto.
-* **Prueba unitaria:** `CronogramaServiceImplTest.testCrearCronogramaFallaPorConflictoDeJurado` mockea la respuesta `Boolean.FALSE` del procedimiento y confirma que el servicio la traduce en el mensaje de conflicto esperado.
+* **Prueba unitaria:** `ScheduleServiceImplTest.testCrearCronogramaFallaPorConflictoDeJurado` mockea la respuesta `Boolean.FALSE` del procedimiento y confirma que el servicio la traduce en el mensaje de conflicto esperado.
 
 ---
 
@@ -216,14 +216,14 @@ CREATE OR REPLACE PROCEDURE presus.sp_generar_codigo_expediente(
 )
 ```
 * **Tablas que afecta:** ninguna tabla — solo la secuencia `presus.expediente_codigo_seq`.
-* **Invocación real desde Java** (`Estudiante.java` + `EstudianteRepository.java`):
+* **Invocación real desde Java** (`Estudiante.java` + `StudentRepository.java`):
 ```java
 @Procedure(name = "Estudiante.generarCodigoExpediente")
 String generarCodigoExpediente(@Param("p_anio") Integer anio, @Param("p_codigo") String codigoInicial);
 ```
-* **Flujo real:** `SolicitudServiceImpl.crearPerfilEstudiante()` lo llama al crear automáticamente el perfil de un estudiante nuevo.
+* **Flujo real:** `SubmissionServiceImpl.crearPerfilEstudiante()` lo llama al crear automáticamente el perfil de un estudiante nuevo.
 * **Verificado real:** creación de solicitud de punta a punta → `expedienteCodigo: "EXP-2026-00001"` en la respuesta real del backend.
-* **Prueba unitaria:** `SolicitudServiceImplTest.testCrearSolicitudPorUsuarioCreaPerfilEstudianteAutomaticamente` verifica que `crearPerfilEstudiante()` invoca `generarCodigoExpediente` y que el código devuelto por el procedimiento (no calculado en Java) queda en el estudiante guardado.
+* **Prueba unitaria:** `SubmissionServiceImplTest.testCrearSolicitudPorUsuarioCreaPerfilEstudianteAutomaticamente` verifica que `crearPerfilEstudiante()` invoca `generarCodigoExpediente` y que el código devuelto por el procedimiento (no calculado en Java) queda en el estudiante guardado.
 
 ---
 
@@ -261,21 +261,21 @@ CREATE OR REPLACE PROCEDURE presus.sp_registrar_tutoria_avance(
 )
 ```
 * **Tablas que afecta:** lee y escribe (`INSERT`/`UPDATE`) `presus.tutoria_fases`; lee `presus.tutores`.
-* **Invocación real desde Java** (`TutoriaFaseRepository.java`) — ya usa el mecanismo correcto:
+* **Invocación real desde Java** (`TutoringPhaseRepository.java`) — ya usa el mecanismo correcto:
 ```java
 @org.springframework.data.jpa.repository.query.Procedure(procedureName = "presus.sp_registrar_tutoria_avance")
 void spRegistrarTutoriaAvance(@Param("p_tutor_id") Long tutorId, @Param("p_numero_fase") Integer numeroFase,
                                @Param("p_archivo_pdf") String archivoPdf, @Param("p_tamano_bytes") Long tamanoBytes,
                                @Param("p_sha256") String sha256);
 ```
-* **Flujo real:** `TutoriaServiceImpl.registrarAvanceSP()` → `POST /api/v1/tutorias/{tutorId}/registrar-avance` en `TutoriaController`.
-* **Prueba unitaria:** no confirmada en esta pasada — verificar si `TutoriaServiceImplTest` la cubre.
+* **Flujo real:** `TutoringServiceImpl.registrarAvanceSP()` → `POST /api/v1/tutorias/{tutorId}/registrar-avance` en `TutoringController`.
+* **Prueba unitaria:** no confirmada en esta pasada — verificar si `TutoringServiceImplTest` la cubre.
 
 ---
 
 ### 9. `fn_auditoria_generica` — categoría: trigger de auditoría (no invocado desde Java)
 * **Tipo:** `FUNCTION ... RETURNS TRIGGER` (definida en [`V15__auditoria.sql`](../../backend/src/main/resources/db/migration/V15__auditoria.sql))
-* **Propósito:** Registra en `presus.auditoria` cada `INSERT`/`UPDATE`/`DELETE` sobre las tablas de mayor valor auditable (`usuarios`, `roles_usuario`, `permisos`, y por extensión el flujo de negocio crítico), guardando el antes/después completo de la fila vía `to_jsonb`. Nunca persiste el hash de contraseña. Identifica al actor leyendo el GUC de sesión `presus.usuario_actual`, fijado por `AuditoriaService.marcarActorActual()` antes de cada operación relevante.
+* **Propósito:** Registra en `presus.auditoria` cada `INSERT`/`UPDATE`/`DELETE` sobre las tablas de mayor valor auditable (`usuarios`, `roles_usuario`, `permisos`, y por extensión el flujo de negocio crítico), guardando el antes/después completo de la fila vía `to_jsonb`. Nunca persiste el hash de contraseña. Identifica al actor leyendo el GUC de sesión `presus.usuario_actual`, fijado por `AuditService.marcarActorActual()` antes de cada operación relevante.
 * **No se invoca desde Java** — se dispara solo mediante los `CREATE TRIGGER` de `V15` (p. ej. `trg_auditoria_usuarios`, `trg_auditoria_roles_usuario`, `trg_auditoria_permisos`), por eso no aparece en ninguna columna `Tipo_Acceso = SP` de `matriz.csv`: es auditoría a nivel de motor, corre incluso si algo escribe directo a la base sin pasar por el backend.
 * **Verificación:** disparar manualmente un `UPDATE presus.usuarios ...` y confirmar la fila resultante en `presus.auditoria`.
 
@@ -300,11 +300,11 @@ trazable en vez de implícito.
 
 | Categoría (guía) | Procedimiento(s) | Estado | Prueba unitaria |
 |---|---|---|---|
-| Consultas multi-tabla / Reportes | `sp_generar_reporte_defensas` | ✅ Conectado y verificado | ✅ `SolicitudServiceImplTest` |
-| Cálculos agregados | `sp_calcular_promedio_evaluacion` | ✅ Conectado y verificado | ✅ `EvaluacionServiceImplTest` |
-| Actualizaciones masivas | `sp_asignar_jurado_masivo`, `sp_firmar_acta_digital` | ✅ Conectados y verificados | ✅ `JuradoServiceImplTest`, `ActaServiceImplTest` |
-| Validaciones cruzadas | `sp_validar_conflicto_jurado` | ✅ Conectado y verificado (Fase 3) | ✅ `CronogramaServiceImplTest` |
-| Generación de códigos secuenciales | `sp_generar_codigo_expediente` | ✅ Conectado y verificado (Fase 3) | ✅ `SolicitudServiceImplTest` |
+| Consultas multi-tabla / Reportes | `sp_generar_reporte_defensas` | ✅ Conectado y verificado | ✅ `SubmissionServiceImplTest` |
+| Cálculos agregados | `sp_calcular_promedio_evaluacion` | ✅ Conectado y verificado | ✅ `EvaluationServiceImplTest` |
+| Actualizaciones masivas | `sp_asignar_jurado_masivo`, `sp_firmar_acta_digital` | ✅ Conectados y verificados | ✅ `PanelistServiceImplTest`, `MinutesServiceImplTest` |
+| Validaciones cruzadas | `sp_validar_conflicto_jurado` | ✅ Conectado y verificado (Fase 3) | ✅ `ScheduleServiceImplTest` |
+| Generación de códigos secuenciales | `sp_generar_codigo_expediente` | ✅ Conectado y verificado (Fase 3) | ✅ `SubmissionServiceImplTest` |
 
 **Total real en el esquema: 10 rutinas** — 6 documentadas arriba desde el inicio (1-6, todas conectadas
 desde Java vía JPA 2.1 con `@Procedure`/`@NamedStoredProcedureQuery`, verificadas end-to-end contra
@@ -326,11 +326,11 @@ documentada arriba —, así que no cuentan como rutinas adicionales "activas", 
 en el esquema y deben citarse como tales si se referencia el esquema (no el código Java) como fuente.
 Antes de esta fecha, `sp_calcular_promedio_evaluacion` y `sp_generar_reporte_defensas` solo
 estaban verificados manualmente (brecha que declaraba explícitamente `docs/mediciones/jacoco/COVERAGE.md`);
-`sp_asignar_jurado_masivo` tampoco tenía prueba dedicada pese a que `JuradoServiceImplTest` ya
+`sp_asignar_jurado_masivo` tampoco tenía prueba dedicada pese a que `PanelistServiceImplTest` ya
 existía para otras responsabilidades de esa clase. Supera el mínimo de 6 exigido por el criterio P1.
 
 **Pendiente explícito (no resuelto en esta corrección):** decidir cuál de las dos rutas paralelas
-que calculan el promedio de evaluación se conserva — `EvaluacionServiceImpl.calcularPromedioSp()`
+que calculan el promedio de evaluación se conserva — `EvaluationServiceImpl.calcularPromedioSp()`
 (expuesto en `POST /api/v1/evaluaciones/calcular-promedio/{solicitudId}`, sin llamadores en código
 de producción, solo en tests) vs. `calcularPromedioSP()` (con P mayúscula, el que sí expone el
 endpoint real de negocio). Ambas resuelven contra objetos SQL distintos (la `PROCEDURE` de dos
