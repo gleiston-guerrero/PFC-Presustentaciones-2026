@@ -1,8 +1,8 @@
 # Sistema de Gestión de Pre-Sustentaciones UTEQ
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21988563.svg)](https://doi.org/10.5281/zenodo.21988563)
-[![Version](https://img.shields.io/badge/version-v1.0.1-blue.svg)](https://github.com/carla22072004/PFC-Presustentaciones-2026)
-[![CI](https://github.com/carla22072004/PFC-Presustentaciones-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/carla22072004/PFC-Presustentaciones-2026/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-v1.1.0-blue.svg)](https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026)
+[![CI](https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![JaCoCo Coverage](https://img.shields.io/badge/coverage-82.03%25_lines-brightgreen.svg)](docs/mediciones/jacoco/COVERAGE.md)
 [![OWASP Top 10](https://img.shields.io/badge/OWASP-5%2F6_controles_con_evidencia-yellow.svg)](docs/mediciones/sec/owasp/OWASP-AUDIT.md)
@@ -65,7 +65,7 @@ La arquitectura incluye:
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/carla22072004/PFC-Presustentaciones-2026.git
+git clone https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026.git
 cd PFC-Presustentaciones-2026
 
 # 2. Configurar variables de entorno (incluye PostgreSQL y Redis)
@@ -138,9 +138,9 @@ latexmk -pdf -interaction=nonstopmode -halt-on-error informe-final.tex
 **2. Comando para compilar y generar el PDF del SRS:**
 ```bash
 cd docs/requisitos
-latexmk -pdf -interaction=nonstopmode -halt-on-error SRS-v1.0.0.tex
+latexmk -pdf -interaction=nonstopmode -halt-on-error SRS-v1.0.1.tex
 ```
-*(El archivo generado será `docs/requisitos/SRS-v1.0.0.pdf`)*
+*(El archivo generado será `docs/requisitos/SRS-v1.0.1.pdf`)*
 
 Ambos PDF ya están compilados y versionados en el repositorio — solo hace falta recompilar si editas el `.tex` correspondiente. `latexmk` es incremental: si no hay cambios, termina de inmediato sin recompilar.
 

@@ -601,3 +601,57 @@ inflar este resumen; varios de los que ya estaban cerrados en `OBSERVACIONES.md`
 evaluación quedan aquí con matices que esa bitácora, por ser narrativa y cronológica, no siempre deja
 igual de visibles a primera vista. **P12 en particular no puede pasar a ✅ con más documentación:**
 depende de una conversación real con el docente y el equipo completo que todavía no ha ocurrido.
+
+---
+
+## Verificación adicional: el resto de la evaluación integral (secciones 1-3, 5-9)
+
+La evaluación integral del ing no es solo la tabla P1-P12 (sección 4, ya cubierta arriba punto por
+punto) — tiene ocho secciones más. Verificado cada una contra el estado real del repositorio hoy
+(2026-09-17), ver `OBSERVACIONES.md` OBS-48 para el detalle completo con comandos:
+
+**Hallazgo estructural que explica casi todo lo demás:** el PDF completo evalúa el commit `8b1c1d2`
+(tag `v1.1.0`), no el HEAD actual. `git rev-list v1.1.0..HEAD --count` da 22+ (ver `OBS-44`). La
+mayoría de los "no cumple" de las secciones 2, 3 y 6 de ese PDF ya estaban corregidos en commits
+posteriores a ese tag, hechos en esta misma ronda — el documento simplemente no pudo verlos porque el
+tag no se había movido todavía.
+
+1. **Método común de evaluación:** sin verificación aplicable, es metodología.
+2. **Riesgo de Piso 3 (SUS):** el riesgo de fondo (11 de 15 hojas con fecha imposible) **sigue sin
+   resolverse** — no es algo que se pueda cerrar con documentación, requiere las hojas físicas y los
+   participantes reales. Lo que sí está resuelto: el informe ya no reporta con falsa certeza. Los 7
+   pasajes que el ing cita como contradictorios (`04:55`, `08:98`, `11:55`, `12:7`, `13:18`, `14:27`,
+   `15:22`) ya dicen todos, de forma consistente, "n=4 verificable, 11 pendientes de confirmar" —
+   corregido hoy mismo en el commit `8488d06` (P1), antes del tag que evalúa este PDF. Queda constancia
+   explícita en `SUS-RESULTS.md` de que se recibió y se **rechazó** una segunda versión de las hojas con
+   la fecha alterada — la misma que se le pidió a este asistente usar y se negó a usar, documentado ahí
+   mismo.
+3. **Pisos y entregables:** Piso 2 confirmado roto — el README manda compilar `SRS-v1.0.0.tex`, que no
+   existe (reproducido: `latexmk` falla con "Could not find file"). **Corregido** a `SRS-v1.0.1.tex`. De
+   paso, tres URLs más en el README seguían apuntando al repositorio antiguo (`carla22072004`, ya
+   transferido) — corregidas, junto con el mismo defecto en `SRS-v1.0.1.tex` y `15-declaraciones.tex`.
+   EV-1/EV-2/EV-3/EV-4 "no cumple": ya resueltos antes de esta sección (ver arriba, entregables
+   obligatorios y P9).
+4. **Evaluación por pendiente:** es la tabla P1-P12, cubierta arriba en detalle.
+5. **Hoja de cálculo:** es el cálculo numérico del ing a partir de la tabla anterior — no hay nada del
+   repositorio que verificar aquí, es su aritmética sobre sus propios porcentajes.
+6. **Regresiones de la sección 1:** la única marcada "rota" (SUS) ya no lo está, ver punto 2. Las
+   etiquetas huérfanas (`sec:chatbot`, `sec:anexos`, `lst:ci-api`) se confirmaron reales pero el propio
+   ing las marca como preexistentes ("ya presentes en `f3d1ff4`"), no una regresión de esta ronda — no
+   se fuerza una cita artificial. La tabla de Holm ya se cita (P6, `OBS-41`). `sus-analysis.ipynb`
+   confirmado sin ejecutar (`execution_count: None`) — **ejecutado hoy**, confirma n=4, media=48.75,
+   coincidiendo exacto con lo citado en el informe.
+7. **Autoría y aporte individual:** ya lo documenta `CONTRIBUCIONES.md`. La mención de que "un asistente
+   automatizado se negó a marcar P12 como cerrado" es real y está en `OBSERVACIONES.md` (OBS-26) — no es
+   un defecto, es la misma disciplina de no inflar el estado que rige el resto de este archivo.
+8. **Solicitudes para la defensa:** los ítems 2 (VERIFICACION.md/make verify/CONTRIBUCIONES.md) y 4
+   (doclint + errores de Javadoc) ya están satisfechos por el trabajo de esta ronda. Los ítems 1, 3 y 5
+   son acciones para el día de la defensa (mostrar hojas físicas, hacer una demo en vivo, reunión con el
+   docente) — no son algo que este archivo pueda cerrar por adelantado.
+9. **Alcance:** describe lo que el ing sí y no ejecutó (con y sin base de datos/Docker) — informativo,
+   nada que verificar contra el repositorio.
+
+**Recomendación derivada de este hallazgo estructural:** con P1-P12 ya atendidos en esta ronda (P1 y P4
+con límites reales que no se pueden cerrar del todo; P12 pendiente del docente), corresponde mover el
+tag ahora — es exactamente el "cierre real de toda la ronda" que `OBS-44` dejó pendiente. Mientras el
+tag siga en `8b1c1d2`, cualquier nueva revisión seguirá viendo el estado de hace 22+ commits.
