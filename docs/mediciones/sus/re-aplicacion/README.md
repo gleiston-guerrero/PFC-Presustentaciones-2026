@@ -31,7 +31,26 @@ Si la UTEQ tiene Office 365, **Microsoft Forms con la cuenta institucional es la
 sello de tiempo es de un servidor de Microsoft y la cuenta es de la universidad, no del equipo. Google
 Forms sirve igual de bien.
 
-## Paso 1 — crear el formulario destino (5 minutos)
+## Paso 1 — crear el formulario destino
+
+### Forma rápida: que lo cree el script (2 minutos, recomendado)
+
+[`crear-formulario.gs`](crear-formulario.gs) construye el formulario entero, con las 13 preguntas ya
+configuradas. Evita transcribir los enunciados a mano, que es donde se cuela el error que rompe la
+comparabilidad entre rondas.
+
+1. Entra a <https://script.google.com> con la cuenta que será dueña del formulario (preferiblemente la
+   institucional de la UTEQ).
+2. **Nuevo proyecto**. Borra lo que haya y pega todo el contenido de `crear-formulario.gs`.
+3. Arriba, elige la función `crearFormularioSUS` y pulsa **Ejecutar**. Google pedirá autorización la
+   primera vez: es tu propio script creando un formulario en tu propia cuenta.
+4. Abre **Registro de ejecución**. Ahí salen dos enlaces: el de **responder** (el que se reparte) y el
+   de **editar** (para ti).
+
+No hay que tocar nada más. El script ya desactiva la recolección de correo y marca las 13 preguntas
+como obligatorias.
+
+### Forma manual (si prefieres hacerlo a mano)
 
 Crea un formulario nuevo con **exactamente** estos campos, en este orden. La redacción de los 10 ítems
 tiene que ser **idéntica** a la de la hoja en papel (`../respuestas-crudas/`): si cambia una palabra,

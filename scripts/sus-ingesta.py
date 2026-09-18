@@ -211,8 +211,9 @@ def main():
     cuantos_papel = sum(1 for r in verificables
                         if norm(r["respondio_en_papel"]).startswith("si"))
     if verificables:
+        verbo = "declara" if cuantos_papel == 1 else "declaran"
         print(f"\nDe las {len(verificables)} respuestas verificables, {cuantos_papel} "
-              "declaran haber participado antes en la ronda de papel.")
+              f"{verbo} haber participado antes en la ronda de papel.")
     print("\nLa fecha de cada fila es la que trae el archivo del formulario; este")
     print("script no genera ninguna. Versiona el CSV exportado sin editarlo.")
     return 0
