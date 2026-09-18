@@ -79,9 +79,11 @@ Permutación, p95 & $1\times10^{-5}$ & $0.05$ & $2\times10^{-5}$ & Significativo
 (decisión con $\alpha=0.05$). Los p-valores de permutación se reportan como $1\times10^{-5}$ (el piso
 reportable con $10^5$ permutaciones, ya que ninguna de las $10^5$ reasignaciones aleatorias igualó o
 superó la diferencia observada) en vez de 0 exacto.}
+\label{tab:holm-bonferroni}
 \end{table}
 
-Las tres pruebas siguen siendo significativas tras la corrección: la separación entre caché fría y
+La Tabla~\ref{tab:holm-bonferroni} resume el resultado de las tres pruebas tras la corrección: siguen
+siendo significativas; la separación entre caché fría y
 caliente es lo bastante grande (el valor mínimo en frío, 104.96\,ms, ya supera el valor máximo en
 caliente, 11.15\,ms) como para que ningún ajuste conservador la revierta. Reproducible con
 \texttt{scripts/perf-analysis.ipynb} --- ver la Figura~\ref{fig:cache-boxplot} para la distribución

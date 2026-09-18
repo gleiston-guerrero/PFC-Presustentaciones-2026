@@ -280,10 +280,12 @@ Permutacion mediana:    p=1e-05     umbral=0.025    p_ajustado=2e-05     Signifi
 Permutacion p95:        p=1e-05     umbral=0.05     p_ajustado=2e-05     Significativo
 ```
 
-**Veredicto: ✅ Cumple.** Coincide cifra por cifra con la Sección de evaluación empírica del informe
-(`10-evaluacion-empirica.tex`), que nombra explícitamente Holm-Bonferroni, Bonferroni y
-Benjamini-Hochberg. Defecto menor: la tabla de resultados en el PDF no tiene `\label` propio ni se cita
-por número desde el texto.
+**Veredicto: ✅ Cumple, defecto corregido.** Re-ejecutado el cuaderno hoy antes de tocar nada: coincide
+cifra por cifra con lo que ya citaba el informe (U=900, p=3.02e-11, p ajustados 9.06e-11/2e-5/2e-5).
+Defecto que señaló el ing (la tabla de resultados no tenía `\label` propio ni se citaba por número
+desde el texto) — **corregido**: se agregó `\label{tab:holm-bonferroni}` y el párrafo siguiente ahora
+empieza citándola como "La Tabla~\ref{tab:holm-bonferroni} resume..." en vez de solo "Las tres pruebas
+siguen siendo...". PDF recompilado sin advertencias de referencias indefinidas.
 
 ---
 
