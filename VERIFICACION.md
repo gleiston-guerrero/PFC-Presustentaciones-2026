@@ -478,12 +478,46 @@ grep -rnoE "\b(Usuario|Solicitud|Acta|Jurado|Tutoria|Cronograma|Estudiante|Evalu
 (sin coincidencias -- cero clases con nombre pre-P4 citadas en el informe activo)
 ```
 
-**Veredicto: ✅ Cumple, con un desacuerdo de fondo sin resolver.** 31 controladores y 10 rutinas son la
-única cifra en todo el documento activo (verificado también con el esquema real: hay 13 objetos en
-`esquema.sql` por sobrecargas de la misma rutina, distinto de "10 rutinas con nombre distinto" — ambas
-cifras son correctas, miden cosas distintas, no se corrigió esta ambigüedad en el texto). Corregidas 17
-citas de clases con nombre pre-P4 que quedaron desactualizadas tras el renombrado de P4 (ver
-`OBSERVACIONES.md`, OBS-36).
+**Veredicto (ronda anterior): ✅ Cumple, con un desacuerdo de fondo sin resolver.** 31 controladores y
+10 rutinas son la única cifra en todo el documento activo (verificado también con el esquema real: hay
+13 objetos en `esquema.sql` por sobrecargas de la misma rutina, distinto de "10 rutinas con nombre
+distinto" — ambas cifras son correctas, miden cosas distintas, no se corrigió esta ambigüedad en el
+texto). Corregidas 17 citas de clases con nombre pre-P4 que quedaron desactualizadas tras el renombrado
+de P4 (ver `OBSERVACIONES.md`, OBS-36).
+
+**Re-verificado y corregido hoy (evaluación integral 2026-09-17).** El ing repitió el mismo punto con
+tres detalles nuevos, verificados uno por uno:
+
+1. **"13 objetos en esquema.sql por sobrecargas":** confirmado exacto —
+   `grep -c "^CREATE \(OR REPLACE \)\?\(PROCEDURE\|FUNCTION\)" database/esquema.sql` → **13** (8
+   `PROCEDURE` + 5 `FUNCTION`), contra 10 nombres distintos. Ya estaba señalado en la ronda anterior
+   pero sin corregir en ningún texto — corregido hoy (ver punto 3).
+2. **"`03-introduccion.tex:22` dice 30 controladores... el resto dice 31":** re-verificado con `grep`
+   multilínea (no de una sola línea, ver punto 4) sobre `Informe-Final/secciones/*.tex` completo: **no
+   hay ningún "30 controladores" vigente** — ya se había corregido en la ronda anterior (`OBS-36`,
+   commit `6282d50`, antes de que se generara este PDF de evaluación integral). Confirmado también que
+   no quedan citas de `UsuarioController`/`EvaluacionController` en ningún documento activo.
+3. **"El SRS desglosa '8 procedimientos y 2 funciones', que no cuadra con el código":** confirmado
+   exacto — `docs/requisitos/SRS-v1.0.1.tex:339` decía literalmente eso. El desglose real por nombre es
+   7 procedimientos y 3 funciones (10 rutinas); por objeto del esquema materializado son 8 `PROCEDURE` +
+   5 `FUNCTION` (13 objetos) — ninguna combinación da "8 y 2". **Corregido:** reescrita la oración para
+   declarar ambas cifras correctamente (10 por nombre, 13 objetos reales, con la razón de la diferencia)
+   y citar `CATALOGO-SP.md`. De paso, en la misma oración, se encontró y corrigió un error más no citado
+   por el ing: decía "30 migraciones Flyway"; `find backend/src/main/resources/db/migration -iname
+   "V*.sql" | wc -l` da **31**, no 30 — corregido también. SRS recompilado (`latexmk -pdf`, 80 páginas,
+   sin errores) y verificado con `pdftotext` que el PDF final dice el texto corregido.
+4. **"La búsqueda de DATA-PROVENANCE.md es de una sola línea y no detecta el '30'":** confirmado el
+   defecto de metodología, aunque no encontró un "30" vigente hoy. Causa real: la búsqueda documentada
+   corría `grep` línea por línea sobre el `.tex` **fuente**, donde LaTeX envuelve libremente el texto
+   (p. ej. `...15\nrequisitos funcionales...31\ncontroladores REST...` — el número y la palabra caen en
+   líneas de archivo distintas), así que un `grep` de una sola línea puede fallar en detectar una
+   combinación real sin que se note — el hecho de que hoy no haya ningún "30" no prueba que la búsqueda
+   sea confiable, ya que sencillamente no encontró nada tampoco antes por una fuente distinta. **Corregido:**
+   la búsqueda ahora corre sobre el texto ya renderizado del PDF (`pdftotext -layout ... | grep`), donde
+   LaTeX sí reflowa el texto a líneas completas — inmune al problema de line-wrap del `.tex` fuente.
+   Re-ejecutada así hoy sobre `informe-final.pdf` y `SRS-v1.0.1.pdf`: sigue dando 31/10 en todo el
+   documento activo, ahora con una metodología que si hubiera existido un "30" perdido por el wrapping,
+   sí lo habría encontrado. Documentado en `docs/mediciones/DATA-PROVENANCE.md`.
 
 ---
 

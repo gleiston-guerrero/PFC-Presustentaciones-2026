@@ -336,7 +336,10 @@ Todos los componentes se orquestan con Docker Compose.
 
 \textbf{Tamaño real del sistema en el punto de corte:} 31 controladores REST \emph{de
 producción} ---49 si se cuentan también las 18 clases de prueba de controlador, que no exponen
-ninguna ruta--- con 207 combinaciones de método y ruta, 10 rutinas SQL (8 procedimientos y 2 funciones de auditoría), 30 migraciones
+ninguna ruta--- con 207 combinaciones de método y ruta, 10 rutinas SQL por nombre (7 procedimientos
+y 3 funciones; el esquema materializado real tiene 13 objetos ---8 \texttt{PROCEDURE} y 5
+\texttt{FUNCTION}--- porque 3 nombres conservan una sobrecarga adicional sin uso desde una fusión de
+ramas de agosto de 2026, ver \texttt{docs/basedatos/CATALOGO-SP.md}), 31 migraciones
 Flyway y 559 pruebas automatizadas. Estas cifras están contadas sobre la etiqueta
 \texttt{v1.0.1} y se recuentan en cada versión de este documento; no se dejan sin fecha.
 

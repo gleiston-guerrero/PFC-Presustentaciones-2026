@@ -313,6 +313,17 @@ estar conectadas y sin documentar: `sp_obtener_estadisticas_tutores` y `sp_regis
 (7-8, ambas invocadas desde Java — la primera todavía vía `@Query(nativeQuery = true)`, mecanismo
 pendiente de corregir; ver ítem 7) y `fn_auditoria_generica`/`fn_auditoria_rol_permisos` (9-10,
 triggers de motor que no se invocan desde Java, por lo que no tienen fila en `matriz.csv`).
+
+**Nota de conteo (P11, evaluación integral 2026-09-17):** "10 rutinas" cuenta por **nombre** distinto,
+que es lo que invoca Java. El esquema materializado real (`database/esquema.sql`) tiene **13 objetos**
+(`grep -c "^CREATE \(OR REPLACE \)\?\(PROCEDURE\|FUNCTION\)" database/esquema.sql` → 13; 8 `PROCEDURE` +
+5 `FUNCTION`), porque 3 de los 10 nombres conservan una sobrecarga adicional sin uso, documentada arriba
+y en la advertencia "Objetos duplicados" al inicio de este archivo: las `FUNCTION` huérfanas de un
+parámetro de `sp_calcular_promedio_evaluacion` y `sp_generar_reporte_defensas` (`V10`), y la variante
+`BIGINT[]` de `sp_asignar_jurado_masivo` (nota de fusión de ramas, ítem 3). Ninguna de las tres se
+invoca desde Java — PostgreSQL las resuelve por firma exacta y el código siempre llama la variante
+documentada arriba —, así que no cuentan como rutinas adicionales "activas", pero sí son objetos reales
+en el esquema y deben citarse como tales si se referencia el esquema (no el código Java) como fuente.
 Antes de esta fecha, `sp_calcular_promedio_evaluacion` y `sp_generar_reporte_defensas` solo
 estaban verificados manualmente (brecha que declaraba explícitamente `docs/mediciones/jacoco/COVERAGE.md`);
 `sp_asignar_jurado_masivo` tampoco tenía prueba dedicada pese a que `JuradoServiceImplTest` ya
