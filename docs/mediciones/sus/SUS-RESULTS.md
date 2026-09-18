@@ -124,6 +124,70 @@ posible del hallazgo: **los puntajes de las hojas no son números inventados par
 fueran, no habría por qué esperar que una muestra distinta cayera en el mismo rango. Sigue siendo
 evidencia indirecta, y se presenta como tal: apoya la autenticidad de las respuestas, no la de la fecha.
 
+---
+
+## Retractación formal de las 11 hojas y declaración del equipo (2026-09-18)
+
+### 1. Las 11 hojas quedan retiradas como evidencia
+
+**Las 11 hojas con fecha no verificable se retiran como evidencia válida.** No cuentan para ningún
+resultado reportado en este proyecto, ni en este documento ni en el informe final. El resultado de
+usabilidad que se defiende es el de la ronda del 18-sep (n=15, fecha sellada por un tercero); el de las
+4 hojas de fecha verificable se conserva únicamente como registro histórico.
+
+No se borran del repositorio. Siguen en [`respuestas-crudas/`](respuestas-crudas/) y en
+[`sus-respuestas.csv`](sus-respuestas.csv) con su columna `fecha_verificable=no`, exactamente como
+fueron escaneadas. Borrar evidencia incómoda después de que la señalaron sería peor que conservarla
+marcada: quien quiera revisar el hallazgo tiene que poder ver el mismo material que vio el evaluador.
+
+Retirarlas es lo que corresponde. Una hoja que no puede fecharse no sostiene una afirmación empírica,
+y defenderla cuesta más de lo que vale.
+
+### 2. Lo que declara el equipo sobre el origen de esas fechas
+
+> **Declaración del equipo** (2026-09-18). Lo que sigue es lo que el equipo afirma que ocurrió. No está
+> verificado de forma independiente y no debe leerse como un hallazgo comprobado.
+
+El equipo declara que, durante la aplicación en papel, **había una fecha a la vista** — en el aula,
+sobre un formato de ejemplo — y que varios participantes la copiaron en la casilla «Fecha:» en lugar de
+escribir la del día en que respondían. Bajo esa declaración, la fecha de esas hojas no es la fecha real
+de aplicación, sino una fecha copiada.
+
+### 3. Hasta dónde llega esa explicación, y dónde deja de llegar
+
+Esto es lo que la declaración **no** cubre, y conviene decirlo aquí antes de que lo diga otro:
+
+| Fecha escrita | Hojas | ¿La explicación la cubre? |
+|---|---|---|
+| 2026-09-26 | 6 (A, D, I, L, M, N) | Consistente: es el grupo mayoritario, compatible con una fecha copiada |
+| 2026-09-24 | 2 (C, F) | **No explicada** |
+| 2026-09-25 | 1 (B) | **No explicada** |
+| 2026-09-18 | 1 (E) | **No explicada** |
+| 2026-09-29 | 1 (J) | **No explicada** |
+
+**Una sola fecha a la vista produce una sola fecha, no cinco.** La declaración es compatible con las 6
+hojas que comparten el 26/09, y **no explica las otras 5**, que llevan cuatro fechas distintas. El
+equipo no tiene una explicación para esas cinco.
+
+Por eso la declaración se registra como contexto, no como reparación: **aunque se acepte por completo,
+las 11 hojas siguen retiradas.** No cambia el tratamiento de los datos ni ninguna cifra de este
+documento.
+
+### 4. Qué sigue abierto
+
+La evaluación integral condiciona el Piso 3 a que el equipo lo explique **«con las hojas físicas y los
+participantes»**. Ninguna de las dos cosas está en este documento:
+
+- Las **hojas físicas** existen y pueden presentarse en la defensa.
+- Los **participantes** de esas 11 hojas no han respondido la ronda nueva: de los 15 del formulario del
+  18-sep, ninguno declara haber participado antes en papel. El formulario sigue disponible, y si esas
+  personas responden y marcan «Sí» en la pregunta de participación previa, **eso** sí sería la
+  re-aplicación que se pidió.
+
+**El Piso 3 sigue en riesgo.** Esta sección no lo cierra, y no pretende hacerlo.
+
+---
+
 ### Figuras
 
 Generadas desde los CSV versionados con `python scripts/gen-figuras-sus.py`
