@@ -26,7 +26,7 @@ public class ObservacionesController {
      * @return 200 con las observaciones de esa submission
      */
     @GetMapping("/solicitud/{submissionId}")
-    public ResponseEntity<?> obtainObservaciones(@PathVariable Long submissionId) {
+    public ResponseEntity<?> obtainObservaciones(@PathVariable("submissionId") Long submissionId) {
         try {
             ObservacionesSubmissionDTO obs = rubricEvaluationService.obtainObservacionesSubmission(submissionId);
             return ResponseEntity.ok(obs);

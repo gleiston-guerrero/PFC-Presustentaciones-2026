@@ -45,9 +45,9 @@ public class EvaluationController {
     public ResponseEntity<?> evaluarPonderado(
             @RequestParam(name = "solicitudId") Long submissionId,
             @RequestParam(name = "rubricaId") Long rubricId,
-            @RequestParam Double notaInstructor,
+            @RequestParam("notaInstructor") Double notaInstructor,
             @RequestParam(name = "notaJurado") Double notaPanelist,
-            @RequestParam String observaciones,
+            @RequestParam("observaciones") String observaciones,
             @RequestParam(name = "pesoInstructor", defaultValue = "60.0") Double pesoInstructor,
             @RequestParam(name = "pesoJurado", defaultValue = "40.0") Double pesoPanelist) {
         try {
@@ -75,8 +75,8 @@ public class EvaluationController {
     @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_CALIFICAR')")
     public EvaluationFinal evaluar(@RequestParam(name = "solicitudId") Long submissionId,
                               @RequestParam(name = "rubricaId") Long rubricId,
-                              @RequestParam Double notaFinal,
-                              @RequestParam String observaciones) {
+                              @RequestParam("notaFinal") Double notaFinal,
+                              @RequestParam("observaciones") String observaciones) {
         return evaluationService.evaluarSubmission(submissionId, rubricId, notaFinal, observaciones);
     }
 
@@ -100,7 +100,7 @@ public class EvaluationController {
      */
     @GetMapping("/estudiante/{studentId}")
     @PreAuthorize("isAuthenticated()")
-    public List<EvaluationFinal> listPorStudent(@PathVariable Long studentId) {
+    public List<EvaluationFinal> listPorStudent(@PathVariable("studentId") Long studentId) {
         return evaluationService.listPorStudent(studentId);
     }
 
@@ -112,7 +112,7 @@ public class EvaluationController {
      */
     @GetMapping("/usuario/{appUserId}")
     @PreAuthorize("isAuthenticated()")
-    public List<EvaluationFinal> listPorAppUser(@PathVariable Long appUserId) {
+    public List<EvaluationFinal> listPorAppUser(@PathVariable("appUserId") Long appUserId) {
         return evaluationService.listPorAppUser(appUserId);
     }
 
@@ -124,7 +124,7 @@ public class EvaluationController {
      */
     @GetMapping("/solicitud/{submissionId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<EvaluationFinal> porSubmission(@PathVariable Long submissionId) {
+    public ResponseEntity<EvaluationFinal> porSubmission(@PathVariable("submissionId") Long submissionId) {
         return evaluationService.searchPorSubmission(submissionId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -142,7 +142,7 @@ public class EvaluationController {
      */
     @PostMapping("/calcular-promedio/{submissionId}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_CALIFICAR')")
-    public ResponseEntity<?> calculatePromedio(@PathVariable Long submissionId) {
+    public ResponseEntity<?> calculatePromedio(@PathVariable("submissionId") Long submissionId) {
         try {
             Map<String, Object> resultado = evaluationService.calculatePromedioSP(submissionId);
             return ResponseEntity.ok(resultado);

@@ -18,6 +18,7 @@ public class Teacher {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
     
     @ManyToOne(fetch = FetchType.EAGER)
@@ -27,6 +28,7 @@ public class Teacher {
     private AppUser appUser;
     
     @Column(name = "area_especialidad", length = 180)
+    @JsonProperty("areaEspecialidad")
     private String areaEspecialidad;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -36,12 +38,15 @@ public class Teacher {
     private Faculty faculty;
     
     @Column(name = "carga_horaria_semanal", nullable = false)
-    private Integer cargaHorariaSemanal = 0;
+    @JsonProperty("cargaHorariaSemanal")
+    private Integer cargaHorariaSemanal= 0;
     
     @Column(name = "disponible", nullable = false)
-    private Boolean disponible = true;
+    @JsonProperty("disponible")
+    private Boolean disponible= true;
     
     @Column(name = "creado_en", nullable = false, updatable = false)
+    @JsonProperty("creadoEn")
     private LocalDateTime creadoEn;
     
     @PrePersist

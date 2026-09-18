@@ -1,5 +1,7 @@
 package ec.edu.uteq.presustentaciones.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
@@ -17,16 +19,20 @@ public class EstadoSubmission {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
+    @JsonProperty("id")
     private Short id;
 
     @JsonValue
     @Column(name = "codigo", nullable = false, unique = true, length = 30)
+    @JsonProperty("codigo")
     private String codigo;
 
     @Column(name = "nombre", nullable = false, length = 80)
+    @JsonProperty("nombre")
     private String nombre;
 
     @Column(name = "orden", nullable = false)
+    @JsonProperty("orden")
     private Short orden;
 
     /**

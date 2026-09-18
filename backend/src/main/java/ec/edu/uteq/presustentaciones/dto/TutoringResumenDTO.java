@@ -7,6 +7,7 @@ import lombok.Data;
 @Data @Builder
 public class TutoringResumenDTO {
 
+    @JsonProperty("tutorId")
     private Long tutorId;
     @JsonProperty("solicitudId")
     private Long submissionId;
@@ -14,11 +15,15 @@ public class TutoringResumenDTO {
     private String tituloTopic;
     @JsonProperty("nombreEstudiante")
     private String nombreStudent;
+    @JsonProperty("nombreTutor")
     private String nombreTutor;
+    @JsonProperty("totalFases")
     private long totalFases;
+    @JsonProperty("fasesAprobadas")
     private long fasesAprobadas;
     @JsonProperty("estadoTutoria")
     private String estadoTutoring;
+    @JsonProperty("mensajesNoLeidos")
     private long mensajesNoLeidos;
     @JsonProperty("solicitudSuspendida")
     private boolean submissionSuspendida;

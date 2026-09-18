@@ -14,14 +14,18 @@ public class AppUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id")
     private Long id;
     @Column(nullable = false)
+    @JsonProperty("nombre")
     private String nombre;
 
     @Column(nullable = false)
+    @JsonProperty("apellido")
     private String apellido;
 
     @Column(unique = true, nullable = false)
+    @JsonProperty("email")
     private String email;
 
     @Column(nullable = false)
@@ -33,9 +37,11 @@ public class AppUser {
     private String role; // ESTUDIANTE, DOCENTE, ADMIN
 
     @Column(nullable = false)
-    private Boolean activo = true;
+    @JsonProperty("activo")
+    private Boolean activo= true;
 
     @Column
+    @JsonProperty("telefono")
     private String telefono;
 
     /** Correo donde llegan las notifications del sistema (puede ser distinto al de login) */
@@ -49,6 +55,7 @@ public class AppUser {
     private RoleAppUser roleAppUser;
 
     @Column(name = "creado_en", nullable = false, updatable = false)
+    @JsonProperty("creadoEn")
     private java.time.LocalDateTime creadoEn;
 
     @PrePersist

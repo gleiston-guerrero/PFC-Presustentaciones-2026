@@ -1,5 +1,7 @@
 package ec.edu.uteq.presustentaciones.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,10 +17,15 @@ public class ResponseWrapper<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @JsonProperty("success")
     private boolean success;
+    @JsonProperty("data")
     private T data;
+    @JsonProperty("message")
     private String message;
+    @JsonProperty("errors")
     private Object errors;
+    @JsonProperty("meta")
     private Object meta;
 
     /**

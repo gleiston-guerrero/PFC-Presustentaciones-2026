@@ -87,7 +87,7 @@ public class RoleController {
      */
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<?> rename(@PathVariable Short id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<?> rename(@PathVariable("id") Short id, @RequestBody Map<String, String> body) {
         auditService.marcarActorActual();
         RoleAppUser role = roleAppUserRepository.findById(id).orElse(null);
         if (role == null) {
@@ -114,7 +114,7 @@ public class RoleController {
      */
     @DeleteMapping("/{id}")
     @Transactional
-    public ResponseEntity<?> delete(@PathVariable Short id) {
+    public ResponseEntity<?> delete(@PathVariable("id") Short id) {
         RoleAppUser role = roleAppUserRepository.findById(id).orElse(null);
         if (role == null) {
             return ResponseEntity.notFound().build();

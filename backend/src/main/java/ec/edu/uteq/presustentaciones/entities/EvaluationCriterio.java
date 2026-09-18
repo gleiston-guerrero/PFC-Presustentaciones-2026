@@ -22,6 +22,7 @@ public class EvaluationCriterio {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id")
     private Long id;
 
     /** Scale aplicada: 1-100 (% del puntaje máximo del criterio) */
@@ -31,20 +32,25 @@ public class EvaluationCriterio {
 
     /** Nota calculada = criterio.ponderacion * scale / 100  (sobre la base del criterio) */
     @Column(name = "nota_obtenida", nullable = false)
+    @JsonProperty("notaObtenida")
     private Double notaObtenida;
 
     /** Observación automática según el rango de la scale */
     @Column(name = "observacion_auto", columnDefinition = "TEXT")
+    @JsonProperty("observacionAuto")
     private String observacionAuto;
 
     /** Observación manual ingresada por el panelist */
     @Column(name = "observacion_manual", columnDefinition = "TEXT")
+    @JsonProperty("observacionManual")
     private String observacionManual;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
+    @JsonProperty("observaciones")
     private String observaciones;
 
     @Column(name = "registrado_en", nullable = false, updatable = false)
+    @JsonProperty("registradoEn")
     private LocalDateTime registradoEn;
 
     @ManyToOne(fetch = FetchType.EAGER)

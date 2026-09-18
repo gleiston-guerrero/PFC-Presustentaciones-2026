@@ -35,9 +35,9 @@ public class StudentController {
      */
     @GetMapping("/paginado")
     public ResponseEntity<Page<StudentDTO>> listPaginado(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String q) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "q", required = false) String q) {
         return ResponseEntity.ok(studentService.listPaginado(page, size, q));
     }
 
@@ -46,7 +46,7 @@ public class StudentController {
      * @return 200 con la ficha del student, o el error correspondiente si no existe
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> obtainPorId(@PathVariable Long id) {
+    public ResponseEntity<?> obtainPorId(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(studentService.obtainPorId(id));
         } catch (RuntimeException e) {
@@ -78,7 +78,7 @@ public class StudentController {
      * @return 200 con el student actualizado, o el error correspondiente
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UpdateStudentRequest req) {
+    public ResponseEntity<?> update(@PathVariable("id") Long id, @RequestBody UpdateStudentRequest req) {
         try {
             return ResponseEntity.ok(studentService.update(id, req));
         } catch (RuntimeException e) {

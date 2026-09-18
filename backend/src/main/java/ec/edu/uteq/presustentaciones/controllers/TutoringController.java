@@ -49,7 +49,7 @@ public class TutoringController {
      * @return 200 con las tutorías, o 400 si no hay sesión válida
      */
     @GetMapping("/estudiante/{appUserId}")
-    public ResponseEntity<?> obtainTutoringsStudent(@PathVariable Long appUserId) {
+    public ResponseEntity<?> obtainTutoringsStudent(@PathVariable("appUserId") Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
             List<TutoringResumenDTO> resultado = tutoringService.obtainTutoringsStudent(realAppUserId);
@@ -66,7 +66,7 @@ public class TutoringController {
      * @return 200 con las tutorías, o 400 si no hay sesión válida
      */
     @GetMapping("/docente/{appUserId}")
-    public ResponseEntity<?> obtainTutoringsTeacher(@PathVariable Long appUserId) {
+    public ResponseEntity<?> obtainTutoringsTeacher(@PathVariable("appUserId") Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
             List<TutoringResumenDTO> resultado = tutoringService.obtainTutoringsTeacher(realAppUserId);
@@ -86,7 +86,7 @@ public class TutoringController {
      * @return 200 con el resumen, o 400 si no hay acceso a esa tutoría
      */
     @GetMapping("/{tutorId}/resumen")
-    public ResponseEntity<?> obtainResumen(@PathVariable Long tutorId,
+    public ResponseEntity<?> obtainResumen(@PathVariable("tutorId") Long tutorId,
                                             @RequestParam(name = "usuarioId", required = false) Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
@@ -105,8 +105,8 @@ public class TutoringController {
      * @return 200 con las fases, o 400 si no hay acceso a esa tutoría
      */
     @GetMapping("/{tutorId}/fases")
-    public ResponseEntity<?> obtainFases(@PathVariable Long tutorId,
-                                          @RequestParam(required = false) Long appUserId) {
+    public ResponseEntity<?> obtainFases(@PathVariable("tutorId") Long tutorId,
+                                          @RequestParam(name = "appUserId", required = false) Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
             List<TutoringFaseDTO> fases = tutoringService.obtainFases(tutorId, realAppUserId);
@@ -128,8 +128,8 @@ public class TutoringController {
      */
     @PostMapping("/{tutorId}/nueva-fase")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'TUTORIA_GESTIONAR')")
-    public ResponseEntity<?> createFaseConObservacion(@PathVariable Long tutorId,
-                                                     @RequestParam String observacion,
+    public ResponseEntity<?> createFaseConObservacion(@PathVariable("tutorId") Long tutorId,
+                                                     @RequestParam("observacion") String observacion,
                                                      @RequestParam(name = "tutorUsuarioId", required = false) Long tutorAppUserId) {
         try {
             Long realTutorAppUserId = obtainAppUserAutenticado().getId();
@@ -150,7 +150,7 @@ public class TutoringController {
      */
     @PostMapping(value = "/fases/{faseId}/subir-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> uploadPdfCorregido(@PathVariable Long faseId,
+    public ResponseEntity<?> uploadPdfCorregido(@PathVariable("faseId") Long faseId,
                                                @RequestParam("archivo") MultipartFile archivo,
                                                @RequestParam(name = "estudianteUsuarioId", required = false) Long studentAppUserId) {
         try {
@@ -172,9 +172,9 @@ public class TutoringController {
      */
     @PostMapping("/fases/{faseId}/aprobar")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'TUTORIA_GESTIONAR')")
-    public ResponseEntity<?> approveFase(@PathVariable Long faseId,
+    public ResponseEntity<?> approveFase(@PathVariable("faseId") Long faseId,
                                          @RequestParam(name = "tutorUsuarioId", required = false) Long tutorAppUserId,
-                                         @RequestParam(required = false) String comentario) {
+                                         @RequestParam(name = "comentario", required = false) String comentario) {
         try {
             Long realTutorAppUserId = obtainAppUserAutenticado().getId();
             TutoringFaseDTO fase = tutoringService.approveFase(faseId, realTutorAppUserId, comentario);
@@ -194,8 +194,8 @@ public class TutoringController {
      */
     @PostMapping("/fases/{faseId}/mensaje")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> sendMensaje(@PathVariable Long faseId,
-                                           @RequestParam(required = false) Long remitenteId,
+    public ResponseEntity<?> sendMensaje(@PathVariable("faseId") Long faseId,
+                                           @RequestParam(name = "remitenteId", required = false) Long remitenteId,
                                            @RequestBody NuevoMensajeRequest request) {
         try {
             Long realRemitenteId = obtainAppUserAutenticado().getId();
@@ -216,7 +216,7 @@ public class TutoringController {
      */
     @PutMapping("/fases/{faseId}/leer")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> marcarMensajesLeidos(@PathVariable Long faseId,
+    public ResponseEntity<?> marcarMensajesLeidos(@PathVariable("faseId") Long faseId,
                                                   @RequestParam(name = "usuarioId", required = false) Long appUserId) {
         try {
             Long realAppUserId = obtainAppUserAutenticado().getId();
@@ -237,8 +237,8 @@ public class TutoringController {
      * @return 200 con el PDF y cabecera inline, o 400 si la fase no tiene archivo o no hay acceso
      */
     @GetMapping("/fases/{faseId}/pdf")
-    public ResponseEntity<?> obtainPdfFase(@PathVariable Long faseId,
-                                            @RequestParam(required = false) Long appUserId) {
+    public ResponseEntity<?> obtainPdfFase(@PathVariable("faseId") Long faseId,
+                                            @RequestParam(name = "appUserId", required = false) Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
             Resource resource = tutoringService.obtainPdfFase(faseId, realAppUserId);
@@ -271,7 +271,7 @@ public class TutoringController {
     @PostMapping("/{tutorId}/registrar-avance")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'TUTORIA_AVANCE_ESTUDIANTE')")
     public ResponseEntity<?> registerAvanceSP(
-            @PathVariable Long tutorId,
+            @PathVariable("tutorId") Long tutorId,
             @RequestBody Map<String, Object> body) {
         try {
             Integer numeroFase = (Integer) body.get("numeroFase");

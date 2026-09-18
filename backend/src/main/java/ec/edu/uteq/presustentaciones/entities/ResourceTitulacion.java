@@ -21,15 +21,19 @@ public class ResourceTitulacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Integer id;
 
     @Column(name = "titulo", nullable = false, length = 255)
+    @JsonProperty("titulo")
     private String titulo;
 
     @Column(name = "categoria", nullable = false, length = 100)
+    @JsonProperty("categoria")
     private String categoria;
 
     @Column(name = "url_archivo", nullable = false, length = 500)
+    @JsonProperty("urlArchivo")
     private String urlArchivo;
 
     @ManyToOne(fetch = FetchType.LAZY)

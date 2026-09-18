@@ -40,7 +40,7 @@ public class EstadoTiempoRealController {
      *         del servidor
      */
     @GetMapping("/solicitud/{id}")
-    public ResponseEntity<Map<String, Object>> estadoSubmission(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> estadoSubmission(@PathVariable("id") Long id) {
         Map<String, Object> estado = new HashMap<>();
 
         submissionRepo.findById(id).ifPresent(s -> {

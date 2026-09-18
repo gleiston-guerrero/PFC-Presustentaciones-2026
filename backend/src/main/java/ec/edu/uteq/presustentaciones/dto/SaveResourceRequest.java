@@ -10,14 +10,17 @@ public class SaveResourceRequest {
 
     @NotBlank(message = "El título es obligatorio")
     @Size(max = 255, message = "El título no puede superar los 255 caracteres")
+    @JsonProperty("titulo")
     private String titulo;
 
     @NotBlank(message = "La categoría es obligatoria")
     @Size(max = 100, message = "La categoría no puede superar los 100 caracteres")
+    @JsonProperty("categoria")
     private String categoria;
 
     @NotBlank(message = "La URL del archivo es obligatoria")
     @Size(max = 500, message = "La URL no puede superar los 500 caracteres")
+    @JsonProperty("urlArchivo")
     private String urlArchivo;
 
     /** Opcional: null = resource general para todas las programs. */

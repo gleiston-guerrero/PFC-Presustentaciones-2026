@@ -46,39 +46,48 @@ public class Evaluation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
 
     // ── Notas desagregadas ───────────────────────────────────────────────────
     /** Nota asignada por el instructor del curso (ponderación default 60%) */
     @Column(name = "nota_instructor")
+    @JsonProperty("notaInstructor")
     private Double notaInstructor;
 
     /** Nota asignada por el tribunal/panelist (ponderación default 40%) */
     @Column(name = "nota_jurado")
+    @JsonProperty("notaPanelist")
     private Double notaPanelist;
 
     /** Ponderación del instructor en %, default 60 */
     @Column(name = "peso_instructor", nullable = false)
     @Builder.Default
-    private Double pesoInstructor = 60.0;
+    @JsonProperty("pesoInstructor")
+    private Double pesoInstructor= 60.0;
 
     /** Ponderación del panelist en %, default 40 */
     @Column(name = "peso_jurado", nullable = false)
     @Builder.Default
-    private Double pesoPanelist = 40.0;
+    @JsonProperty("pesoPanelist")
+    private Double pesoPanelist= 40.0;
 
     /** Nota final calculada = (notaInstructor * pesoInstructor/100) + (notaPanelist * pesoPanelist/100) */
     @Column(name = "nota_final")
+    @JsonProperty("notaFinal")
     private Double notaFinal;
 
     /** Valores posibles: APROBADO, REPROBADO */
     @Column(name = "resultado", length = 20)
+    @JsonProperty("resultado")
     private String resultado;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
+    @JsonProperty("observaciones")
     private String observaciones;
 
     @Column(name = "comentario_preestablecido", columnDefinition = "TEXT")
+    @JsonProperty("comentarioPreestablecido")
     private String comentarioPreestablecido;
 
     @OneToOne(fetch = FetchType.EAGER)

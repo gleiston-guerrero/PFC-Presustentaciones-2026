@@ -72,9 +72,9 @@ public class AppUserController {
     @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Listar usuarios paginado, con búsqueda opcional (solo ADMIN)")
     public ResponseEntity<?> listPaginado(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String q
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "q", required = false) String q
     ) {
         try {
             var resultado = appUserService.listPaginado(page, size, q);
@@ -99,7 +99,7 @@ public class AppUserController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "Obtener usuario por ID (propio usuario o ADMIN)")
-    public ResponseEntity<?> obtainPorId(@PathVariable Long id) {
+    public ResponseEntity<?> obtainPorId(@PathVariable("id") Long id) {
         if (!esAppUserActualOAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ResponseWrapper.error("No tienes permiso para ver este usuario"));
@@ -119,7 +119,7 @@ public class AppUserController {
     @GetMapping("/email/{email}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Buscar usuario por email (solo ADMIN)")
-    public ResponseEntity<?> searchPorEmail(@PathVariable String email) {
+    public ResponseEntity<?> searchPorEmail(@PathVariable("email") String email) {
         log.info("GET /api/usuarios/email/{} - Buscando usuario", email);
         return appUserService.obtainPorEmail(email)
                 .<ResponseEntity<?>>map(appUser -> ResponseEntity.ok(ResponseWrapper.success(appUser)))
@@ -187,7 +187,7 @@ public class AppUserController {
     @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Actualizar usuario, incluido su rol (solo ADMIN)")
     public ResponseEntity<?> update(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody AppUser appUser
     ) {
         log.info("PUT /api/usuarios/{} - Actualizando usuario", id);
@@ -208,7 +208,7 @@ public class AppUserController {
     @PatchMapping("/{id}/activar")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Activar usuario (solo ADMIN)")
-    public ResponseEntity<?> activate(@PathVariable Long id) {
+    public ResponseEntity<?> activate(@PathVariable("id") Long id) {
         log.info("PATCH /api/usuarios/{}/activar", id);
         try {
             appUserService.activate(id);
@@ -227,7 +227,7 @@ public class AppUserController {
     @PatchMapping("/{id}/desactivar")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Desactivar usuario (solo ADMIN)")
-    public ResponseEntity<?> deactivate(@PathVariable Long id) {
+    public ResponseEntity<?> deactivate(@PathVariable("id") Long id) {
         log.info("PATCH /api/usuarios/{}/desactivar", id);
         try {
             appUserService.deactivate(id);
@@ -249,7 +249,7 @@ public class AppUserController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Actualizar correo de notificaciones y teléfono del perfil propio")
     public ResponseEntity<?> updatePerfil(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody PerfilRequest req
     ) {
         if (!esAppUserActual(id)) {
@@ -274,7 +274,7 @@ public class AppUserController {
     @DeleteMapping("/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Eliminar usuario (solo ADMIN)")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable("id") Long id) {
         log.info("DELETE /api/usuarios/{}", id);
         try {
             appUserService.delete(id);
@@ -296,7 +296,7 @@ public class AppUserController {
     @PostMapping("/{id}/solicitar-supresion")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Solicitar la supresión de los propios datos personales (RNF-19)")
-    public ResponseEntity<?> solicitarSupresion(@PathVariable Long id) {
+    public ResponseEntity<?> solicitarSupresion(@PathVariable("id") Long id) {
         if (!esAppUserActual(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ResponseWrapper.error("No puedes solicitar la supresión de datos de otro usuario"));
@@ -329,7 +329,7 @@ public class AppUserController {
     @PostMapping("/solicitudes-supresion/{submissionId}/resolver")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Resolver una solicitud de supresión (RNF-19, solo ADMIN)")
-    public ResponseEntity<?> resolveSupresion(@PathVariable Long submissionId,
+    public ResponseEntity<?> resolveSupresion(@PathVariable("submissionId") Long submissionId,
                                                 @RequestBody ResolveSupresionRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Long resueltoPorId = appUserRepository.findByEmail(auth.getName()).map(AppUser::getId).orElse(null);

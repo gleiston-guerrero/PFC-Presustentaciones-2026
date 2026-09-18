@@ -22,6 +22,7 @@ public class BackupPruebaRestauracion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id")
     private Long id;
 
     @Column(name = "respaldo_nombre", nullable = false, length = 255)
@@ -29,15 +30,19 @@ public class BackupPruebaRestauracion {
     private String backupNombre;
 
     @Column(nullable = false)
+    @JsonProperty("fecha")
     private LocalDateTime fecha;
 
     /** EXITOSA | FALLIDA */
     @Column(nullable = false, length = 20)
+    @JsonProperty("resultado")
     private String resultado;
 
     @Column(length = 200)
+    @JsonProperty("responsable")
     private String responsable;
 
     @Column(columnDefinition = "text")
+    @JsonProperty("notas")
     private String notas;
 }

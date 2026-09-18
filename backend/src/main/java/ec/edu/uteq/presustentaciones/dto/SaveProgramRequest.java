@@ -5,7 +5,9 @@ import lombok.Data;
 
 @Data
 public class SaveProgramRequest {
+    @JsonProperty("codigo")
     private String codigo;
+    @JsonProperty("nombre")
     private String nombre;
     @JsonProperty("facultadId")
     private Integer facultyId;

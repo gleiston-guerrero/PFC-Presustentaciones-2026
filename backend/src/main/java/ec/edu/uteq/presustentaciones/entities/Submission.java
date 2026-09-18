@@ -51,6 +51,7 @@ public class Submission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
     
     @ManyToOne(fetch = FetchType.EAGER)
@@ -60,6 +61,7 @@ public class Submission {
     private Student student;
     
     @Column(name = "titulo_tema", nullable = false, length = 300)
+    @JsonProperty("tituloTopic")
     private String tituloTopic;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -86,9 +88,11 @@ public class Submission {
     private AreaTematica areaTematica;
 
     @Column(name = "fecha_registro", nullable = false, updatable = false)
+    @JsonProperty("fechaRegistro")
     private LocalDateTime fechaRegistro;
     
     @Column(name = "observaciones", columnDefinition = "TEXT")
+    @JsonProperty("observaciones")
     private String observaciones;
     
     // Trazabilidad
@@ -103,6 +107,7 @@ public class Submission {
     private AppUser actualizadoPor;
     
     @Column(name = "actualizado_en", nullable = false)
+    @JsonProperty("actualizadoEn")
     private LocalDateTime actualizadoEn;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -119,12 +124,15 @@ public class Submission {
      * de la relación FK, sin tocar los puntos del servicio que la usan.
      */
     @Column(name = "estado", nullable = false, length = 30)
+    @JsonProperty("estadoCodigo")
     private String estadoCodigo;
 
     @Column(name = "motivo_suspension", columnDefinition = "TEXT")
+    @JsonProperty("motivoSuspension")
     private String motivoSuspension;
 
     @Column(name = "suspendido_en")
+    @JsonProperty("suspendidoEn")
     private LocalDateTime suspendidoEn;
 
     @PrePersist

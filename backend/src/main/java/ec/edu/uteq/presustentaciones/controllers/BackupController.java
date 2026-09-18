@@ -54,7 +54,7 @@ public class BackupController {
      * @return 200 con los metadatos del backup, o 400/409 si {@code pg_dump} falla
      */
     @PostMapping
-    public ResponseEntity<?> generate(@RequestParam(defaultValue = "MANUAL") String origen) {
+    public ResponseEntity<?> generate(@RequestParam(name = "origen", defaultValue = "MANUAL") String origen) {
         OrigenBackup o = "EVENTO".equalsIgnoreCase(origen) ? OrigenBackup.EVENTO : OrigenBackup.MANUAL;
         BackupInfoDTO info = backupService.generate(TipoBackup.FULL, o);
         return ResponseEntity.ok(ResponseWrapper.success(info, "Respaldo generado correctamente"));
@@ -67,7 +67,7 @@ public class BackupController {
      * @return 200 con los metadatos del diferencial generado
      */
     @PostMapping("/diferencial")
-    public ResponseEntity<?> generateDiferencial(@RequestParam(defaultValue = "MANUAL") String origen) {
+    public ResponseEntity<?> generateDiferencial(@RequestParam(name = "origen", defaultValue = "MANUAL") String origen) {
         OrigenBackup o = "EVENTO".equalsIgnoreCase(origen) ? OrigenBackup.EVENTO : OrigenBackup.MANUAL;
         BackupInfoDTO info = backupService.generateDiferencial(o);
         return ResponseEntity.ok(ResponseWrapper.success(info, "Respaldo diferencial generado"));
@@ -80,7 +80,7 @@ public class BackupController {
      * @return 200 con el contenido del archivo como {@code application/octet-stream}
      */
     @GetMapping("/{nombre}/descargar")
-    public ResponseEntity<byte[]> download(@PathVariable String nombre) {
+    public ResponseEntity<byte[]> download(@PathVariable("nombre") String nombre) {
         byte[] contenido = backupService.leer(nombre);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -95,7 +95,7 @@ public class BackupController {
      * @return 200 confirmando la restauración
      */
     @PostMapping("/{nombre}/restaurar")
-    public ResponseEntity<?> restore(@PathVariable String nombre) {
+    public ResponseEntity<?> restore(@PathVariable("nombre") String nombre) {
         backupService.restore(nombre);
         return ResponseEntity.ok(ResponseWrapper.success(null,
                 "Base de datos restaurada desde el respaldo. Se recomienda reiniciar el backend "
@@ -109,7 +109,7 @@ public class BackupController {
      * @return 200 confirmando el borrado
      */
     @DeleteMapping("/{nombre}")
-    public ResponseEntity<?> delete(@PathVariable String nombre) {
+    public ResponseEntity<?> delete(@PathVariable("nombre") String nombre) {
         backupService.delete(nombre);
         return ResponseEntity.ok(ResponseWrapper.success(null, "Respaldo eliminado"));
     }
@@ -228,7 +228,7 @@ public class BackupController {
      * @return 200 confirmando el borrado
      */
     @DeleteMapping("/bases/{nombre}")
-    public ResponseEntity<?> deleteBase(@PathVariable String nombre) {
+    public ResponseEntity<?> deleteBase(@PathVariable("nombre") String nombre) {
         walPitrService.deleteBase(nombre);
         return ResponseEntity.ok(ResponseWrapper.success(null, "Base física eliminada"));
     }

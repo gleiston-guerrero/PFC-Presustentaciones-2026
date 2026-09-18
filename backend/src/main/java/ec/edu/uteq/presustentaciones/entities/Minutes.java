@@ -20,12 +20,15 @@ public class Minutes {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
 
     @Column(name = "fecha_generacion", nullable = false)
+    @JsonProperty("fechaGeneracion")
     private LocalDate fechaGeneracion;
 
     @Column(name = "archivo_pdf")
+    @JsonProperty("archivoPdf")
     private String archivoPdf;
 
     // ── Firma multi-actor (RF-08) ─────────────────────────────────────────────
@@ -33,41 +36,51 @@ public class Minutes {
     /** ¿Ha firmado el presidente del panelist? */
     @Column(name = "firmada_presidente", nullable = false)
     @Builder.Default
-    private boolean firmadaPresidente = false;
+    @JsonProperty("firmadaPresidente")
+    private boolean firmadaPresidente= false;
 
     @Column(name = "fecha_firma_presidente")
+    @JsonProperty("fechaFirmaPresidente")
     private LocalDateTime fechaFirmaPresidente;
 
     /** ¿Ha firmado el vocal 1? */
     @Column(name = "firmada_vocal1", nullable = false)
     @Builder.Default
-    private boolean firmadaVocal1 = false;
+    @JsonProperty("firmadaVocal1")
+    private boolean firmadaVocal1= false;
 
     @Column(name = "fecha_firma_vocal1")
+    @JsonProperty("fechaFirmaVocal1")
     private LocalDateTime fechaFirmaVocal1;
 
     /** ¿Ha firmado el vocal 2? */
     @Column(name = "firmada_vocal2", nullable = false)
     @Builder.Default
-    private boolean firmadaVocal2 = false;
+    @JsonProperty("firmadaVocal2")
+    private boolean firmadaVocal2= false;
 
     @Column(name = "fecha_firma_vocal2")
+    @JsonProperty("fechaFirmaVocal2")
     private LocalDateTime fechaFirmaVocal2;
 
     /** ¿Ha firmado el tutor? */
     @Column(name = "firmada_tutor", nullable = false)
     @Builder.Default
-    private boolean firmadaTutor = false;
+    @JsonProperty("firmadaTutor")
+    private boolean firmadaTutor= false;
 
     @Column(name = "fecha_firma_tutor")
+    @JsonProperty("fechaFirmaTutor")
     private LocalDateTime fechaFirmaTutor;
 
     /** true solo cuando TODOS los actores requeridos han firmado */
     @Column(name = "firmada", nullable = false)
     @Builder.Default
-    private boolean firmada = false;
+    @JsonProperty("firmada")
+    private boolean firmada= false;
 
     @Column(name = "observaciones_acta", columnDefinition = "TEXT")
+    @JsonProperty("observacionesMinutes")
     private String observacionesMinutes;
 
     /**

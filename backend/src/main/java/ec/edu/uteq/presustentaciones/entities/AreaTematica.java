@@ -17,6 +17,7 @@ public class AreaTematica {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -26,8 +27,10 @@ public class AreaTematica {
     private LineInvestigacion lineInvestigacion;
 
     @Column(name = "nombre", nullable = false, length = 150)
+    @JsonProperty("nombre")
     private String nombre;
 
     @Column(name = "descripcion", columnDefinition = "TEXT")
+    @JsonProperty("descripcion")
     private String descripcion;
 }

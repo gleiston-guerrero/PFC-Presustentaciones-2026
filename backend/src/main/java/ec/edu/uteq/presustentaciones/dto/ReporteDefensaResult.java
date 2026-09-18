@@ -19,11 +19,16 @@ public class ReporteDefensaResult {
     private Long submissionId;
     @JsonProperty("estudianteNombre")
     private String studentNombre;
+    @JsonProperty("expediente")
     private String expediente;
+    @JsonProperty("tituloTopic")
     private String tituloTopic;
+    @JsonProperty("estadoSubmission")
     private String estadoSubmission;
+    @JsonProperty("fechaDefensa")
     private LocalDateTime fechaDefensa;
     @JsonProperty("salaNombre")
     private String roomNombre;
+    @JsonProperty("notaFinal")
     private Double notaFinal;
 }

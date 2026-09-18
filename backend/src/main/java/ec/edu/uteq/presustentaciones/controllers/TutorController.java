@@ -75,7 +75,7 @@ public class TutorController {
      * @return 200 con el tutor asignado, o 404 si la submission aún no tiene tutor
      */
     @GetMapping("/solicitud/{submissionId}")
-    public ResponseEntity<Tutor> porSubmission(@PathVariable Long submissionId) {
+    public ResponseEntity<Tutor> porSubmission(@PathVariable("submissionId") Long submissionId) {
         return tutorService.searchPorSubmission(submissionId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -98,7 +98,7 @@ public class TutorController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         tutorService.deleteTutor(id);
         return ResponseEntity.noContent().build();
     }

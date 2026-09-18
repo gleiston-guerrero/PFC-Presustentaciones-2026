@@ -172,7 +172,7 @@ public class CatalogoController {
     @PutMapping("/facultades/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> updateFaculty(@PathVariable Integer id, @RequestBody SaveFacultyRequest req) {
+    public ResponseEntity<?> updateFaculty(@PathVariable("id") Integer id, @RequestBody SaveFacultyRequest req) {
         auditService.marcarActorActual();
         Faculty faculty = facultyRepo.findById(id).orElse(null);
         if (faculty == null) {
@@ -195,7 +195,7 @@ public class CatalogoController {
      */
     @DeleteMapping("/facultades/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
-    public ResponseEntity<?> deleteFaculty(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteFaculty(@PathVariable("id") Integer id) {
         if (!facultyRepo.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
@@ -250,7 +250,7 @@ public class CatalogoController {
     @PutMapping("/carreras/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> updateProgram(@PathVariable Integer id, @RequestBody SaveProgramRequest req) {
+    public ResponseEntity<?> updateProgram(@PathVariable("id") Integer id, @RequestBody SaveProgramRequest req) {
         auditService.marcarActorActual();
         Program program = programRepo.findById(id).orElse(null);
         if (program == null) {
@@ -283,7 +283,7 @@ public class CatalogoController {
      */
     @DeleteMapping("/carreras/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
-    public ResponseEntity<?> deleteProgram(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteProgram(@PathVariable("id") Integer id) {
         if (!programRepo.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
@@ -329,7 +329,7 @@ public class CatalogoController {
     @PutMapping("/modalidades/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> updateModality(@PathVariable Short id, @RequestBody SaveModalityRequest req) {
+    public ResponseEntity<?> updateModality(@PathVariable("id") Short id, @RequestBody SaveModalityRequest req) {
         auditService.marcarActorActual();
         ModalityTitulacion modality = modalityRepo.findById(id).orElse(null);
         if (modality == null) {
@@ -351,7 +351,7 @@ public class CatalogoController {
      */
     @DeleteMapping("/modalidades/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
-    public ResponseEntity<?> deleteModality(@PathVariable Short id) {
+    public ResponseEntity<?> deleteModality(@PathVariable("id") Short id) {
         if (!modalityRepo.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
@@ -407,7 +407,7 @@ public class CatalogoController {
     @PutMapping("/periodos-academicos/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
     @Transactional
-    public ResponseEntity<?> updatePeriod(@PathVariable Integer id, @RequestBody SavePeriodRequest req) {
+    public ResponseEntity<?> updatePeriod(@PathVariable("id") Integer id, @RequestBody SavePeriodRequest req) {
         auditService.marcarActorActual();
         PeriodAcademico period = periodAcademicoRepo.findById(id).orElse(null);
         if (period == null) {
@@ -440,7 +440,7 @@ public class CatalogoController {
      */
     @DeleteMapping("/periodos-academicos/{id}")
     @PreAuthorize(PERMISO_GESTIONAR)
-    public ResponseEntity<?> deletePeriod(@PathVariable Integer id) {
+    public ResponseEntity<?> deletePeriod(@PathVariable("id") Integer id) {
         if (!periodAcademicoRepo.existsById(id)) {
             return ResponseEntity.notFound().build();
         }

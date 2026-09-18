@@ -1,5 +1,7 @@
 package ec.edu.uteq.presustentaciones.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +15,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReporteCountDTO {
+    @JsonProperty("etiqueta")
     private String etiqueta;
+    @JsonProperty("cantidad")
     private long cantidad;
 }

@@ -19,6 +19,7 @@ public class HistoryEstadosSubmission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -44,11 +45,13 @@ public class HistoryEstadosSubmission {
     private AppUser appUser;
 
     @Column(name = "comentario", columnDefinition = "TEXT")
+    @JsonProperty("comentario")
     private String comentario;
 
     @Column(name = "fecha_cambio", nullable = false, updatable = false)
     @Builder.Default
-    private LocalDateTime fechaCambio = LocalDateTime.now();
+    @JsonProperty("fechaCambio")
+    private LocalDateTime fechaCambio= LocalDateTime.now();
 
     @PrePersist
     protected void onCreate() {

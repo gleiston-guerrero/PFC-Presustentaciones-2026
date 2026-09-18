@@ -36,6 +36,7 @@ public class Panelist {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -58,9 +59,11 @@ public class Panelist {
 
     @Column(name = "confirmado", nullable = false)
     @Builder.Default
-    private boolean confirmado = false;
+    @JsonProperty("confirmado")
+    private boolean confirmado= false;
 
     @Column(name = "asignado_en", nullable = false, updatable = false)
+    @JsonProperty("asignadoEn")
     private LocalDateTime asignadoEn;
 
     @PrePersist

@@ -25,15 +25,19 @@ public class Audit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id")
     private Long id;
 
     @Column(name = "tabla", nullable = false, length = 60)
+    @JsonProperty("tabla")
     private String tabla;
 
     @Column(name = "registro_id")
+    @JsonProperty("registroId")
     private Long registroId;
 
     @Column(name = "accion", nullable = false, length = 20)
+    @JsonProperty("accion")
     private String accion;
 
     @Column(name = "usuario_id")
@@ -45,13 +49,16 @@ public class Audit {
     private String appUserNombre;
 
     @Column(name = "fecha", nullable = false)
+    @JsonProperty("fecha")
     private LocalDateTime fecha;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "datos_anteriores", columnDefinition = "jsonb")
+    @JsonProperty("datosAnteriores")
     private String datosAnteriores;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "datos_nuevos", columnDefinition = "jsonb")
+    @JsonProperty("datosNuevos")
     private String datosNuevos;
 }

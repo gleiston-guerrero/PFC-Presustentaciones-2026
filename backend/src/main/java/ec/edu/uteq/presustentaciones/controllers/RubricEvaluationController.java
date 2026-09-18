@@ -53,8 +53,8 @@ public class RubricEvaluationController {
      */
     @GetMapping("/solicitud/{submissionId}/jurado/{panelistId}")
     public ResponseEntity<?> obtainPanelist(
-            @PathVariable Long submissionId,
-            @PathVariable Long panelistId) {
+            @PathVariable("submissionId") Long submissionId,
+            @PathVariable("panelistId") Long panelistId) {
         try {
             return ResponseEntity.ok(service.obtainEvaluationPanelist(submissionId, panelistId));
         } catch (org.springframework.security.access.AccessDeniedException e) {
@@ -69,7 +69,7 @@ public class RubricEvaluationController {
      * @return evaluations de todos los panelists del tribunal para esa submission
      */
     @GetMapping("/solicitud/{submissionId}")
-    public List<EvaluationRubricResponse> obtainSubmission(@PathVariable Long submissionId) {
+    public List<EvaluationRubricResponse> obtainSubmission(@PathVariable("submissionId") Long submissionId) {
         return service.obtainEvaluationsSubmission(submissionId);
     }
 
@@ -82,7 +82,7 @@ public class RubricEvaluationController {
      *         formulario de evaluation final pueda mostrar el aviso sin tratarlo como fallo
      */
     @GetMapping("/nota-tribunal/{submissionId}")
-    public ResponseEntity<?> notaTribunal(@PathVariable Long submissionId) {
+    public ResponseEntity<?> notaTribunal(@PathVariable("submissionId") Long submissionId) {
         Double nota = service.calculateNotaTribunal(submissionId);
         if (nota == null) {
             return ResponseEntity.ok(Map.of("nota", (Object) null,
@@ -96,7 +96,7 @@ public class RubricEvaluationController {
      * @return criterios de esa rubric, para pintar el formulario de calificacion
      */
     @GetMapping("/criterios/{rubricId}")
-    public List<CriterioRubric> criteriosPorRubric(@PathVariable Long rubricId) {
+    public List<CriterioRubric> criteriosPorRubric(@PathVariable("rubricId") Long rubricId) {
         return criterioRepo.findByRubricIdOrderByOrdenAsc(rubricId);
     }
 
@@ -108,7 +108,7 @@ public class RubricEvaluationController {
      * @return 200 con las observaciones consolidadas, o 400 si no existe la submission
      */
     @GetMapping("/observaciones/{submissionId}")
-    public ResponseEntity<?> obtainObservaciones(@PathVariable Long submissionId) {
+    public ResponseEntity<?> obtainObservaciones(@PathVariable("submissionId") Long submissionId) {
         try {
             ObservacionesSubmissionDTO obs = service.obtainObservacionesSubmission(submissionId);
             return ResponseEntity.ok(obs);

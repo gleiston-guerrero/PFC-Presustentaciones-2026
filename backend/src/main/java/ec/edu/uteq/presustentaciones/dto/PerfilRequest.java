@@ -7,5 +7,6 @@ import lombok.Data;
 public class PerfilRequest {
     @JsonProperty("emailNotificaciones")
     private String emailNotifications;
+    @JsonProperty("telefono")
     private String telefono;
 }

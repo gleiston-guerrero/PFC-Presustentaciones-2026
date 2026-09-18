@@ -17,6 +17,7 @@ public class Program {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -26,9 +27,11 @@ public class Program {
     private Faculty faculty;
 
     @Column(name = "codigo", nullable = false, unique = true, length = 20)
+    @JsonProperty("codigo")
     private String codigo;
 
     @Column(name = "nombre", nullable = false, length = 150)
+    @JsonProperty("nombre")
     private String nombre;
 
     @Column(name = "modalidad_estudio", length = 40)

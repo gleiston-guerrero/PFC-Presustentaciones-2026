@@ -18,17 +18,21 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
 
     @Column(name = "mensaje", columnDefinition = "TEXT")
+    @JsonProperty("mensaje")
     private String mensaje;
 
     @Column(name = "fecha")
+    @JsonProperty("fecha")
     private LocalDateTime fecha;
 
     @Column(name = "leida", nullable = false)
     @Builder.Default
-    private boolean leida = false;
+    @JsonProperty("leida")
+    private boolean leida= false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")

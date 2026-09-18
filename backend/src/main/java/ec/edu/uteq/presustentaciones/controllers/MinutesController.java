@@ -42,7 +42,7 @@ public class MinutesController {
      */
     @PostMapping("/generar/{submissionId}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTA_GENERAR')")
-    public ResponseEntity<?> generateMinutes(@PathVariable Long submissionId) {
+    public ResponseEntity<?> generateMinutes(@PathVariable("submissionId") Long submissionId) {
         try {
             Minutes minutes = minutesService.generateMinutes(submissionId);
             return ResponseEntity.ok(ResponseWrapper.success(minutes, "Acta generada exitosamente"));
@@ -65,9 +65,9 @@ public class MinutesController {
     @PostMapping("/firmar/{minutesId}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTA_FIRMAR')")
     public ResponseEntity<?> signMinutes(
-            @PathVariable Long minutesId,
+            @PathVariable("minutesId") Long minutesId,
             @RequestParam(name = "rol") String role,
-            @RequestParam(required = false) String observacion) {
+            @RequestParam(name = "observacion", required = false) String observacion) {
         try {
             Minutes minutes = minutesService.signMinutes(minutesId, role, observacion);
             return ResponseEntity.ok(ResponseWrapper.success(minutes, "Acta firmada exitosamente"));
@@ -84,7 +84,7 @@ public class MinutesController {
      */
     @GetMapping("/descargar/{minutesId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<byte[]> downloadPdf(@PathVariable Long minutesId) {
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable("minutesId") Long minutesId) {
         try {
             byte[] pdfBytes = minutesService.obtainPdfBytes(minutesId);
             return ResponseEntity.ok()
@@ -105,7 +105,7 @@ public class MinutesController {
      */
     @GetMapping("/ver/{minutesId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<byte[]> verPdf(@PathVariable Long minutesId) {
+    public ResponseEntity<byte[]> verPdf(@PathVariable("minutesId") Long minutesId) {
         try {
             byte[] pdfBytes = minutesService.obtainPdfBytes(minutesId);
             return ResponseEntity.ok()
@@ -164,11 +164,11 @@ public class MinutesController {
     @GetMapping("/buscar")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTAS_VER')")
     public ResponseEntity<?> search(
-            @RequestParam(required = false) String estado,
+            @RequestParam(name = "estado", required = false) String estado,
             @RequestParam(name = "carrera", required = false) String program,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-            @RequestParam(required = false) String q,
+            @RequestParam(name = "q", required = false) String q,
             Pageable pageable) {
         return ResponseEntity.ok(ResponseWrapper.success(
                 minutesService.searchMinutes(estado, program, desde, hasta, q, pageable)));
@@ -183,7 +183,7 @@ public class MinutesController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> detalle(@PathVariable Long id) {
+    public ResponseEntity<?> detalle(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(minutesService.obtainDetalle(id)));
         } catch (RuntimeException e) {
@@ -200,7 +200,7 @@ public class MinutesController {
      */
     @GetMapping("/{id}/historial")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTA_HISTORIAL_VER')")
-    public ResponseEntity<?> history(@PathVariable Long id) {
+    public ResponseEntity<?> history(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(minutesService.obtainHistory(id)));
         } catch (RuntimeException e) {
@@ -219,7 +219,7 @@ public class MinutesController {
      */
     @PatchMapping("/{id}/estado")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTA_ESTADO_CAMBIAR')")
-    public ResponseEntity<?> changeEstado(@PathVariable Long id,
+    public ResponseEntity<?> changeEstado(@PathVariable("id") Long id,
                                            @Valid @RequestBody ChangeEstadoMinutesRequest req) {
         try {
             Minutes minutes = minutesService.changeEstado(id, req.getNuevoEstado(), req.getMotivo());
@@ -236,7 +236,7 @@ public class MinutesController {
      */
     @GetMapping("/solicitud/{submissionId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> porSubmission(@PathVariable Long submissionId) {
+    public ResponseEntity<?> porSubmission(@PathVariable("submissionId") Long submissionId) {
         try {
             return minutesService.searchPorSubmission(submissionId)
                     .map(minutes -> ResponseEntity.ok(ResponseWrapper.success(minutes)))
@@ -260,7 +260,7 @@ public class MinutesController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTAS_GESTIONAR')")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable("id") Long id) {
         try {
             minutesService.deleteMinutes(id);
             return ResponseEntity.ok(ResponseWrapper.success(null, "Acta eliminada exitosamente"));

@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 public class PromedioEvaluationResult {
     @JsonProperty("solicitudId")
     private Long submissionId;
+    @JsonProperty("notaFinal")
     private Double notaFinal;
+    @JsonProperty("estadoResultado")
     private String estadoResultado;
 }

@@ -54,8 +54,8 @@ public class EvaluationPanelistController {
      */
     @GetMapping("/{submissionId}/{panelistId}")
     public ResponseEntity<?> obtain(
-            @PathVariable Long submissionId,
-            @PathVariable Long panelistId) {
+            @PathVariable("submissionId") Long submissionId,
+            @PathVariable("panelistId") Long panelistId) {
         try {
             EvaluationPanelistDTO dto = service.obtainEvaluation(submissionId, panelistId);
             if (dto == null) {
@@ -77,7 +77,7 @@ public class EvaluationPanelistController {
      * @return 200 con una entrada por member del tribunal
      */
     @GetMapping("/tribunal/{submissionId}")
-    public ResponseEntity<List<EvaluationPanelistDTO>> obtainTribunal(@PathVariable Long submissionId) {
+    public ResponseEntity<List<EvaluationPanelistDTO>> obtainTribunal(@PathVariable("submissionId") Long submissionId) {
         return ResponseEntity.ok(service.obtainTribunal(submissionId));
     }
 }

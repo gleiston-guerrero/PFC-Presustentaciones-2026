@@ -19,6 +19,7 @@ public class AnnouncementTitulacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -28,18 +29,23 @@ public class AnnouncementTitulacion {
     private PeriodAcademico periodAcademico;
 
     @Column(name = "codigo", nullable = false, unique = true, length = 30)
+    @JsonProperty("codigo")
     private String codigo;
 
     @Column(name = "nombre", nullable = false, length = 150)
+    @JsonProperty("nombre")
     private String nombre;
 
     @Column(name = "fecha_inicio", nullable = false)
+    @JsonProperty("fechaInicio")
     private LocalDate fechaInicio;
 
     @Column(name = "fecha_fin", nullable = false)
+    @JsonProperty("fechaFin")
     private LocalDate fechaFin;
 
     @Column(name = "activa", nullable = false)
     @Builder.Default
-    private Boolean activa = true;
+    @JsonProperty("activa")
+    private Boolean activa= true;
 }

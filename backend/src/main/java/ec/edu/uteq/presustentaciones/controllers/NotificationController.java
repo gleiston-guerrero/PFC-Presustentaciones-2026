@@ -34,7 +34,7 @@ public class NotificationController {
      */
     @PostMapping("/crear")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'NOTIFICACIONES_ENVIAR')")
-    public ResponseEntity<?> create(@RequestParam Long appUserId, @RequestParam String mensaje) {
+    public ResponseEntity<?> create(@RequestParam("appUserId") Long appUserId, @RequestParam("mensaje") String mensaje) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(notificationService.createNotification(appUserId, mensaje)));
         } catch (RuntimeException e) {
@@ -63,7 +63,7 @@ public class NotificationController {
      */
     @GetMapping("/usuario/{appUserId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> listPorAppUser(@PathVariable Long appUserId, Pageable pageable) {
+    public ResponseEntity<?> listPorAppUser(@PathVariable("appUserId") Long appUserId, Pageable pageable) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(notificationService.listPorAppUser(appUserId, pageable)));
         } catch (RuntimeException e) {
@@ -79,7 +79,7 @@ public class NotificationController {
      */
     @GetMapping("/usuario/{appUserId}/no-leidas")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> countNoLeidas(@PathVariable Long appUserId) {
+    public ResponseEntity<?> countNoLeidas(@PathVariable("appUserId") Long appUserId) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(java.util.Map.of("total", notificationService.countNoLeidas(appUserId))));
         } catch (RuntimeException e) {
@@ -93,7 +93,7 @@ public class NotificationController {
      */
     @PatchMapping("/{id}/marcar-leida")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> marcarLeida(@PathVariable Long id) {
+    public ResponseEntity<?> marcarLeida(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(notificationService.marcarComoLeida(id), "Notificación marcada como leída"));
         } catch (RuntimeException e) {
@@ -107,7 +107,7 @@ public class NotificationController {
      */
     @PatchMapping("/usuario/{appUserId}/marcar-todas-leidas")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> marcarTodasLeidas(@PathVariable Long appUserId) {
+    public ResponseEntity<?> marcarTodasLeidas(@PathVariable("appUserId") Long appUserId) {
         try {
             notificationService.marcarTodasLeidas(appUserId);
             return ResponseEntity.ok(ResponseWrapper.success(null, "Todas las notificaciones marcadas como leídas"));
@@ -122,7 +122,7 @@ public class NotificationController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable("id") Long id) {
         try {
             notificationService.deleteNotification(id);
             return ResponseEntity.ok(ResponseWrapper.success(null, "Notificación eliminada exitosamente"));

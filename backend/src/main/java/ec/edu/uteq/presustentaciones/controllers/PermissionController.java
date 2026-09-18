@@ -58,7 +58,7 @@ public class PermissionController {
      */
     @PutMapping("/rol/{roleId}")
     @Transactional
-    public ResponseEntity<?> updatePermissionsDeRole(@PathVariable Short roleId, @RequestBody List<String> codigosPermissions) {
+    public ResponseEntity<?> updatePermissionsDeRole(@PathVariable("roleId") Short roleId, @RequestBody List<String> codigosPermissions) {
         RoleAppUser role = roleAppUserRepository.findById(roleId).orElse(null);
         if (role == null) {
             return ResponseEntity.notFound().build();

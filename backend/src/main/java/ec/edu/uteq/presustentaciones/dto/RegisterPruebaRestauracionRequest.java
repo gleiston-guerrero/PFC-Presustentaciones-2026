@@ -16,11 +16,14 @@ public class RegisterPruebaRestauracionRequest {
 
     @NotBlank
     @Pattern(regexp = "EXITOSA|FALLIDA", message = "El resultado debe ser EXITOSA o FALLIDA")
+    @JsonProperty("resultado")
     private String resultado;
 
     @Size(max = 200)
+    @JsonProperty("responsable")
     private String responsable;
 
     @Size(max = 4000)
+    @JsonProperty("notas")
     private String notas;
 }

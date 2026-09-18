@@ -18,6 +18,7 @@ public class TopicGuardadoStudent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -33,6 +34,7 @@ public class TopicGuardadoStudent {
     private TopicPropuesto topicPropuesto;
 
     @Column(name = "fecha_guardado", nullable = false, updatable = false)
+    @JsonProperty("fechaGuardado")
     private LocalDateTime fechaGuardado;
 
     @PrePersist

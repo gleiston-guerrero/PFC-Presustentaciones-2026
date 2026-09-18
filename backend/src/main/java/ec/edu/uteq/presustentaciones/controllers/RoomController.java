@@ -53,7 +53,7 @@ public class RoomController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'SALA_GESTIONAR')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         roomRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

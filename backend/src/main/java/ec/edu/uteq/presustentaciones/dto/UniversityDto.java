@@ -17,9 +17,12 @@ public class UniversityDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @JsonProperty("name")
     private String name;
+    @JsonProperty("country")
     private String country;
     
+    @JsonProperty("domains")
     private List<String> domains;
 
     @JsonProperty("web_pages")

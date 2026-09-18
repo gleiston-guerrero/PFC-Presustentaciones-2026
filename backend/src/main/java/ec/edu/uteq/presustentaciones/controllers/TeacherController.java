@@ -52,7 +52,7 @@ public class TeacherController {
      * @return página de teachers que cumplen el filtro
      */
     @GetMapping("/paginado")
-    public Page<Teacher> listPaginado(@RequestParam(required = false) String q, Pageable pageable) {
+    public Page<Teacher> listPaginado(@RequestParam(name = "q", required = false) String q, Pageable pageable) {
         return teacherRepository.searchPaginado(q, pageable);
     }
 
@@ -75,7 +75,7 @@ public class TeacherController {
      * @return 200 con el teacher, o 404 si no existe
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Teacher> obtain(@PathVariable Long id) {
+    public ResponseEntity<Teacher> obtain(@PathVariable("id") Long id) {
         return teacherRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -95,7 +95,7 @@ public class TeacherController {
      *                               distinto del suyo
      */
     @GetMapping("/usuario/{appUserId}")
-    public ResponseEntity<Teacher> obtainPorAppUser(@PathVariable Long appUserId) {
+    public ResponseEntity<Teacher> obtainPorAppUser(@PathVariable("appUserId") Long appUserId) {
         validateAccesoPropioOAdministrativo(appUserId);
         return teacherRepository.findByAppUserId(appUserId)
                 .map(ResponseEntity::ok)

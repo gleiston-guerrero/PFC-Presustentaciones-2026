@@ -67,8 +67,8 @@ public class TopicController {
     public ResponseEntity<List<TopicPropuestoDTO>> explorar(
             @RequestParam(name = "carreraId", required = false) Integer programId,
             @RequestParam(name = "lineaInvestigacionId", required = false) Integer lineInvestigacionId,
-            @RequestParam(required = false) Integer areaId,
-            @RequestParam(required = false) String nivelDificultad) {
+            @RequestParam(name = "areaId", required = false) Integer areaId,
+            @RequestParam(name = "nivelDificultad", required = false) String nivelDificultad) {
         Long studentId = studentActualIdOrNull();
         return ResponseEntity.ok(topicService.explorar(
                 programId, lineInvestigacionId, areaId, nivelDificultad, studentId));
@@ -86,7 +86,7 @@ public class TopicController {
      * @param topicId topicId
      * @return el ResponseEntity<TopicPropuestoDTO> correspondiente
      */
-    public ResponseEntity<TopicPropuestoDTO> detalle(@PathVariable Integer topicId) {
+    public ResponseEntity<TopicPropuestoDTO> detalle(@PathVariable("topicId") Integer topicId) {
         return ResponseEntity.ok(topicService.obtainDetalle(topicId));
     }
 
@@ -124,7 +124,7 @@ public class TopicController {
      */
     @PostMapping("/{topicId}/guardar")
     @PreAuthorize("hasRole('ESTUDIANTE')")
-    public ResponseEntity<Void> save(@PathVariable Integer topicId) {
+    public ResponseEntity<Void> save(@PathVariable("topicId") Integer topicId) {
         topicService.saveTopicStudent(studentActual().getId(), topicId);
         return ResponseEntity.status(201).build();
     }
@@ -137,7 +137,7 @@ public class TopicController {
      */
     @DeleteMapping("/{topicId}/guardar")
     @PreAuthorize("hasRole('ESTUDIANTE')")
-    public ResponseEntity<Void> removeGuardado(@PathVariable Integer topicId) {
+    public ResponseEntity<Void> removeGuardado(@PathVariable("topicId") Integer topicId) {
         topicService.removeTopicGuardado(studentActual().getId(), topicId);
         return ResponseEntity.noContent().build();
     }
@@ -165,7 +165,7 @@ public class TopicController {
      */
     @PutMapping("/{topicId}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
-    public ResponseEntity<TopicPropuestoDTO> update(@PathVariable Integer topicId,
+    public ResponseEntity<TopicPropuestoDTO> update(@PathVariable("topicId") Integer topicId,
                                                        @RequestBody @Valid SaveTopicPropuestoRequest request) {
         return ResponseEntity.ok(topicService.update(topicId, request));
     }
@@ -178,7 +178,7 @@ public class TopicController {
      */
     @DeleteMapping("/{topicId}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
-    public ResponseEntity<Void> delete(@PathVariable Integer topicId) {
+    public ResponseEntity<Void> delete(@PathVariable("topicId") Integer topicId) {
         topicService.delete(topicId);
         return ResponseEntity.noContent().build();
     }

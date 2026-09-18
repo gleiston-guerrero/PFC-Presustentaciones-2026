@@ -292,7 +292,7 @@ public class AuthController {
     @PatchMapping("/usuarios/{id}/password")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Cambiar la contraseña propia", description = "Solo el titular puede cambiar su propia contraseña, incluso si quien lo intenta es Administrador.")
-    public ResponseEntity<?> changePassword(@PathVariable Long id,
+    public ResponseEntity<?> changePassword(@PathVariable("id") Long id,
                                               @Valid @RequestBody ChangePasswordRequest request,
                                               HttpServletRequest http) {
         // Mismo patrón que AppUserController#updatePerfil (RF-10): la identidad se resuelve

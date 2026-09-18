@@ -14,21 +14,27 @@ public class EvaluationPanelist {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id")
     private Long id;
 
     @Column(name = "nota_jurado", nullable = false)
+    @JsonProperty("notaPanelist")
     private Double notaPanelist;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
+    @JsonProperty("observaciones")
     private String observaciones;
 
     @Column(name = "resultado", length = 20)
+    @JsonProperty("resultado")
     private String resultado;
 
     @Column(name = "comentario_preestablecido", columnDefinition = "TEXT")
+    @JsonProperty("comentarioPreestablecido")
     private String comentarioPreestablecido;
 
     @Column(name = "fecha_registro", nullable = false, updatable = false)
+    @JsonProperty("fechaRegistro")
     private LocalDateTime fechaRegistro;
 
     @ManyToOne(fetch = FetchType.EAGER)

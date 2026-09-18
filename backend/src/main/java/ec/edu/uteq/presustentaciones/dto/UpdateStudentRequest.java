@@ -9,7 +9,10 @@ public class UpdateStudentRequest {
     private Integer programId;
     @JsonProperty("periodoIngresoId")
     private Integer periodIngresoId;
+    @JsonProperty("semestreActual")
     private Short semestreActual;
+    @JsonProperty("telefono")
     private String telefono;
+    @JsonProperty("estadoAcademicoCodigo")
     private String estadoAcademicoCodigo;
 }

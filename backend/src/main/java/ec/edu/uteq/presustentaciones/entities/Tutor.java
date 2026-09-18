@@ -19,6 +19,7 @@ public class Tutor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -34,12 +35,14 @@ public class Tutor {
     private Submission submission;
 
     @Column(name = "fecha_asignacion", nullable = false, updatable = false)
+    @JsonProperty("fechaAsignacion")
     private LocalDateTime fechaAsignacion;
 
     /** Estado de la tutoría: ACTIVO, COMPLETADA, FINALIZADO, REEMPLAZADO */
     @Column(name = "estado", nullable = false, length = 20)
     @Builder.Default
-    private String estado = "ACTIVO";
+    @JsonProperty("estado")
+    private String estado= "ACTIVO";
 
     /**
      * Columna "estado_id" (FK NOT NULL a estados_process) heredada del esquema real,
@@ -48,9 +51,11 @@ public class Tutor {
      * Submission.java y Proposal.java para el mismo problema).
      */
     @Column(name = "estado_id", nullable = false)
+    @JsonProperty("estadoProcessId")
     private Short estadoProcessId;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
+    @JsonProperty("observaciones")
     private String observaciones;
 
     @PrePersist

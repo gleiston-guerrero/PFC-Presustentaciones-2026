@@ -1,5 +1,7 @@
 package ec.edu.uteq.presustentaciones.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,6 +16,7 @@ public class TutoringFase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -23,12 +26,14 @@ public class TutoringFase {
 
     /** Número de fase: 1, 2 o 3 */
     @Column(name = "numero_fase", nullable = false)
+    @JsonProperty("numeroFase")
     private Integer numeroFase;
 
     /** Estados: PENDIENTE_ESTUDIANTE | PENDIENTE_TUTOR | APROBADA */
     @Column(name = "estado", nullable = false, length = 30)
     @Builder.Default
-    private String estado = "PENDIENTE_ESTUDIANTE";
+    @JsonProperty("estado")
+    private String estado= "PENDIENTE_ESTUDIANTE";
 
     /**
      * Columna "estado_id" (FK NOT NULL a estados_process) heredada del esquema real,
@@ -36,21 +41,27 @@ public class TutoringFase {
      * Submission.java, Proposal.java y Tutor.java para el mismo problema).
      */
     @Column(name = "estado_id", nullable = false)
+    @JsonProperty("estadoProcessId")
     private Short estadoProcessId;
 
     @Column(name = "fecha_inicio", nullable = false, updatable = false)
+    @JsonProperty("fechaInicio")
     private LocalDateTime fechaInicio;
 
     @Column(name = "fecha_aprobacion")
+    @JsonProperty("fechaAprobacion")
     private LocalDateTime fechaAprobacion;
 
     @Column(name = "archivo_pdf_estudiante")
+    @JsonProperty("archivoPdfStudent")
     private String archivoPdfStudent;
 
     @Column(name = "sha256_pdf", length = 64)
+    @JsonProperty("sha256Pdf")
     private String sha256Pdf;
 
     @Column(name = "tamano_pdf_bytes")
+    @JsonProperty("tamanoPdfBytes")
     private Long tamanoPdfBytes;
 
     @PrePersist

@@ -19,6 +19,7 @@ public class Evaluator {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -46,11 +47,13 @@ public class Evaluator {
 
     @Column(name = "peso", nullable = false)
     @Builder.Default
-    private Double peso = 1.0;
+    @JsonProperty("peso")
+    private Double peso= 1.0;
 
     @Column(name = "fecha_asignacion", nullable = false, updatable = false)
     @Builder.Default
-    private LocalDateTime fechaAsignacion = LocalDateTime.now();
+    @JsonProperty("fechaAsignacion")
+    private LocalDateTime fechaAsignacion= LocalDateTime.now();
 
     @PrePersist
     protected void onCreate() {

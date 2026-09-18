@@ -200,7 +200,7 @@ public class ReporteController {
     @GetMapping("/defensas")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<ec.edu.uteq.presustentaciones.dto.ReporteDefensaResult>> reporteDefensas(
-            @RequestParam String program) {
+            @RequestParam("program") String program) {
         return ResponseEntity.ok(submissionRepo.generateReporteDefensas(program));
     }
 

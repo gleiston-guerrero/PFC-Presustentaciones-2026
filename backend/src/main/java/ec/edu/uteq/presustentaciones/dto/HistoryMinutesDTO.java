@@ -20,11 +20,15 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class HistoryMinutesDTO {
 
+    @JsonProperty("id")
     private Long id;
     @JsonProperty("actaId")
     private Long minutesId;
+    @JsonProperty("accion")
     private String accion;
+    @JsonProperty("estadoAnterior")
     private String estadoAnterior;
+    @JsonProperty("estadoNuevo")
     private String estadoNuevo;
     @JsonProperty("usuarioEmail")
     private String appUserEmail;
@@ -32,7 +36,9 @@ public class HistoryMinutesDTO {
     private String appUserNombre;
     @JsonProperty("rolUsuario")
     private String roleAppUser;
+    @JsonProperty("comentario")
     private String comentario;
+    @JsonProperty("fecha")
     private LocalDateTime fecha;
 
     /**

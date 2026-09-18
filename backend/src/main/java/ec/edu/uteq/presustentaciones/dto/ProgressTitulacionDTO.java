@@ -1,5 +1,7 @@
 package ec.edu.uteq.presustentaciones.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,9 +20,13 @@ import java.util.List;
 @AllArgsConstructor
 public class ProgressTitulacionDTO {
 
+    @JsonProperty("porcentaje")
     private int porcentaje;
+    @JsonProperty("completados")
     private int completados;
+    @JsonProperty("total")
     private int total;
+    @JsonProperty("pasos")
     private List<PasoDTO> pasos;
 
     @Data
@@ -28,10 +34,15 @@ public class ProgressTitulacionDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class PasoDTO {
+        @JsonProperty("clave")
         private String clave;
+        @JsonProperty("orden")
         private int orden;
+        @JsonProperty("titulo")
         private String titulo;
+        @JsonProperty("descripcion")
         private String descripcion;
+        @JsonProperty("completado")
         private boolean completado;
     }
 }

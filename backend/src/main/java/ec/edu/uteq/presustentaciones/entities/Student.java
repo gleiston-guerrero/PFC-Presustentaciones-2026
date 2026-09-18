@@ -38,6 +38,7 @@ public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -51,12 +52,15 @@ public class Student {
     private String program;
 
     @Column(name = "semestre", length = 30)
+    @JsonProperty("semestre")
     private String semestre;
 
     @Column(name = "telefono", length = 30)
+    @JsonProperty("telefono")
     private String telefono;
 
     @Column(name = "expediente_codigo", unique = true, length = 60)
+    @JsonProperty("expedienteCodigo")
     private String expedienteCodigo;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -72,6 +76,7 @@ public class Student {
     private PeriodAcademico periodIngreso;
 
     @Column(name = "semestre_actual", nullable = false)
+    @JsonProperty("semestreActual")
     private Short semestreActual;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -80,6 +85,7 @@ public class Student {
     private EstadoAcademico estadoAcademico;
 
     @Column(name = "creado_en", nullable = false, updatable = false)
+    @JsonProperty("creadoEn")
     private LocalDateTime creadoEn;
 
     @PrePersist

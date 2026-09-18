@@ -20,6 +20,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class MinutesResumenDTO {
 
+    @JsonProperty("id")
     private Long id;
     @JsonProperty("solicitudId")
     private Long submissionId;
@@ -27,11 +28,17 @@ public class MinutesResumenDTO {
     private String studentNombre;
     @JsonProperty("carrera")
     private String program;
+    @JsonProperty("tituloTopic")
     private String tituloTopic;
+    @JsonProperty("estado")
     private String estado;
+    @JsonProperty("estadoNombre")
     private String estadoNombre;
+    @JsonProperty("fechaGeneracion")
     private LocalDate fechaGeneracion;
+    @JsonProperty("firmada")
     private boolean firmada;
+    @JsonProperty("firmantesPendientes")
     private String firmantesPendientes;
 
     /**

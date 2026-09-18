@@ -23,6 +23,7 @@ import java.util.List;
 @AllArgsConstructor
 public class MinutesDetalleDTO {
 
+    @JsonProperty("id")
     private Long id;
     @JsonProperty("solicitudId")
     private Long submissionId;
@@ -32,24 +33,39 @@ public class MinutesDetalleDTO {
     private String program;
     @JsonProperty("tituloTema")
     private String tituloTopic;
+    @JsonProperty("estado")
     private String estado;
+    @JsonProperty("estadoNombre")
     private String estadoNombre;
+    @JsonProperty("fechaGeneracion")
     private LocalDate fechaGeneracion;
     @JsonProperty("observacionesActa")
     private String observacionesMinutes;
+    @JsonProperty("archivoPdf")
     private String archivoPdf;
 
+    @JsonProperty("firmada")
     private boolean firmada;
+    @JsonProperty("firmadaPresidente")
     private boolean firmadaPresidente;
+    @JsonProperty("firmadaVocal1")
     private boolean firmadaVocal1;
+    @JsonProperty("firmadaVocal2")
     private boolean firmadaVocal2;
+    @JsonProperty("firmadaTutor")
     private boolean firmadaTutor;
+    @JsonProperty("fechaFirmaPresidente")
     private LocalDateTime fechaFirmaPresidente;
+    @JsonProperty("fechaFirmaVocal1")
     private LocalDateTime fechaFirmaVocal1;
+    @JsonProperty("fechaFirmaVocal2")
     private LocalDateTime fechaFirmaVocal2;
+    @JsonProperty("fechaFirmaTutor")
     private LocalDateTime fechaFirmaTutor;
+    @JsonProperty("firmantesPendientes")
     private String firmantesPendientes;
 
+    @JsonProperty("tribunal")
     private List<MemberTribunalDTO> tribunal;
 
     @Getter
@@ -61,6 +77,7 @@ public class MinutesDetalleDTO {
         private String teacher;
         @JsonProperty("rol")
         private String role;
+        @JsonProperty("confirmado")
         private boolean confirmado;
     }
 

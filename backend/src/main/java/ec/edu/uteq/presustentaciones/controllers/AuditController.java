@@ -35,12 +35,12 @@ public class AuditController {
      */
     @GetMapping("/paginado")
     public ResponseEntity<Page<Audit>> listPaginado(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String tabla,
-            @RequestParam(required = false) String accion,
-            @RequestParam(required = false) Long appUserId,
-            @RequestParam(required = false) String q) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "tabla", required = false) String tabla,
+            @RequestParam(name = "accion", required = false) String accion,
+            @RequestParam(name = "appUserId", required = false) Long appUserId,
+            @RequestParam(name = "q", required = false) String q) {
         int tamanioSeguro = Math.min(Math.max(size, 1), 100);
         Pageable pageable = org.springframework.data.domain.PageRequest.of(
                 Math.max(page, 0), tamanioSeguro, Sort.by(Sort.Direction.DESC, "fecha"));

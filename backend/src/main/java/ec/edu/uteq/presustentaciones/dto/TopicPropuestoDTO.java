@@ -11,13 +11,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TopicPropuestoDTO {
+    @JsonProperty("id")
     private Integer id;
+    @JsonProperty("titulo")
     private String titulo;
+    @JsonProperty("problema")
     private String problema;
+    @JsonProperty("objetivoGeneral")
     private String objetivoGeneral;
+    @JsonProperty("objetivosEspecificos")
     private String objetivosEspecificos;
+    @JsonProperty("justificacion")
     private String justificacion;
+    @JsonProperty("beneficiarios")
     private String beneficiarios;
+    @JsonProperty("nivelDificultad")
     private String nivelDificultad;
     @JsonProperty("carreraId")
     private Integer programId;
@@ -27,8 +35,11 @@ public class TopicPropuestoDTO {
     private Integer lineInvestigacionId;
     @JsonProperty("lineaInvestigacionNombre")
     private String lineInvestigacionNombre;
+    @JsonProperty("areaId")
     private Integer areaId;
+    @JsonProperty("areaNombre")
     private String areaNombre;
     /** true si el student autenticado ya guardó este topic (solo se rellena en listados del student). */
+    @JsonProperty("guardado")
     private Boolean guardado;
 }

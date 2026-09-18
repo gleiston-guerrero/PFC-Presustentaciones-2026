@@ -21,9 +21,12 @@ public class EstadoBackupsDTO {
     @JsonProperty("ultimoRespaldoHace")
     private String        ultimoBackupHace;      // "hace 3 horas" / "—"
 
-    private boolean       programacionActiva;
+    @JsonProperty("programacionActiva")
+    private boolean programacionActiva;
+    @JsonProperty("proximoAutomatico")
     private LocalDateTime proximoAutomatico;       // null si está desactivada o el cron es inválido
-    private String        proximoAutomaticoTexto;  // "domingo 23:00" / "programación pausada"
+    @JsonProperty("proximoAutomaticoTexto")
+    private String proximoAutomaticoTexto;  // "domingo 23:00" / "programación pausada"
 
     @JsonProperty("totalRespaldos")
     private int              totalBackups;
@@ -32,15 +35,23 @@ public class EstadoBackupsDTO {
     @JsonProperty("conteoPorOrigen")
     private Map<String,Long>  countPorOrigen;      // {AUTOMATICO: 3, MANUAL: 1}
 
-    private long   espacioUsadoBytes;
+    @JsonProperty("espacioUsadoBytes")
+    private long espacioUsadoBytes;
+    @JsonProperty("espacioUsadoLegible")
     private String espacioUsadoLegible;
-    private long   espacioLibreBytes;
+    @JsonProperty("espacioLibreBytes")
+    private long espacioLibreBytes;
+    @JsonProperty("espacioLibreLegible")
     private String espacioLibreLegible;
 
     /** Ventana máxima de pérdida de datos estimada según la programación. */
+    @JsonProperty("rpoEstimado")
     private String rpoEstimado;
 
+    @JsonProperty("ultimaPruebaRestauracion")
     private LocalDateTime ultimaPruebaRestauracion;      // null si nunca se registró
-    private String        ultimaPruebaResultado;         // EXITOSA | FALLIDA | —
-    private String        ultimaPruebaHace;              // "hace 12 días" / "nunca"
+    @JsonProperty("ultimaPruebaResultado")
+    private String ultimaPruebaResultado;         // EXITOSA | FALLIDA | —
+    @JsonProperty("ultimaPruebaHace")
+    private String ultimaPruebaHace;              // "hace 12 días" / "nunca"
 }

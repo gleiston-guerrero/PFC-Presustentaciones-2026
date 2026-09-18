@@ -25,6 +25,7 @@ public class ProgressStudent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Integer id;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -35,5 +36,6 @@ public class ProgressStudent {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "pasos_json", columnDefinition = "jsonb", nullable = false)
+    @JsonProperty("pasosJson")
     private String pasosJson;
 }

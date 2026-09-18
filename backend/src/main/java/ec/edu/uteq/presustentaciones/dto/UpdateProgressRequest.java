@@ -1,5 +1,7 @@
 package ec.edu.uteq.presustentaciones.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -14,5 +16,6 @@ public class UpdateProgressRequest {
      * enviadas conservan su valor anterior.
      */
     @NotNull(message = "Debe enviar al menos un paso")
+    @JsonProperty("pasos")
     private Map<String, Boolean> pasos;
 }

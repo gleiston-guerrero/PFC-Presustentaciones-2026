@@ -12,16 +12,20 @@ public class Proposal {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
 
     @Column(name = "archivo_pdf")
+    @JsonProperty("archivoPdf")
     private String archivoPdf;
 
     @Column(name = "fecha_envio")
+    @JsonProperty("fechaEnvio")
     private LocalDate fechaEnvio;
 
     /** Estados: ENVIADO, APROBADO, RECHAZADO */
     @Column(name = "estado", length = 30)
+    @JsonProperty("estado")
     private String estado;
 
     /**
@@ -34,16 +38,20 @@ public class Proposal {
      * RECHAZADO=5), sin necesidad de tocar los puntos del servicio que la usan.
      */
     @Column(name = "estado_id", nullable = false)
+    @JsonProperty("estadoProcessId")
     private Short estadoProcessId;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
+    @JsonProperty("observaciones")
     private String observaciones;
 
     /** RF-02: Hash SHA-256 del archivo para verificación de integridad */
     @Column(name = "sha256_hash", length = 64)
+    @JsonProperty("sha256Hash")
     private String sha256Hash;
 
     @Column(name = "tamano_bytes")
+    @JsonProperty("tamanoBytes")
     private Long tamanoBytes;
 
     @OneToOne

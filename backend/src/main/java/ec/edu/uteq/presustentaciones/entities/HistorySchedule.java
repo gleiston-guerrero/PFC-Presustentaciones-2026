@@ -19,6 +19,7 @@ public class HistorySchedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -28,9 +29,11 @@ public class HistorySchedule {
     private Schedule schedule;
 
     @Column(name = "fecha_anterior", nullable = false)
+    @JsonProperty("fechaAnterior")
     private LocalDateTime fechaAnterior;
 
     @Column(name = "fecha_nueva", nullable = false)
+    @JsonProperty("fechaNueva")
     private LocalDateTime fechaNueva;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -46,6 +49,7 @@ public class HistorySchedule {
     private Room roomNueva;
 
     @Column(name = "motivo", columnDefinition = "TEXT")
+    @JsonProperty("motivo")
     private String motivo;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -56,7 +60,8 @@ public class HistorySchedule {
 
     @Column(name = "fecha_cambio", nullable = false, updatable = false)
     @Builder.Default
-    private LocalDateTime fechaCambio = LocalDateTime.now();
+    @JsonProperty("fechaCambio")
+    private LocalDateTime fechaCambio= LocalDateTime.now();
 
     @PrePersist
     protected void onCreate() {

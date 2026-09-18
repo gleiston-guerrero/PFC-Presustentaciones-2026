@@ -19,6 +19,7 @@ public class Schedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
+    @JsonProperty("id")
     private Long id;
     
     @ManyToOne(fetch = FetchType.EAGER)
@@ -47,13 +48,16 @@ public class Schedule {
 
     @Column(name = "numero_intento", nullable = false)
     @Builder.Default
-    private Short numeroIntento = 1;
+    @JsonProperty("numeroIntento")
+    private Short numeroIntento= 1;
     
     @Column(name = "fecha_inicio", nullable = false)
+    @JsonProperty("fechaInicio")
     private LocalDateTime fechaInicio;
     
     @Column(name = "duracion_min", nullable = false)
-    private Integer duracionMin = 45;
+    @JsonProperty("duracionMin")
+    private Integer duracionMin= 45;
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "estado_id", nullable = false)
@@ -67,9 +71,11 @@ public class Schedule {
      * mapeada, pero faltaba synchronize la columna de texto redundante.
      */
     @Column(name = "estado", nullable = false, length = 30)
+    @JsonProperty("estadoCodigo")
     private String estadoCodigo;
 
     @Column(name = "creado_en", nullable = false, updatable = false)
+    @JsonProperty("creadoEn")
     private LocalDateTime creadoEn;
 
     @PrePersist

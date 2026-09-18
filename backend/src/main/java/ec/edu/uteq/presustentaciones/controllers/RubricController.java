@@ -35,7 +35,7 @@ public class RubricController {
      * @return 200 con la rubric, o 404 si no existe
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Rubric> obtain(@PathVariable Long id) {
+    public ResponseEntity<Rubric> obtain(@PathVariable("id") Long id) {
         return rubricRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -57,7 +57,7 @@ public class RubricController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'RUBRICA_GESTIONAR')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         rubricRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
@@ -71,7 +71,7 @@ public class RubricController {
      */
     @PostMapping("/{rubricId}/criterios")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'RUBRICA_GESTIONAR')")
-    public ResponseEntity<?> addCriterio(@PathVariable Long rubricId,
+    public ResponseEntity<?> addCriterio(@PathVariable("rubricId") Long rubricId,
                                               @RequestBody CriterioRubric criterio) {
         Rubric rubric = rubricRepository.findById(rubricId)
                 .orElseThrow(() -> new RuntimeException("Rúbrica no encontrada"));
@@ -84,7 +84,7 @@ public class RubricController {
      * @return criterios que componen esa rubric
      */
     @GetMapping("/{rubricId}/criterios")
-    public List<CriterioRubric> criterios(@PathVariable Long rubricId) {
+    public List<CriterioRubric> criterios(@PathVariable("rubricId") Long rubricId) {
         return criterioRepository.findByRubricIdOrderByOrdenAsc(rubricId);
     }
 
@@ -100,7 +100,7 @@ public class RubricController {
      */
     @PostMapping("/{rubricId}/inicializar-criterios")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'RUBRICA_GESTIONAR')")
-    public ResponseEntity<?> inicializarCriteriosInstitucionales(@PathVariable Long rubricId) {
+    public ResponseEntity<?> inicializarCriteriosInstitucionales(@PathVariable("rubricId") Long rubricId) {
         Rubric rubric = rubricRepository.findById(rubricId)
                 .orElseThrow(() -> new RuntimeException("Rúbrica no encontrada"));
 

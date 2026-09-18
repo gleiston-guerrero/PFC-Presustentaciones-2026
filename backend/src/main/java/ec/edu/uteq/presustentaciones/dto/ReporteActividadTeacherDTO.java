@@ -16,6 +16,7 @@ public class ReporteActividadTeacherDTO {
     private String teacher;
     @JsonProperty("comoJurado")
     private long comoPanelist;
+    @JsonProperty("comoTutor")
     private long comoTutor;
     @JsonProperty("actasFirmadas")
     private long minutesFirmadas;

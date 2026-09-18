@@ -19,6 +19,7 @@ public class AvailabilityRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -28,6 +29,7 @@ public class AvailabilityRoom {
     private Room room;
 
     @Column(name = "fecha", nullable = false)
+    @JsonProperty("fecha")
     private LocalDate fecha;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -38,8 +40,10 @@ public class AvailabilityRoom {
 
     @Column(name = "disponible", nullable = false)
     @Builder.Default
-    private Boolean disponible = true;
+    @JsonProperty("disponible")
+    private Boolean disponible= true;
 
     @Column(name = "motivo", length = 200)
+    @JsonProperty("motivo")
     private String motivo;
 }

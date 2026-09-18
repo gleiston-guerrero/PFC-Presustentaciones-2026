@@ -22,6 +22,7 @@ public class SubmissionSupresion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id")
     private Long id;
 
     @Column(name = "usuario_id", nullable = false)
@@ -29,22 +30,28 @@ public class SubmissionSupresion {
     private Long appUserId;
 
     @Column(name = "fecha_solicitud", nullable = false)
+    @JsonProperty("fechaSubmission")
     private LocalDateTime fechaSubmission;
 
     /** PENDIENTE | RESUELTA | RECHAZADA */
     @Column(name = "estado", nullable = false, length = 20)
+    @JsonProperty("estado")
     private String estado;
 
     /** SEUDONIMIZACION | RECHAZADA -- null mientras esté PENDIENTE. */
     @Column(name = "tipo_resolucion", length = 20)
+    @JsonProperty("tipoResolucion")
     private String tipoResolucion;
 
     @Column(name = "resuelto_por")
+    @JsonProperty("resueltoPor")
     private Long resueltoPor;
 
     @Column(name = "fecha_resolucion")
+    @JsonProperty("fechaResolucion")
     private LocalDateTime fechaResolucion;
 
     @Column(name = "notas", columnDefinition = "TEXT")
+    @JsonProperty("notas")
     private String notas;
 }

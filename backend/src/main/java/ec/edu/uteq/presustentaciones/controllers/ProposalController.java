@@ -44,7 +44,7 @@ public class ProposalController {
      */
     @PostMapping(value = "/enviar/{submissionId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Proposal> send(@PathVariable Long submissionId,
+    public ResponseEntity<Proposal> send(@PathVariable("submissionId") Long submissionId,
             @RequestParam("archivo") MultipartFile archivo) {
         return ResponseEntity.ok(proposalService.sendProposal(submissionId, archivo));
     }
@@ -54,7 +54,7 @@ public class ProposalController {
      * @return 200 con el proposal de esa submission, o el error si aun no se subio
      */
     @GetMapping("/solicitud/{submissionId}")
-    public ResponseEntity<?> obtainPorSubmission(@PathVariable Long submissionId) {
+    public ResponseEntity<?> obtainPorSubmission(@PathVariable("submissionId") Long submissionId) {
         return proposalService.searchPorSubmission(submissionId)
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
@@ -66,7 +66,7 @@ public class ProposalController {
      * @return 200 con el PDF, o el estado de error que devuelva el servicio
      */
     @GetMapping("/ver/{submissionId}")
-    public ResponseEntity<Resource> verPdf(@PathVariable Long submissionId) {
+    public ResponseEntity<Resource> verPdf(@PathVariable("submissionId") Long submissionId) {
         Proposal ap = proposalService.searchPorSubmission(submissionId)
                 .orElseThrow(() -> new RuntimeException("Anteproyecto no encontrado"));
         try {
@@ -91,7 +91,7 @@ public class ProposalController {
      * @return 200 con el resultado de la comparacion de hashes
      */
     @GetMapping("/verificar/{submissionId}")
-    public ResponseEntity<Map<String, Object>> verify(@PathVariable Long submissionId) {
+    public ResponseEntity<Map<String, Object>> verify(@PathVariable("submissionId") Long submissionId) {
         try {
             boolean ok = proposalService.verifyIntegridad(submissionId);
             Proposal ap = proposalService.searchPorSubmission(submissionId).orElseThrow();
@@ -117,7 +117,7 @@ public class ProposalController {
      */
     @PostMapping("/aprobar/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ANTEPROYECTO_REVISAR')")
-    public ResponseEntity<Proposal> approve(@PathVariable Long id, @RequestParam String observaciones) {
+    public ResponseEntity<Proposal> approve(@PathVariable("id") Long id, @RequestParam("observaciones") String observaciones) {
         return ResponseEntity.ok(proposalService.approveProposal(id, observaciones));
     }
 
@@ -130,7 +130,7 @@ public class ProposalController {
      */
     @PostMapping("/rechazar/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ANTEPROYECTO_REVISAR')")
-    public ResponseEntity<Proposal> reject(@PathVariable Long id, @RequestParam String observaciones) {
+    public ResponseEntity<Proposal> reject(@PathVariable("id") Long id, @RequestParam("observaciones") String observaciones) {
         return ResponseEntity.ok(proposalService.rejectProposal(id, observaciones));
     }
 }

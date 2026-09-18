@@ -19,6 +19,7 @@ public class BlockHorario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -28,11 +29,14 @@ public class BlockHorario {
     private Shift shift;
 
     @Column(name = "nombre", nullable = false, length = 60)
+    @JsonProperty("nombre")
     private String nombre;
 
     @Column(name = "hora_inicio", nullable = false)
+    @JsonProperty("horaInicio")
     private LocalTime horaInicio;
 
     @Column(name = "hora_fin", nullable = false)
+    @JsonProperty("horaFin")
     private LocalTime horaFin;
 }

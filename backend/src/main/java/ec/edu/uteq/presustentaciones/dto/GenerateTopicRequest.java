@@ -12,8 +12,12 @@ public class GenerateTopicRequest {
     
     @JsonProperty("lineaInvestigacionId")
     private Integer lineInvestigacionId;
+    @JsonProperty("areaId")
     private Integer areaId;
+    @JsonProperty("areaInteres")
     private String areaInteres;
+    @JsonProperty("tipoProblema")
     private String tipoProblema;
+    @JsonProperty("poblacion")
     private String poblacion;
 }

@@ -47,7 +47,7 @@ public class SubmissionController {
      */
     @PostMapping("/crear/{studentId}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> create(@PathVariable Long studentId, @RequestBody Submission datos) {
+    public ResponseEntity<?> create(@PathVariable("studentId") Long studentId, @RequestBody Submission datos) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(submissionService.createSubmission(studentId, datos), "Solicitud creada exitosamente"));
         } catch (RuntimeException e) {
@@ -67,7 +67,7 @@ public class SubmissionController {
      */
     @PostMapping("/crear-por-usuario/{appUserId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> createPorAppUser(@PathVariable Long appUserId, @RequestBody Submission datos) {
+    public ResponseEntity<?> createPorAppUser(@PathVariable("appUserId") Long appUserId, @RequestBody Submission datos) {
         try {
             // Obtain email desde el JWT (más seguro que el id del path)
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -111,7 +111,7 @@ public class SubmissionController {
      * @return 200 con las submissions, o 200 con lista vacía si el servicio falla
      */
     @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> listPorAppUser(@PathVariable Long appUserId) {
+    public ResponseEntity<?> listPorAppUser(@PathVariable("appUserId") Long appUserId) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(submissionService.listPorAppUser(appUserId)));
         } catch (RuntimeException e) {
@@ -130,7 +130,7 @@ public class SubmissionController {
      */
     @PostMapping("/enviar/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> send(@PathVariable Long id) {
+    public ResponseEntity<?> send(@PathVariable("id") Long id) {
         try {
             // Verify propiedad o permission
             validateAccesoSubmission(id);
@@ -146,7 +146,7 @@ public class SubmissionController {
      */
     @PostMapping("/aprobar/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> approve(@PathVariable Long id) {
+    public ResponseEntity<?> approve(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(submissionService.approveSubmission(id), "Solicitud aprobada"));
         } catch (RuntimeException e) {
@@ -160,7 +160,7 @@ public class SubmissionController {
      */
     @PostMapping("/rechazar/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> reject(@PathVariable Long id) {
+    public ResponseEntity<?> reject(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(submissionService.rejectSubmission(id), "Solicitud rechazada"));
         } catch (RuntimeException e) {
@@ -178,7 +178,7 @@ public class SubmissionController {
     @PostMapping("/rechazar-con-observacion/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
     public ResponseEntity<?> rejectConObservacion(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody java.util.Map<String, String> body) {
         try {
             String observacion = body.getOrDefault("observacion", "");
@@ -199,7 +199,7 @@ public class SubmissionController {
     @PostMapping("/suspender/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_SUSPENDER')")
     public ResponseEntity<?> suspender(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody Map<String, String> body) {
         try {
             String motivo = body.get("motivo");
@@ -238,10 +238,10 @@ public class SubmissionController {
     @GetMapping("/paginado")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
     public ResponseEntity<?> listPaginado(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String estado,
-            @RequestParam(required = false) String q,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "estado", required = false) String estado,
+            @RequestParam(name = "q", required = false) String q,
             @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate fechaDesde,
             @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate fechaHasta) {
         Page<Submission> resultado = submissionService.listSubmissionsPaginado(page, size, estado, q, fechaDesde, fechaHasta);
@@ -272,7 +272,7 @@ public class SubmissionController {
      */
     @GetMapping("/estudiante/{studentId}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> listPorStudent(@PathVariable Long studentId) {
+    public ResponseEntity<?> listPorStudent(@PathVariable("studentId") Long studentId) {
         return ResponseEntity.ok(ResponseWrapper.success(submissionService.listPorStudent(studentId)));
     }
 
@@ -284,7 +284,7 @@ public class SubmissionController {
      * @return 200 con la submission, 404 si no existe, o 403 si no es propietario ni revisor
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> obtain(@PathVariable Long id) {
+    public ResponseEntity<?> obtain(@PathVariable("id") Long id) {
         try {
             validateAccesoSubmission(id);
             return submissionService.obtainPorId(id)
@@ -308,7 +308,7 @@ public class SubmissionController {
     @GetMapping("/reporte-defensas")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
     public ResponseEntity<?> reporteDefensas(
-            @RequestParam(defaultValue = "") String program) {
+            @RequestParam(name = "program", defaultValue = "") String program) {
         try {
             List<Map<String, Object>> reporte = submissionService.generateReporteDefensasSP(program);
             return ResponseEntity.ok(ResponseWrapper.success(reporte));
@@ -325,7 +325,7 @@ public class SubmissionController {
      * @return 200 con el tracking, o 403 si no es propietario ni revisor
      */
     @GetMapping("/{id}/seguimiento")
-    public ResponseEntity<?> obtainTracking(@PathVariable Long id) {
+    public ResponseEntity<?> obtainTracking(@PathVariable("id") Long id) {
         try {
             validateAccesoSubmission(id);
             return ResponseEntity.ok(ResponseWrapper.success(submissionService.obtainTracking(id)));

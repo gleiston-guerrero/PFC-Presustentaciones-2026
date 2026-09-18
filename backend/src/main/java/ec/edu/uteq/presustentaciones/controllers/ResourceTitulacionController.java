@@ -75,7 +75,7 @@ public class ResourceTitulacionController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
-    public ResponseEntity<ResourceTitulacionDTO> update(@PathVariable Integer id,
+    public ResponseEntity<ResourceTitulacionDTO> update(@PathVariable("id") Integer id,
                                                            @RequestBody @Valid SaveResourceRequest request) {
         return ResponseEntity.ok(resourceService.update(id, request));
     }
@@ -88,7 +88,7 @@ public class ResourceTitulacionController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(@PathVariable("id") Integer id) {
         resourceService.delete(id);
         return ResponseEntity.noContent().build();
     }

@@ -26,6 +26,7 @@ public class HistoryEstadoMinutes {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonProperty("id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -58,14 +59,17 @@ public class HistoryEstadoMinutes {
 
     /** CREAR, CAMBIO_ESTADO, FIRMA_COMPLETA, ... */
     @Column(name = "accion", nullable = false, length = 30)
+    @JsonProperty("accion")
     private String accion;
 
     @Column(name = "comentario", columnDefinition = "TEXT")
+    @JsonProperty("comentario")
     private String comentario;
 
     @Column(name = "fecha_cambio", nullable = false, updatable = false)
     @Builder.Default
-    private LocalDateTime fechaCambio = LocalDateTime.now();
+    @JsonProperty("fechaCambio")
+    private LocalDateTime fechaCambio= LocalDateTime.now();
 
     @PrePersist
     protected void onCreate() {

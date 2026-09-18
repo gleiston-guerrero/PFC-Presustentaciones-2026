@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EvaluationPanelistDTO {
+    @JsonProperty("id")
     private Long id;
     @JsonProperty("solicitudId")
     private Long submissionId;
@@ -17,8 +18,11 @@ public class EvaluationPanelistDTO {
     private Long panelistId;
     @JsonProperty("notaJurado")
     private Double notaPanelist;
+    @JsonProperty("observaciones")
     private String observaciones;
+    @JsonProperty("resultado")
     private String resultado;
+    @JsonProperty("comentarioPreestablecido")
     private String comentarioPreestablecido;
     @JsonProperty("nombreJurado")
     private String nombrePanelist;
