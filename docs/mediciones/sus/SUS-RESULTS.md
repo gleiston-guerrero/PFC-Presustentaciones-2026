@@ -40,6 +40,36 @@ otras 11 quedan pendientes: o se re-aplica la encuesta a esas personas con fecha
 consigue una forma independiente de confirmar cuándo respondieron (por ejemplo, si el cuestionario se
 compartió por un medio con marca de tiempo propia).
 
+### Re-aplicación en curso (2026-09-18): [`re-aplicacion/`](re-aplicacion/)
+
+Se preparó el instrumento para tomar la primera de esas dos salidas. Está en
+[`re-aplicacion/`](re-aplicacion/), con el protocolo completo en su
+[`README.md`](re-aplicacion/README.md).
+
+La regla que ordena todo el diseño: **la marca de tiempo no la puede poner el equipo.** Ni el navegador
+del participante, ni el backend de este proyecto, ni un campo "fecha" que alguien escriba — si la hora
+la pone algo que el equipo controla, la evidencia nueva tiene exactamente el mismo problema que las
+hojas de papel. Por eso las respuestas van a un formulario alojado por un tercero (Microsoft Forms con
+la cuenta institucional de la UTEQ, o Google Forms), que sella cada respuesta con su propia hora de
+servidor; el formulario HTML del proyecto **no registra ninguna hora del lado del cliente**, y eso está
+comentado en el código como una decisión deliberada, no como algo por completar.
+
+Los 10 ítems se transcriben **palabra por palabra** de la hoja en papel: si cambia el enunciado, las dos
+rondas dejan de ser comparables. Se corrige además el segundo defecto que señaló la evaluación —
+*"no hay consentimiento individual: solo una nota impresa de consentimiento implícito"*— con una
+casilla de aceptación obligatoria que marca cada participante.
+
+[`scripts/sus-ingesta.py`](../../../scripts/sus-ingesta.py) ingiere el CSV exportado sin editarlo,
+valida que cada ítem esté entre 1 y 5, y recalcula el puntaje con la fórmula de Brooke. La fórmula se
+verificó contra esta misma tabla: reproduce **los 15 puntajes ya versionados, al dígito**. El script no
+genera ninguna fecha; reporta la que trae el archivo del tercero, y marca como no verificable cualquier
+fila que llegue sin ella.
+
+**Esta ronda no reemplaza ni corrige las 15 hojas de papel**, que se quedan intactas en
+[`respuestas-crudas/`](respuestas-crudas/). Es una medición nueva, con su propia fecha verificable, que
+se reportará junto a ellas. Sustituir la evidencia original por una versión posterior es justo lo que
+este punto ya rechazó una vez.
+
 ## Por qué esto tardó en tener datos reales
 
 Una versión anterior de este documento presentaba respuestas de "10 evaluadores" (con nombres de rol como

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Cuestionario de Usabilidad (SUS)</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --card:#ffffff; --ink:#1b2733; --muted:#5d6b7a;
+    --line:#d8e0e8; --accent:#12694a; --accent-soft:#e6f2ec;
+    --warn-bg:#fff8e6; --warn-line:#e8d28a; --focus:#0b6bcb;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    padding:24px 16px 64px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  header{text-align:center;margin-bottom:22px}
+  h1{font-size:1.45rem;margin:0 0 4px;letter-spacing:.2px}
+  .sub{color:var(--muted);font-size:.95rem;margin:0}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;margin-bottom:16px;
+  }
+  .consent{background:var(--accent-soft);border-color:#bcdccd}
+  .consent h2{font-size:1rem;margin:0 0 8px;color:var(--accent)}
+  .consent p{margin:0 0 12px;font-size:.92rem;color:#24483a}
+  label.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-weight:600}
+  label.check input{margin-top:3px;width:18px;height:18px;flex:none}
+  .field{margin-bottom:16px}
+  .field:last-child{margin-bottom:0}
+  .field > label{display:block;font-weight:600;margin-bottom:6px}
+  select{
+    width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;
+    font:inherit;background:#fff;color:inherit;
+  }
+  .hint{color:var(--muted);font-size:.85rem;margin:4px 0 0}
+  .scale-key{
+    display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.83rem;color:var(--muted);
+    margin:0 0 14px;padding-bottom:12px;border-bottom:1px dashed var(--line);
+  }
+  .item{padding:14px 0;border-bottom:1px solid #eef2f6}
+  .item:last-of-type{border-bottom:0}
+  .item p{margin:0 0 10px;font-weight:500}
+  .item p .n{color:var(--accent);font-weight:700;margin-right:6px}
+  .opts{display:flex;gap:4px}
+  .opts label{
+    flex:1;text-align:center;border:1px solid var(--line);border-radius:8px;
+    padding:9px 0;cursor:pointer;background:#fbfcfd;font-variant-numeric:tabular-nums;
+    transition:background .12s,border-color .12s;
+  }
+  .opts input{position:absolute;opacity:0;width:0;height:0}
+  .opts label:hover{background:#eef3f7}
+  .opts input:focus-visible + span{outline:2px solid var(--focus);outline-offset:3px;border-radius:4px}
+  .opts label:has(input:checked){background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  .ends{display:flex;justify-content:space-between;font-size:.76rem;color:var(--muted);margin-top:6px}
+  button{
+    width:100%;padding:14px;border:0;border-radius:var(--radius);
+    background:var(--accent);color:#fff;font:600 1.02rem/1 inherit;cursor:pointer;
+  }
+  button:disabled{background:#9db3a9;cursor:not-allowed}
+  .err{
+    background:#fdecec;border:1px solid #f0b6b6;color:#8d2323;
+    border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:.9rem;display:none;
+  }
+  .note{
+    background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;
+    padding:12px 14px;font-size:.87rem;color:#6b5312;margin-bottom:16px;
+  }
+  .done{text-align:center;padding:40px 20px}
+  .done .tick{font-size:2.6rem;color:var(--accent);line-height:1}
+  .done h2{margin:12px 0 6px;font-size:1.2rem}
+  .done p{color:var(--muted);margin:0}
+  footer{text-align:center;color:var(--muted);font-size:.8rem;margin-top:20px}
+  @media (max-width:520px){
+    .opts{gap:3px}
+    .opts label{padding:11px 0;font-size:.95rem}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Cuestionario de Usabilidad (SUS)</h1>
+    <p class="sub">Sistema de Gestión de Pre-Sustentaciones — Universidad Técnica Estatal de Quevedo</p>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       CONFIGURACIÓN: pega aquí los datos del formulario destino.
+       Ver README.md de esta carpeta para obtener los identificadores.
+       Mientras ACTION_URL esté vacío, el formulario funciona en modo
+       vista previa: valida y muestra el resumen, pero no envía nada.
+       ══════════════════════════════════════════════════════════════════ -->
+  <script>
+    const ACTION_URL = "";   // .../formResponse
+    const CAMPOS = {
+      rol:      "",   // entry.XXXXXXXX
+      previo:   "",   // entry.XXXXXXXX
+      q1:"", q2:"", q3:"", q4:"", q5:"", q6:"", q7:"", q8:"", q9:"", q10:""
+    };
+  </script>
+
+  <div id="preview-note" class="note" hidden>
+    <strong>Modo vista previa.</strong> Este formulario todavía no está conectado al destino que
+    registra las respuestas, así que <em>no se enviará nada</em>. Sirve para revisar la redacción.
+    Ver <code>README.md</code> de esta carpeta para conectarlo.
+  </div>
+
+  <form id="form" novalidate>
+
+    <div class="card consent">
+      <h2>Consentimiento informado</h2>
+      <p>
+        Tu participación es <strong>voluntaria y anónima</strong>: este formulario no pide tu nombre,
+        tu correo ni ningún dato que permita identificarte. Las respuestas se usan únicamente con fines
+        académicos, para evaluar la usabilidad del sistema en el marco de este proyecto de titulación.
+        Puedes abandonar el cuestionario en cualquier momento sin dar explicaciones. Toma entre 3 y 5
+        minutos.
+      </p>
+      <label class="check">
+        <input type="checkbox" id="consent" required>
+        <span>He leído lo anterior y acepto participar en estas condiciones.</span>
+      </label>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label for="rol">Tu rol dentro del sistema</label>
+        <select id="rol" required>
+          <option value="">— Selecciona —</option>
+          <option>Estudiante</option>
+          <option>Docente</option>
+          <option>Coordinador</option>
+          <option>Administrador</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="previo">¿Habías respondido antes este cuestionario en papel?</label>
+        <select id="previo" required>
+          <option value="">— Selecciona —</option>
+          <option>Sí</option>
+          <option>No</option>
+          <option>No recuerdo</option>
+        </select>
+        <p class="hint">
+          Sirve para saber cuántas respuestas son de personas que ya habían participado. No te
+          identifica: la pregunta es sobre la participación, no sobre quién eres.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="scale-key">
+        <span><strong>1</strong> Totalmente en desacuerdo</span>
+        <span><strong>2</strong> En desacuerdo</span>
+        <span><strong>3</strong> Neutral</span>
+        <span><strong>4</strong> De acuerdo</span>
+        <span><strong>5</strong> Totalmente de acuerdo</span>
+      </p>
+      <div id="items"></div>
+    </div>
+
+    <div class="err" id="err"></div>
+    <button type="submit" id="send">Enviar respuesta</button>
+  </form>
+
+  <div class="card done" id="done" hidden>
+    <div class="tick">✓</div>
+    <h2>Respuesta registrada</h2>
+    <p>Gracias por tu tiempo. Tu opinión ayuda a mejorar el sistema.</p>
+  </div>
+
+  <footer>Escala SUS de Brooke (1996), 10 ítems · Proyecto de titulación UTEQ</footer>
+</div>
+
+<script>
+// Los 10 ítems, con la redacción EXACTA de la hoja en papel que ya se aplicó
+// (docs/mediciones/sus/respuestas-crudas/). No se cambia ni una palabra: si el
+// enunciado varía, las dos rondas dejan de ser comparables.
+const ITEMS = [
+  "Creo que me gustaría utilizar este sistema con frecuencia.",
+  "Encontré el sistema innecesariamente complejo.",
+  "Pensé que el sistema era fácil de usar.",
+  "Creo que necesitaría el apoyo de un técnico para poder utilizar este sistema.",
+  "Encontré que las diversas funciones de este sistema estaban bien integradas.",
+  "Pensé que había demasiada inconsistencia en este sistema.",
+  "Imagino que la mayoría de las personas aprenderían a usar este sistema muy rápidamente.",
+  "Encontré el sistema muy pesado/incómodo de usar.",
+  "Me sentí muy confiado/seguro al usar el sistema.",
+  "Necesité aprender muchas cosas antes de poder empezar a usar este sistema."
+];
+
+const cont = document.getElementById("items");
+ITEMS.forEach((texto, i) => {
+  const n = i + 1;
+  const div = document.createElement("div");
+  div.className = "item";
+  const p = document.createElement("p");
+  const span = document.createElement("span");
+  span.className = "n";
+  span.textContent = n + ".";
+  p.append(span, document.createTextNode(texto));
+  const opts = document.createElement("div");
+  opts.className = "opts";
+  for (let v = 1; v <= 5; v++) {
+    const lab = document.createElement("label");
+    const inp = document.createElement("input");
+    inp.type = "radio"; inp.name = "q" + n; inp.value = String(v); inp.required = true;
+    inp.setAttribute("aria-label", "Ítem " + n + ", valor " + v);
+    const sp = document.createElement("span");
+    sp.textContent = v;
+    lab.append(inp, sp);
+    opts.append(lab);
+  }
+  const ends = document.createElement("div");
+  ends.className = "ends";
+  const a = document.createElement("span"); a.textContent = "En desacuerdo";
+  const b = document.createElement("span"); b.textContent = "De acuerdo";
+  ends.append(a, b);
+  div.append(p, opts, ends);
+  cont.append(div);
+});
+
+const form = document.getElementById("form");
+const err  = document.getElementById("err");
+const send = document.getElementById("send");
+
+if (!ACTION_URL) document.getElementById("preview-note").hidden = false;
+
+function leer() {
+  const r = {
+    rol: document.getElementById("rol").value,
+    previo: document.getElementById("previo").value
+  };
+  for (let n = 1; n <= 10; n++) {
+    const m = form.querySelector('input[name="q' + n + '"]:checked');
+    r["q" + n] = m ? Number(m.value) : null;
+  }
+  return r;
+}
+
+function faltantes(r) {
+  const f = [];
+  if (!document.getElementById("consent").checked) f.push("aceptar el consentimiento");
+  if (!r.rol) f.push("indicar tu rol");
+  if (!r.previo) f.push("responder si ya habías participado");
+  const sin = [];
+  for (let n = 1; n <= 10; n++) if (r["q" + n] === null) sin.push(n);
+  if (sin.length) f.push("responder " + (sin.length === 1 ? "el ítem " : "los ítems ") + sin.join(", "));
+  return f;
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  err.style.display = "none";
+  const r = leer();
+  const falta = faltantes(r);
+  if (falta.length) {
+    err.textContent = "Antes de enviar, falta " + falta.join("; ") + ".";
+    err.style.display = "block";
+    err.scrollIntoView({behavior: "smooth", block: "center"});
+    return;
+  }
+
+  send.disabled = true;
+  send.textContent = "Enviando…";
+
+  if (!ACTION_URL) {
+    // Vista previa: no hay destino configurado, no se envia nada.
+    form.hidden = true;
+    document.getElementById("done").hidden = false;
+    document.getElementById("done").querySelector("p").textContent =
+      "Vista previa: la respuesta NO se envió porque el formulario aún no está conectado.";
+    return;
+  }
+
+  // El envio va al formulario destino, que es quien pone la marca de tiempo.
+  // Deliberadamente NO se registra ninguna hora del lado del navegador: una
+  // fecha que pone el propio equipo es justo lo que no sirve como evidencia.
+  const datos = new FormData();
+  for (const [clave, entry] of Object.entries(CAMPOS)) {
+    if (entry) datos.append(entry, r[clave]);
+  }
+  try {
+    await fetch(ACTION_URL, {method: "POST", mode: "no-cors", body: datos});
+    form.hidden = true;
+    document.getElementById("done").hidden = false;
+  } catch (_) {
+    // `no-cors` no deja leer la respuesta, asi que solo un fallo de red llega aqui.
+    err.textContent = "No se pudo enviar. Revisa tu conexión e inténtalo otra vez.";
+    err.style.display = "block";
+    send.disabled = false;
+    send.textContent = "Enviar respuesta";
+  }
+});
+</script>
+</body>
+</html>
