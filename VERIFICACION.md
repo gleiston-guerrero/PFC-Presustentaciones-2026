@@ -19,6 +19,39 @@ Commit de referencia de esta corrida: verificar con `git rev-parse HEAD`. Entorn
 
 ---
 
+## Re-verificación completa del 2026-09-18
+
+Los 12 puntos se volvieron a correr contra el repositorio de hoy, en una sesión distinta y tras otros
+commits, para comprobar que ninguna afirmación de este archivo quedó desactualizada. Resultado:
+
+| # | Estado | Qué se corrió hoy y qué dio |
+|---|---|---|
+| P1 | 🟡 Parcial | `n=4 media=48.75 DE=1.44 IC95=[46.45,51.05]` — reproduce exacto; 15 filas en el CSV |
+| P2 | ✅ Cumple | `./mvnw clean test`: **804 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE 82,03 %, BRANCH 73,49 % |
+| P3 | ✅ Cumple | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, exit 0, 0 errores**, con `doclint` activo (no hay `<doclint>` en ningún `pom.xml`); 731/768 elementos documentados (95,2 %) |
+| P4 | 🔴 **No cumple** | Disputa **resuelta a favor del ing**; medición real 35,7 % de tipos contra un máximo de 5 % — ver abajo |
+| P5 | ✅ Cumple | 6 corridas Lighthouse versionadas en `prod-runs/`; URL pública en la primera pantalla del README |
+| P6 | ✅ Cumple | `\label{tab:holm-bonferroni}` presente y citado con `\ref` en `10-evaluacion-empirica.tex:85` |
+| P7 | ✅ Cumple | Surefire de hoy: 11 + 2 + 3 = **16 pruebas del chatbot, 0 fallos** |
+| P8 | ✅ Cumple | 102 endpoints de escritura; los 5 sin anotación son los exentos de pre-login (`login`, `refresh`, `logout`, `recuperar`, `reset`) |
+| P9 | ⚠️ Ver nota | El tag `v1.1.0` existe y `CITATION.cff` + portada lo declaran, **pero apunta 37 commits atrás** |
+| P10 | ✅ Cumple | Portada: 32 líneas, 0 referencias DOI, 0 notas de proceso, URL del repositorio presente |
+| P11 | ✅ Cumple | 31 controladores, 10 rutinas SQL distintas, cero clases con nombre pre-P4 en el informe activo |
+| P12 | 🟡 Parcial | Ningún commit vacío nuevo desde `f3d1ff4`; la conversación con el docente sigue sin ocurrir |
+
+Todo lo anterior sale de correr `make verify` más `./mvnw clean test` y `./mvnw javadoc:javadoc` con
+Postgres y Redis reales levantados. **Dos cambios respecto de la versión anterior de este archivo:**
+P4 bajó de 🟡 a 🔴 (por honestidad, no por un criterio nuevo), y P2 quedó confirmado por una segunda
+corrida limpia independiente que da exactamente las mismas cifras.
+
+**Nota de P9, que es la más importante de todas:** el tag `v1.1.0` sigue apuntando a `8b1c1d2`. Todo lo
+que está en esta tabla —incluidos `VERIFICACION.md`, `make verify` y `CONTRIBUCIONES.md`, los tres
+entregables obligatorios cuya ausencia topa la nota al 40 %— vive en commits **posteriores** a ese tag.
+Bajo la regla de la guía (*"lo que no esté dentro de la etiqueta no existe"*), nada de esto es visible
+para una revisión que lea `v1.1.0`.
+
+---
+
 ## P1 — SUS (peso 1,7)
 
 **Criterio:** al menos 15 respuestas reales en un CSV versionado, con el instrumento de 10 ítems de
@@ -478,6 +511,15 @@ mantiene la misma disciplina que ya documentó `OBS-35`: el re-etiquetado (`v1.1
 hace una sola vez, al cierre real de *toda* esta ronda de revisión (después de P10 y P12), no punto a
 punto. Se deja constancia explícita aquí para que no se olvide antes de la entrega final.
 
+**Actualización 2026-09-18:** el desfase ya no es de 22 commits sino de **37**, y la condición que
+justificaba esperar (cerrar P10 y P12) se cumplió: P10 está ✅ y P12 quedó 🟡 por depender de una
+conversación con el docente, que no va a cambiar por esperar más. **El re-etiquetado es ahora la acción
+pendiente de mayor impacto de todo este archivo**, y no por una cuestión de prolijidad: dentro de esos
+37 commits están `VERIFICACION.md`, `make verify` y `CONTRIBUCIONES.md` (creados en `9fd9d0c`, 17-sep
+17:50). Son los tres entregables obligatorios cuya ausencia, según la propia hoja de cálculo del ing,
+topa **todos** los puntos al 40 % y baja la nota de un rango de 4,00–6,97 a 2,92–4,00. Están escritos y
+en `main` desde hace casi un día, pero fuera de la etiqueta que se evalúa.
+
 ---
 
 ## P10 — Carátula (peso 0,3)
@@ -651,15 +693,25 @@ con el detalle exacto de la imprecisión, y esta vez sí se corrigió lo que sí
 
 ## Resumen de honestidad de este archivo
 
-**Actualizado tras cerrar P9, P10 y P11 (evaluación integral 2026-09-17).** De los 12 puntos: **9 ✅
-Cumple** (P2, P3, P5, P6, P7, P8, P9, P10, P11 — cada uno con al menos un defecto menor declarado) y
-**3 🟡 Parcial** (P1, P4, P12 — con una brecha real sin cerrar cada uno; P4 además con una disputa
-numérica abierta sin resolver: las regresiones funcionales que causó ya se corrigieron y verificaron,
-lo que queda abierto es solo cuántos nombres siguen en español). Ningún punto se declaró "resuelto" para
-inflar este resumen; varios de los que ya estaban cerrados en `OBSERVACIONES.md` antes de esta
-evaluación quedan aquí con matices que esa bitácora, por ser narrativa y cronológica, no siempre deja
-igual de visibles a primera vista. **P12 en particular no puede pasar a ✅ con más documentación:**
-depende de una conversación real con el docente y el equipo completo que todavía no ha ocurrido.
+**Actualizado el 2026-09-18, tras resolver la disputa numérica de P4.** De los 12 puntos:
+
+- **9 ✅ Cumple** — P2, P3, P5, P6, P7, P8, P9, P10, P11, cada uno con al menos un defecto menor
+  declarado.
+- **2 🟡 Parcial** — P1 y P12, con una brecha real sin cerrar cada uno, y ninguna de las dos se cierra
+  con más documentación: dependen de las hojas físicas del SUS y de una conversación con el docente.
+- **1 🔴 No cumple** — **P4**. Cambió de 🟡 a 🔴 el 2026-09-18, y el cambio es **a la baja por
+  honestidad, no al alza**: la "disputa numérica abierta" se resolvió **a favor del ingeniero**.
+  Reproducimos su cifra al dígito (121/339 tipos, 35,7 %; 39,7 % en `src/main`) y se retracta la
+  medición anterior del equipo (1,8 % / 0,1 %), que era un artefacto de un diccionario que omitía los
+  tokens españoles más frecuentes del propio código. Peor aún: comparado con la línea base del ing
+  antes del renombrado (98/272 = 36,0 %), el renombrado masivo de `49adaee` dejó la cifra **3,7 puntos
+  peor** mientras rompía 18 `@RequestParam` y 5 llamadas a procedimientos almacenados. Detalle en
+  [`docs/observaciones/P4-RESOLUCION-DISPUTA.md`](docs/observaciones/P4-RESOLUCION-DISPUTA.md).
+
+Ningún punto se declaró "resuelto" para inflar este resumen, y el único punto que cambió de categoría
+en la última ronda lo hizo para empeorar. Varios de los que ya estaban cerrados en `OBSERVACIONES.md`
+antes de esta evaluación quedan aquí con matices que esa bitácora, por ser narrativa y cronológica, no
+siempre deja igual de visibles a primera vista.
 
 ---
 
@@ -670,7 +722,10 @@ punto) — tiene ocho secciones más. Verificado cada una contra el estado real 
 (2026-09-17), ver `OBSERVACIONES.md` OBS-48 para el detalle completo con comandos:
 
 **Hallazgo estructural que explica casi todo lo demás:** el PDF completo evalúa el commit `8b1c1d2`
-(tag `v1.1.0`), no el HEAD actual. `git rev-list v1.1.0..HEAD --count` da 22+ (ver `OBS-44`). La
+(tag `v1.1.0`), no el HEAD actual. `git rev-list v1.1.0..HEAD --count` da **37 al 2026-09-18** (eran
+22+ cuando se escribió esta sección; ver `OBS-44`). **Esto incluye los tres entregables obligatorios
+`VERIFICACION.md`, `make verify` y `CONTRIBUCIONES.md`**, creados en `9fd9d0c` el 17-sep a las 17:50,
+seis horas después del commit que el PDF evalúa — su ausencia es lo que topa toda la nota al 40 %. La
 mayoría de los "no cumple" de las secciones 2, 3 y 6 de ese PDF ya estaban corregidos en commits
 posteriores a ese tag, hechos en esta misma ronda — el documento simplemente no pudo verlos porque el
 tag no se había movido todavía.
@@ -703,8 +758,14 @@ tag no se había movido todavía.
 7. **Autoría y aporte individual:** ya lo documenta `CONTRIBUCIONES.md`. La mención de que "un asistente
    automatizado se negó a marcar P12 como cerrado" es real y está en `OBSERVACIONES.md` (OBS-26) — no es
    un defecto, es la misma disciplina de no inflar el estado que rige el resto de este archivo.
-8. **Solicitudes para la defensa:** los ítems 2 (VERIFICACION.md/make verify/CONTRIBUCIONES.md) y 4
-   (doclint + errores de Javadoc) ya están satisfechos por el trabajo de esta ronda. Los ítems 1, 3 y 5
+8. **Solicitudes para la defensa:** los ítems 2 (VERIFICACION.md/make verify/CONTRIBUCIONES.md) y 4 ya
+   están satisfechos por el trabajo de esta ronda. El ítem 4 pedía tres cosas: reactivar `doclint` y
+   corregir los 5 errores (hecho, `./mvnw javadoc:javadoc` da exit 0 sin apagar el chequeo), unificar
+   el "30/31" (hecho, P11: 31 en todo el informe) y **unificar la narrativa del SUS** — esto último
+   quedaba incompleto hasta el 2026-09-18: tres pasajes (`15-declaraciones.tex:38`,
+   `12-amenazas-validez.tex:35`, `14-conclusiones.tex:41`) seguían diciendo que el SUS no se había
+   aplicado, contradiciendo al capítulo 10 y a la propia sección 15 cuatro líneas más arriba.
+   Corregidos en `e36f25e`. Los ítems 1, 3 y 5
    son acciones para el día de la defensa (mostrar hojas físicas, hacer una demo en vivo, reunión con el
    docente) — no son algo que este archivo pueda cerrar por adelantado.
 9. **Alcance:** describe lo que el ing sí y no ejecutó (con y sin base de datos/Docker) — informativo,
@@ -713,4 +774,5 @@ tag no se había movido todavía.
 **Recomendación derivada de este hallazgo estructural:** con P1-P12 ya atendidos en esta ronda (P1 y P4
 con límites reales que no se pueden cerrar del todo; P12 pendiente del docente), corresponde mover el
 tag ahora — es exactamente el "cierre real de toda la ronda" que `OBS-44` dejó pendiente. Mientras el
-tag siga en `8b1c1d2`, cualquier nueva revisión seguirá viendo el estado de hace 22+ commits.
+tag siga en `8b1c1d2`, cualquier nueva revisión seguirá viendo el estado de hace **37 commits**, sin
+los tres entregables obligatorios y sin ninguna de las correcciones de P1-P12 de esta ronda.
