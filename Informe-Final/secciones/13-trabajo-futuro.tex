@@ -35,7 +35,7 @@ maquillarlo con contenido de relleno:
     \item \textbf{Ampliar las pruebas de integración reales:} el proyecto ya tiene dos clases de prueba
     de integración verdadera contra PostgreSQL (\texttt{@SpringBootTest} +
     \texttt{@AutoConfigureTestDatabase(replace = NONE)}, sin mocking del repositorio):
-    \texttt{PreSustentacionesApplicationTests} y \texttt{TemaPropuestoRepositoryIntegrationTest} --- esta
+    \texttt{PreDefenseApplicationTests} y \texttt{TopicProposedRepositoryIntegrationTest} --- esta
     última fue precisamente la que detectó un bug real de inferencia de tipos SQL invisible a las
     pruebas unitarias mockeadas (Sección~\ref{sec:seguridad-corregida}), demostrando el valor del
     patrón. Sigue pendiente extenderlo a más repositorios/servicios con lógica de negocio compleja, en

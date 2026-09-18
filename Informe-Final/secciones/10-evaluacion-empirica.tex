@@ -145,10 +145,10 @@ COORDINADOR, DOCENTE, ESTUDIANTE) y cubierto con pruebas automatizadas nuevas:
 \begin{enumerate}[nosep]
     \item \textbf{IDOR de lectura en Evaluaciones/Anteproyectos:} \texttt{EvaluationController},
     \texttt{EvaluationPanelistController}, \texttt{RubricEvaluationController} y
-    \texttt{AnteproyectoController} exponían notas, observaciones de tribunal y el PDF del anteproyecto
+    \texttt{ProposalController} exponían notas, observaciones de tribunal y el PDF del anteproyecto
     de cualquier estudiante a cualquier usuario autenticado que cambiara el id en la URL --- sin ninguna
     verificación de pertenencia. Corregido con un servicio compartido
-    (\texttt{SolicitudAccessService}) que exige ser el estudiante dueño, un jurado o tutor asignado, o
+    (\texttt{SubmissionAccessService}) que exige ser el estudiante dueño, un jurado o tutor asignado, o
     tener el permiso administrativo correspondiente; 403 verificado en vivo.
     \item \textbf{IDOR de escritura en registro de notas de jurado:} \texttt{EvaluationPanelistService} y
     \texttt{RubricEvaluationService} permitían que un docente-jurado registrara una nota \emph{a nombre
@@ -181,7 +181,7 @@ El Listado~\ref{lst:idor-docente} muestra la corrección del segundo hallazgo (I
 docentes): la comprobación de propiedad se extrajo a un método privado reutilizable en el propio
 controlador, en vez de delegarla únicamente a una anotación declarativa sin granularidad por recurso.
 
-\begin{lstlisting}[language=Java,style=codigobase,caption={Correccion del IDOR de \texttt{DocenteController}: verificacion de propiedad del recurso antes de exponerlo.},label={lst:idor-docente}]
+\begin{lstlisting}[language=Java,style=codigobase,caption={Correccion del IDOR de \texttt{TeacherController}: verificacion de propiedad del recurso antes de exponerlo.},label={lst:idor-docente}]
 @GetMapping("/usuario/{usuarioId}")
 public ResponseEntity<Docente> obtenerPorUsuario(@PathVariable Long usuarioId) {
     validarAccesoPropioOAdministrativo(usuarioId);
@@ -286,9 +286,9 @@ controladores, que habían llegado a 72.00\,\%/77.41\,\% (líneas/ramas) el 06-0
 líneas para el 11-09 (0.53 puntos bajo el umbral, ramas sin cambio en 75.00\,\%) por el mismo efecto de
 denominador. Se cerró con 5 pruebas nuevas dirigidas a los dos controladores que seguían sin ninguna
 prueba (\texttt{MeController}, \texttt{ExternalApiController}) y a tres endpoints sin ejercitar en otros
-dos (\texttt{AuditoriaController\#/tablas}, \texttt{DocenteController\#/disponibles} y \texttt{\#/paginado}).
-Al mismo tiempo se corrigieron 8 fallos preexistentes de \texttt{SolicitudControllerTest} --- un
-\texttt{NullPointerException} real por un mock de \texttt{PermisoService} faltante en el propio test, no
+dos (\texttt{AuditController\#/tablas}, \texttt{TeacherController\#/disponibles} y \texttt{\#/paginado}).
+Al mismo tiempo se corrigieron 8 fallos preexistentes de \texttt{SubmissionControllerTest} --- un
+\texttt{NullPointerException} real por un mock de \texttt{PermissionService} faltante en el propio test, no
 un problema de entorno --- lo que ejercitó ese controlador con más profundidad, llegando en conjunto a
 \textbf{71.05\,\% de líneas (854/1,202) y 76.47\,\% de ramas (260/340)} --- cruza el umbral de 70\,\%
 exigido en líneas \emph{y} en ramas. Los servicios quedan en 70.22\,\% de líneas (2,245/3,197) y
@@ -326,8 +326,8 @@ ramas), y \texttt{JwtTokenProvider} (36.8\,\% de ramas: la lógica de refresh to
 no tenía ningún test, cubierta ahora con un \texttt{StringRedisTemplate} simulado, incluido el camino
 fail-closed de RNF-04 cuando Redis no responde). Esa primera pasada dejó 71.90\,\% de ramas --- por
 encima del umbral pero al filo para el gusto del equipo, así que se hizo una segunda pasada sobre lo
-que quedaba: \texttt{EstadoTiempoRealController} y \texttt{AnteproyectoController} (0\,\% cada uno,
-sin ningún test), y \texttt{EmailService}/\texttt{AuditoriaService} (0\,\% cada uno). Resultado:
+que quedaba: \texttt{StatusLiveController} y \texttt{ProposalController} (0\,\% cada uno,
+sin ningún test), y \texttt{EmailService}/\texttt{AuditService} (0\,\% cada uno). Resultado:
 \textbf{82.10\,\% de líneas (4,020/4,897) y 73.49\,\% de ramas (1,483/2,018)} a nivel global (801
 pruebas, 0 fallos).
 
@@ -341,16 +341,16 @@ Una versión previa de este párrafo citaba además una cifra intermedia de rama
 archivo crudo respaldándola en el repositorio; queda reemplazada por la que sí se puede recalcular desde
 el CSV versionado.
 El salto anterior, del 29-08 al 31-08 (37.06\,\%$\to$38.88\,\% líneas), no vino de tests nuevos --- el
-número de tests no cambió --- sino de que \texttt{PreSustentacionesApplicationTests} dejó de ser un
+número de tests no cambió --- sino de que \texttt{PreDefenseApplicationTests} dejó de ser un
 \texttt{assertTrue(true)} y empezó a levantar el contexto real de Spring. El salto más reciente sí viene
 de tests nuevos reales: entre otros, 20 tests para el módulo de autorización creado en la corrección de
-IDOR (\texttt{SolicitudAccessServiceTest}, 8 tests, y casos permitido/IDOR/admin en los 4 servicios
+IDOR (\texttt{SubmissionAccessServiceTest}, 8 tests, y casos permitido/IDOR/admin en los 4 servicios
 afectados), 6 para el mass-assignment de registro de usuarios, 7 para el control de acceso de docentes, y
 12 para dos controladores que tenían servicio probado pero 0\,\% de cobertura propia
-(\texttt{ResourceTitulacionController}, \texttt{EvaluationPanelistController}). Además, el proyecto ya
+(\texttt{ResourceDegreeController}, \texttt{EvaluationPanelistController}). Además, el proyecto ya
 cuenta con dos clases de prueba de integración real contra PostgreSQL (\texttt{@SpringBootTest} +
 \texttt{@AutoConfigureTestDatabase(replace = NONE)}, sin mocking del repositorio):
-\texttt{PreSustentacionesApplicationTests} y \texttt{TemaPropuestoRepositoryIntegrationTest} (8 tests) ---
+\texttt{PreDefenseApplicationTests} y \texttt{TopicProposedRepositoryIntegrationTest} (8 tests) ---
 esta última fue, de hecho, la que detectó un bug real de tipos SQL invisible a las pruebas unitarias
 mockeadas (Sección~\ref{sec:seguridad-corregida}).
 

@@ -2372,7 +2372,7 @@ normal, y fallan \textbf{cerrado} (401 / 503) solo ante la primera. La caché de
 \texttt{CacheErrorHandler} dedicado que absorbe el error y dejar seguir el método hacia el
 origen -- la única de las tres que falla \textbf{abierto}, a propósito. Las tres rutas registran
 una entrada identificable (\texttt{DEGRADACION (RNF-04): ...}). Verificado con
-\texttt{RedisDegradacionTest.java}, doble de \texttt{StringRedisTemplate} que lanza
+\texttt{RedisDegradationTest.java}, doble de \texttt{StringRedisTemplate} que lanza
 \texttt{RedisConnectionFailureException}.}
 
 \subsection{Seguridad}
@@ -2686,11 +2686,11 @@ de ejercer sus derechos. Un hallazgo ético sin requisito no tiene fecha de cier
 \cd{docs/etica/RETENCION-DATOS.md}, enlazada desde \cd{ETHICS.md}, con período declarado por
 categoría y una distinción explícita de qué NO es suprimible (expediente académico, calificaciones,
 actas) por obligación legal de conservación. (2) Depuración automática de la bitácora
-(\cd{DepuracionBitacoraScheduler}, \cd{@Scheduled} mensual, retención de 2 años) sin ningún
+(\cd{CleanupLogScheduler}, \cd{@Scheduled} mensual, retención de 2 años) sin ningún
 endpoint -- resuelve la tensión con RNF-18 (ninguna operación de la API puede borrar la bitácora)
 a nivel de tarea programada, no de código de aplicación alcanzable por una petición. Deja traza
 verificable en \cd{presus.depuracion\_bitacora\_log} (cuántas entradas, hasta qué fecha).
-(3) Procedimiento de supresión (\cd{SupresionDatosService}) que \textbf{seudonimiza}, no borra: el
+(3) Procedimiento de supresión (\cd{ErasureDataService}) que \textbf{seudonimiza}, no borra: el
 expediente sigue enlazado al mismo id. El registro de la solicitud
 (\cd{presus.solicitud\_supresion}) no guarda el dato suprimido, solo el id del usuario --
 resolviendo la paradoja de que el registro de una supresión no puede contener lo suprimido. (4)

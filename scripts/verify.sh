@@ -104,8 +104,11 @@ RUT=$(grep -rhoE "CREATE (OR REPLACE )?(PROCEDURE|FUNCTION) [a-zA-Z0-9_.]+" back
 echo "  Controladores: $CTRL   Rutinas SQL (nombre distinto): $RUT"
 [ "$CTRL" = "31" ] && ok "31 controladores (cifra esperada)" || fail "P11: se esperaban 31 controladores, se encontraron $CTRL"
 [ "$RUT" = "10" ] && ok "10 rutinas SQL (cifra esperada)" || fail "P11: se esperaban 10 rutinas, se encontraron $RUT"
-STALE=$(grep -rnoE "\b(Usuario|Solicitud|Acta|Jurado|Tutoria|Cronograma|Estudiante|Evaluacion|RecursoTitulacion)(Controller|Service|ServiceImpl|Repository)\b" Informe-Final/secciones/*.tex docs/requisitos/SRS-v1.0.1.tex 2>/dev/null | wc -l)
-[ "$STALE" = "0" ] && ok "sin clases con nombre pre-P4 citadas en el informe activo" || fail "P11: $STALE cita(s) de clases con nombre pre-P4 sin actualizar"
+if python scripts/p11-citas-clases.py; then
+  ok "ninguna clase citada en el informe o el SRS apunta a un .java inexistente"
+else
+  fail "P11: el informe cita clases que ya no existen -- ver la lista de arriba"
+fi
 echo
 
 echo "=== P12 -- Commits vacios (desde f3d1ff4, el commit que reviso la guia) ==="
