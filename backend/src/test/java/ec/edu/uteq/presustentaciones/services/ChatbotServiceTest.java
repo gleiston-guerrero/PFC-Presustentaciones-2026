@@ -20,13 +20,13 @@ class ChatbotServiceTest {
 
     private final ChatbotService chatbotService = new ChatbotService();
 
-    private ChatRequest req(String mensaje) {
+    private ChatRequest req(String message) {
         ChatRequest r = new ChatRequest();
-        r.setMessage(mensaje);
+        r.setMessage(message);
         return r;
     }
 
-    private void autenticar() {
+    private void authenticate() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("estudiante@uteq.edu.ec", null,
                         AuthorityUtils.createAuthorityList("ROLE_ESTUDIANTE")));
@@ -54,8 +54,8 @@ class ChatbotServiceTest {
     }
 
     @Test
-    void mensajeNuloDevuelveRespuestaPorDefecto() {
-        autenticar();
+    void messageNuloDevuelveRespuestaByDefault() {
+        authenticate();
         ChatResponse resp = chatbotService.processMessage(req(null));
         assertTrue(resp.getResponse().contains("No estoy seguro"));
         assertEquals(7, resp.getOptions().size());
@@ -63,40 +63,40 @@ class ChatbotServiceTest {
 
     @Test
     void preguntaSobreSubmission() {
-        autenticar();
+        authenticate();
         assertTrue(chatbotService.processMessage(req("¿Cómo veo mi SOLICITUD?")).getResponse().contains("Solicitudes"));
     }
 
     @Test
     void preguntaSobreProposal() {
-        autenticar();
+        authenticate();
         assertTrue(chatbotService.processMessage(req("dudas del anteproyecto")).getResponse().contains("anteproyecto"));
     }
 
     @Test
     void preguntaSobreNotifications() {
-        autenticar();
+        authenticate();
         assertTrue(chatbotService.processMessage(req("tengo notificaciones")).getResponse().contains("notificaciones"));
         assertTrue(chatbotService.processMessage(req("una notificación")).getResponse().contains("notificaciones"));
     }
 
     @Test
-    void preguntaSobrePerfil() {
-        autenticar();
+    void preguntaSobreProfile() {
+        authenticate();
         assertTrue(chatbotService.processMessage(req("quiero ver mi perfil")).getResponse().contains("Mi Perfil"));
         assertTrue(chatbotService.processMessage(req("mis datos personales")).getResponse().contains("Mi Perfil"));
     }
 
     @Test
-    void preguntaSobreSustentacion() {
-        autenticar();
+    void preguntaSobreDefense() {
+        authenticate();
         assertTrue(chatbotService.processMessage(req("cuando es mi sustentacion")).getResponse().contains("sustentación"));
         assertTrue(chatbotService.processMessage(req("mi sustentación")).getResponse().contains("sustentación"));
     }
 
     @Test
     void preguntaSobreContrasena() {
-        autenticar();
+        authenticate();
         assertTrue(chatbotService.processMessage(req("olvide mi contraseña")).getResponse().contains("contraseña"));
         assertTrue(chatbotService.processMessage(req("cambiar contrasena")).getResponse().contains("contraseña"));
         assertTrue(chatbotService.processMessage(req("cual es mi clave")).getResponse().contains("contraseña"));
@@ -104,7 +104,7 @@ class ChatbotServiceTest {
 
     @Test
     void preguntaDeAyuda() {
-        autenticar();
+        authenticate();
         assertTrue(chatbotService.processMessage(req("ayuda")).getResponse().contains("Puedo ayudarte"));
         assertTrue(chatbotService.processMessage(req("no sé qué hacer")).getResponse().contains("Puedo ayudarte"));
         assertTrue(chatbotService.processMessage(req("no se que hacer")).getResponse().contains("Puedo ayudarte"));
@@ -113,8 +113,8 @@ class ChatbotServiceTest {
     }
 
     @Test
-    void mensajeSinCoincidenciasDevuelveRespuestaPorDefectoConOpciones() {
-        autenticar();
+    void messageWithoutCoincidenciasDevuelveRespuestaByDefaultWithOpciones() {
+        authenticate();
         ChatResponse resp = chatbotService.processMessage(req("cuál es el sentido de la vida"));
         assertTrue(resp.getResponse().contains("No estoy seguro"));
         assertEquals(7, resp.getOptions().size());

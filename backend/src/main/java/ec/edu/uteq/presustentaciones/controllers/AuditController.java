@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auditoria")
 @RequiredArgsConstructor
-@PreAuthorize("@permissionService.tienePermission(authentication, 'AUDITORIA_VER')")
+@PreAuthorize("@permissionService.hasPermission(authentication, 'AUDITORIA_VER')")
 public class AuditController {
 
     private final AuditRepository auditRepository;
@@ -34,7 +34,7 @@ public class AuditController {
      * @return 200 con la página de eventos de auditoría
      */
     @GetMapping("/paginado")
-    public ResponseEntity<Page<Audit>> listPaginado(
+    public ResponseEntity<Page<Audit>> listPaged(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @RequestParam(name = "tabla", required = false) String tabla,
@@ -43,8 +43,8 @@ public class AuditController {
             @RequestParam(name = "q", required = false) String q) {
         int tamanioSeguro = Math.min(Math.max(size, 1), 100);
         Pageable pageable = org.springframework.data.domain.PageRequest.of(
-                Math.max(page, 0), tamanioSeguro, Sort.by(Sort.Direction.DESC, "fecha"));
-        return ResponseEntity.ok(auditRepository.searchConFiltros(tabla, accion, appUserId, q, pageable));
+                Math.max(page, 0), tamanioSeguro, Sort.by(Sort.Direction.DESC, "date"));
+        return ResponseEntity.ok(auditRepository.searchWithFiltros(tabla, accion, appUserId, q, pageable));
     }
 
     /**
@@ -54,7 +54,7 @@ public class AuditController {
      * @return nombres de tabla presentes hoy en el history de auditoría
      */
     @GetMapping("/tablas")
-    public java.util.List<String> tablasAuditadas() {
+    public java.util.List<String> tablesAudited() {
         return java.util.List.of("usuarios", "roles_usuario", "permisos", "rol_permisos", "estudiante", "solicitud", "actas", "evaluaciones_finales", "facultades", "carreras", "modalidades_titulacion", "periodos_academicos");
     }
 }

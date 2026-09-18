@@ -42,13 +42,13 @@ class MinutesServiceImplTest {
     @Mock private SubmissionRepository submissionRepository;
     @Mock private EvaluationFinalRepository evaluationRepository;
     @Mock private PanelistRepository panelistRepository;
-    @Mock private EstadoSubmissionRepository estadoSubmissionRepository;
+    @Mock private StatusSubmissionRepository statusSubmissionRepository;
     @Mock private EntityManager entityManager;
     @Mock private NotificationService notificationService;
     @Mock private AuditService auditService;
     @Mock private TutorRepository tutorRepository;
-    @Mock private ec.edu.uteq.presustentaciones.repositories.EstadoMinutesRepository estadoMinutesRepository;
-    @Mock private ec.edu.uteq.presustentaciones.repositories.HistoryEstadoMinutesRepository historyEstadoMinutesRepository;
+    @Mock private ec.edu.uteq.presustentaciones.repositories.StatusMinutesRepository statusMinutesRepository;
+    @Mock private ec.edu.uteq.presustentaciones.repositories.HistoryStatusMinutesRepository historyStatusMinutesRepository;
     @Mock private ec.edu.uteq.presustentaciones.repositories.AppUserRepository appUserRepository;
     @Mock private PermissionService permissionService;
 
@@ -59,8 +59,8 @@ class MinutesServiceImplTest {
     private Student student;
     private Submission submission;
 
-    private static EstadoMinutes estadoMinutes(int id, String codigo) {
-        return EstadoMinutes.builder().id((short) id).codigo(codigo).nombre(codigo).orden((short) id).build();
+    private static StatusMinutes statusMinutes(int id, String code) {
+        return StatusMinutes.builder().id((short) id).code(code).nombre(code).orden((short) id).build();
     }
 
     @BeforeEach
@@ -87,13 +87,13 @@ class MinutesServiceImplTest {
 
         // V19: el minutes tiene estado (catálogo estados_minutes) y cada transición se registra
         // en history_estados_minutes. Stubs leniente porque no todos los tests los ejercen.
-        lenient().when(estadoMinutesRepository.findByCodigo("GENERADA")).thenReturn(Optional.of(estadoMinutes(1, "GENERADA")));
-        lenient().when(estadoMinutesRepository.findByCodigo("REVISADA")).thenReturn(Optional.of(estadoMinutes(2, "REVISADA")));
-        lenient().when(estadoMinutesRepository.findByCodigo("OBSERVADA")).thenReturn(Optional.of(estadoMinutes(3, "OBSERVADA")));
-        lenient().when(estadoMinutesRepository.findByCodigo("FINALIZADA")).thenReturn(Optional.of(estadoMinutes(4, "FINALIZADA")));
-        lenient().when(estadoMinutesRepository.findByCodigo("ANULADA")).thenReturn(Optional.of(estadoMinutes(5, "ANULADA")));
+        lenient().when(statusMinutesRepository.findByCode("GENERADA")).thenReturn(Optional.of(statusMinutes(1, "GENERADA")));
+        lenient().when(statusMinutesRepository.findByCode("REVISADA")).thenReturn(Optional.of(statusMinutes(2, "REVISADA")));
+        lenient().when(statusMinutesRepository.findByCode("OBSERVADA")).thenReturn(Optional.of(statusMinutes(3, "OBSERVADA")));
+        lenient().when(statusMinutesRepository.findByCode("FINALIZADA")).thenReturn(Optional.of(statusMinutes(4, "FINALIZADA")));
+        lenient().when(statusMinutesRepository.findByCode("ANULADA")).thenReturn(Optional.of(statusMinutes(5, "ANULADA")));
         lenient().when(appUserRepository.findByEmail(any())).thenReturn(Optional.empty());
-        lenient().when(historyEstadoMinutesRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(historyStatusMinutesRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
     @AfterEach
@@ -101,7 +101,7 @@ class MinutesServiceImplTest {
         SecurityContextHolder.clearContext();
     }
 
-    private Minutes minutesConFirmas(boolean presidente, boolean vocal1, boolean vocal2, boolean tutor) {
+    private Minutes minutesWithSignatures(boolean presidente, boolean vocal1, boolean vocal2, boolean tutor) {
         Minutes minutes = Minutes.builder()
                 .id(1L)
                 .submission(submission)
@@ -110,13 +110,13 @@ class MinutesServiceImplTest {
                 .firmadaVocal2(vocal2)
                 .firmadaTutor(tutor)
                 .build();
-        minutes.updateEstadoFirma();
+        minutes.updateStatusSignature();
         return minutes;
     }
 
     @Test
-    void signMinutesConRoleInvalidoLanzaExcepcionYNoLlamaAlProcedimiento() {
-        Minutes minutes = minutesConFirmas(false, false, false, false);
+    void signMinutesWithRoleInvalidoLanzaExcepcionYNoLlamaAlProcedimiento() {
+        Minutes minutes = minutesWithSignatures(false, false, false, false);
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -127,39 +127,39 @@ class MinutesServiceImplTest {
     }
 
     @Test
-    void signMinutesParcialNoCompletaLaSubmissionNiRegeneraElPdf() {
+    void signMinutesParcialNoCompleteLaSubmissionNiRegeneraElPdf() {
         // Ya firmado por Presidente y Vocal 1; esta llamada firma Vocal 2 -- Tutor sigue pendiente.
-        Minutes minutes = minutesConFirmas(true, true, false, false);
+        Minutes minutes = minutesWithSignatures(true, true, false, false);
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
         when(minutesRepository.save(any(Minutes.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Minutes resultado = minutesService.signMinutes(1L, "vocal_2", "Todo correcto");
+        Minutes result = minutesService.signMinutes(1L, "vocal_2", "Todo correcto");
 
         verify(minutesRepository).signMinutesDigital(1L, "VOCAL_2", "Todo correcto");
         verify(entityManager).refresh(minutes);
-        assertFalse(resultado.isFirmada());
+        assertFalse(result.isFirmada());
         verify(submissionRepository, never()).save(any());
-        verify(estadoSubmissionRepository, never()).findByCodigo(any());
+        verify(statusSubmissionRepository, never()).findByCode(any());
     }
 
     @Test
-    void signMinutesCuandoQuedanLas4FirmasCompletaLaSubmissionYNotifica() {
+    void signMinutesCuandoQuedanLas4SignaturesCompleteLaSubmissionYNotifica() {
         // Las 4 ya estaban en true al reload (entityManager.refresh esta mockeado como no-op,
         // asi que el objeto que devuelve findById ya simula el estado post-SP/post-refresh).
-        Minutes minutes = minutesConFirmas(true, true, true, true);
-        minutes.setArchivoPdf("acta_7.pdf");
+        Minutes minutes = minutesWithSignatures(true, true, true, true);
+        minutes.setFilePdf("acta_7.pdf");
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
         when(minutesRepository.save(any(Minutes.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(estadoSubmissionRepository.findByCodigo("COMPLETADA"))
-                .thenReturn(Optional.of(EstadoSubmission.builder().codigo("COMPLETADA").nombre("Completada").build()));
+        when(statusSubmissionRepository.findByCode("COMPLETADA"))
+                .thenReturn(Optional.of(StatusSubmission.builder().code("COMPLETADA").nombre("Completada").build()));
         when(submissionRepository.save(any(Submission.class))).thenAnswer(inv -> inv.getArgument(0));
         when(evaluationRepository.findBySubmissionId(7L)).thenReturn(Optional.empty());
         when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of());
 
-        Minutes resultado = minutesService.signMinutes(1L, "TUTOR", null);
+        Minutes result = minutesService.signMinutes(1L, "TUTOR", null);
 
-        assertTrue(resultado.isFirmada());
-        assertEquals("COMPLETADA", submission.getEstado().getCodigo());
+        assertTrue(result.isFirmada());
+        assertEquals("COMPLETADA", submission.getStatus().getCode());
         verify(submissionRepository).save(submission);
         verify(notificationService).createNotification(eq(10L), contains("firmó"));
         verify(notificationService).createNotification(eq(10L), contains("finalizado"));
@@ -170,7 +170,7 @@ class MinutesServiceImplTest {
 
     @Test
     void signMinutesSiFallaLaNotificationNoPropagaLaExcepcion() {
-        Minutes minutes = minutesConFirmas(true, true, false, false);
+        Minutes minutes = minutesWithSignatures(true, true, false, false);
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
         when(minutesRepository.save(any(Minutes.class))).thenAnswer(inv -> inv.getArgument(0));
         doThrow(new RuntimeException("servicio de notificaciones caido"))
@@ -181,7 +181,7 @@ class MinutesServiceImplTest {
 
     @Test
     void obtainPdfBytesLanzaExcepcionSiElMinutesNoTienePdfGenerado() {
-        Minutes minutes = minutesConFirmas(false, false, false, false);
+        Minutes minutes = minutesWithSignatures(false, false, false, false);
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> minutesService.obtainPdfBytes(1L));
@@ -189,7 +189,7 @@ class MinutesServiceImplTest {
     }
 
     @Test
-    void obtainPdfBytesLanzaExcepcionSiElMinutesNoExiste() {
+    void obtainPdfBytesLanzaExcepcionSiElMinutesNoExists() {
         when(minutesRepository.findById(99L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> minutesService.obtainPdfBytes(99L));
     }
@@ -198,58 +198,58 @@ class MinutesServiceImplTest {
     // pese a que matriz.csv lo cita explicitamente como "ninguna (ActaServiceImplTest.java
     // no existe)" -- ahora existe.
     @Test
-    void generateMinutesLanzaExcepcionSiLaSubmissionNoExiste() {
+    void generateMinutesLanzaExcepcionSiLaSubmissionNoExists() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> minutesService.generateMinutes(7L));
         verify(minutesRepository, never()).save(any());
     }
 
     @Test
-    void generateMinutesRetornaLaExistenteSinRegenerateElPdf() {
-        Minutes existente = minutesConFirmas(false, false, false, false);
+    void generateMinutesRetornaLaExistingWithoutRegenerateElPdf() {
+        Minutes existing = minutesWithSignatures(false, false, false, false);
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(evaluationRepository.findBySubmissionId(7L)).thenReturn(Optional.of(new ec.edu.uteq.presustentaciones.entities.EvaluationFinal()));
         when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of());
-        when(minutesRepository.findBySubmissionId(7L)).thenReturn(Optional.of(existente));
+        when(minutesRepository.findBySubmissionId(7L)).thenReturn(Optional.of(existing));
 
-        Minutes resultado = minutesService.generateMinutes(7L);
+        Minutes result = minutesService.generateMinutes(7L);
 
-        assertSame(existente, resultado);
+        assertSame(existing, result);
         verify(minutesRepository, never()).save(any());
     }
 
     @Test
-    void generateMinutesCreaUnaNuevaConPdfRealYLaGuarda() {
+    void generateMinutesCreaUnaNuevaWithPdfRealYLaGuarda() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(evaluationRepository.findBySubmissionId(7L)).thenReturn(Optional.of(new ec.edu.uteq.presustentaciones.entities.EvaluationFinal()));
         when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of());
         when(minutesRepository.findBySubmissionId(7L)).thenReturn(Optional.empty());
         when(minutesRepository.save(any(Minutes.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Minutes resultado = minutesService.generateMinutes(7L);
+        Minutes result = minutesService.generateMinutes(7L);
 
-        assertNotNull(resultado);
-        assertEquals(submission, resultado.getSubmission());
-        assertNotNull(resultado.getArchivoPdf());
-        assertTrue(tempDir.resolve(resultado.getArchivoPdf()).toFile().exists());
+        assertNotNull(result);
+        assertEquals(submission, result.getSubmission());
+        assertNotNull(result.getFilePdf());
+        assertTrue(tempDir.resolve(result.getFilePdf()).toFile().exists());
         verify(minutesRepository).save(any(Minutes.class));
     }
 
     @Test
-    void searchPorSubmissionDelegaAlRepositorio() {
-        Minutes minutes = minutesConFirmas(false, false, false, false);
+    void searchBySubmissionDelegaAlRepositorio() {
+        Minutes minutes = minutesWithSignatures(false, false, false, false);
         when(minutesRepository.findBySubmissionId(7L)).thenReturn(Optional.of(minutes));
 
-        Optional<Minutes> resultado = minutesService.searchPorSubmission(7L);
+        Optional<Minutes> result = minutesService.searchBySubmission(7L);
 
-        assertTrue(resultado.isPresent());
+        assertTrue(result.isPresent());
         verify(minutesRepository).findBySubmissionId(7L);
     }
 
     @Test
     void deleteMinutesExitosoSiEsAdmin() {
-        Minutes minutes = minutesConFirmas(false, false, false, false);
-        minutes.setArchivoPdf("test.pdf");
+        Minutes minutes = minutesWithSignatures(false, false, false, false);
+        minutes.setFilePdf("test.pdf");
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
 
         SecurityContextHolder.getContext().setAuthentication(
@@ -261,8 +261,8 @@ class MinutesServiceImplTest {
     }
 
     @Test
-    void deleteMinutesLanzaExcepcionSiNoTieneAcceso() {
-        Minutes minutes = minutesConFirmas(false, false, false, false);
+    void deleteMinutesLanzaExcepcionSiNoTieneAccess() {
+        Minutes minutes = minutesWithSignatures(false, false, false, false);
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
 
         SecurityContextHolder.getContext().setAuthentication(
@@ -279,89 +279,89 @@ class MinutesServiceImplTest {
 
     // ═══ Módulo 2: gestión e history de minutes (V19) ═══════════════════════════
 
-    private Minutes minutesConEstado(String codigoEstado) {
-        Minutes minutes = minutesConFirmas(false, false, false, false);
-        minutes.setEstado(estadoMinutes(1, codigoEstado));
+    private Minutes minutesWithStatus(String codeStatus) {
+        Minutes minutes = minutesWithSignatures(false, false, false, false);
+        minutes.setStatus(statusMinutes(1, codeStatus));
         return minutes;
     }
 
-    private void autenticarComo(String email, String rolee) {
+    private void authenticateAs(String email, String rolee) {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(email, null,
                         org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_" + rolee)));
     }
 
     @Test
-    void obtainDetalleDeMinutesAjenaLanzaExcepcionAunConIdConocido() {
+    void obtainDetailDeMinutesAjenaLanzaExcepcionAunWithIdConocido() {
         // IDOR/BOLA: teacher B pide el minutes de una submission donde no es panelist ni tutor.
-        Minutes minutes = minutesConEstado("GENERADA");
-        autenticarComo("docenteB@uteq.edu.ec", "DOCENTE");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+        Minutes minutes = minutesWithStatus("GENERADA");
+        authenticateAs("docenteB@uteq.edu.ec", "DOCENTE");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
         when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of());
         when(tutorRepository.findBySubmissionId(7L)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> minutesService.obtainDetalle(1L));
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> minutesService.obtainDetail(1L));
         assertTrue(ex.getMessage().contains("No tienes permiso"));
     }
 
     @Test
-    void obtainDetalleLoPermiteAlCoordinadorViaPermission() {
-        Minutes minutes = minutesConEstado("GENERADA");
-        autenticarComo("coord@uteq.edu.ec", "COORDINADOR");
-        when(permissionService.tienePermission(any(), eq("ACTAS_VER"))).thenReturn(true);
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+    void obtainDetailLoPermiteAlCoordinatorViaPermission() {
+        Minutes minutes = minutesWithStatus("GENERADA");
+        authenticateAs("coord@uteq.edu.ec", "COORDINADOR");
+        when(permissionService.hasPermission(any(), eq("ACTAS_VER"))).thenReturn(true);
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
         when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of());
 
-        assertNotNull(minutesService.obtainDetalle(1L));
+        assertNotNull(minutesService.obtainDetail(1L));
     }
 
     @Test
-    void changeEstadoValidoRegistraHistoryYActualizaElMinutes() {
-        Minutes minutes = minutesConEstado("GENERADA");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+    void changeStatusValidRegistraHistoryYActualizaElMinutes() {
+        Minutes minutes = minutesWithStatus("GENERADA");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
         when(minutesRepository.save(any(Minutes.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Minutes resultado = minutesService.changeEstado(1L, "revisada", "Revisado por el coordinador");
+        Minutes result = minutesService.changeStatus(1L, "revisada", "Revisado por el coordinador");
 
-        assertEquals("REVISADA", resultado.getEstado().getCodigo());
-        var captor = org.mockito.ArgumentCaptor.forClass(ec.edu.uteq.presustentaciones.entities.HistoryEstadoMinutes.class);
-        verify(historyEstadoMinutesRepository).save(captor.capture());
+        assertEquals("REVISADA", result.getStatus().getCode());
+        var captor = org.mockito.ArgumentCaptor.forClass(ec.edu.uteq.presustentaciones.entities.HistoryStatusMinutes.class);
+        verify(historyStatusMinutesRepository).save(captor.capture());
         assertEquals("CAMBIO_ESTADO", captor.getValue().getAccion());
-        assertEquals("GENERADA", captor.getValue().getEstadoAnterior().getCodigo());
-        assertEquals("REVISADA", captor.getValue().getEstadoNuevo().getCodigo());
+        assertEquals("GENERADA", captor.getValue().getStatusAnterior().getCode());
+        assertEquals("REVISADA", captor.getValue().getStatusNew().getCode());
     }
 
     @Test
-    void changeEstadoConTransicionNoPermitidaLanzaExcepcion() {
-        Minutes minutes = minutesConEstado("GENERADA");
-        autenticarComo("coord@uteq.edu.ec", "COORDINADOR");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+    void changeStatusWithTransicionNoPermitidaLanzaExcepcion() {
+        Minutes minutes = minutesWithStatus("GENERADA");
+        authenticateAs("coord@uteq.edu.ec", "COORDINADOR");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> minutesService.changeEstado(1L, "FINALIZADA", null));
+                () -> minutesService.changeStatus(1L, "FINALIZADA", null));
         assertTrue(ex.getMessage().contains("no permitida"));
-        verify(historyEstadoMinutesRepository, never()).save(any());
+        verify(historyStatusMinutesRepository, never()).save(any());
         verify(minutesRepository, never()).save(any());
     }
 
     @Test
-    void changeEstadoAObservadaSinMotivoLanzaExcepcion() {
-        Minutes minutes = minutesConEstado("GENERADA");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+    void changeStatusAObservadaWithoutMotivoLanzaExcepcion() {
+        Minutes minutes = minutesWithStatus("GENERADA");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> minutesService.changeEstado(1L, "OBSERVADA", "   "));
+                () -> minutesService.changeStatus(1L, "OBSERVADA", "   "));
         assertTrue(ex.getMessage().toLowerCase().contains("motivo"));
     }
 
     @Test
     void obtainHistoryDevuelveLasEntradasDelRepositorio() {
-        Minutes minutes = minutesConEstado("GENERADA");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
-        var h = ec.edu.uteq.presustentaciones.entities.HistoryEstadoMinutes.builder()
-                .id(1L).minutes(minutes).estadoNuevo(estadoMinutes(1, "GENERADA")).accion("CREAR")
-                .fechaCambio(java.time.LocalDateTime.now()).build();
-        when(historyEstadoMinutesRepository.findByMinutesIdOrderByFechaCambioDesc(1L)).thenReturn(List.of(h));
+        Minutes minutes = minutesWithStatus("GENERADA");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
+        var h = ec.edu.uteq.presustentaciones.entities.HistoryStatusMinutes.builder()
+                .id(1L).minutes(minutes).statusNew(statusMinutes(1, "GENERADA")).accion("CREAR")
+                .dateCambio(java.time.LocalDateTime.now()).build();
+        when(historyStatusMinutesRepository.findByMinutesIdOrderByDateCambioDesc(1L)).thenReturn(List.of(h));
 
         var timeline = minutesService.obtainHistory(1L);
 
@@ -370,13 +370,13 @@ class MinutesServiceImplTest {
     }
 
     @Test
-    void listMisMinutesDelegaAlRepositorioConElEmail() {
+    void listMyMinutesDelegaAlRepositorioWithElEmail() {
         org.springframework.data.domain.Page<Minutes> vacia = org.springframework.data.domain.Page.empty();
-        when(minutesRepository.findMisMinutes(eq("docente@uteq.edu.ec"), any())).thenReturn(vacia);
+        when(minutesRepository.findMyMinutes(eq("docente@uteq.edu.ec"), any())).thenReturn(vacia);
 
-        minutesService.listMisMinutes("docente@uteq.edu.ec", org.springframework.data.domain.PageRequest.of(0, 10));
+        minutesService.listMyMinutes("docente@uteq.edu.ec", org.springframework.data.domain.PageRequest.of(0, 10));
 
-        verify(minutesRepository).findMisMinutes(eq("docente@uteq.edu.ec"), any());
+        verify(minutesRepository).findMyMinutes(eq("docente@uteq.edu.ec"), any());
     }
 
     // ── listMinutes / searchMinutes ────────────────────────────────────────────
@@ -395,75 +395,75 @@ class MinutesServiceImplTest {
         org.springframework.data.domain.Page<Minutes> pagina = org.springframework.data.domain.Page.empty();
         // Sin filtro de fecha -> el service pasa un rango abierto con sentinelas (Postgres no
         // puede inferir el tipo de un parámetro de fecha null en "(:desde IS NULL OR ...)").
-        java.time.LocalDate desdeMin = java.time.LocalDate.of(1900, 1, 1);
-        java.time.LocalDate hastaMax = java.time.LocalDate.of(9999, 12, 31);
-        when(minutesRepository.searchConFiltros(eq("FINALIZADA"), isNull(), eq(desdeMin), eq(hastaMax), eq("sistema"), eq(pageable)))
+        java.time.LocalDate fromMin = java.time.LocalDate.of(1900, 1, 1);
+        java.time.LocalDate toMax = java.time.LocalDate.of(9999, 12, 31);
+        when(minutesRepository.searchWithFiltros(eq("FINALIZADA"), isNull(), eq(fromMin), eq(toMax), eq("sistema"), eq(pageable)))
                 .thenReturn(pagina);
 
         minutesService.searchMinutes("FINALIZADA", "   ", null, null, "sistema", pageable);
 
-        verify(minutesRepository).searchConFiltros(eq("FINALIZADA"), isNull(), eq(desdeMin), eq(hastaMax), eq("sistema"), eq(pageable));
+        verify(minutesRepository).searchWithFiltros(eq("FINALIZADA"), isNull(), eq(fromMin), eq(toMax), eq("sistema"), eq(pageable));
     }
 
     // ── validateAcceso: rutas de propiedad (no solo admin/ajeno) ─────────────
 
     @Test
-    void obtainDetalleLoPermiteAlPropioStudent() {
-        Minutes minutes = minutesConEstado("GENERADA");
-        autenticarComo("atorres@uteq.edu.ec", "ESTUDIANTE"); // email del student del fixture
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+    void obtainDetailLoPermiteAlOwnStudent() {
+        Minutes minutes = minutesWithStatus("GENERADA");
+        authenticateAs("atorres@uteq.edu.ec", "ESTUDIANTE"); // email del student del fixture
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
         when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of());
 
-        assertDoesNotThrow(() -> minutesService.obtainDetalle(1L));
+        assertDoesNotThrow(() -> minutesService.obtainDetail(1L));
     }
 
     @Test
-    void obtainDetalleLoPermiteAlPanelistAsignado() {
-        Minutes minutes = minutesConEstado("GENERADA");
+    void obtainDetailLoPermiteAlPanelistAsignado() {
+        Minutes minutes = minutesWithStatus("GENERADA");
         AppUser appUserPanelist = AppUser.builder().id(50L).email("jurado@uteq.edu.ec").build();
         Teacher teacherPanelist = Teacher.builder().id(1L).appUser(appUserPanelist).build();
         Panelist panelist = Panelist.builder().id(1L).submission(submission).teacher(teacherPanelist)
-                .rolePanelist(RolePanelist.builder().codigo("PRESIDENTE").build()).build();
-        autenticarComo("jurado@uteq.edu.ec", "DOCENTE");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+                .rolePanelist(RolePanelist.builder().code("PRESIDENTE").build()).build();
+        authenticateAs("jurado@uteq.edu.ec", "DOCENTE");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
         when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of(panelist));
 
-        assertDoesNotThrow(() -> minutesService.obtainDetalle(1L));
+        assertDoesNotThrow(() -> minutesService.obtainDetail(1L));
     }
 
     @Test
-    void obtainDetalleLoPermiteAlTutorAsignado() {
-        Minutes minutes = minutesConEstado("GENERADA");
+    void obtainDetailLoPermiteAlTutorAsignado() {
+        Minutes minutes = minutesWithStatus("GENERADA");
         AppUser appUserTutor = AppUser.builder().id(60L).email("tutor@uteq.edu.ec").build();
         Teacher teacherTutor = Teacher.builder().id(2L).appUser(appUserTutor).build();
         Tutor tutor = Tutor.builder().id(1L).teacher(teacherTutor).build();
-        autenticarComo("tutor@uteq.edu.ec", "DOCENTE");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+        authenticateAs("tutor@uteq.edu.ec", "DOCENTE");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
         when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of());
         when(tutorRepository.findBySubmissionId(7L)).thenReturn(Optional.of(tutor));
 
-        assertDoesNotThrow(() -> minutesService.obtainDetalle(1L));
+        assertDoesNotThrow(() -> minutesService.obtainDetail(1L));
     }
 
     @Test
-    void validateAccesoLanzaSiNoHayAutenticacion() {
+    void validateAccessLanzaSiNoHayAutenticacion() {
         SecurityContextHolder.clearContext();
-        Minutes minutes = minutesConEstado("GENERADA");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+        Minutes minutes = minutesWithStatus("GENERADA");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
 
-        assertThrows(RuntimeException.class, () -> minutesService.obtainDetalle(1L));
+        assertThrows(RuntimeException.class, () -> minutesService.obtainDetail(1L));
     }
 
     // ── signMinutes: rutas autorizadas para panelist/tutor (no admin) ──────────
 
     @Test
-    void signMinutesPermiteAlPanelistConElRoleCorrecto() {
+    void signMinutesPermiteAlPanelistWithElRoleCorrecto() {
         AppUser appUserPresidente = AppUser.builder().id(50L).email("presidente@uteq.edu.ec").build();
         Teacher teacherPresidente = Teacher.builder().id(1L).appUser(appUserPresidente).build();
         Panelist panelist = Panelist.builder().id(1L).submission(submission).teacher(teacherPresidente)
-                .rolePanelist(RolePanelist.builder().codigo("PRESIDENTE").build()).build();
-        Minutes minutes = minutesConFirmas(false, false, false, false);
-        autenticarComo("presidente@uteq.edu.ec", "DOCENTE");
+                .rolePanelist(RolePanelist.builder().code("PRESIDENTE").build()).build();
+        Minutes minutes = minutesWithSignatures(false, false, false, false);
+        authenticateAs("presidente@uteq.edu.ec", "DOCENTE");
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
         when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of(panelist));
         when(minutesRepository.save(any(Minutes.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -475,13 +475,13 @@ class MinutesServiceImplTest {
     }
 
     @Test
-    void signMinutesRechazaPanelistConRoleQueNoLeCorresponde() {
+    void signMinutesRechazaPanelistWithRoleQueNoLeCorresponde() {
         AppUser appUserVocal = AppUser.builder().id(51L).email("vocal@uteq.edu.ec").build();
         Teacher teacherVocal = Teacher.builder().id(2L).appUser(appUserVocal).build();
         Panelist panelist = Panelist.builder().id(2L).submission(submission).teacher(teacherVocal)
-                .rolePanelist(RolePanelist.builder().codigo("VOCAL_1").build()).build();
-        Minutes minutes = minutesConFirmas(false, false, false, false);
-        autenticarComo("vocal@uteq.edu.ec", "DOCENTE");
+                .rolePanelist(RolePanelist.builder().code("VOCAL_1").build()).build();
+        Minutes minutes = minutesWithSignatures(false, false, false, false);
+        authenticateAs("vocal@uteq.edu.ec", "DOCENTE");
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
         when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of(panelist));
 
@@ -496,8 +496,8 @@ class MinutesServiceImplTest {
         AppUser appUserTutor = AppUser.builder().id(60L).email("tutor@uteq.edu.ec").build();
         Teacher teacherTutor = Teacher.builder().id(3L).appUser(appUserTutor).build();
         Tutor tutor = Tutor.builder().id(1L).teacher(teacherTutor).build();
-        Minutes minutes = minutesConFirmas(false, false, false, false);
-        autenticarComo("tutor@uteq.edu.ec", "DOCENTE");
+        Minutes minutes = minutesWithSignatures(false, false, false, false);
+        authenticateAs("tutor@uteq.edu.ec", "DOCENTE");
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
         when(tutorRepository.findBySubmissionId(7L)).thenReturn(Optional.of(tutor));
         when(minutesRepository.save(any(Minutes.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -508,8 +508,8 @@ class MinutesServiceImplTest {
 
     @Test
     void signMinutesRechazaSiNoEsElTutorAsignado() {
-        Minutes minutes = minutesConFirmas(false, false, false, false);
-        autenticarComo("impostor@uteq.edu.ec", "DOCENTE");
+        Minutes minutes = minutesWithSignatures(false, false, false, false);
+        authenticateAs("impostor@uteq.edu.ec", "DOCENTE");
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
         when(tutorRepository.findBySubmissionId(7L)).thenReturn(Optional.empty());
 
@@ -521,75 +521,75 @@ class MinutesServiceImplTest {
     // ── changeEstado: ramas restantes ───────────────────────────────────────
 
     @Test
-    void changeEstadoLanzaSiNuevoEstadoEsBlanco() {
+    void changeStatusLanzaSiNewStatusEsBlanco() {
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> minutesService.changeEstado(1L, "  ", null));
+                () -> minutesService.changeStatus(1L, "  ", null));
         assertTrue(ex.getMessage().contains("Debe indicar el nuevo estado"));
     }
 
     @Test
-    void changeEstadoLanzaSiYaEstaEnEseEstado() {
-        Minutes minutes = minutesConEstado("REVISADA");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+    void changeStatusLanzaSiYaIsEnEseStatus() {
+        Minutes minutes = minutesWithStatus("REVISADA");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> minutesService.changeEstado(1L, "REVISADA", null));
+                () -> minutesService.changeStatus(1L, "REVISADA", null));
         assertTrue(ex.getMessage().contains("ya está en estado"));
     }
 
     @Test
-    void changeEstadoLanzaSiElCodigoDestinoNoExiste() {
-        Minutes minutes = minutesConEstado("GENERADA");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
-        when(estadoMinutesRepository.findByCodigo("INVALIDO")).thenReturn(Optional.empty());
+    void changeStatusLanzaSiElCodeDestinoNoExists() {
+        Minutes minutes = minutesWithStatus("GENERADA");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
+        when(statusMinutesRepository.findByCode("INVALIDO")).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> minutesService.changeEstado(1L, "INVALIDO", null));
+                () -> minutesService.changeStatus(1L, "INVALIDO", null));
         assertTrue(ex.getMessage().contains("Estado de acta inválido"));
     }
 
     @Test
-    void changeEstadoAdminPuedeAnularDesdeCualquierEstado() {
+    void changeStatusAdminCanAnularFromCualquierStatus() {
         // FINALIZADA solo permite -> ANULADA en TRANSICIONES; se prueba igual la ruta explicita
         // del bypass de ADMIN, no solo la transicion ya permitida por el mapa.
-        Minutes minutes = minutesConEstado("FINALIZADA");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+        Minutes minutes = minutesWithStatus("FINALIZADA");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
         when(minutesRepository.save(any(Minutes.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Minutes resultado = minutesService.changeEstado(1L, "ANULADA", "Error administrativo");
+        Minutes result = minutesService.changeStatus(1L, "ANULADA", "Error administrativo");
 
-        assertEquals("ANULADA", resultado.getEstado().getCodigo());
-        assertEquals("Error administrativo", resultado.getObservacionesMinutes());
+        assertEquals("ANULADA", result.getStatus().getCode());
+        assertEquals("Error administrativo", result.getObservationsMinutes());
     }
 
     @Test
-    void changeEstadoDeObservadaARevisadaEsValido() {
-        Minutes minutes = minutesConEstado("OBSERVADA");
-        autenticarComo("coord@uteq.edu.ec", "COORDINADOR");
-        when(permissionService.tienePermission(any(), eq("ACTAS_GESTIONAR"))).thenReturn(false);
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+    void changeStatusDeObservadaARevisadaEsValid() {
+        Minutes minutes = minutesWithStatus("OBSERVADA");
+        authenticateAs("coord@uteq.edu.ec", "COORDINADOR");
+        when(permissionService.hasPermission(any(), eq("ACTAS_GESTIONAR"))).thenReturn(false);
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
         when(minutesRepository.save(any(Minutes.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Minutes resultado = minutesService.changeEstado(1L, "REVISADA", null);
+        Minutes result = minutesService.changeStatus(1L, "REVISADA", null);
 
-        assertEquals("REVISADA", resultado.getEstado().getCodigo());
+        assertEquals("REVISADA", result.getStatus().getCode());
     }
 
     @Test
-    void changeEstadoNoPropagaFalloDeNotification() {
-        Minutes minutes = minutesConEstado("GENERADA");
-        when(minutesRepository.findDetalleById(1L)).thenReturn(Optional.of(minutes));
+    void changeStatusNoPropagaFalloDeNotification() {
+        Minutes minutes = minutesWithStatus("GENERADA");
+        when(minutesRepository.findDetailById(1L)).thenReturn(Optional.of(minutes));
         when(minutesRepository.save(any(Minutes.class))).thenAnswer(inv -> inv.getArgument(0));
         doThrow(new RuntimeException("smtp caido")).when(notificationService).createNotification(anyLong(), anyString());
 
-        assertDoesNotThrow(() -> minutesService.changeEstado(1L, "REVISADA", null));
+        assertDoesNotThrow(() -> minutesService.changeStatus(1L, "REVISADA", null));
     }
 
     // ── deleteMinutes: borra tambien el archivo fisico si existe ─────────────
 
     @Test
-    void deleteMinutesSinArchivoPdfNoIntentaEraseNada() {
-        Minutes minutes = minutesConFirmas(false, false, false, false); // sin archivoPdf
+    void deleteMinutesWithoutFilePdfNoIntentaEraseNada() {
+        Minutes minutes = minutesWithSignatures(false, false, false, false); // sin archivoPdf
         when(minutesRepository.findById(1L)).thenReturn(Optional.of(minutes));
 
         assertDoesNotThrow(() -> minutesService.deleteMinutes(1L));

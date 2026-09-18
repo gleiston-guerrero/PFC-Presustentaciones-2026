@@ -26,14 +26,14 @@ class CustomUserDetailsServiceTest {
     private CustomUserDetailsService service;
 
     @Test
-    void lanzaUsernameNotFoundSiElAppUserNoExiste() {
+    void lanzaUsernameNotFoundSiElAppUserNoExists() {
         when(appUserRepository.findByEmail("nadie@uteq.edu.ec")).thenReturn(Optional.empty());
 
         assertThrows(UsernameNotFoundException.class, () -> service.loadUserByUsername("nadie@uteq.edu.ec"));
     }
 
     @Test
-    void devuelveUserDetailsHabilitadoParaUnAppUserActivo() {
+    void devuelveUserDetailsHabilitadoForUnAppUserActivo() {
         AppUser u = new AppUser();
         u.setEmail("docente@uteq.edu.ec");
         u.setPassword("hash-bcrypt");
@@ -51,7 +51,7 @@ class CustomUserDetailsServiceTest {
     }
 
     @Test
-    void devuelveUserDetailsDeshabilitadoParaUnAppUserInactivo() {
+    void devuelveUserDetailsDeshabilitadoForUnAppUserInactivo() {
         AppUser u = new AppUser();
         u.setEmail("retirado@uteq.edu.ec");
         u.setPassword("hash");

@@ -7,7 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 /**
- * Bean invocado desde @PreAuthorize("@permissionService.tienePermission(authentication, 'CODIGO')")
+ * Bean invocado desde @PreAuthorize("@permissionService.hasPermission(authentication, 'CODIGO')")
  * en cada controlador protegido. Reemplaza los hasRole/hasAnyRole fijos en código: el role
  * del appUser autenticado y sus permissions viven en la base de datos (roles_appUser,
  * permissions, role_permissions) y son editables desde "Gestionar Roles" / "Gestionar Permisos".
@@ -21,10 +21,10 @@ public class PermissionService {
 
     /**
      * @param authentication autenticación del appUser a evaluar
-     * @param codigoPermission  código del permission requerido
+     * @param codePermission  código del permission requerido
      * @return {@code true} si el appUser autenticado tiene ese permission vía su role
      */
-    public boolean tienePermission(Authentication authentication, String codigoPermission) {
+    public boolean hasPermission(Authentication authentication, String codePermission) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
         }
@@ -32,7 +32,7 @@ public class PermissionService {
         if (email == null || "anonymousUser".equals(email)) {
             return false;
         }
-        return permissionRepository.appUserTienePermission(email, codigoPermission);
+        return permissionRepository.appUserTienePermission(email, codePermission);
     }
 
     /**
@@ -42,7 +42,7 @@ public class PermissionService {
      * @param authentication autenticación del appUser
      * @return los códigos de permission de ese appUser, o lista vacía si no está autenticado
      */
-    public java.util.List<String> permissionsDe(Authentication authentication) {
+    public java.util.List<String> permissionsOf(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return java.util.List.of();
         }
@@ -50,7 +50,7 @@ public class PermissionService {
         if (email == null || "anonymousUser".equals(email)) {
             return java.util.List.of();
         }
-        return permissionRepository.findCodigosPorEmail(email);
+        return permissionRepository.findCodigosByEmail(email);
     }
 
     /**
@@ -58,7 +58,7 @@ public class PermissionService {
      * @param teacherId      id del teacher a comparar
      * @return {@code true} si el appUser autenticado es el teacher vinculado a ese id
      */
-    public boolean esPropioTeacher(Authentication authentication, Long teacherId) {
+    public boolean isOwnTeacher(Authentication authentication, Long teacherId) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
         }

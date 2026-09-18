@@ -15,23 +15,23 @@ public interface SubmissionService {
      * inicial "CREADA".
      *
      * @param studentId id del {@code Student} propietario de la submission
-     * @param datos        datos de la submission a create (título del topic, modality, etc.)
+     * @param data        datos de la submission a create (título del topic, modality, etc.)
      * @return la submission creada y persistida, con su estado y student asociados
      * @throws RuntimeException si el student no existe o falta la modality de titulación
      */
-    Submission createSubmission(Long studentId, Submission datos);
+    Submission createSubmission(Long studentId, Submission data);
 
     /**
      * Crea una submission a partir del appUser autenticado, creando automáticamente su perfil de
      * {@code Student} (vía {@code sp_generate_codigo_expediente}) si todavía no existe.
      *
      * @param appUserId id del {@code AppUser} autenticado (role ESTUDIANTE)
-     * @param datos     datos de la submission a create
+     * @param data     datos de la submission a create
      * @return la submission creada
      * @throws RuntimeException si el appUser no existe, no tiene role ESTUDIANTE, o no hay
      *                          programs configuradas para create el perfil automáticamente
      */
-    Submission createSubmissionPorAppUser(Long appUserId, Submission datos);
+    Submission createSubmissionByAppUser(Long appUserId, Submission data);
 
     /**
      * Transiciona una submission de "CREADA" a "ENVIADA", validando que ya tenga un proposal
@@ -63,10 +63,10 @@ public interface SubmissionService {
      * Rechaza una submission registrando el motivo del rechazo en sus observaciones.
      *
      * @param submissionId  id de la submission a reject
-     * @param observacion  motivo del rechazo, visible luego para el student
+     * @param observation  motivo del rechazo, visible luego para el student
      * @return la submission actualizada en estado "RECHAZADA" con la observación guardada
      */
-    Submission rejectConObservacion(Long submissionId, String observacion);
+    Submission rejectWithObservation(Long submissionId, String observation);
 
     /** @return todas las submissions del sistema, sin paginar */
     List<Submission> listSubmissions();
@@ -78,36 +78,36 @@ public interface SubmissionService {
      *
      * @param pagina       número de página, base 0
      * @param tamanio      tamaño de página
-     * @param estado       código de estado por el que filtrar, o {@code null} para no filtrar
+     * @param status       código de estado por el que filtrar, o {@code null} para no filtrar
      * @param texto        texto libre de búsqueda (título/student), o {@code null}
-     * @param fechaDesde   fecha mínima de registro, o {@code null} para no acotar
-     * @param fechaHasta   fecha máxima de registro, o {@code null} para no acotar
+     * @param dateFrom   fecha mínima de registro, o {@code null} para no acotar
+     * @param dateTo   fecha máxima de registro, o {@code null} para no acotar
      * @return página de submissions que cumplen los filtros
      */
-    Page<Submission> listSubmissionsPaginado(int pagina, int tamanio, String estado, String texto,
-                                               LocalDate fechaDesde, LocalDate fechaHasta);
+    Page<Submission> listSubmissionsPaged(int pagina, int tamanio, String status, String texto,
+                                               LocalDate dateFrom, LocalDate dateTo);
 
     /** @return count de submissions agrupado por código de estado, para el dashboard */
-    Map<String, Long> countPorEstado();
+    Map<String, Long> countByStatus();
 
     /**
      * @param studentId id del student
      * @return todas las submissions registradas por ese student
      */
-    List<Submission> listPorStudent(Long studentId);
+    List<Submission> listByStudent(Long studentId);
 
     /**
      * @param appUserId id del appUser (se resuelve a su perfil de student internamente)
      * @return las submissions del student asociado a ese appUser, o lista vacía si no tiene
      *         perfil de student todavía
      */
-    List<Submission> listPorAppUser(Long appUserId);
+    List<Submission> listByAppUser(Long appUserId);
 
     /**
      * @param id id de la submission
      * @return la submission si existe, o {@link Optional#empty()} en caso contrario
      */
-    Optional<Submission> obtainPorId(Long id);
+    Optional<Submission> obtainById(Long id);
 
     /**
      * Suspende una submission que ya está en trámite (no permitido si está en "CREADA",
@@ -119,7 +119,7 @@ public interface SubmissionService {
      * @throws RuntimeException si la submission no existe, su estado actual no permite
      *                          suspensión, o el motivo está vacío
      */
-    Submission suspenderSubmission(Long submissionId, String motivo);
+    Submission suspendSubmission(Long submissionId, String motivo);
 
     /**
      * Invoca {@code sp_generate_reporte_defensas} (procedimiento almacenado, Criterio P1) para
@@ -131,7 +131,7 @@ public interface SubmissionService {
      *         {@code docs/basedatos/CATALOGO-SP.md} (submissionId, studentNombre, expediente,
      *         tituloTopic, estadoSubmission, fechaDefensa, roomNombre, notaFinal)
      */
-    List<Map<String, Object>> generateReporteDefensasSP(String program);
+    List<Map<String, Object>> generateReportDefensesSP(String program);
 
     /**
      * Obtiene el tracking visual de la pre-sustentación.

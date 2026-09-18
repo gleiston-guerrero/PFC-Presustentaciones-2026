@@ -10,8 +10,8 @@ import java.util.Optional;
 public interface RolePanelistRepository extends JpaRepository<RolePanelist, Short> {
     /**
      * Busca el/los registro(s) con codigo.
-     * @param codigo codigo
+     * @param code code
      * @return el registro si existe, vacío si no
      */
-    Optional<RolePanelist> findByCodigo(String codigo);
+    Optional<RolePanelist> findByCode(String code);
 }

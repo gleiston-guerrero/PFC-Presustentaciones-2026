@@ -24,9 +24,9 @@ public class StudentDTO {
     @JsonProperty("activo")
     private Boolean activo;
     @JsonProperty("telefono")
-    private String telefono;
+    private String phone;
     @JsonProperty("expedienteCodigo")
-    private String expedienteCodigo;
+    private String expedienteCode;
     @JsonProperty("carreraId")
     private Integer programId;
     @JsonProperty("carreraNombre")
@@ -38,12 +38,12 @@ public class StudentDTO {
     @JsonProperty("semestreActual")
     private Short semestreActual;
     @JsonProperty("estadoAcademicoCodigo")
-    private String estadoAcademicoCodigo;
+    private String statusAcademicCode;
     @JsonProperty("estadoAcademicoNombre")
-    private String estadoAcademicoNombre;
+    private String statusAcademicNombre;
     /** Topic de la submission más reciente del student, si tiene alguna. */
     @JsonProperty("proyectoTitulo")
     private String proyectoTitulo;
     @JsonProperty("proyectoEstado")
-    private String proyectoEstado;
+    private String proyectoStatus;
 }

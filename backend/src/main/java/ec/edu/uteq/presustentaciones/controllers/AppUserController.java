@@ -1,14 +1,14 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.dto.PerfilRequest;
-import ec.edu.uteq.presustentaciones.dto.ResolveSupresionRequest;
+import ec.edu.uteq.presustentaciones.dto.ProfileRequest;
+import ec.edu.uteq.presustentaciones.dto.ResolveErasureRequest;
 import ec.edu.uteq.presustentaciones.dto.ResponseWrapper;
-import ec.edu.uteq.presustentaciones.entities.SubmissionSupresion;
+import ec.edu.uteq.presustentaciones.entities.SubmissionErasure;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.security.dto.RegisterRequest;
 import ec.edu.uteq.presustentaciones.services.IAppUserService;
-import ec.edu.uteq.presustentaciones.services.SupresionDatosService;
+import ec.edu.uteq.presustentaciones.services.ErasureDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -37,7 +37,7 @@ public class AppUserController {
 
     private final IAppUserService appUserService;
     private final AppUserRepository appUserRepository;
-    private final SupresionDatosService supresionDatosService;
+    private final ErasureDataService erasureDataService;
 
     /**
      * Listado completo de appUsers, sin paginar. Se conserva para usos puntuales; el panel de
@@ -47,12 +47,12 @@ public class AppUserController {
      * @return 200 con todos los appUsers
      */
     @GetMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Listar todos los usuarios (solo ADMIN) — sin paginar, uso interno/pequeñas instalaciones")
-    public ResponseEntity<?> listTodos() {
+    public ResponseEntity<?> listAll() {
         log.info("GET /api/usuarios - Listando todos los usuarios");
         try {
-            return ResponseEntity.ok(ResponseWrapper.success(appUserService.listTodos()));
+            return ResponseEntity.ok(ResponseWrapper.success(appUserService.listAll()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -69,21 +69,21 @@ public class AppUserController {
      * @return 200 con la página de appUsers
      */
     @GetMapping("/paginado")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Listar usuarios paginado, con búsqueda opcional (solo ADMIN)")
-    public ResponseEntity<?> listPaginado(
+    public ResponseEntity<?> listPaged(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @RequestParam(name = "q", required = false) String q
     ) {
         try {
-            var resultado = appUserService.listPaginado(page, size, q);
+            var result = appUserService.listPaged(page, size, q);
             return ResponseEntity.ok(ResponseWrapper.success(java.util.Map.of(
-                    "content", resultado.getContent(),
-                    "totalElements", resultado.getTotalElements(),
-                    "totalPages", resultado.getTotalPages(),
-                    "page", resultado.getNumber(),
-                    "size", resultado.getSize()
+                    "content", result.getContent(),
+                    "totalElements", result.getTotalElements(),
+                    "totalPages", result.getTotalPages(),
+                    "page", result.getNumber(),
+                    "size", result.getSize()
             )));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
@@ -99,13 +99,13 @@ public class AppUserController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "Obtener usuario por ID (propio usuario o ADMIN)")
-    public ResponseEntity<?> obtainPorId(@PathVariable("id") Long id) {
-        if (!esAppUserActualOAdmin(id)) {
+    public ResponseEntity<?> obtainById(@PathVariable("id") Long id) {
+        if (!isCurrentAppUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ResponseWrapper.error("No tienes permiso para ver este usuario"));
         }
         log.info("GET /api/usuarios/{} - Obteniendo usuario", id);
-        return appUserService.obtainPorId(id)
+        return appUserService.obtainById(id)
                 .<ResponseEntity<?>>map(appUser -> ResponseEntity.ok(ResponseWrapper.success(appUser)))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseWrapper.error("Usuario no encontrado")));
     }
@@ -117,11 +117,11 @@ public class AppUserController {
      * @return 200 con el appUser encontrado, o el error correspondiente si no existe
      */
     @GetMapping("/email/{email}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Buscar usuario por email (solo ADMIN)")
-    public ResponseEntity<?> searchPorEmail(@PathVariable("email") String email) {
+    public ResponseEntity<?> searchByEmail(@PathVariable("email") String email) {
         log.info("GET /api/usuarios/email/{} - Buscando usuario", email);
-        return appUserService.obtainPorEmail(email)
+        return appUserService.obtainByEmail(email)
                 .<ResponseEntity<?>>map(appUser -> ResponseEntity.ok(ResponseWrapper.success(appUser)))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseWrapper.error("Usuario no encontrado")));
     }
@@ -133,12 +133,12 @@ public class AppUserController {
      * @return 200 con los appUsers activos
      */
     @GetMapping("/activos")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Listar usuarios activos (solo ADMIN)")
-    public ResponseEntity<?> listActivos() {
+    public ResponseEntity<?> listActive() {
         log.info("GET /api/usuarios/activos - Listando usuarios activos");
         try {
-            return ResponseEntity.ok(ResponseWrapper.success(appUserService.listActivos()));
+            return ResponseEntity.ok(ResponseWrapper.success(appUserService.listActive()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -157,7 +157,7 @@ public class AppUserController {
      * @return 200 con el appUser creado, o el error de validación/duplicado correspondiente
      */
     @PostMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Crear nuevo usuario (solo ADMIN)")
     public ResponseEntity<?> create(@Valid @RequestBody RegisterRequest request) {
         log.info("POST /api/usuarios - Creando usuario: {}", request.getEmail());
@@ -184,7 +184,7 @@ public class AppUserController {
      * @return 200 con el appUser actualizado, o el error correspondiente si no existe
      */
     @PutMapping("/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Actualizar usuario, incluido su rol (solo ADMIN)")
     public ResponseEntity<?> update(
             @PathVariable("id") Long id,
@@ -206,7 +206,7 @@ public class AppUserController {
      * @return 200 con el appUser ya activo
      */
     @PatchMapping("/{id}/activar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Activar usuario (solo ADMIN)")
     public ResponseEntity<?> activate(@PathVariable("id") Long id) {
         log.info("PATCH /api/usuarios/{}/activar", id);
@@ -225,7 +225,7 @@ public class AppUserController {
      * @return 200 con el appUser ya inactivo
      */
     @PatchMapping("/{id}/desactivar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Desactivar usuario (solo ADMIN)")
     public ResponseEntity<?> deactivate(@PathVariable("id") Long id) {
         log.info("PATCH /api/usuarios/{}/desactivar", id);
@@ -248,16 +248,16 @@ public class AppUserController {
     @PatchMapping("/{id}/perfil")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Actualizar correo de notificaciones y teléfono del perfil propio")
-    public ResponseEntity<?> updatePerfil(
+    public ResponseEntity<?> updateProfile(
             @PathVariable("id") Long id,
-            @RequestBody PerfilRequest req
+            @RequestBody ProfileRequest req
     ) {
-        if (!esAppUserActual(id)) {
+        if (!isCurrentAppUser(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ResponseWrapper.error("No puedes editar el perfil de otro usuario"));
         }
         try {
-            AppUser actualizado = appUserService.updatePerfil(id, req.getEmailNotifications(), req.getTelefono());
+            AppUser actualizado = appUserService.updateProfile(id, req.getEmailNotifications(), req.getPhone());
             return ResponseEntity.ok(ResponseWrapper.success(actualizado, "Perfil actualizado exitosamente"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
@@ -272,7 +272,7 @@ public class AppUserController {
      * @return 200 al confirmar el borrado, o el error si la base lo rechaza por referencias
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Eliminar usuario (solo ADMIN)")
     public ResponseEntity<?> delete(@PathVariable("id") Long id) {
         log.info("DELETE /api/usuarios/{}", id);
@@ -288,7 +288,7 @@ public class AppUserController {
 
     /**
      * El titular solicita la supresión de sus propios datos. Mismo patrón de auto-comprobación
-     * que {@link #updatePerfil}: no se puede solicitar en nombre de otra cuenta.
+     * que {@link #updateProfile}: no se puede solicitar en nombre de otra cuenta.
      *
      * @param id appUser que solicita -- debe ser el autenticado
      * @return 200 con la submission creada (estado PENDIENTE), o 403 si no es el propio appUser
@@ -296,13 +296,13 @@ public class AppUserController {
     @PostMapping("/{id}/solicitar-supresion")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Solicitar la supresión de los propios datos personales (RNF-19)")
-    public ResponseEntity<?> solicitarSupresion(@PathVariable("id") Long id) {
-        if (!esAppUserActual(id)) {
+    public ResponseEntity<?> solicitarErasure(@PathVariable("id") Long id) {
+        if (!isCurrentAppUser(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ResponseWrapper.error("No puedes solicitar la supresión de datos de otro usuario"));
         }
         try {
-            SubmissionSupresion submission = supresionDatosService.solicitar(id);
+            SubmissionErasure submission = erasureDataService.solicitar(id);
             return ResponseEntity.ok(ResponseWrapper.success(submission, "Solicitud de supresión registrada"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
@@ -311,10 +311,10 @@ public class AppUserController {
 
     /** @return 200 con todas las submissions de supresión, más recientes primero (solo ADMIN) */
     @GetMapping("/solicitudes-supresion")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Listar solicitudes de supresión de datos personales (RNF-19, solo ADMIN)")
-    public ResponseEntity<?> listSubmissionsSupresion() {
-        return ResponseEntity.ok(ResponseWrapper.success(supresionDatosService.list()));
+    public ResponseEntity<?> listSubmissionsErasure() {
+        return ResponseEntity.ok(ResponseWrapper.success(erasureDataService.list()));
     }
 
     /**
@@ -327,15 +327,15 @@ public class AppUserController {
      * @return 200 con la submission resuelta, o 400 si ya estaba resuelta o no existe
      */
     @PostMapping("/solicitudes-supresion/{submissionId}/resolver")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Resolver una solicitud de supresión (RNF-19, solo ADMIN)")
-    public ResponseEntity<?> resolveSupresion(@PathVariable("submissionId") Long submissionId,
-                                                @RequestBody ResolveSupresionRequest request) {
+    public ResponseEntity<?> resolveErasure(@PathVariable("submissionId") Long submissionId,
+                                                @RequestBody ResolveErasureRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Long resueltoPorId = appUserRepository.findByEmail(auth.getName()).map(AppUser::getId).orElse(null);
+        Long resueltoById = appUserRepository.findByEmail(auth.getName()).map(AppUser::getId).orElse(null);
         try {
-            SubmissionSupresion resuelta = supresionDatosService.resolve(
-                    submissionId, request.isAceptar(), resueltoPorId, request.getNotas());
+            SubmissionErasure resuelta = erasureDataService.resolve(
+                    submissionId, request.isAceptar(), resueltoById, request.getNotas());
             return ResponseEntity.ok(ResponseWrapper.success(resuelta, "Solicitud de supresión resuelta"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
@@ -350,17 +350,17 @@ public class AppUserController {
      * @param id identificador que llega en la ruta
      * @return true si ese id es el del appUser autenticado
      */
-    private boolean esAppUserActual(Long id) {
+    private boolean isCurrentAppUser(Long id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return appUserRepository.findByEmail(auth.getName())
                 .map(u -> u.getId().equals(id))
                 .orElse(false);
     }
 
-    private boolean esAppUserActualOAdmin(Long id) {
+    private boolean isCurrentAppUserOrAdmin(Long id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        return esAdmin || esAppUserActual(id);
+        return esAdmin || isCurrentAppUser(id);
     }
 }

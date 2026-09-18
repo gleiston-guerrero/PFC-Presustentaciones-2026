@@ -31,7 +31,7 @@ public class Evaluator {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "tipo_evaluador_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private TipoEvaluator tipoEvaluator;
+    private KindEvaluator kindEvaluator;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "docente_id", nullable = false)
@@ -43,7 +43,7 @@ public class Evaluator {
     @JoinColumn(name = "miembro_tribunal_id")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "solicitud"})
     @JsonProperty("miembroTribunal")
-    private Panelist memberTribunal;
+    private Panelist memberPanel;
 
     @Column(name = "peso", nullable = false)
     @Builder.Default
@@ -53,12 +53,12 @@ public class Evaluator {
     @Column(name = "fecha_asignacion", nullable = false, updatable = false)
     @Builder.Default
     @JsonProperty("fechaAsignacion")
-    private LocalDateTime fechaAsignacion= LocalDateTime.now();
+    private LocalDateTime dateAsignacion= LocalDateTime.now();
 
     @PrePersist
     protected void onCreate() {
-        if (fechaAsignacion == null) {
-            fechaAsignacion = LocalDateTime.now();
+        if (dateAsignacion == null) {
+            dateAsignacion = LocalDateTime.now();
         }
     }
 }

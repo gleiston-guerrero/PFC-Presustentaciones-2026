@@ -18,7 +18,7 @@ import java.util.Optional;
 /**
  * Verifica que el appUser autenticado tenga relación real con una {@link Submission} antes de
  * exponer datos académicos asociados a ella (evaluations, rúbricas, proposal). Mismo
- * patrón que {@code MinutesServiceImpl.validateAcceso} / {@code NotificationServiceImpl.validateAcceso}
+ * patrón que {@code MinutesServiceImpl.validateAccess} / {@code NotificationServiceImpl.validateAccess}
  * (evita IDOR: nunca basta con "estar autenticado", hay que ser el student dueño, un panelist
  * asignado, el tutor, o tener el permission administrativo indicado), consolidado aquí porque
  * Evaluación, EvaluaciónPanelist, RúbricaEvaluación y Proposal comparten exactamente la misma
@@ -43,7 +43,7 @@ public class SubmissionAccessService {
      *                               permissions, y no participa en la submission como student
      *                               dueño, panelist asignado o tutor.
      */
-    public void validateAcceso(Submission submission, String... codigosPermissionBypass) {
+    public void validateAccess(Submission submission, String... codigosPermissionBypass) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             throw new AccessDeniedException("Usuario no autenticado");
@@ -53,8 +53,8 @@ public class SubmissionAccessService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         if (isAdmin) return;
 
-        for (String codigo : codigosPermissionBypass) {
-            if (permissionService.tienePermission(auth, codigo)) return;
+        for (String code : codigosPermissionBypass) {
+            if (permissionService.hasPermission(auth, code)) return;
         }
 
         String email = auth.getName();

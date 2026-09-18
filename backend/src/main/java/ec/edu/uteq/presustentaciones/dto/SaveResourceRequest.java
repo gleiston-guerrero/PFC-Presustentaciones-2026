@@ -21,7 +21,7 @@ public class SaveResourceRequest {
     @NotBlank(message = "La URL del archivo es obligatoria")
     @Size(max = 500, message = "La URL no puede superar los 500 caracteres")
     @JsonProperty("urlArchivo")
-    private String urlArchivo;
+    private String urlFile;
 
     /** Opcional: null = resource general para todas las programs. */
     @JsonProperty("carreraId")

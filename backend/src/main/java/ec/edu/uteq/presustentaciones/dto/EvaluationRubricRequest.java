@@ -14,7 +14,7 @@ public class EvaluationRubricRequest {
     private Long rubricId;
     /** Una entrada por cada criterio de la rúbrica */
     @JsonProperty("criterios")
-    private List<ScaleCriterioDTO> criterios;
+    private List<ScaleCriterionDTO> criteria;
     @JsonProperty("observaciones")
-    private String observaciones;
+    private String observations;
 }

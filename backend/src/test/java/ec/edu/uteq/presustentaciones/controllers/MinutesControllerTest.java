@@ -73,14 +73,14 @@ class MinutesControllerTest {
     @MockBean
     private ec.edu.uteq.presustentaciones.repositories.AppUserRepository appUserRepository;
 
-    private void autenticarComo(String email, String role, boolean tienePermission) {
+    private void authenticateAs(String email, String role, boolean hasPermission) {
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role)));
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(email);
         when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
-        when(permissionService.tienePermission(any(), any())).thenReturn(tienePermission);
+        when(permissionService.hasPermission(any(), any())).thenReturn(hasPermission);
     }
 
     @Test
@@ -88,7 +88,7 @@ class MinutesControllerTest {
         // Caso que exponía la vulnerabilidad: antes, ser el student dueño/panelist/tutor
         // (via validateAcceso en el service) bastaba para erase el minutes. Ahora ni siquiera
         // llega al service: @PreAuthorize lo rechaza antes.
-        autenticarComo("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
+        authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
 
         mockMvc.perform(delete("/api/v1/actas/1")
                         .header("Authorization", "Bearer token-estudiante@uteq.edu.ec")
@@ -99,8 +99,8 @@ class MinutesControllerTest {
     }
 
     @Test
-    void deleteRechazaATeacherPanelistOTutorSinMinutesGestionar() throws Exception {
-        autenticarComo("docente@uteq.edu.ec", "DOCENTE", false);
+    void deleteRechazaATeacherPanelistOTutorWithoutMinutesGestionar() throws Exception {
+        authenticateAs("docente@uteq.edu.ec", "DOCENTE", false);
 
         mockMvc.perform(delete("/api/v1/actas/1")
                         .header("Authorization", "Bearer token-docente@uteq.edu.ec")
@@ -111,8 +111,8 @@ class MinutesControllerTest {
     }
 
     @Test
-    void deletePermiteAAdminConMinutesGestionar() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+    void deletePermiteAAdminWithMinutesGestionar() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(delete("/api/v1/actas/1")
                         .header("Authorization", "Bearer token-admin@uteq.edu.ec")
@@ -123,7 +123,7 @@ class MinutesControllerTest {
     }
 
     @Test
-    void deleteSinTokenDevuelve401() throws Exception {
+    void deleteWithoutTokenDevuelve401() throws Exception {
         mockMvc.perform(delete("/api/v1/actas/1").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }

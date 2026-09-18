@@ -47,20 +47,20 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
      * @param pageable pageable
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    Page<AppUser> searchPaginado(@Param("q") String q, Pageable pageable);
+    Page<AppUser> searchPaged(@Param("q") String q, Pageable pageable);
 
     @Modifying
-    @Query("UPDATE AppUser u SET u.emailNotifications = :emailNoti, u.telefono = :telefono WHERE u.id = :id")
+    @Query("UPDATE AppUser u SET u.emailNotifications = :emailNoti, u.phone = :telefono WHERE u.id = :id")
     /**
      * Update perfil.
      * @param id id
      * @param emailNotifications emailNotifications
-     * @param telefono telefono
+     * @param phone phone
      * @return la cantidad de registros
      */
-    int updatePerfil(@Param("id") Long id,
+    int updateProfile(@Param("id") Long id,
                          @Param("emailNoti") String emailNotifications,
-                         @Param("telefono") String telefono);
+                         @Param("telefono") String phone);
 
     /**
      * Busca el/los registro(s) con role.

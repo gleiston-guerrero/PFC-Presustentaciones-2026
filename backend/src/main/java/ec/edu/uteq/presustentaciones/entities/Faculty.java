@@ -22,7 +22,7 @@ public class Faculty {
 
     @Column(name = "codigo", nullable = false, unique = true, length = 20)
     @JsonProperty("codigo")
-    private String codigo;
+    private String code;
 
     @Column(name = "nombre", nullable = false, length = 150)
     @JsonProperty("nombre")

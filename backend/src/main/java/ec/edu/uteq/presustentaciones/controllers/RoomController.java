@@ -31,7 +31,7 @@ public class RoomController {
      * @return página de rooms
      */
     @GetMapping("/paginado")
-    public Page<Room> listPaginado(Pageable pageable) {
+    public Page<Room> listPaged(Pageable pageable) {
         return roomRepository.findAll(pageable);
     }
 
@@ -42,7 +42,7 @@ public class RoomController {
      * @return la room persistida, con su id asignado
      */
     @PostMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SALA_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SALA_GESTIONAR')")
     public Room create(@RequestBody Room room) { return roomRepository.save(room); }
 
     /**
@@ -52,7 +52,7 @@ public class RoomController {
      * @return 204 sin cuerpo
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SALA_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SALA_GESTIONAR')")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         roomRepository.deleteById(id);
         return ResponseEntity.noContent().build();

@@ -27,7 +27,7 @@ class JwtAuthenticationFilterTest {
     private final JwtAuthenticationFilter filtro = new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
 
     @Test
-    void tokenExpiradoResponde401ConMensajeDistinguibleDeSinPermission() throws Exception {
+    void tokenExpiradoResponde401WithMessageDistinguibleDeWithoutPermission() throws Exception {
         SecurityContextHolder.clearContext();
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer token-expirado");
@@ -50,7 +50,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void tokenMalformadoRespondeConMensajeDistintoAlDeExpirado() throws Exception {
+    void tokenMalformadoRespondeWithMessageDistintoAlDeExpirado() throws Exception {
         SecurityContextHolder.clearContext();
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer token-basura");
@@ -69,7 +69,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void sinTokenDejaPasarLaPeticionSinEstablecerAutenticacion() throws Exception {
+    void sinTokenDejaPasarLaRequestWithoutEstablecerAutenticacion() throws Exception {
         SecurityContextHolder.clearContext();
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();

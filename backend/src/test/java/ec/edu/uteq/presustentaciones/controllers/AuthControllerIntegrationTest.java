@@ -81,7 +81,7 @@ class AuthControllerIntegrationTest {
     private ec.edu.uteq.presustentaciones.security.PasswordRecoveryService passwordRecoveryService;
 
     @MockBean
-    private ec.edu.uteq.presustentaciones.services.SupresionDatosService supresionDatosService;
+    private ec.edu.uteq.presustentaciones.services.ErasureDataService erasureDataService;
 
     @MockBean
     private IAppUserService appUserService;
@@ -164,7 +164,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testAccesoProtegidoSinToken() throws Exception {
+    void testAccessProtegidoWithoutToken() throws Exception {
         // 401, no 403: ver fix(seguridad) "responder 401 en vez de 403 cuando la sesion expira"
         // (SecurityConfig.authenticationEntryPoint / GlobalExceptionHandler).
         mockMvc.perform(get("/api/v1/usuarios")
@@ -173,7 +173,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testAccesoProtegidoConTokenValido() throws Exception {
+    void testAccessProtegidoWithTokenValid() throws Exception {
         String token = "validToken";
         UserDetails userDetails = new User(dummyAppUser.getEmail(), dummyAppUser.getPassword(), 
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
@@ -181,8 +181,8 @@ class AuthControllerIntegrationTest {
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(dummyAppUser.getEmail());
         when(userDetailsService.loadUserByUsername(dummyAppUser.getEmail())).thenReturn(userDetails);
-        when(appUserService.listTodos()).thenReturn(Collections.emptyList());
-        when(permissionService.tienePermission(any(), any())).thenReturn(true);
+        when(appUserService.listAll()).thenReturn(Collections.emptyList());
+        when(permissionService.hasPermission(any(), any())).thenReturn(true);
 
         mockMvc.perform(get("/api/v1/usuarios")
                         .header("Authorization", "Bearer " + token)
@@ -209,7 +209,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testRefreshConTokenValido() throws Exception {
+    void testRefreshWithTokenValid() throws Exception {
         String refreshToken = "validRefresh";
         String newAccessToken = "newAccessToken";
         String newRefreshToken = "newRefreshToken";
@@ -234,7 +234,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testRefreshConTokenReutilizado() throws Exception {
+    void testRefreshWithTokenReutilizado() throws Exception {
         String refreshToken = "stolenRefresh";
         jakarta.servlet.http.Cookie refreshCookie = new jakarta.servlet.http.Cookie("refreshToken", refreshToken);
 
@@ -249,7 +249,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testRefreshConTokenInvalido() throws Exception {
+    void testRefreshWithTokenInvalido() throws Exception {
         String refreshToken = "invalidRefresh";
         jakarta.servlet.http.Cookie refreshCookie = new jakarta.servlet.http.Cookie("refreshToken", refreshToken);
 
@@ -282,19 +282,19 @@ class AuthControllerIntegrationTest {
     // ── /register: endurecido contra mass-assignment (auditoría 2026-09-04) ────────────────
 
     /** Autentica como un ADMIN con USUARIOS_GESTIONAR, igual que testAccesoProtegidoConTokenValido. */
-    private void autenticarComoAdminConGestionAppUsers() {
+    private void authenticateAsAdminWithManagementAppUsers() {
         String token = "adminToken";
         UserDetails adminDetails = new User(dummyAppUser.getEmail(), dummyAppUser.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(dummyAppUser.getEmail());
         when(userDetailsService.loadUserByUsername(dummyAppUser.getEmail())).thenReturn(adminDetails);
-        when(permissionService.tienePermission(any(), any())).thenReturn(true);
+        when(permissionService.hasPermission(any(), any())).thenReturn(true);
     }
 
     @Test
-    void testRegisterExitosoDelegaEnAppUserServiceConLosCincoCamposPermitidos() throws Exception {
-        autenticarComoAdminConGestionAppUsers();
+    void testRegisterExitosoDelegaEnAppUserServiceWithLosCincoCamposPermitidos() throws Exception {
+        authenticateAsAdminWithManagementAppUsers();
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"}";
 
@@ -318,10 +318,10 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testRegisterIgnoraCamposSensiblesEnviadosPorElCliente() throws Exception {
+    void testRegisterIgnoraCamposSensiblesEnviadosByElCliente() throws Exception {
         // Mass-assignment: id, activo=false y roleAppUser no existen en RegisterRequest, así que
         // Jackson los descarta al deserializar -- nunca llegan a la entidad AppUser real.
-        autenticarComoAdminConGestionAppUsers();
+        authenticateAsAdminWithManagementAppUsers();
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"," +
                 "\"id\":999,\"activo\":false,\"rolUsuario\":{\"id\":1},\"creadoEn\":\"2020-01-01T00:00:00\"}";
@@ -341,8 +341,8 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testRegisterDatosInvalidosDevuelve400SinLlamarAAppUserService() throws Exception {
-        autenticarComoAdminConGestionAppUsers();
+    void testRegisterDataInvalidosDevuelve400WithoutLlamarAAppUserService() throws Exception {
+        authenticateAsAdminWithManagementAppUsers();
         // Falta "nombre" (obligatorio) y password muy corta.
         String body = "{\"apellido\":\"Mendoza\",\"email\":\"no-es-un-email\",\"password\":\"123\",\"rol\":\"ESTUDIANTE\"}";
 
@@ -357,7 +357,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void testRegisterEmailDuplicadoDevuelve400() throws Exception {
-        autenticarComoAdminConGestionAppUsers();
+        authenticateAsAdminWithManagementAppUsers();
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"}";
         when(appUserService.create(any(AppUser.class)))
@@ -373,7 +373,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void testRegisterRoleInvalidoDevuelve400() throws Exception {
-        autenticarComoAdminConGestionAppUsers();
+        authenticateAsAdminWithManagementAppUsers();
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"SUPERUSUARIO_INVENTADO\"}";
         when(appUserService.create(any(AppUser.class)))
@@ -387,14 +387,14 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void testRegisterSinPermissionAppUsersGestionarDevuelve403() throws Exception {
+    void testRegisterWithoutPermissionAppUsersGestionarDevuelve403() throws Exception {
         String token = "docenteToken";
         UserDetails teacherDetails = new User("docente@uteq.edu.ec", "x",
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_DOCENTE")));
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn("docente@uteq.edu.ec");
         when(userDetailsService.loadUserByUsername("docente@uteq.edu.ec")).thenReturn(teacherDetails);
-        when(permissionService.tienePermission(any(), any())).thenReturn(false);
+        when(permissionService.hasPermission(any(), any())).thenReturn(false);
 
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"}";
@@ -410,7 +410,7 @@ class AuthControllerIntegrationTest {
 
     // ── PATCH /api/v1/auth/appUsers/{id}/password (RF-06: cambio de contraseña propia) ─────
 
-    private void autenticarComoTitular() {
+    private void authenticateAsHolder() {
         String token = "selfToken";
         UserDetails userDetails = new User(dummyAppUser.getEmail(), dummyAppUser.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
@@ -421,8 +421,8 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void changePasswordConLaActualCorrectaDevuelve200YRevocaSesionesSalvoLaActual() throws Exception {
-        autenticarComoTitular();
+    void changePasswordWithLaActualCorrectaDevuelve200YRevocaSesionesSalvoLaActual() throws Exception {
+        authenticateAsHolder();
         when(passwordEncoder.matches("actualCorrecta", dummyAppUser.getPassword())).thenReturn(true);
         when(passwordEncoder.encode("NuevaClave#2026")).thenReturn("hashNuevo");
 
@@ -443,8 +443,8 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void changePasswordConLaActualIncorrectaDevuelve401YNoCambiaNada() throws Exception {
-        autenticarComoTitular();
+    void changePasswordWithLaActualIncorrectaDevuelve401YNoCambiaNada() throws Exception {
+        authenticateAsHolder();
         when(passwordEncoder.matches("incorrecta", dummyAppUser.getPassword())).thenReturn(false);
 
         mockMvc.perform(patch("/api/v1/auth/usuarios/1/password")
@@ -460,7 +460,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void changePasswordIgualALaVigenteDevuelve400() throws Exception {
-        autenticarComoTitular();
+        authenticateAsHolder();
         when(passwordEncoder.matches("igual", dummyAppUser.getPassword())).thenReturn(true);
 
         mockMvc.perform(patch("/api/v1/auth/usuarios/1/password")
@@ -474,7 +474,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void changePasswordQueIncumpleLaPoliticaDevuelve400() throws Exception {
-        autenticarComoTitular();
+        authenticateAsHolder();
         when(passwordEncoder.matches("actualCorrecta", dummyAppUser.getPassword())).thenReturn(true);
         org.mockito.Mockito.doThrow(new IllegalArgumentException("Esa contraseña es demasiado común. Elige una diferente."))
                 .when(passwordPolicyValidator).validate("comun123");
@@ -492,7 +492,7 @@ class AuthControllerIntegrationTest {
     @Test
     void changePasswordDeOtroAppUserDevuelve403AunqueQuienLoIntentaSeaAdmin() throws Exception {
         // dummyAppUser (id=1, ROLE_ADMIN) intenta change la contraseña del appUser id=2.
-        autenticarComoTitular();
+        authenticateAsHolder();
 
         mockMvc.perform(patch("/api/v1/auth/usuarios/2/password")
                         .header("Authorization", "Bearer selfToken")
@@ -507,7 +507,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void changePasswordNuncaDevuelveLaContrasenaEnLaRespuesta() throws Exception {
-        autenticarComoTitular();
+        authenticateAsHolder();
         when(passwordEncoder.matches("actualCorrecta", dummyAppUser.getPassword())).thenReturn(true);
         when(passwordEncoder.encode(any())).thenReturn("hashNuevo");
 
@@ -526,27 +526,27 @@ class AuthControllerIntegrationTest {
     // ── POST /api/v1/auth/recuperar y /reset (RF-05: recuperación sin sesión) ────────
 
     @Test
-    void recuperarDevuelveElMismoCuerpoYCodigoExistaONoLaCuenta() throws Exception {
+    void recoverDevuelveElMismoCuerpoYCodeExistaONoLaCuenta() throws Exception {
         when(rateLimiterService.isAllowed(anyString(), anyInt(), anyLong())).thenReturn(true);
 
-        String cuerpoExiste = mockMvc.perform(post("/api/v1/auth/recuperar")
+        String cuerpoExists = mockMvc.perform(post("/api/v1/auth/recuperar")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"estudiante@uteq.edu.ec\"}"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        String cuerpoNoExiste = mockMvc.perform(post("/api/v1/auth/recuperar")
+        String cuerpoNoExists = mockMvc.perform(post("/api/v1/auth/recuperar")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"nadie-registrado@uteq.edu.ec\"}"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertEquals(cuerpoExiste, cuerpoNoExiste, "el cuerpo debe ser identico para no permitir enumerar cuentas");
-        verify(passwordRecoveryService, times(2)).solicitarRecuperacion(anyString());
+        assertEquals(cuerpoExists, cuerpoNoExists, "el cuerpo debe ser identico para no permitir enumerar cuentas");
+        verify(passwordRecoveryService, times(2)).solicitarRecovery(anyString());
     }
 
     @Test
-    void recuperarSuperandoElLimiteDeTasaDevuelve429() throws Exception {
+    void recoverSuperandoElLimiteDeTasaDevuelve429() throws Exception {
         when(rateLimiterService.isAllowed(anyString(), anyInt(), anyLong())).thenReturn(false);
 
         mockMvc.perform(post("/api/v1/auth/recuperar")
@@ -554,11 +554,11 @@ class AuthControllerIntegrationTest {
                         .content("{\"email\":\"estudiante@uteq.edu.ec\"}"))
                 .andExpect(status().isTooManyRequests());
 
-        verify(passwordRecoveryService, never()).solicitarRecuperacion(anyString());
+        verify(passwordRecoveryService, never()).solicitarRecovery(anyString());
     }
 
     @Test
-    void recuperarConElLimitadorDeTasaCaidoDevuelve503() throws Exception {
+    void recoverWithElLimitadorDeTasaDownDevuelve503() throws Exception {
         when(rateLimiterService.isAllowed(anyString(), anyInt(), anyLong()))
                 .thenThrow(new ec.edu.uteq.presustentaciones.security.RateLimiterUnavailableException("caido", new RuntimeException()));
 
@@ -567,11 +567,11 @@ class AuthControllerIntegrationTest {
                         .content("{\"email\":\"estudiante@uteq.edu.ec\"}"))
                 .andExpect(status().isServiceUnavailable());
 
-        verify(passwordRecoveryService, never()).solicitarRecuperacion(anyString());
+        verify(passwordRecoveryService, never()).solicitarRecovery(anyString());
     }
 
     @Test
-    void resetConTokenValidoDevuelve200() throws Exception {
+    void resetWithTokenValidDevuelve200() throws Exception {
         mockMvc.perform(post("/api/v1/auth/restablecer")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"token\":\"un-token-cualquiera\",\"passwordNueva\":\"NuevaClave#2026\"}"))
@@ -582,7 +582,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void resetConTokenInvalidoOExpiradoDevuelve400() throws Exception {
+    void resetWithTokenInvalidoOExpiradoDevuelve400() throws Exception {
         org.mockito.Mockito.doThrow(new IllegalArgumentException("El enlace de recuperación es inválido o ya expiró."))
                 .when(passwordRecoveryService).reset("token-vencido", "NuevaClave#2026");
 
@@ -599,7 +599,7 @@ class AuthControllerIntegrationTest {
     void testCreateAppUserIgnoraIdDelClienteEnviadoEnElBody() throws Exception {
         // Mismo patrón que testRegisterIgnoraCamposSensiblesEnviadosPorElCliente: "id" no existe
         // en RegisterRequest, así que Jackson lo descarta -- nunca llega a la entidad AppUser.
-        autenticarComoAdminConGestionAppUsers();
+        authenticateAsAdminWithManagementAppUsers();
         String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza2@uteq.edu.ec\"," +
                 "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\",\"id\":1,\"activo\":false}";
 

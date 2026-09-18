@@ -76,6 +76,6 @@ public class Panelist {
      * @return el valor encontrado, o null si no existe
      */
     public String getRole() {
-        return rolePanelist != null ? rolePanelist.getCodigo() : null;
+        return rolePanelist != null ? rolePanelist.getCode() : null;
     }
 }

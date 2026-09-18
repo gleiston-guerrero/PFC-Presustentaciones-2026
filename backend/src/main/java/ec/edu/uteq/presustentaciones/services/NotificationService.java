@@ -13,11 +13,11 @@ public interface NotificationService {
      * hay ninguno.
      *
      * @param appUserId id del appUser receptor de la notificación
-     * @param mensaje   texto de la notificación
+     * @param message   texto de la notificación
      * @return la notificación creada
      * @throws RuntimeException si el appUser receptor no existe
      */
-    Notification createNotification(Long appUserId, String mensaje);
+    Notification createNotification(Long appUserId, String message);
 
     /**
      * @param pageable configuración de paginación
@@ -30,23 +30,23 @@ public interface NotificationService {
      * @param pageable  configuración de paginación
      * @return página de notifications de ese appUser, más recientes primero
      */
-    Page<Notification> listPorAppUser(Long appUserId, Pageable pageable);
+    Page<Notification> listByAppUser(Long appUserId, Pageable pageable);
 
     /**
      * @param appUserId id del appUser
      * @return cantidad de notifications no leídas de ese appUser
      */
-    long countNoLeidas(Long appUserId);
+    long countUnread(Long appUserId);
 
     /**
      * @param notificationId id de la notificación a marcar
      * @return la notificación actualizada con {@code leida = true}
      * @throws RuntimeException si la notificación no existe
      */
-    Notification marcarComoLeida(Long notificationId);
+    Notification markAsRead(Long notificationId);
 
     /** @param appUserId id del appUser cuyas notifications se marcan todas como leídas */
-    void marcarTodasLeidas(Long appUserId);
+    void markAllRead(Long appUserId);
 
     /**
      * Elimina una notificación específica

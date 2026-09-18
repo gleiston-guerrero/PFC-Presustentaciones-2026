@@ -1,20 +1,20 @@
 package ec.edu.uteq.presustentaciones.services;
 
 import ec.edu.uteq.presustentaciones.entities.Program;
-import ec.edu.uteq.presustentaciones.entities.AnnouncementTitulacion;
+import ec.edu.uteq.presustentaciones.entities.AnnouncementDegree;
 import ec.edu.uteq.presustentaciones.entities.Student;
-import ec.edu.uteq.presustentaciones.entities.ModalityTitulacion;
-import ec.edu.uteq.presustentaciones.entities.PeriodAcademico;
+import ec.edu.uteq.presustentaciones.entities.ModalityDegree;
+import ec.edu.uteq.presustentaciones.entities.PeriodAcademic;
 import ec.edu.uteq.presustentaciones.entities.Submission;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.ProposalRepository;
-import ec.edu.uteq.presustentaciones.repositories.AreaTematicaRepository;
+import ec.edu.uteq.presustentaciones.repositories.SubjectRepository;
 import ec.edu.uteq.presustentaciones.repositories.ProgramRepository;
-import ec.edu.uteq.presustentaciones.repositories.AnnouncementTitulacionRepository;
+import ec.edu.uteq.presustentaciones.repositories.AnnouncementDegreeRepository;
 import ec.edu.uteq.presustentaciones.repositories.StudentRepository;
-import ec.edu.uteq.presustentaciones.repositories.LineInvestigacionRepository;
-import ec.edu.uteq.presustentaciones.repositories.ModalityTitulacionRepository;
-import ec.edu.uteq.presustentaciones.repositories.PeriodAcademicoRepository;
+import ec.edu.uteq.presustentaciones.repositories.ResearchLineRepository;
+import ec.edu.uteq.presustentaciones.repositories.ModalityDegreeRepository;
+import ec.edu.uteq.presustentaciones.repositories.PeriodAcademicRepository;
 import ec.edu.uteq.presustentaciones.repositories.SubmissionRepository;
 import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -46,33 +46,33 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final ProposalRepository proposalRepository;
     private final NotificationService notificationService;
     private final AppUserRepository appUserRepository;
-    private final ec.edu.uteq.presustentaciones.repositories.EstadoSubmissionRepository estadoSubmissionRepository;
-    private final ModalityTitulacionRepository modalityTitulacionRepository;
-    private final AnnouncementTitulacionRepository announcementTitulacionRepository;
+    private final ec.edu.uteq.presustentaciones.repositories.StatusSubmissionRepository statusSubmissionRepository;
+    private final ModalityDegreeRepository modalityDegreeRepository;
+    private final AnnouncementDegreeRepository announcementDegreeRepository;
     private final ProgramRepository programRepository;
-    private final PeriodAcademicoRepository periodAcademicoRepository;
-    private final LineInvestigacionRepository lineInvestigacionRepository;
-    private final AreaTematicaRepository areaTematicaRepository;
+    private final PeriodAcademicRepository periodAcademicRepository;
+    private final ResearchLineRepository researchLineRepository;
+    private final SubjectRepository subjectRepository;
     private final AuditService auditService;
-    private final ec.edu.uteq.presustentaciones.repositories.EstadoAcademicoRepository estadoAcademicoRepository;
+    private final ec.edu.uteq.presustentaciones.repositories.StatusAcademicRepository statusAcademicRepository;
 
     // ─── Helpers ────────────────────────────────────────────────────────────
 
-    private void notifyAdmins(String mensaje) {
+    private void notifyAdmins(String message) {
         List<AppUser> admins = appUserRepository.findByRole("ADMIN");
         for (AppUser admin : admins) {
             try {
-                notificationService.createNotification(admin.getId(), mensaje);
+                notificationService.createNotification(admin.getId(), message);
             } catch (Exception e) {
                 log.warn("No se pudo notificar al coordinador ID {}: {}", admin.getId(), e.getMessage());
             }
         }
     }
 
-    private void notifyStudent(Submission submission, String mensaje) {
+    private void notifyStudent(Submission submission, String message) {
         try {
             Long appUserId = submission.getStudent().getAppUser().getId();
-            notificationService.createNotification(appUserId, mensaje);
+            notificationService.createNotification(appUserId, message);
         } catch (Exception e) {
             log.warn("No se pudo notificar al estudiante de solicitud ID {}: {}", submission.getId(), e.getMessage());
         }
@@ -82,88 +82,88 @@ public class SubmissionServiceImpl implements SubmissionService {
 
     /**
      * @param studentId id del {@code Student} propietario de la submission
-     * @param datos        datos de la submission a create (título del topic, modality, etc.)
+     * @param data        datos de la submission a create (título del topic, modality, etc.)
      * @return la submission creada y persistida, con su estado y student asociados
      * @throws RuntimeException si el student no existe o falta la modality de titulación
      */
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
-    public Submission createSubmission(Long studentId, Submission datos) {
+    public Submission createSubmission(Long studentId, Submission data) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Estudiante no encontrado con ID: " + studentId));
 
-        if (datos.getTituloTopic() == null || datos.getTituloTopic().trim().isEmpty()) {
+        if (data.getTituloTopic() == null || data.getTituloTopic().trim().isEmpty()) {
             throw new RuntimeException("El título del tema es obligatorio");
         }
-        if (datos.getTituloTopic().length() > 300) {
+        if (data.getTituloTopic().length() > 300) {
             throw new RuntimeException("El título del tema no puede exceder los 300 caracteres");
         }
 
         // Resolve estado inicial
-        ec.edu.uteq.presustentaciones.entities.EstadoSubmission estadoCreada = estadoSubmissionRepository.findByCodigo("CREADA")
-                .orElseGet(() -> estadoSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.EstadoSubmission.builder()
-                        .codigo("CREADA").nombre("Creada").build()));
+        ec.edu.uteq.presustentaciones.entities.StatusSubmission statusCreada = statusSubmissionRepository.findByCode("CREADA")
+                .orElseGet(() -> statusSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.StatusSubmission.builder()
+                        .code("CREADA").nombre("Creada").build()));
 
         // Resolve modality: si el objeto ya viene completo (con id) úsalo; si no, error
-        if (datos.getModalityTitulacion() == null || datos.getModalityTitulacion().getId() == null) {
+        if (data.getModalityDegree() == null || data.getModalityDegree().getId() == null) {
             throw new RuntimeException("Debe seleccionar una modalidad de titulación válida");
         }
-        ModalityTitulacion modality = modalityTitulacionRepository
-                .findById(datos.getModalityTitulacion().getId())
-                .orElseThrow(() -> new RuntimeException("Modalidad no encontrada con ID: " + datos.getModalityTitulacion().getId()));
-        datos.setModalityTitulacion(modality);
+        ModalityDegree modality = modalityDegreeRepository
+                .findById(data.getModalityDegree().getId())
+                .orElseThrow(() -> new RuntimeException("Modalidad no encontrada con ID: " + data.getModalityDegree().getId()));
+        data.setModalityDegree(modality);
 
         // Resolve announcement: si viene en el body úroom, si no search/create la activa
-        if (datos.getAnnouncement() == null || datos.getAnnouncement().getId() == null) {
-            AnnouncementTitulacion convActiva = announcementTitulacionRepository
-                    .findFirstByActivaTrue()
+        if (data.getAnnouncement() == null || data.getAnnouncement().getId() == null) {
+            AnnouncementDegree convActive = announcementDegreeRepository
+                    .findFirstByActiveTrue()
                     .orElseGet(this::createAnnouncementDefault);
-            datos.setAnnouncement(convActiva);
+            data.setAnnouncement(convActive);
         } else {
-            AnnouncementTitulacion announcement = announcementTitulacionRepository
-                    .findById(datos.getAnnouncement().getId())
-                    .orElseThrow(() -> new RuntimeException("Convocatoria no encontrada con ID: " + datos.getAnnouncement().getId()));
-            datos.setAnnouncement(announcement);
+            AnnouncementDegree announcement = announcementDegreeRepository
+                    .findById(data.getAnnouncement().getId())
+                    .orElseThrow(() -> new RuntimeException("Convocatoria no encontrada con ID: " + data.getAnnouncement().getId()));
+            data.setAnnouncement(announcement);
         }
 
         // Resolve línea de investigación (opcional, igual que en la columna real de la BD)
-        if (datos.getLineInvestigacion() != null && datos.getLineInvestigacion().getId() != null) {
-            ec.edu.uteq.presustentaciones.entities.LineInvestigacion line = lineInvestigacionRepository
-                    .findById(datos.getLineInvestigacion().getId())
-                    .orElseThrow(() -> new RuntimeException("Línea de investigación no encontrada con ID: " + datos.getLineInvestigacion().getId()));
-            datos.setLineInvestigacion(line);
+        if (data.getResearchLine() != null && data.getResearchLine().getId() != null) {
+            ec.edu.uteq.presustentaciones.entities.ResearchLine line = researchLineRepository
+                    .findById(data.getResearchLine().getId())
+                    .orElseThrow(() -> new RuntimeException("Línea de investigación no encontrada con ID: " + data.getResearchLine().getId()));
+            data.setResearchLine(line);
         } else {
-            datos.setLineInvestigacion(null);
+            data.setResearchLine(null);
         }
 
         // Resolve área temática (opcional); si viene, debe pertenecer a la línea seleccionada
-        if (datos.getAreaTematica() != null && datos.getAreaTematica().getId() != null) {
-            ec.edu.uteq.presustentaciones.entities.AreaTematica area = areaTematicaRepository
-                    .findById(datos.getAreaTematica().getId())
-                    .orElseThrow(() -> new RuntimeException("Área temática no encontrada con ID: " + datos.getAreaTematica().getId()));
-            if (datos.getLineInvestigacion() != null
-                    && !area.getLineInvestigacion().getId().equals(datos.getLineInvestigacion().getId())) {
+        if (data.getSubject() != null && data.getSubject().getId() != null) {
+            ec.edu.uteq.presustentaciones.entities.Subject area = subjectRepository
+                    .findById(data.getSubject().getId())
+                    .orElseThrow(() -> new RuntimeException("Área temática no encontrada con ID: " + data.getSubject().getId()));
+            if (data.getResearchLine() != null
+                    && !area.getResearchLine().getId().equals(data.getResearchLine().getId())) {
                 throw new RuntimeException("El área temática seleccionada no pertenece a la línea de investigación elegida");
             }
-            datos.setAreaTematica(area);
+            data.setSubject(area);
         } else {
-            datos.setAreaTematica(null);
+            data.setSubject(null);
         }
 
-        datos.setEstado(estadoCreada);
-        datos.setStudent(student);
-        datos.setCreadoPor(student.getAppUser());
-        datos.setActualizadoPor(student.getAppUser());
-        datos.setFechaRegistro(LocalDateTime.now());
-        datos.setActualizadoEn(LocalDateTime.now());
-        auditService.marcarActorActual();
-        return submissionRepository.save(datos);
+        data.setStatus(statusCreada);
+        data.setStudent(student);
+        data.setCreadoBy(student.getAppUser());
+        data.setActualizadoBy(student.getAppUser());
+        data.setDateRecord(LocalDateTime.now());
+        data.setActualizadoEn(LocalDateTime.now());
+        auditService.markActorActual();
+        return submissionRepository.save(data);
     }
 
     /**
      * @param appUserId id del {@code AppUser} autenticado (role ESTUDIANTE)
-     * @param datos     datos de la submission a create
+     * @param data     datos de la submission a create
      * @return la submission creada
      * @throws RuntimeException si el appUser no existe, no tiene role ESTUDIANTE, o no hay
      *                          programs configuradas para create el perfil automáticamente
@@ -171,7 +171,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
-    public Submission createSubmissionPorAppUser(Long appUserId, Submission datos) {
+    public Submission createSubmissionByAppUser(Long appUserId, Submission data) {
         // NOTA: createSubmission(...) también tiene @CacheEvict, pero como se invoca aquí
         // como "this.crearSolicitud(...)" (autoinvocación dentro de la misma clase), el
         // proxy de Spring AOP se salta y esa anotación nunca se dispara. Por eso este
@@ -182,8 +182,8 @@ public class SubmissionServiceImpl implements SubmissionService {
 
         // Search perfil de student; si no existe, crearlo automáticamente
         Student student = studentRepository.findByAppUserId(appUserId)
-                .orElseGet(() -> createPerfilStudent(appUserId));
-        return createSubmission(student.getId(), datos);
+                .orElseGet(() -> createProfileStudent(appUserId));
+        return createSubmission(student.getId(), data);
     }
 
     /**
@@ -191,32 +191,32 @@ public class SubmissionServiceImpl implements SubmissionService {
      * cuando la base de datos no tiene ninguno configurado (instalación inicial).
      */
     @Transactional
-    private AnnouncementTitulacion createAnnouncementDefault() {
+    private AnnouncementDegree createAnnouncementDefault() {
         int anio = java.time.Year.now().getValue();
 
         // Create o reusar período académico del año actual
-        PeriodAcademico period = periodAcademicoRepository
-                .findByCodigo("PA-" + anio)
+        PeriodAcademic period = periodAcademicRepository
+                .findByCode("PA-" + anio)
                 .orElseGet(() -> {
                     log.info("Creando período académico por defecto para año {}", anio);
-                    return periodAcademicoRepository.save(PeriodAcademico.builder()
-                            .codigo("PA-" + anio)
+                    return periodAcademicRepository.save(PeriodAcademic.builder()
+                            .code("PA-" + anio)
                             .nombre("Período Académico " + anio)
-                            .fechaInicio(LocalDate.of(anio, 1, 1))
-                            .fechaFin(LocalDate.of(anio, 12, 31))
+                            .dateStart(LocalDate.of(anio, 1, 1))
+                            .dateEnd(LocalDate.of(anio, 12, 31))
                             .activo(true)
                             .build());
                 });
 
         // Create announcement activa ligada al período
-        log.info("Creando convocatoria activa por defecto para período {}", period.getCodigo());
-        return announcementTitulacionRepository.save(AnnouncementTitulacion.builder()
-                .codigo("CONV-" + anio + "-01")
+        log.info("Creando convocatoria activa por defecto para período {}", period.getCode());
+        return announcementDegreeRepository.save(AnnouncementDegree.builder()
+                .code("CONV-" + anio + "-01")
                 .nombre("Convocatoria " + anio + " – Período I")
-                .periodAcademico(period)
-                .fechaInicio(LocalDate.of(anio, 1, 1))
-                .fechaFin(LocalDate.of(anio, 12, 31))
-                .activa(true)
+                .periodAcademic(period)
+                .dateStart(LocalDate.of(anio, 1, 1))
+                .dateEnd(LocalDate.of(anio, 12, 31))
+                .active(true)
                 .build());
     }
 
@@ -225,7 +225,7 @@ public class SubmissionServiceImpl implements SubmissionService {
      * que aún no tenga registro en la tabla student.
      */
     @Transactional
-    private Student createPerfilStudent(Long appUserId) {
+    private Student createProfileStudent(Long appUserId) {
         AppUser appUser = appUserRepository.findById(appUserId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + appUserId));
 
@@ -244,22 +244,22 @@ public class SubmissionServiceImpl implements SubmissionService {
         // sp_generate_codigo_expediente (Fase 3 / Criterio P1, categoría "generación de
         // códigos secuenciales"): nextval() sobre una secuencia dedicada es atómico a nivel
         // de motor, así que dos altas concurrentes nunca reciben el mismo código.
-        String expedienteCodigo = studentRepository.generateCodigoExpediente(null, null);
+        String expedienteCode = studentRepository.generateCodeExpediente(null, null);
 
-        ec.edu.uteq.presustentaciones.entities.EstadoAcademico estadoActivo = estadoAcademicoRepository.findByCodigo("ACTIVO")
+        ec.edu.uteq.presustentaciones.entities.StatusAcademic statusActivo = statusAcademicRepository.findByCode("ACTIVO")
                 .orElseThrow(() -> new RuntimeException("Catálogo de estados académicos no sembrado"));
 
-        Student nuevoStudent = Student.builder()
+        Student targetStudent = Student.builder()
                 .appUser(appUser)
                 .program(programDefault.getNombre())
                 .programEntidad(programDefault)
                 .semestreActual((short) 1)
                 .semestre("1ro")
-                .expedienteCodigo(expedienteCodigo)
-                .estadoAcademico(estadoActivo)
+                .expedienteCode(expedienteCode)
+                .statusAcademic(statusActivo)
                 .build();
 
-        return studentRepository.save(nuevoStudent);
+        return studentRepository.save(targetStudent);
     }
  
     /**
@@ -269,7 +269,7 @@ public class SubmissionServiceImpl implements SubmissionService {
      */
     @Override
     @Cacheable(value = "solicitudes", key = "'usuario:' + #usuarioId")
-    public List<Submission> listPorAppUser(Long appUserId) {
+    public List<Submission> listByAppUser(Long appUserId) {
         return studentRepository.findByAppUserId(appUserId)
                 .map(e -> submissionRepository.findByStudentId(e.getId()))
                 .orElse(java.util.Collections.emptyList());
@@ -288,18 +288,18 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
  
         boolean tienePdf = proposalRepository.findBySubmissionId(submissionId)
-                .map(a -> a.getArchivoPdf() != null && !a.getArchivoPdf().isBlank())
+                .map(a -> a.getFilePdf() != null && !a.getFilePdf().isBlank())
                 .orElse(false);
  
         if (!tienePdf) {
             throw new RuntimeException("Debes cargar el PDF del anteproyecto antes de enviar la solicitud a revisión.");
         }
  
-        ec.edu.uteq.presustentaciones.entities.EstadoSubmission estadoEnviada = estadoSubmissionRepository.findByCodigo("ENVIADA")
-                .orElseGet(() -> estadoSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.EstadoSubmission.builder()
-                        .codigo("ENVIADA").nombre("Enviada").build()));
+        ec.edu.uteq.presustentaciones.entities.StatusSubmission statusEnviada = statusSubmissionRepository.findByCode("ENVIADA")
+                .orElseGet(() -> statusSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.StatusSubmission.builder()
+                        .code("ENVIADA").nombre("Enviada").build()));
 
-        s.setEstado(estadoEnviada);
+        s.setStatus(statusEnviada);
         Submission guardada = submissionRepository.save(s);
  
         String nombreStudent = s.getStudent().getAppUser().getNombre()
@@ -320,15 +320,15 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
     public Submission approveSubmission(Long submissionId) {
-        auditService.marcarActorActual();
+        auditService.markActorActual();
         Submission s = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
 
-        ec.edu.uteq.presustentaciones.entities.EstadoSubmission estadoAprobada = estadoSubmissionRepository.findByCodigo("APROBADA")
-                .orElseGet(() -> estadoSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.EstadoSubmission.builder()
-                        .codigo("APROBADA").nombre("Aprobada").build()));
+        ec.edu.uteq.presustentaciones.entities.StatusSubmission statusAprobada = statusSubmissionRepository.findByCode("APROBADA")
+                .orElseGet(() -> statusSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.StatusSubmission.builder()
+                        .code("APROBADA").nombre("Aprobada").build()));
 
-        s.setEstado(estadoAprobada);
+        s.setStatus(statusAprobada);
         Submission guardada = submissionRepository.save(s);
 
         notifyStudent(s, String.format(
@@ -346,34 +346,34 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
     public Submission rejectSubmission(Long submissionId) {
-        return rejectConObservacion(submissionId, null);
+        return rejectWithObservation(submissionId, null);
     }
 
     /**
      * @param submissionId  id de la submission a reject
-     * @param observacion  motivo del rechazo, visible luego para el student
+     * @param observation  motivo del rechazo, visible luego para el student
      * @return la submission actualizada en estado "RECHAZADA" con la observación guardada
      */
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
-    public Submission rejectConObservacion(Long submissionId, String observacion) {
-        auditService.marcarActorActual();
+    public Submission rejectWithObservation(Long submissionId, String observation) {
+        auditService.markActorActual();
         Submission s = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
 
-        ec.edu.uteq.presustentaciones.entities.EstadoSubmission estadoRechazada = estadoSubmissionRepository.findByCodigo("RECHAZADA")
-                .orElseGet(() -> estadoSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.EstadoSubmission.builder()
-                        .codigo("RECHAZADA").nombre("Rechazada").build()));
+        ec.edu.uteq.presustentaciones.entities.StatusSubmission statusRechazada = statusSubmissionRepository.findByCode("RECHAZADA")
+                .orElseGet(() -> statusSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.StatusSubmission.builder()
+                        .code("RECHAZADA").nombre("Rechazada").build()));
 
-        s.setEstado(estadoRechazada);
-        if (observacion != null && !observacion.isBlank()) {
-            s.setObservaciones(observacion);
+        s.setStatus(statusRechazada);
+        if (observation != null && !observation.isBlank()) {
+            s.setObservations(observation);
         }
         Submission guardada = submissionRepository.save(s);
  
-        String obs = (s.getObservaciones() != null && !s.getObservaciones().isBlank())
-                ? " Motivo: " + s.getObservaciones() : "";
+        String obs = (s.getObservations() != null && !s.getObservations().isBlank())
+                ? " Motivo: " + s.getObservations() : "";
         notifyStudent(s, String.format(
                 "❌ Tu solicitud \"%s\" ha sido RECHAZADA.%s Revisa las observaciones.",
                 s.getTituloTopic(), obs));
@@ -397,37 +397,37 @@ public class SubmissionServiceImpl implements SubmissionService {
     /**
      * @param pagina       número de página, base 0
      * @param tamanio      tamaño de página
-     * @param estado       código de estado por el que filtrar, o {@code null} para no filtrar
+     * @param status       código de estado por el que filtrar, o {@code null} para no filtrar
      * @param texto        texto libre de búsqueda (título/student), o {@code null}
-     * @param fechaDesde   fecha mínima de registro, o {@code null} para no acotar
-     * @param fechaHasta   fecha máxima de registro, o {@code null} para no acotar
+     * @param dateFrom   fecha mínima de registro, o {@code null} para no acotar
+     * @param dateTo   fecha máxima de registro, o {@code null} para no acotar
      * @return página de submissions que cumplen los filtros
      */
     @Override
-    public Page<Submission> listSubmissionsPaginado(int pagina, int tamanio, String estado, String texto,
-                                                       LocalDate fechaDesde, LocalDate fechaHasta) {
+    public Page<Submission> listSubmissionsPaged(int pagina, int tamanio, String status, String texto,
+                                                       LocalDate dateFrom, LocalDate dateTo) {
         int paginaSegura = Math.max(pagina, 0);
         int tamanioSeguro = Math.min(Math.max(tamanio, 1), 100);
-        PageRequest pageRequest = PageRequest.of(paginaSegura, tamanioSeguro, Sort.by(Sort.Direction.DESC, "fechaRegistro"));
+        PageRequest pageRequest = PageRequest.of(paginaSegura, tamanioSeguro, Sort.by(Sort.Direction.DESC, "dateRegistro"));
         // fechaRegistro es timestamp -- se acota al día completo (00:00:00 a 23:59:59.999999999)
         // para que filtrar por "hoy" o por un día puntual incluya todas las horas de ese día.
         // Se usan centinelas (1900/2999) en vez de pasar null al JPQL: Hibernate no logra
         // inferir el tipo SQL de un parámetro null reutilizado dentro de "x IS NULL OR campo >= x"
         // contra Postgres (falla con "cannot cast type bytea to timestamp"), así que en vez de
         // ese patrón se acota siempre a un rango concreto, sin importar si el appUser filtró o no.
-        LocalDateTime desde = fechaDesde != null ? fechaDesde.atStartOfDay() : LocalDateTime.of(1900, 1, 1, 0, 0);
-        LocalDateTime hasta = fechaHasta != null ? fechaHasta.atTime(LocalTime.MAX) : LocalDateTime.of(2999, 12, 31, 23, 59, 59);
-        return submissionRepository.searchConFiltros(estado, texto, desde, hasta, pageRequest);
+        LocalDateTime from = dateFrom != null ? dateFrom.atStartOfDay() : LocalDateTime.of(1900, 1, 1, 0, 0);
+        LocalDateTime to = dateTo != null ? dateTo.atTime(LocalTime.MAX) : LocalDateTime.of(2999, 12, 31, 23, 59, 59);
+        return submissionRepository.searchWithFiltros(status, texto, from, to, pageRequest);
     }
 
     /** @return count de submissions agrupado por código de estado, para el dashboard */
     @Override
-    public Map<String, Long> countPorEstado() {
+    public Map<String, Long> countByStatus() {
         Map<String, Long> counts = new LinkedHashMap<>();
         long total = submissionRepository.count();
         counts.put("TODAS", total);
-        for (SubmissionRepository.EstadoCount c : submissionRepository.countAgrupadoPorEstado()) {
-            counts.put(c.getCodigo(), c.getTotal());
+        for (SubmissionRepository.StatusCount c : submissionRepository.countAgrupadoByStatus()) {
+            counts.put(c.getCode(), c.getTotal());
         }
         return counts;
     }
@@ -438,7 +438,7 @@ public class SubmissionServiceImpl implements SubmissionService {
      */
     @Override
     @Cacheable(value = "solicitudes", key = "'estudiante:' + #estudianteId")
-    public List<Submission> listPorStudent(Long studentId) {
+    public List<Submission> listByStudent(Long studentId) {
         return submissionRepository.findByStudentId(studentId);
     }
  
@@ -448,7 +448,7 @@ public class SubmissionServiceImpl implements SubmissionService {
      */
     @Override
     @Cacheable(value = "solicitudes", key = "#id", unless = "#result == null")
-    public Optional<Submission> obtainPorId(Long id) {
+    public Optional<Submission> obtainById(Long id) {
         return submissionRepository.findById(id);
     }
  
@@ -462,31 +462,31 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Override
     @Transactional
     @CacheEvict(value = "solicitudes", allEntries = true)
-    public Submission suspenderSubmission(Long submissionId, String motivo) {
-        auditService.marcarActorActual();
+    public Submission suspendSubmission(Long submissionId, String motivo) {
+        auditService.markActorActual();
         Submission s = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
  
-        String codEstado = s.getEstado() != null ? s.getEstado().getCodigo() : "";
-        boolean esSuspendible = !"CREADA".equals(codEstado) && !"RECHAZADA".equals(codEstado) && !"SUSPENDIDA".equals(codEstado);
-        if (!esSuspendible) {
-            throw new RuntimeException("La solicitud no puede ser suspendida en su estado actual: " + codEstado);
+        String codStatus = s.getStatus() != null ? s.getStatus().getCode() : "";
+        boolean isSuspendable = !"CREADA".equals(codStatus) && !"RECHAZADA".equals(codStatus) && !"SUSPENDIDA".equals(codStatus);
+        if (!isSuspendable) {
+            throw new RuntimeException("La solicitud no puede ser suspendida en su estado actual: " + codStatus);
         }
  
         if (motivo == null || motivo.isBlank()) {
             throw new RuntimeException("Debe especificar el motivo de la suspensión");
         }
  
-        ec.edu.uteq.presustentaciones.entities.EstadoSubmission estadoSuspendida = estadoSubmissionRepository.findByCodigo("SUSPENDIDA")
-                .orElseGet(() -> estadoSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.EstadoSubmission.builder()
-                        .codigo("SUSPENDIDA").nombre("Suspendida").build()));
+        ec.edu.uteq.presustentaciones.entities.StatusSubmission statusSuspendida = statusSubmissionRepository.findByCode("SUSPENDIDA")
+                .orElseGet(() -> statusSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.StatusSubmission.builder()
+                        .code("SUSPENDIDA").nombre("Suspendida").build()));
 
-        s.setEstado(estadoSuspendida);
+        s.setStatus(statusSuspendida);
         s.setMotivoSuspension(motivo);
         s.setSuspendidoEn(LocalDateTime.now());
 
         Submission guardada = submissionRepository.save(s);
-        log.info("Solicitud {} suspendida desde estado {} por motivo: {}", submissionId, codEstado, motivo);
+        log.info("Solicitud {} suspendida desde estado {} por motivo: {}", submissionId, codStatus, motivo);
  
         notifyStudent(s, String.format(
                 "🚫 Tu trabajo \"%s\" ha sido SUSPENDIDO. Motivo: %s. No podrás continuar.",
@@ -502,8 +502,8 @@ public class SubmissionServiceImpl implements SubmissionService {
      *         tituloTopic, estadoSubmission, fechaDefensa, roomNombre, notaFinal)
      */
     @Override
-    public List<Map<String, Object>> generateReporteDefensasSP(String program) {
-        List<Object[]> res = submissionRepository.generateReporteDefensasSp(program);
+    public List<Map<String, Object>> generateReportDefensesSP(String program) {
+        List<Object[]> res = submissionRepository.generateReportDefensesSp(program);
         List<Map<String, Object>> list = new java.util.ArrayList<>();
         for (Object[] row : res) {
             Map<String, Object> map = new java.util.HashMap<>();
@@ -529,67 +529,67 @@ public class SubmissionServiceImpl implements SubmissionService {
         Submission s = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
                 
-        String codEstado = s.getEstado() != null ? s.getEstado().getCodigo() : "";
+        String codStatus = s.getStatus() != null ? s.getStatus().getCode() : "";
         
-        List<ec.edu.uteq.presustentaciones.dto.EtapaTrackingDTO> etapas = new java.util.ArrayList<>();
+        List<ec.edu.uteq.presustentaciones.dto.StageTrackingDTO> etapas = new java.util.ArrayList<>();
         
         // Etapa 1: Submission registrada
-        etapas.add(ec.edu.uteq.presustentaciones.dto.EtapaTrackingDTO.builder()
+        etapas.add(ec.edu.uteq.presustentaciones.dto.StageTrackingDTO.builder()
                 .nombre("Solicitud registrada")
-                .estadoVisual("COMPLETADO")
-                .fecha(s.getFechaRegistro())
-                .descripcion("Solicitud creada en el sistema.")
+                .statusVisual("COMPLETADO")
+                .date(s.getDateRecord())
+                .description("Solicitud creada en el sistema.")
                 .build());
                 
         // Etapa 2: Revisión de submission
-        String revEstado = "PENDIENTE";
-        if (codEstado.equals("ENVIADA")) revEstado = "EN_PROCESO";
-        else if (codEstado.equals("APROBADA") || codEstado.equals("RECHAZADA")) revEstado = "COMPLETADO";
-        etapas.add(ec.edu.uteq.presustentaciones.dto.EtapaTrackingDTO.builder()
+        String revStatus = "PENDIENTE";
+        if (codStatus.equals("ENVIADA")) revStatus = "EN_PROCESO";
+        else if (codStatus.equals("APROBADA") || codStatus.equals("RECHAZADA")) revStatus = "COMPLETADO";
+        etapas.add(ec.edu.uteq.presustentaciones.dto.StageTrackingDTO.builder()
                 .nombre("Revisión de solicitud")
-                .estadoVisual(revEstado)
-                .fecha(codEstado.equals("ENVIADA") ? s.getActualizadoEn() : null)
-                .descripcion("Revisión por parte de coordinación.")
+                .statusVisual(revStatus)
+                .date(codStatus.equals("ENVIADA") ? s.getActualizadoEn() : null)
+                .description("Revisión por parte de coordinación.")
                 .build());
                 
         // Etapa 3: Submission aprobada
-        String aprEstado = "PENDIENTE";
-        if (codEstado.equals("APROBADA")) aprEstado = "COMPLETADO";
-        else if (codEstado.equals("RECHAZADA")) aprEstado = "RECHAZADO";
-        etapas.add(ec.edu.uteq.presustentaciones.dto.EtapaTrackingDTO.builder()
+        String aprStatus = "PENDIENTE";
+        if (codStatus.equals("APROBADA")) aprStatus = "COMPLETADO";
+        else if (codStatus.equals("RECHAZADA")) aprStatus = "RECHAZADO";
+        etapas.add(ec.edu.uteq.presustentaciones.dto.StageTrackingDTO.builder()
                 .nombre("Aprobación de solicitud")
-                .estadoVisual(aprEstado)
-                .fecha(codEstado.equals("APROBADA") || codEstado.equals("RECHAZADA") ? s.getActualizadoEn() : null)
-                .descripcion(codEstado.equals("RECHAZADA") ? "Rechazada: " + s.getObservaciones() : "Solicitud aprobada.")
+                .statusVisual(aprStatus)
+                .date(codStatus.equals("APROBADA") || codStatus.equals("RECHAZADA") ? s.getActualizadoEn() : null)
+                .description(codStatus.equals("RECHAZADA") ? "Rechazada: " + s.getObservations() : "Solicitud aprobada.")
                 .build());
                 
         // Etapa 4: Proposal
         boolean tienePdf = proposalRepository.findBySubmissionId(submissionId)
-                .map(a -> a.getArchivoPdf() != null && !a.getArchivoPdf().isBlank())
+                .map(a -> a.getFilePdf() != null && !a.getFilePdf().isBlank())
                 .orElse(false);
-        etapas.add(ec.edu.uteq.presustentaciones.dto.EtapaTrackingDTO.builder()
+        etapas.add(ec.edu.uteq.presustentaciones.dto.StageTrackingDTO.builder()
                 .nombre("Anteproyecto")
-                .estadoVisual(tienePdf ? "COMPLETADO" : (codEstado.equals("APROBADA") ? "EN_PROCESO" : "PENDIENTE"))
-                .fecha(null)
-                .descripcion(tienePdf ? "Anteproyecto cargado." : "Pendiente de cargar.")
+                .statusVisual(tienePdf ? "COMPLETADO" : (codStatus.equals("APROBADA") ? "EN_PROCESO" : "PENDIENTE"))
+                .date(null)
+                .description(tienePdf ? "Anteproyecto cargado." : "Pendiente de cargar.")
                 .build());
                 
         // Resto de etapas pendientes (simplificadas al no estar completamente desarrolladas en este nivel)
-        etapas.add(ec.edu.uteq.presustentaciones.dto.EtapaTrackingDTO.builder().nombre("Observaciones").estadoVisual("PENDIENTE").build());
-        etapas.add(ec.edu.uteq.presustentaciones.dto.EtapaTrackingDTO.builder().nombre("Tutoría").estadoVisual("PENDIENTE").build());
-        etapas.add(ec.edu.uteq.presustentaciones.dto.EtapaTrackingDTO.builder().nombre("Asignación de jurados").estadoVisual("PENDIENTE").build());
-        etapas.add(ec.edu.uteq.presustentaciones.dto.EtapaTrackingDTO.builder().nombre("Evaluación").estadoVisual("PENDIENTE").build());
-        etapas.add(ec.edu.uteq.presustentaciones.dto.EtapaTrackingDTO.builder().nombre("Acta").estadoVisual("PENDIENTE").build());
+        etapas.add(ec.edu.uteq.presustentaciones.dto.StageTrackingDTO.builder().nombre("Observaciones").statusVisual("PENDIENTE").build());
+        etapas.add(ec.edu.uteq.presustentaciones.dto.StageTrackingDTO.builder().nombre("Tutoría").statusVisual("PENDIENTE").build());
+        etapas.add(ec.edu.uteq.presustentaciones.dto.StageTrackingDTO.builder().nombre("Asignación de jurados").statusVisual("PENDIENTE").build());
+        etapas.add(ec.edu.uteq.presustentaciones.dto.StageTrackingDTO.builder().nombre("Evaluación").statusVisual("PENDIENTE").build());
+        etapas.add(ec.edu.uteq.presustentaciones.dto.StageTrackingDTO.builder().nombre("Acta").statusVisual("PENDIENTE").build());
         
         int progress = 10;
-        if (codEstado.equals("ENVIADA")) progress = 20;
-        if (codEstado.equals("APROBADA")) progress = 40;
+        if (codStatus.equals("ENVIADA")) progress = 20;
+        if (codStatus.equals("APROBADA")) progress = 40;
         if (tienePdf) progress = 50;
 
         return ec.edu.uteq.presustentaciones.dto.TrackingDTO.builder()
                 .submissionId(submissionId)
                 .tituloProyecto(s.getTituloTopic())
-                .estadoActual(s.getEstado().getNombre())
+                .statusActual(s.getStatus().getNombre())
                 .porcentajeProgress(progress)
                 .etapas(etapas)
                 .build();

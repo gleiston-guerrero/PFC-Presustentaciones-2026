@@ -12,7 +12,7 @@ public class UpdateStudentRequest {
     @JsonProperty("semestreActual")
     private Short semestreActual;
     @JsonProperty("telefono")
-    private String telefono;
+    private String phone;
     @JsonProperty("estadoAcademicoCodigo")
-    private String estadoAcademicoCodigo;
+    private String statusAcademicCode;
 }

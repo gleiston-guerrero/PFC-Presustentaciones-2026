@@ -1,9 +1,9 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.dto.NuevoMensajeRequest;
-import ec.edu.uteq.presustentaciones.dto.TutoringFaseDTO;
-import ec.edu.uteq.presustentaciones.dto.TutoringMensajeDTO;
-import ec.edu.uteq.presustentaciones.dto.TutoringResumenDTO;
+import ec.edu.uteq.presustentaciones.dto.NewMessageRequest;
+import ec.edu.uteq.presustentaciones.dto.TutoringPhaseDTO;
+import ec.edu.uteq.presustentaciones.dto.TutoringMessageDTO;
+import ec.edu.uteq.presustentaciones.dto.TutoringSummaryDTO;
 import ec.edu.uteq.presustentaciones.dto.ResponseWrapper;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
@@ -52,8 +52,8 @@ public class TutoringController {
     public ResponseEntity<?> obtainTutoringsStudent(@PathVariable("appUserId") Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
-            List<TutoringResumenDTO> resultado = tutoringService.obtainTutoringsStudent(realAppUserId);
-            return ResponseEntity.ok(ResponseWrapper.success(resultado));
+            List<TutoringSummaryDTO> result = tutoringService.obtainTutoringsStudent(realAppUserId);
+            return ResponseEntity.ok(ResponseWrapper.success(result));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -69,8 +69,8 @@ public class TutoringController {
     public ResponseEntity<?> obtainTutoringsTeacher(@PathVariable("appUserId") Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
-            List<TutoringResumenDTO> resultado = tutoringService.obtainTutoringsTeacher(realAppUserId);
-            return ResponseEntity.ok(ResponseWrapper.success(resultado));
+            List<TutoringSummaryDTO> result = tutoringService.obtainTutoringsTeacher(realAppUserId);
+            return ResponseEntity.ok(ResponseWrapper.success(result));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -86,12 +86,12 @@ public class TutoringController {
      * @return 200 con el resumen, o 400 si no hay acceso a esa tutoría
      */
     @GetMapping("/{tutorId}/resumen")
-    public ResponseEntity<?> obtainResumen(@PathVariable("tutorId") Long tutorId,
+    public ResponseEntity<?> obtainSummary(@PathVariable("tutorId") Long tutorId,
                                             @RequestParam(name = "usuarioId", required = false) Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
-            TutoringResumenDTO resumen = tutoringService.obtainResumen(tutorId, realAppUserId);
-            return ResponseEntity.ok(ResponseWrapper.success(resumen));
+            TutoringSummaryDTO summary = tutoringService.obtainSummary(tutorId, realAppUserId);
+            return ResponseEntity.ok(ResponseWrapper.success(summary));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -105,12 +105,12 @@ public class TutoringController {
      * @return 200 con las fases, o 400 si no hay acceso a esa tutoría
      */
     @GetMapping("/{tutorId}/fases")
-    public ResponseEntity<?> obtainFases(@PathVariable("tutorId") Long tutorId,
+    public ResponseEntity<?> obtainPhases(@PathVariable("tutorId") Long tutorId,
                                           @RequestParam(name = "appUserId", required = false) Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
-            List<TutoringFaseDTO> fases = tutoringService.obtainFases(tutorId, realAppUserId);
-            return ResponseEntity.ok(ResponseWrapper.success(fases));
+            List<TutoringPhaseDTO> phases = tutoringService.obtainPhases(tutorId, realAppUserId);
+            return ResponseEntity.ok(ResponseWrapper.success(phases));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -122,19 +122,19 @@ public class TutoringController {
      * Abre una nueva fase de tutoría con la observación del tutor.
      *
      * @param tutorId        tutoría a la que se agrega la fase
-     * @param observacion    indicación del tutor para el student
+     * @param observation    indicación del tutor para el student
      * @param tutorAppUserId ignorado; el tutor se resuelve siempre desde el token
      * @return 200 con la fase creada, o 400 con el motivo del rechazo
      */
     @PostMapping("/{tutorId}/nueva-fase")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TUTORIA_GESTIONAR')")
-    public ResponseEntity<?> createFaseConObservacion(@PathVariable("tutorId") Long tutorId,
-                                                     @RequestParam("observacion") String observacion,
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TUTORIA_GESTIONAR')")
+    public ResponseEntity<?> createPhaseWithObservation(@PathVariable("tutorId") Long tutorId,
+                                                     @RequestParam("observacion") String observation,
                                                      @RequestParam(name = "tutorUsuarioId", required = false) Long tutorAppUserId) {
         try {
-            Long realTutorAppUserId = obtainAppUserAutenticado().getId();
-            TutoringFaseDTO fase = tutoringService.createFaseConObservacion(tutorId, realTutorAppUserId, observacion);
-            return ResponseEntity.ok(ResponseWrapper.success(fase, "Fase creada exitosamente"));
+            Long realTutorAppUserId = obtainAppUserAuthenticated().getId();
+            TutoringPhaseDTO phase = tutoringService.createPhaseWithObservation(tutorId, realTutorAppUserId, observation);
+            return ResponseEntity.ok(ResponseWrapper.success(phase, "Fase creada exitosamente"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -143,20 +143,20 @@ public class TutoringController {
     /**
      * Sube el PDF corregido del student para una fase.
      *
-     * @param faseId              fase a la que corresponde el archivo
-     * @param archivo             PDF enviado como multipart
+     * @param phaseId              fase a la que corresponde el archivo
+     * @param file             PDF enviado como multipart
      * @param studentAppUserId ignorado; el student se resuelve desde el token
      * @return 200 con la fase actualizada, o 400 si el archivo no es válido
      */
     @PostMapping(value = "/fases/{faseId}/subir-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> uploadPdfCorregido(@PathVariable("faseId") Long faseId,
-                                               @RequestParam("archivo") MultipartFile archivo,
+    public ResponseEntity<?> uploadPdfCorrected(@PathVariable("faseId") Long phaseId,
+                                               @RequestParam("archivo") MultipartFile file,
                                                @RequestParam(name = "estudianteUsuarioId", required = false) Long studentAppUserId) {
         try {
-            Long realStudentAppUserId = obtainAppUserAutenticado().getId();
-            TutoringFaseDTO fase = tutoringService.uploadPdfCorregido(faseId, archivo, realStudentAppUserId);
-            return ResponseEntity.ok(ResponseWrapper.success(fase, "PDF subido exitosamente"));
+            Long realStudentAppUserId = obtainAppUserAuthenticated().getId();
+            TutoringPhaseDTO phase = tutoringService.uploadPdfCorrected(phaseId, file, realStudentAppUserId);
+            return ResponseEntity.ok(ResponseWrapper.success(phase, "PDF subido exitosamente"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -165,20 +165,20 @@ public class TutoringController {
     /**
      * Aprueba una fase, habilitando que el student avance a la siguiente.
      *
-     * @param faseId         fase a approve
+     * @param phaseId         fase a approve
      * @param tutorAppUserId ignorado; el tutor se resuelve desde el token
-     * @param comentario     comentario opcional del tutor
+     * @param comment     comentario opcional del tutor
      * @return 200 con la fase aprobada, o 400 con el motivo del rechazo
      */
     @PostMapping("/fases/{faseId}/aprobar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TUTORIA_GESTIONAR')")
-    public ResponseEntity<?> approveFase(@PathVariable("faseId") Long faseId,
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TUTORIA_GESTIONAR')")
+    public ResponseEntity<?> approvePhase(@PathVariable("faseId") Long phaseId,
                                          @RequestParam(name = "tutorUsuarioId", required = false) Long tutorAppUserId,
-                                         @RequestParam(name = "comentario", required = false) String comentario) {
+                                         @RequestParam(name = "comentario", required = false) String comment) {
         try {
-            Long realTutorAppUserId = obtainAppUserAutenticado().getId();
-            TutoringFaseDTO fase = tutoringService.approveFase(faseId, realTutorAppUserId, comentario);
-            return ResponseEntity.ok(ResponseWrapper.success(fase, "Fase aprobada exitosamente"));
+            Long realTutorAppUserId = obtainAppUserAuthenticated().getId();
+            TutoringPhaseDTO phase = tutoringService.approvePhase(phaseId, realTutorAppUserId, comment);
+            return ResponseEntity.ok(ResponseWrapper.success(phase, "Fase aprobada exitosamente"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -187,21 +187,21 @@ public class TutoringController {
     /**
      * Envía un mensaje en el hilo de conversación de una fase.
      *
-     * @param faseId      fase sobre la que se conversa
-     * @param remitenteId ignorado; el remitente se resuelve desde el token
+     * @param phaseId      fase sobre la que se conversa
+     * @param senderId ignorado; el remitente se resuelve desde el token
      * @param request     cuerpo con el contenido y el tipo de mensaje
      * @return 200 con el mensaje creado, o 400 con el motivo del rechazo
      */
     @PostMapping("/fases/{faseId}/mensaje")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> sendMensaje(@PathVariable("faseId") Long faseId,
-                                           @RequestParam(name = "remitenteId", required = false) Long remitenteId,
-                                           @RequestBody NuevoMensajeRequest request) {
+    public ResponseEntity<?> sendMessage(@PathVariable("faseId") Long phaseId,
+                                           @RequestParam(name = "remitenteId", required = false) Long senderId,
+                                           @RequestBody NewMessageRequest request) {
         try {
-            Long realRemitenteId = obtainAppUserAutenticado().getId();
-            TutoringMensajeDTO mensaje = tutoringService.sendMensaje(
-                    faseId, realRemitenteId, request.getContenido(), request.getTipo());
-            return ResponseEntity.ok(ResponseWrapper.success(mensaje, "Mensaje enviado exitosamente"));
+            Long realSenderId = obtainAppUserAuthenticated().getId();
+            TutoringMessageDTO message = tutoringService.sendMessage(
+                    phaseId, realSenderId, request.getContenido(), request.getKind());
+            return ResponseEntity.ok(ResponseWrapper.success(message, "Mensaje enviado exitosamente"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -210,17 +210,17 @@ public class TutoringController {
     /**
      * Marca como leídos los mensajes que el appUser autenticado tiene pendientes en la fase.
      *
-     * @param faseId    fase cuyos mensajes se marcan
+     * @param phaseId    fase cuyos mensajes se marcan
      * @param appUserId ignorado; el appUser se resuelve desde el token
      * @return 200 sin datos, o 400 con el motivo del rechazo
      */
     @PutMapping("/fases/{faseId}/leer")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> marcarMensajesLeidos(@PathVariable("faseId") Long faseId,
+    public ResponseEntity<?> markMessagesRead(@PathVariable("faseId") Long phaseId,
                                                   @RequestParam(name = "usuarioId", required = false) Long appUserId) {
         try {
-            Long realAppUserId = obtainAppUserAutenticado().getId();
-            tutoringService.marcarMensajesLeidos(faseId, realAppUserId);
+            Long realAppUserId = obtainAppUserAuthenticated().getId();
+            tutoringService.markMessagesRead(phaseId, realAppUserId);
             return ResponseEntity.ok(ResponseWrapper.success(null, "Mensajes marcados como leídos"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
@@ -232,16 +232,16 @@ public class TutoringController {
     /**
      * Descarga en línea el PDF asociado a una fase.
      *
-     * @param faseId    fase consultada
+     * @param phaseId    fase consultada
      * @param appUserId appUser en cuyo nombre se consulta; sólo se respeta para ADMIN o COORDINADOR
      * @return 200 con el PDF y cabecera inline, o 400 si la fase no tiene archivo o no hay acceso
      */
     @GetMapping("/fases/{faseId}/pdf")
-    public ResponseEntity<?> obtainPdfFase(@PathVariable("faseId") Long faseId,
+    public ResponseEntity<?> obtainPdfPhase(@PathVariable("faseId") Long phaseId,
                                             @RequestParam(name = "appUserId", required = false) Long appUserId) {
         try {
             Long realAppUserId = resolveAppUserId(appUserId);
-            Resource resource = tutoringService.obtainPdfFase(faseId, realAppUserId);
+            Resource resource = tutoringService.obtainPdfPhase(phaseId, realAppUserId);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -269,28 +269,28 @@ public class TutoringController {
      *         todavía no está aprobada)
      */
     @PostMapping("/{tutorId}/registrar-avance")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TUTORIA_AVANCE_ESTUDIANTE')")
-    public ResponseEntity<?> registerAvanceSP(
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TUTORIA_AVANCE_ESTUDIANTE')")
+    public ResponseEntity<?> registerProgressSP(
             @PathVariable("tutorId") Long tutorId,
             @RequestBody Map<String, Object> body) {
         try {
-            Integer numeroFase = (Integer) body.get("numeroFase");
-            String archivoPdf = (String) body.get("archivoPdf");
-            Long tamanoBytes = body.get("tamanoBytes") instanceof Number
+            Integer numeroPhase = (Integer) body.get("numeroFase");
+            String filePdf = (String) body.get("archivoPdf");
+            Long sizeBytes = body.get("tamanoBytes") instanceof Number
                     ? ((Number) body.get("tamanoBytes")).longValue() : null;
             String sha256 = (String) body.get("sha256");
 
-            if (numeroFase == null || archivoPdf == null) {
+            if (numeroPhase == null || filePdf == null) {
                 return ResponseEntity.badRequest()
                         .body(ResponseWrapper.error("Se requieren 'numeroFase' y 'archivoPdf'"));
             }
 
-            Long realAppUserId = obtainAppUserAutenticado().getId();
-            tutoringService.registerAvanceSP(tutorId, numeroFase, archivoPdf, tamanoBytes, sha256, realAppUserId);
+            Long realAppUserId = obtainAppUserAuthenticated().getId();
+            tutoringService.registerProgressSP(tutorId, numeroPhase, filePdf, sizeBytes, sha256, realAppUserId);
             return ResponseEntity.ok(ResponseWrapper.success(Map.of(
                     "mensaje", "Avance de fase registrado correctamente vía stored procedure",
                     "tutorId", tutorId,
-                    "numeroFase", numeroFase
+                    "numeroFase", numeroPhase
             ), "Avance de fase registrado correctamente vía stored procedure"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
@@ -304,7 +304,7 @@ public class TutoringController {
      * @throws RuntimeException si no hay sesión, es anónima, o el appUser del token ya no
      *                          existe en la base
      */
-    private AppUser obtainAppUserAutenticado() {
+    private AppUser obtainAppUserAuthenticated() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             throw new RuntimeException("Usuario no autenticado");
@@ -322,12 +322,12 @@ public class TutoringController {
      * @throws RuntimeException si no hay un appUser autenticado válido
      */
     private Long resolveAppUserId(Long appUserIdSolicitado) {
-        AppUser autenticado = obtainAppUserAutenticado();
-        boolean esAdminOCoord = "ADMIN".equalsIgnoreCase(autenticado.getRole())
-                || "COORDINADOR".equalsIgnoreCase(autenticado.getRole());
+        AppUser authenticated = obtainAppUserAuthenticated();
+        boolean esAdminOCoord = "ADMIN".equalsIgnoreCase(authenticated.getRole())
+                || "COORDINADOR".equalsIgnoreCase(authenticated.getRole());
         if (esAdminOCoord && appUserIdSolicitado != null) {
             return appUserIdSolicitado;
         }
-        return autenticado.getId();
+        return authenticated.getId();
     }
 }

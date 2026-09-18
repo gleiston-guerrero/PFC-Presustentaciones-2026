@@ -2,7 +2,7 @@ package ec.edu.uteq.presustentaciones.controllers;
 
 import ec.edu.uteq.presustentaciones.entities.Teacher;
 import ec.edu.uteq.presustentaciones.repositories.TeacherRepository;
-import ec.edu.uteq.presustentaciones.security.service.AppUserActualService;
+import ec.edu.uteq.presustentaciones.security.service.CurrentAppUserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -21,16 +21,16 @@ import java.util.List;
 public class TeacherController {
 
     private final TeacherRepository teacherRepository;
-    private final AppUserActualService appUserActualService;
+    private final CurrentAppUserService currentAppUserService;
 
     /**
      * Construye TeacherController, inyectando teacherRepository, appUserActualService.
      * @param teacherRepository teacherRepository
-     * @param appUserActualService appUserActualService
+     * @param currentAppUserService currentAppUserService
      */
-    public TeacherController(TeacherRepository teacherRepository, AppUserActualService appUserActualService) {
+    public TeacherController(TeacherRepository teacherRepository, CurrentAppUserService currentAppUserService) {
         this.teacherRepository = teacherRepository;
-        this.appUserActualService = appUserActualService;
+        this.currentAppUserService = currentAppUserService;
     }
 
     /**
@@ -52,16 +52,16 @@ public class TeacherController {
      * @return página de teachers que cumplen el filtro
      */
     @GetMapping("/paginado")
-    public Page<Teacher> listPaginado(@RequestParam(name = "q", required = false) String q, Pageable pageable) {
-        return teacherRepository.searchPaginado(q, pageable);
+    public Page<Teacher> listPaged(@RequestParam(name = "q", required = false) String q, Pageable pageable) {
+        return teacherRepository.searchPaged(q, pageable);
     }
 
     /**
      * @return teachers disponibles para asignación de tribunal o tutoría
      */
     @GetMapping("/disponibles")
-    public List<Teacher> disponibles() {
-        return teacherRepository.findByDisponibleTrue();
+    public List<Teacher> available() {
+        return teacherRepository.findByAvailableTrue();
     }
 
     /**
@@ -95,8 +95,8 @@ public class TeacherController {
      *                               distinto del suyo
      */
     @GetMapping("/usuario/{appUserId}")
-    public ResponseEntity<Teacher> obtainPorAppUser(@PathVariable("appUserId") Long appUserId) {
-        validateAccesoPropioOAdministrativo(appUserId);
+    public ResponseEntity<Teacher> obtainByAppUser(@PathVariable("appUserId") Long appUserId) {
+        validateAccessOwnOrAdministrative(appUserId);
         return teacherRepository.findByAppUserId(appUserId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -108,15 +108,15 @@ public class TeacherController {
      * @param appUserIdObjetivo appUser cuyo perfil se quiere consultar
      * @throws AccessDeniedException si no se cumple ninguna de las dos condiciones
      */
-    private void validateAccesoPropioOAdministrativo(Long appUserIdObjetivo) {
+    private void validateAccessOwnOrAdministrative(Long appUserIdObjetivo) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean esAdminOCoordinador = auth.getAuthorities().stream()
+        boolean isAdminOrCoordinator = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_COORDINADOR"));
-        if (esAdminOCoordinador) {
+        if (isAdminOrCoordinator) {
             return;
         }
-        Long appUserActualId = appUserActualService.appUser().getId();
-        if (!appUserActualId.equals(appUserIdObjetivo)) {
+        Long currentAppUserId = currentAppUserService.appUser().getId();
+        if (!currentAppUserId.equals(appUserIdObjetivo)) {
             throw new AccessDeniedException("No tienes permiso para consultar el perfil de otro docente");
         }
     }

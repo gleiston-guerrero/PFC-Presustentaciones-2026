@@ -1,9 +1,9 @@
 package ec.edu.uteq.presustentaciones.services;
 
-import ec.edu.uteq.presustentaciones.dto.ScaleCriterioDTO;
+import ec.edu.uteq.presustentaciones.dto.ScaleCriterionDTO;
 import ec.edu.uteq.presustentaciones.dto.EvaluationRubricRequest;
 import ec.edu.uteq.presustentaciones.dto.EvaluationRubricResponse;
-import ec.edu.uteq.presustentaciones.dto.ObservacionesSubmissionDTO;
+import ec.edu.uteq.presustentaciones.dto.ObservationsSubmissionDTO;
 import ec.edu.uteq.presustentaciones.entities.*;
 import ec.edu.uteq.presustentaciones.repositories.*;
 import ec.edu.uteq.presustentaciones.security.service.SubmissionAccessService;
@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RubricEvaluationServiceImpl implements RubricEvaluationService {
 
-    private final EvaluationCriterioRepository evalCriterioRepo;
-    private final CriterioRubricRepository criterioRepo;
+    private final EvaluationCriterionRepository evalCriterionRepo;
+    private final CriterionRubricRepository criterionRepo;
     private final PanelistRepository panelistRepo;
     private final SubmissionRepository submissionRepo;
     private final RubricRepository rubricRepo;
@@ -31,24 +31,24 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
     private final EvaluationFinalRepository evaluationFinalRepo;
     private final EvaluationPanelistRepository javaEvaluationPanelistRepo;
     private final EvaluatorRepository evaluatorRepo;
-    private final TipoEvaluatorRepository tipoEvaluatorRepo;
+    private final KindEvaluatorRepository kindEvaluatorRepo;
     private final SubmissionAccessService submissionAccessService;
     private final PermissionService permissionService;
 
     /** Mismo criterio que EvaluationPanelistService.validatePuedeRegister: solo el propio
      * panelist, o ADMIN/COORDINADOR, puede register una evaluación de rúbrica -- evita que
      * un panelist registre scales a nombre de otro (IDOR de escritura). */
-    private void validatePuedeRegister(Panelist panelist) {
+    private void validateCanRegister(Panelist panelist) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             throw new AccessDeniedException("Usuario no autenticado");
         }
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        if (isAdmin || permissionService.tienePermission(auth, "EVALUACION_CALIFICAR")) {
+        if (isAdmin || permissionService.hasPermission(auth, "EVALUACION_CALIFICAR")) {
             return;
         }
-        if (!permissionService.esPropioTeacher(auth, panelist.getTeacher().getId())) {
+        if (!permissionService.isOwnTeacher(auth, panelist.getTeacher().getId())) {
             throw new AccessDeniedException("Solo puedes registrar tu propia evaluación como jurado");
         }
     }
@@ -73,65 +73,65 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
             throw new RuntimeException("El jurado no pertenece a esta solicitud.");
         }
 
-        validatePuedeRegister(panelist);
+        validateCanRegister(panelist);
 
         rubricRepo.findById(req.getRubricId())
                 .orElseThrow(() -> new RuntimeException("Rúbrica no encontrada: " + req.getRubricId()));
 
-        List<CriterioRubric> criterios = criterioRepo.findByRubricIdOrderByOrdenAsc(req.getRubricId());
-        if (criterios.isEmpty()) {
+        List<CriterionRubric> criteria = criterionRepo.findByRubricIdOrderByOrdenAsc(req.getRubricId());
+        if (criteria.isEmpty()) {
             throw new RuntimeException("La rúbrica no tiene criterios definidos.");
         }
-        if (req.getCriterios() == null || req.getCriterios().size() != criterios.size()) {
-            throw new RuntimeException("Debe evaluar todos los " + criterios.size() + " criterios de la rúbrica.");
+        if (req.getCriteria() == null || req.getCriteria().size() != criteria.size()) {
+            throw new RuntimeException("Debe evaluar todos los " + criteria.size() + " criterios de la rúbrica.");
         }
-        for (ScaleCriterioDTO c : req.getCriterios()) {
+        for (ScaleCriterionDTO c : req.getCriteria()) {
             if (c.getScale() < 1 || c.getScale() > 100) {
                 throw new RuntimeException("Escala inválida: " + c.getScale() + ". Use valores entre 1 y 100.");
             }
         }
 
         // Search o create el Evaluator correspondiente para este panelist
-        Evaluator evaluator = evaluatorRepo.findBySubmissionIdAndTeacherIdAndTipoEvaluatorCodigo(
+        Evaluator evaluator = evaluatorRepo.findBySubmissionIdAndTeacherIdAndKindEvaluatorCode(
                 req.getSubmissionId(), panelist.getTeacher().getId(), "JURADO")
             .orElseGet(() -> {
-                TipoEvaluator tipo = tipoEvaluatorRepo.findByCodigo("JURADO")
+                KindEvaluator kind = kindEvaluatorRepo.findByCode("JURADO")
                         .orElseThrow(() -> new RuntimeException("Tipo evaluador JURADO no configurado."));
                 Evaluator ev = Evaluator.builder()
                         .submission(submission)
                         .teacher(panelist.getTeacher())
-                        .memberTribunal(panelist)
-                        .tipoEvaluator(tipo)
+                        .memberPanel(panelist)
+                        .kindEvaluator(kind)
                         .peso(1.0)
                         .build();
                 return evaluatorRepo.save(ev);
             });
 
         // Permite re-evaluación: delete la anterior
-        evalCriterioRepo.deleteBySubmissionIdAndEvaluatorId(req.getSubmissionId(), evaluator.getId());
+        evalCriterionRepo.deleteBySubmissionIdAndEvaluatorId(req.getSubmissionId(), evaluator.getId());
 
-        List<EvaluationCriterio> guardadas = new ArrayList<>();
-        for (ScaleCriterioDTO cDto : req.getCriterios()) {
-            CriterioRubric criterio = criterios.stream()
-                    .filter(c -> c.getId().equals(cDto.getCriterioId()))
+        List<EvaluationCriterion> guardadas = new ArrayList<>();
+        for (ScaleCriterionDTO cDto : req.getCriteria()) {
+            CriterionRubric criterion = criteria.stream()
+                    .filter(c -> c.getId().equals(cDto.getCriterionId()))
                     .findFirst()
-                    .orElseThrow(() -> new RuntimeException("Criterio no encontrado: " + cDto.getCriterioId()));
+                    .orElseThrow(() -> new RuntimeException("Criterio no encontrado: " + cDto.getCriterionId()));
 
-            double notaObtenida = Math.round(criterio.getPonderacion() * cDto.getScale() / 100.0 * 100.0) / 100.0;
-            String observacionAuto = EvaluationCriterio.getObservacionPorRango(cDto.getScale());
+            double gradeObtenida = Math.round(criterion.getPonderacion() * cDto.getScale() / 100.0 * 100.0) / 100.0;
+            String observationAuto = EvaluationCriterion.getObservationByRange(cDto.getScale());
 
-            EvaluationCriterio ec = EvaluationCriterio.builder()
+            EvaluationCriterion ec = EvaluationCriterion.builder()
                     .submission(submission)
                     .evaluator(evaluator)
                     .panelist(panelist)
-                    .criterio(criterio)
+                    .criterion(criterion)
                     .scale(cDto.getScale())
-                    .notaObtenida(notaObtenida)
-                    .observacionAuto(observacionAuto)
-                    .observacionManual(cDto.getObservacionManual())
-                    .observaciones(cDto.getObservaciones())
+                    .gradeObtenida(gradeObtenida)
+                    .observationAuto(observationAuto)
+                    .observationManual(cDto.getObservationManual())
+                    .observations(cDto.getObservations())
                     .build();
-            guardadas.add(evalCriterioRepo.save(ec));
+            guardadas.add(evalCriterionRepo.save(ec));
         }
 
         return buildResponse(panelist, guardadas, req.getSubmissionId(), evaluator.getId());
@@ -148,13 +148,13 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
     public EvaluationRubricResponse obtainEvaluationPanelist(Long submissionId, Long panelistId) {
         Panelist panelist = panelistRepo.findById(panelistId)
                 .orElseThrow(() -> new RuntimeException("Jurado no encontrado: " + panelistId));
-        submissionAccessService.validateAcceso(panelist.getSubmission(), "EVALUACION_CALIFICAR");
+        submissionAccessService.validateAccess(panelist.getSubmission(), "EVALUACION_CALIFICAR");
 
-        Evaluator evaluator = evaluatorRepo.findBySubmissionIdAndTeacherIdAndTipoEvaluatorCodigo(
+        Evaluator evaluator = evaluatorRepo.findBySubmissionIdAndTeacherIdAndKindEvaluatorCode(
                 submissionId, panelist.getTeacher().getId(), "JURADO")
                 .orElseThrow(() -> new RuntimeException("Evaluador no registrado para el jurado."));
 
-        List<EvaluationCriterio> evals = evalCriterioRepo.findBySubmissionIdAndEvaluatorId(submissionId, evaluator.getId());
+        List<EvaluationCriterion> evals = evalCriterionRepo.findBySubmissionIdAndEvaluatorId(submissionId, evaluator.getId());
         return buildResponse(panelist, evals, submissionId, evaluator.getId());
     }
  
@@ -166,17 +166,17 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
      */
     @Override
     public List<EvaluationRubricResponse> obtainEvaluationsSubmission(Long submissionId) {
-        Submission submissionParaAcceso = submissionRepo.findById(submissionId)
+        Submission submissionForAccess = submissionRepo.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada: " + submissionId));
-        submissionAccessService.validateAcceso(submissionParaAcceso, "EVALUACION_CALIFICAR");
+        submissionAccessService.validateAccess(submissionForAccess, "EVALUACION_CALIFICAR");
 
         List<Panelist> panelists = panelistRepo.findBySubmissionId(submissionId);
         return panelists.stream()
                 .map(j -> {
-                    var evOpt = evaluatorRepo.findBySubmissionIdAndTeacherIdAndTipoEvaluatorCodigo(
+                    var evOpt = evaluatorRepo.findBySubmissionIdAndTeacherIdAndKindEvaluatorCode(
                             submissionId, j.getTeacher().getId(), "JURADO");
-                    List<EvaluationCriterio> evals = evOpt.isPresent()
-                            ? evalCriterioRepo.findBySubmissionIdAndEvaluatorId(submissionId, evOpt.get().getId())
+                    List<EvaluationCriterion> evals = evOpt.isPresent()
+                            ? evalCriterionRepo.findBySubmissionIdAndEvaluatorId(submissionId, evOpt.get().getId())
                             : new ArrayList<>();
                     return buildResponse(j, evals, submissionId, evOpt.map(Evaluator::getId).orElse(null));
                 })
@@ -191,69 +191,69 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
      *         evaluaron; {@code 0.0} si ninguno ha evaluado todavía
      */
     @Override
-    public Double calculateNotaTribunal(Long submissionId) {
-        Submission submissionParaAcceso = submissionRepo.findById(submissionId)
+    public Double calculateGradePanel(Long submissionId) {
+        Submission submissionForAccess = submissionRepo.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada: " + submissionId));
-        submissionAccessService.validateAcceso(submissionParaAcceso, "EVALUACION_CALIFICAR");
-        return promedioTribunal(submissionId);
+        submissionAccessService.validateAccess(submissionForAccess, "EVALUACION_CALIFICAR");
+        return averagePanel(submissionId);
     }
  
     // ── Helper ──────────────────────────────────────────────────────────────
  
     /** Calcula el promedio de (suma de notas por panelist) en Java para evitar subqueries en JPQL */
-    private Double promedioTribunal(Long submissionId) {
-        List<Object[]> filas = evalCriterioRepo.sumaPorEvaluator(submissionId);
+    private Double averagePanel(Long submissionId) {
+        List<Object[]> filas = evalCriterionRepo.sumaByEvaluator(submissionId);
         if (filas == null || filas.isEmpty()) return null;
         double suma = filas.stream()
                 .mapToDouble(f -> ((Number) f[1]).doubleValue())
                 .sum();
-        double promedio = suma / filas.size();
-        return Math.round(promedio * 100.0) / 100.0;
+        double average = suma / filas.size();
+        return Math.round(average * 100.0) / 100.0;
     }
  
     private EvaluationRubricResponse buildResponse(Panelist panelist,
-                                                     List<EvaluationCriterio> evals,
+                                                     List<EvaluationCriterion> evals,
                                                      Long submissionId,
                                                      Long evaluatorId) {
         String nombre = panelist.getTeacher() != null && panelist.getTeacher().getAppUser() != null
                 ? panelist.getTeacher().getAppUser().getNombre() + " " + panelist.getTeacher().getAppUser().getApellido()
                 : "Docente #" + panelist.getId();
  
-        List<EvaluationRubricResponse.CriterioResultado> detalles = evals.stream()
-                .map(ec -> EvaluationRubricResponse.CriterioResultado.builder()
-                        .criterioId(ec.getCriterio().getId())
-                        .nombreCriterio(ec.getCriterio().getNombre())
-                        .ponderacion(ec.getCriterio().getPonderacion())
+        List<EvaluationRubricResponse.CriterionResult> detalles = evals.stream()
+                .map(ec -> EvaluationRubricResponse.CriterionResult.builder()
+                        .criterionId(ec.getCriterion().getId())
+                        .nombreCriterion(ec.getCriterion().getNombre())
+                        .ponderacion(ec.getCriterion().getPonderacion())
                         .scale(ec.getScale())
-                        .rangoDescripcion(EvaluationCriterio.getRangoDescripcion(ec.getScale()))
-                        .notaObtenida(ec.getNotaObtenida())
-                        .observacionAuto(ec.getObservacionAuto())
-                        .observacionManual(ec.getObservacionManual())
-                        .observaciones(ec.getObservaciones())
+                        .rangeDescription(EvaluationCriterion.getRangeDescription(ec.getScale()))
+                        .gradeObtenida(ec.getGradeObtenida())
+                        .observationAuto(ec.getObservationAuto())
+                        .observationManual(ec.getObservationManual())
+                        .observations(ec.getObservations())
                         .build())
                 .collect(Collectors.toList());
  
-        double notaTotal = evals.stream()
-                .mapToDouble(EvaluationCriterio::getNotaObtenida)
+        double gradeTotal = evals.stream()
+                .mapToDouble(EvaluationCriterion::getGradeObtenida)
                 .sum();
-        notaTotal = Math.round(notaTotal * 100.0) / 100.0;
+        gradeTotal = Math.round(gradeTotal * 100.0) / 100.0;
  
-        Double notaPromedio = promedioTribunal(submissionId);
+        Double gradeAverage = averagePanel(submissionId);
  
-        List<Panelist> todosPanelists = panelistRepo.findBySubmissionId(submissionId);
-        boolean completo = false;
-        if (!todosPanelists.isEmpty()) {
-            completo = true;
-            for (Panelist j : todosPanelists) {
-                var evOpt = evaluatorRepo.findBySubmissionIdAndTeacherIdAndTipoEvaluatorCodigo(
+        List<Panelist> allPanelists = panelistRepo.findBySubmissionId(submissionId);
+        boolean complete = false;
+        if (!allPanelists.isEmpty()) {
+            complete = true;
+            for (Panelist j : allPanelists) {
+                var evOpt = evaluatorRepo.findBySubmissionIdAndTeacherIdAndKindEvaluatorCode(
                         submissionId, j.getTeacher().getId(), "JURADO");
                 if (evOpt.isPresent()) {
-                    if (!evalCriterioRepo.existsBySubmissionIdAndEvaluatorId(submissionId, evOpt.get().getId())) {
-                        completo = false;
+                    if (!evalCriterionRepo.existsBySubmissionIdAndEvaluatorId(submissionId, evOpt.get().getId())) {
+                        complete = false;
                         break;
                     }
                 } else {
-                    completo = false;
+                    complete = false;
                     break;
                 }
             }
@@ -265,9 +265,9 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
                 .nombrePanelist(nombre)
                 .rolePanelist(panelist.getRolePanelist() != null ? panelist.getRolePanelist().getNombre() : "")
                 .detalles(detalles)
-                .notaTotalPanelist(evals.isEmpty() ? null : notaTotal)
-                .notaPromedioTribunal(notaPromedio)
-                .tribunalCompleto(completo)
+                .gradeTotalPanelist(evals.isEmpty() ? null : gradeTotal)
+                .gradeAveragePanel(gradeAverage)
+                .panelComplete(complete)
                 .build();
     }
 
@@ -279,10 +279,10 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
      */
     @Override
     @Transactional(readOnly = true)
-    public ObservacionesSubmissionDTO obtainObservacionesSubmission(Long submissionId) {
+    public ObservationsSubmissionDTO obtainObservationsSubmission(Long submissionId) {
         Submission submission = submissionRepo.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada: " + submissionId));
-        submissionAccessService.validateAcceso(submission, "EVALUACION_CALIFICAR");
+        submissionAccessService.validateAccess(submission, "EVALUACION_CALIFICAR");
 
         String nombreStudent = "";
         if (submission.getStudent() != null && submission.getStudent().getAppUser() != null) {
@@ -290,24 +290,24 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
                     + submission.getStudent().getAppUser().getApellido();
         }
 
-        ObservacionesSubmissionDTO.ObservacionesTutorDTO tutorDTO = null;
+        ObservationsSubmissionDTO.ObservationsTutorDTO tutorDTO = null;
         var tutorOpt = tutorRepo.findBySubmissionId(submissionId);
         if (tutorOpt.isPresent()) {
             Tutor tutor = tutorOpt.get();
             String nombreTutor = tutor.getTeacher() != null && tutor.getTeacher().getAppUser() != null
                     ? tutor.getTeacher().getAppUser().getNombre() + " " + tutor.getTeacher().getAppUser().getApellido()
                     : "Tutor";
-            String fechaRegistro = tutor.getFechaAsignacion() != null
-                    ? tutor.getFechaAsignacion().toString() : null;
-            tutorDTO = ObservacionesSubmissionDTO.ObservacionesTutorDTO.builder()
+            String dateRecord = tutor.getDateAsignacion() != null
+                    ? tutor.getDateAsignacion().toString() : null;
+            tutorDTO = ObservationsSubmissionDTO.ObservationsTutorDTO.builder()
                     .tutorId(tutor.getId())
                     .nombreTutor(nombreTutor)
-                    .observaciones(tutor.getObservaciones())
-                    .fechaRegistro(fechaRegistro)
+                    .observations(tutor.getObservations())
+                    .dateRecord(dateRecord)
                     .build();
         }
 
-        List<ObservacionesSubmissionDTO.ObservacionesPanelistDTO> panelistsDTO = new ArrayList<>();
+        List<ObservationsSubmissionDTO.ObservationsPanelistDTO> panelistsDTO = new ArrayList<>();
         List<Panelist> panelists = panelistRepo.findBySubmissionId(submissionId);
         
         List<EvaluationPanelist> evaluationsPanelist = javaEvaluationPanelistRepo.findBySubmissionId(submissionId);
@@ -322,53 +322,53 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
                     .findFirst()
                     .orElse(null);
             
-            var evOpt = evaluatorRepo.findBySubmissionIdAndTeacherIdAndTipoEvaluatorCodigo(submissionId, panelist.getTeacher().getId(), "JURADO");
-            List<EvaluationCriterio> criterios = evOpt.isPresent()
-                    ? evalCriterioRepo.findBySubmissionIdAndEvaluatorId(submissionId, evOpt.get().getId())
+            var evOpt = evaluatorRepo.findBySubmissionIdAndTeacherIdAndKindEvaluatorCode(submissionId, panelist.getTeacher().getId(), "JURADO");
+            List<EvaluationCriterion> criteria = evOpt.isPresent()
+                    ? evalCriterionRepo.findBySubmissionIdAndEvaluatorId(submissionId, evOpt.get().getId())
                     : new ArrayList<>();
-            List<ObservacionesSubmissionDTO.CriterioObservacionDTO> criteriosDTO = criterios.stream()
-                    .map(ec -> ObservacionesSubmissionDTO.CriterioObservacionDTO.builder()
-                            .nombreCriterio(ec.getCriterio().getNombre())
-                            .ponderacion(ec.getCriterio().getPonderacion())
+            List<ObservationsSubmissionDTO.CriterionObservationDTO> criteriaDTO = criteria.stream()
+                    .map(ec -> ObservationsSubmissionDTO.CriterionObservationDTO.builder()
+                            .nombreCriterion(ec.getCriterion().getNombre())
+                            .ponderacion(ec.getCriterion().getPonderacion())
                             .scale(ec.getScale())
-                            .rangoDescripcion(EvaluationCriterio.getRangoDescripcion(ec.getScale()))
-                            .notaObtenida(ec.getNotaObtenida())
-                            .observacionAuto(ec.getObservacionAuto())
-                            .observacionManual(ec.getObservacionManual())
+                            .rangeDescription(EvaluationCriterion.getRangeDescription(ec.getScale()))
+                            .gradeObtenida(ec.getGradeObtenida())
+                            .observationAuto(ec.getObservationAuto())
+                            .observationManual(ec.getObservationManual())
                             .build())
                     .collect(Collectors.toList());
             
-            panelistsDTO.add(ObservacionesSubmissionDTO.ObservacionesPanelistDTO.builder()
+            panelistsDTO.add(ObservationsSubmissionDTO.ObservationsPanelistDTO.builder()
                     .panelistId(panelist.getId())
                     .nombrePanelist(nombrePanelist)
                     .role(panelist.getRolePanelist() != null ? panelist.getRolePanelist().getNombre() : "")
-                    .criterios(criteriosDTO)
-                    .notaPanelist(evalPanelist != null ? evalPanelist.getNotaPanelist() : null)
-                    .observaciones(evalPanelist != null ? evalPanelist.getObservaciones() : null)
-                    .resultado(evalPanelist != null ? evalPanelist.getResultado() : null)
-                    .comentarioPreestablecido(evalPanelist != null ? evalPanelist.getComentarioPreestablecido() : null)
+                    .criteria(criteriaDTO)
+                    .gradePanelist(evalPanelist != null ? evalPanelist.getGradePanelist() : null)
+                    .observations(evalPanelist != null ? evalPanelist.getObservations() : null)
+                    .result(evalPanelist != null ? evalPanelist.getResult() : null)
+                    .commentPreestablecido(evalPanelist != null ? evalPanelist.getCommentPreestablecido() : null)
                     .build());
         }
 
-        ObservacionesSubmissionDTO.ObservacionesCoordinadorDTO coordinadorDTO = null;
+        ObservationsSubmissionDTO.ObservationsCoordinatorDTO coordinatorDTO = null;
         var evaluationOpt = evaluationFinalRepo.findBySubmissionId(submissionId);
         if (evaluationOpt.isPresent()) {
             EvaluationFinal ev = evaluationOpt.get();
-            coordinadorDTO = ObservacionesSubmissionDTO.ObservacionesCoordinadorDTO.builder()
-                    .observaciones(ev.getObservaciones())
-                    .notaInstructor(ev.getNotaInstructor())
-                    .notaFinal(ev.getNotaFinal())
-                    .resultado(ev.getResultado() != null ? ev.getResultado().getNombre() : "")
+            coordinatorDTO = ObservationsSubmissionDTO.ObservationsCoordinatorDTO.builder()
+                    .observations(ev.getObservations())
+                    .gradeInstructor(ev.getGradeInstructor())
+                    .gradeFinal(ev.getGradeFinal())
+                    .result(ev.getResult() != null ? ev.getResult().getNombre() : "")
                     .build();
         }
 
-        return ObservacionesSubmissionDTO.builder()
+        return ObservationsSubmissionDTO.builder()
                 .submissionId(submissionId)
                 .tituloTopic(submission.getTituloTopic())
                 .nombreStudent(nombreStudent)
                 .tutor(tutorDTO)
                 .panelists(panelistsDTO)
-                .coordinador(coordinadorDTO)
+                .coordinator(coordinatorDTO)
                 .build();
     }
 }

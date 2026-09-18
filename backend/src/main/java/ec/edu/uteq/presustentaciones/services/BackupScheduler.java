@@ -2,8 +2,8 @@ package ec.edu.uteq.presustentaciones.services;
 
 import ec.edu.uteq.presustentaciones.entities.BackupConfig;
 import ec.edu.uteq.presustentaciones.repositories.BackupConfigRepository;
-import ec.edu.uteq.presustentaciones.services.backup.OrigenBackup;
-import ec.edu.uteq.presustentaciones.services.backup.TipoBackup;
+import ec.edu.uteq.presustentaciones.services.backup.SourceBackup;
+import ec.edu.uteq.presustentaciones.services.backup.KindBackup;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -51,8 +51,8 @@ public class BackupScheduler {
             return;
         }
 
-        LocalDateTime ultimoAuto = backupService.fechaUltimoAutomatico();
-        LocalDateTime proximo = cron.next(ultimoAuto);
+        LocalDateTime lastAuto = backupService.dateLastAutomatic();
+        LocalDateTime proximo = cron.next(lastAuto);
         if (proximo == null || proximo.isAfter(LocalDateTime.now())) {
             return; // todavía no toca
         }
@@ -60,8 +60,8 @@ public class BackupScheduler {
         corriendo = true;
         try {
             log.info("Cronograma: generando respaldo FULL automático (programado para ~{})", proximo);
-            backupService.generate(TipoBackup.FULL, OrigenBackup.AUTOMATICO);
-            backupService.aplicarRetencion();
+            backupService.generate(KindBackup.FULL, SourceBackup.AUTOMATICO);
+            backupService.applyRetention();
         } catch (Exception e) {
             log.error("El respaldo automático programado falló: {}", e.getMessage(), e);
         } finally {
@@ -71,30 +71,30 @@ public class BackupScheduler {
 
     /** Tick del diferencial (Fase 2), misma mecánica que el FULL pero con su propio cron. */
     @Scheduled(fixedDelay = 60_000, initialDelay = 75_000)
-    public void tickDiferencial() {
+    public void tickDifferential() {
         if (corriendo) return;
 
         BackupConfig cfg = configRepo.findById(BackupConfig.ID_UNICO).orElse(null);
-        if (cfg == null || !cfg.isDiferencialActivo()
-                || cfg.getCronDiferencial() == null || cfg.getCronDiferencial().isBlank()) {
+        if (cfg == null || !cfg.isDifferentialActivo()
+                || cfg.getCronDifferential() == null || cfg.getCronDifferential().isBlank()) {
             return;
         }
         CronExpression cron;
         try {
-            cron = CronExpression.parse(cfg.getCronDiferencial().trim());
+            cron = CronExpression.parse(cfg.getCronDifferential().trim());
         } catch (IllegalArgumentException e) {
-            log.warn("Cron del diferencial inválido ('{}').", cfg.getCronDiferencial());
+            log.warn("Cron del diferencial inválido ('{}').", cfg.getCronDifferential());
             return;
         }
-        LocalDateTime ultimo = backupService.fechaUltimoDiferencialAutomatico();
-        LocalDateTime proximo = cron.next(ultimo);
+        LocalDateTime last = backupService.dateLastDifferentialAutomatic();
+        LocalDateTime proximo = cron.next(last);
         if (proximo == null || proximo.isAfter(LocalDateTime.now())) {
             return;
         }
         corriendo = true;
         try {
             log.info("Cronograma: generando respaldo DIFERENCIAL automático (programado para ~{})", proximo);
-            backupService.generateDiferencial(OrigenBackup.AUTOMATICO);
+            backupService.generateDifferential(SourceBackup.AUTOMATICO);
         } catch (Exception e) {
             log.error("El respaldo diferencial programado falló: {}", e.getMessage(), e);
         } finally {
@@ -104,12 +104,12 @@ public class BackupScheduler {
 
     /** Barrido de retención diario a las 03:15, independiente del backup programado. */
     @Scheduled(cron = "0 15 3 * * *")
-    public void barridoRetencion() {
+    public void sweepRetention() {
         boolean activo = configRepo.findById(BackupConfig.ID_UNICO)
                 .map(BackupConfig::isActivo).orElse(false);
         if (!activo) return;
         try {
-            backupService.aplicarRetencion();
+            backupService.applyRetention();
         } catch (Exception e) {
             log.error("El barrido de retención diario falló: {}", e.getMessage(), e);
         }

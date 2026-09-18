@@ -1,20 +1,20 @@
 package ec.edu.uteq.presustentaciones.services;
 
 import ec.edu.uteq.presustentaciones.dto.GenerateTopicRequest;
-import ec.edu.uteq.presustentaciones.dto.SaveTopicPropuestoRequest;
-import ec.edu.uteq.presustentaciones.dto.TopicPropuestoDTO;
-import ec.edu.uteq.presustentaciones.entities.AreaTematica;
+import ec.edu.uteq.presustentaciones.dto.SaveTopicProposedRequest;
+import ec.edu.uteq.presustentaciones.dto.TopicProposedDTO;
+import ec.edu.uteq.presustentaciones.entities.Subject;
 import ec.edu.uteq.presustentaciones.entities.Program;
 import ec.edu.uteq.presustentaciones.entities.Student;
-import ec.edu.uteq.presustentaciones.entities.LineInvestigacion;
-import ec.edu.uteq.presustentaciones.entities.TopicGuardadoStudent;
-import ec.edu.uteq.presustentaciones.entities.TopicPropuesto;
-import ec.edu.uteq.presustentaciones.repositories.AreaTematicaRepository;
+import ec.edu.uteq.presustentaciones.entities.ResearchLine;
+import ec.edu.uteq.presustentaciones.entities.TopicSavedStudent;
+import ec.edu.uteq.presustentaciones.entities.TopicProposed;
+import ec.edu.uteq.presustentaciones.repositories.SubjectRepository;
 import ec.edu.uteq.presustentaciones.repositories.ProgramRepository;
 import ec.edu.uteq.presustentaciones.repositories.StudentRepository;
-import ec.edu.uteq.presustentaciones.repositories.LineInvestigacionRepository;
-import ec.edu.uteq.presustentaciones.repositories.TopicGuardadoStudentRepository;
-import ec.edu.uteq.presustentaciones.repositories.TopicPropuestoRepository;
+import ec.edu.uteq.presustentaciones.repositories.ResearchLineRepository;
+import ec.edu.uteq.presustentaciones.repositories.TopicSavedStudentRepository;
+import ec.edu.uteq.presustentaciones.repositories.TopicProposedRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,38 +27,38 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TopicServiceImpl implements TopicService {
 
-    private final TopicPropuestoRepository topicPropuestoRepository;
-    private final TopicGuardadoStudentRepository topicGuardadoStudentRepository;
+    private final TopicProposedRepository topicProposedRepository;
+    private final TopicSavedStudentRepository topicSavedStudentRepository;
     private final StudentRepository studentRepository;
     private final ProgramRepository programRepository;
-    private final LineInvestigacionRepository lineInvestigacionRepository;
-    private final AreaTematicaRepository areaTematicaRepository;
+    private final ResearchLineRepository researchLineRepository;
+    private final SubjectRepository subjectRepository;
 
     /**
      * Explora el catálogo de topics propuestos con filtros opcionales.
      *
      * @param programId            id de program a filtrar, o {@code null} para no filtrar
-     * @param lineInvestigacionId id de línea de investigación a filtrar, o {@code null}
+     * @param researchLineId id de línea de investigación a filtrar, o {@code null}
      * @param areaId               id de área temática a filtrar, o {@code null}
      * @param nivelDificultad      nivel de dificultad a filtrar, o {@code null}/vacío
-     * @param studentId         si no es {@code null}, cada topic se marca con {@code guardado}
+     * @param studentId         si no es {@code null}, cada topic se marca con {@code saved}
      *                             según los topics que ya guardó ese student
      * @return los topics propuestos que cumplen los filtros
      */
     @Override
     @Transactional(readOnly = true)
-    public List<TopicPropuestoDTO> explorar(Integer programId, Integer lineInvestigacionId,
+    public List<TopicProposedDTO> explore(Integer programId, Integer researchLineId,
                                            Integer areaId, String nivelDificultad, Long studentId) {
         String nivel = (nivelDificultad != null && !nivelDificultad.isBlank()) ? nivelDificultad.trim() : null;
-        List<TopicPropuesto> topics = topicPropuestoRepository.searchConFiltros(
-                programId, lineInvestigacionId, areaId, nivel);
+        List<TopicProposed> topics = topicProposedRepository.searchWithFiltros(
+                programId, researchLineId, areaId, nivel);
 
-        Set<Integer> guardados = studentId == null
+        Set<Integer> saved = studentId == null
                 ? Set.of()
-                : Set.copyOf(topicGuardadoStudentRepository.findTopicIdsByStudentId(studentId));
+                : Set.copyOf(topicSavedStudentRepository.findTopicIdsByStudentId(studentId));
 
         return topics.stream()
-                .map(t -> mapToDTO(t, studentId != null ? guardados.contains(t.getId()) : null))
+                .map(t -> mapToDTO(t, studentId != null ? saved.contains(t.getId()) : null))
                 .collect(Collectors.toList());
     }
 
@@ -71,13 +71,13 @@ public class TopicServiceImpl implements TopicService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<TopicPropuestoDTO> generateIdeas(GenerateTopicRequest request) {
-        List<TopicPropuesto> topics;
-        if (request.getLineInvestigacionId() != null) {
-            topics = topicPropuestoRepository.findByProgramIdAndLineInvestigacionId(
-                    request.getProgramId(), request.getLineInvestigacionId());
+    public List<TopicProposedDTO> generateSuggestions(GenerateTopicRequest request) {
+        List<TopicProposed> topics;
+        if (request.getResearchLineId() != null) {
+            topics = topicProposedRepository.findByProgramIdAndResearchLineId(
+                    request.getProgramId(), request.getResearchLineId());
         } else {
-            topics = topicPropuestoRepository.findByProgramId(request.getProgramId());
+            topics = topicProposedRepository.findByProgramId(request.getProgramId());
         }
         return topics.stream().map(t -> mapToDTO(t, null)).collect(Collectors.toList());
     }
@@ -85,14 +85,14 @@ public class TopicServiceImpl implements TopicService {
     /**
      * Detalle de un topic propuesto.
      *
-     * @param topicPropuestoId id del topic propuesto
+     * @param topicProposedId id del topic propuesto
      * @return el detalle del topic, con sus catálogos (program/línea/área) resueltos
      * @throws IllegalArgumentException si el topic no existe
      */
     @Override
     @Transactional(readOnly = true)
-    public TopicPropuestoDTO obtainDetalle(Integer topicPropuestoId) {
-        TopicPropuesto topic = topicPropuestoRepository.findByIdConCatalogos(topicPropuestoId)
+    public TopicProposedDTO obtainDetail(Integer topicProposedId) {
+        TopicProposed topic = topicProposedRepository.findByIdWithCatalogs(topicProposedId)
                 .orElseThrow(() -> new IllegalArgumentException("Tema propuesto no encontrado"));
         return mapToDTO(topic, null);
     }
@@ -101,43 +101,43 @@ public class TopicServiceImpl implements TopicService {
      * Guarda un topic propuesto en la lista de favoritos del student.
      *
      * @param studentId    id del student
-     * @param topicPropuestoId id del topic propuesto a save
+     * @param topicProposedId id del topic propuesto a save
      * @throws IllegalStateException   si el student ya había guardado ese topic
      * @throws IllegalArgumentException si el student o el topic no existen
      */
     @Override
     @Transactional
-    public void saveTopicStudent(Long studentId, Integer topicPropuestoId) {
-        if (topicGuardadoStudentRepository.existsByStudentIdAndTopicPropuestoId(studentId, topicPropuestoId)) {
+    public void saveTopicStudent(Long studentId, Integer topicProposedId) {
+        if (topicSavedStudentRepository.existsByStudentIdAndTopicProposedId(studentId, topicProposedId)) {
             throw new IllegalStateException("El tema ya está guardado por el estudiante");
         }
 
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Estudiante no encontrado"));
 
-        TopicPropuesto topic = topicPropuestoRepository.findById(topicPropuestoId)
+        TopicProposed topic = topicProposedRepository.findById(topicProposedId)
                 .orElseThrow(() -> new IllegalArgumentException("Tema propuesto no encontrado"));
 
-        TopicGuardadoStudent topicGuardado = TopicGuardadoStudent.builder()
+        TopicSavedStudent topicSaved = TopicSavedStudent.builder()
                 .student(student)
-                .topicPropuesto(topic)
+                .topicProposed(topic)
                 .build();
 
-        topicGuardadoStudentRepository.save(topicGuardado);
+        topicSavedStudentRepository.save(topicSaved);
     }
 
     /**
      * Quita un topic de la lista de favoritos del student.
      *
      * @param studentId    id del student
-     * @param topicPropuestoId id del topic propuesto a remove
+     * @param topicProposedId id del topic propuesto a remove
      * @throws IllegalArgumentException si el topic no estaba guardado por ese student
      */
     @Override
     @Transactional
-    public void removeTopicGuardado(Long studentId, Integer topicPropuestoId) {
-        int eliminados = topicGuardadoStudentRepository
-                .deleteByStudentIdAndTopicPropuestoId(studentId, topicPropuestoId);
+    public void removeTopicSaved(Long studentId, Integer topicProposedId) {
+        int eliminados = topicSavedStudentRepository
+                .deleteByStudentIdAndTopicProposedId(studentId, topicProposedId);
         if (eliminados == 0) {
             throw new IllegalArgumentException("El tema no estaba en la lista de guardados del estudiante");
         }
@@ -149,9 +149,9 @@ public class TopicServiceImpl implements TopicService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<TopicPropuestoDTO> obtainTopicsGuardados(Long studentId) {
-        return topicGuardadoStudentRepository.findByStudentIdOrderByFechaGuardadoDesc(studentId).stream()
-                .map(TopicGuardadoStudent::getTopicPropuesto)
+    public List<TopicProposedDTO> obtainTopicsSaved(Long studentId) {
+        return topicSavedStudentRepository.findByStudentIdOrderByDateSavedDesc(studentId).stream()
+                .map(TopicSavedStudent::getTopicProposed)
                 .map(t -> mapToDTO(t, true))
                 .collect(Collectors.toList());
     }
@@ -166,16 +166,16 @@ public class TopicServiceImpl implements TopicService {
      */
     @Override
     @Transactional
-    public TopicPropuestoDTO create(SaveTopicPropuestoRequest request) {
-        TopicPropuesto topic = new TopicPropuesto();
-        aplicar(topic, request);
-        return mapToDTO(topicPropuestoRepository.save(topic), null);
+    public TopicProposedDTO create(SaveTopicProposedRequest request) {
+        TopicProposed topic = new TopicProposed();
+        apply(topic, request);
+        return mapToDTO(topicProposedRepository.save(topic), null);
     }
 
     /**
      * Actualiza un topic propuesto del catálogo (permission ORIENTACION_CATALOGO_GESTIONAR).
      *
-     * @param topicPropuestoId id del topic a update
+     * @param topicProposedId id del topic a update
      * @param request         datos nuevos del topic
      * @return el topic actualizado
      * @throws IllegalArgumentException si el topic no existe, o la program/línea/área indicadas
@@ -183,32 +183,32 @@ public class TopicServiceImpl implements TopicService {
      */
     @Override
     @Transactional
-    public TopicPropuestoDTO update(Integer topicPropuestoId, SaveTopicPropuestoRequest request) {
-        TopicPropuesto topic = topicPropuestoRepository.findById(topicPropuestoId)
+    public TopicProposedDTO update(Integer topicProposedId, SaveTopicProposedRequest request) {
+        TopicProposed topic = topicProposedRepository.findById(topicProposedId)
                 .orElseThrow(() -> new IllegalArgumentException("Tema propuesto no encontrado"));
-        aplicar(topic, request);
-        return mapToDTO(topicPropuestoRepository.save(topic), null);
+        apply(topic, request);
+        return mapToDTO(topicProposedRepository.save(topic), null);
     }
 
     /**
      * Elimina un topic del catálogo (permission ORIENTACION_CATALOGO_GESTIONAR). Los topics
      * guardados por students que apunten a él se eliminan en cascada (FK V20).
      *
-     * @param topicPropuestoId id del topic a delete
+     * @param topicProposedId id del topic a delete
      * @throws IllegalArgumentException si el topic no existe
      */
     @Override
     @Transactional
-    public void delete(Integer topicPropuestoId) {
-        if (!topicPropuestoRepository.existsById(topicPropuestoId)) {
+    public void delete(Integer topicProposedId) {
+        if (!topicProposedRepository.existsById(topicProposedId)) {
             throw new IllegalArgumentException("Tema propuesto no encontrado");
         }
         // topics_guardados tiene FK ON DELETE CASCADE (V20): al erase el topic del
         // catálogo también se quita de la lista de los students que lo guardaron.
-        topicPropuestoRepository.deleteById(topicPropuestoId);
+        topicProposedRepository.deleteById(topicProposedId);
     }
 
-    private void aplicar(TopicPropuesto topic, SaveTopicPropuestoRequest r) {
+    private void apply(TopicProposed topic, SaveTopicProposedRequest r) {
         topic.setTitulo(r.getTitulo().trim());
         topic.setProblema(trimOrNull(r.getProblema()));
         topic.setObjetivoGeneral(trimOrNull(r.getObjetivoGeneral()));
@@ -219,19 +219,19 @@ public class TopicServiceImpl implements TopicService {
 
         Program program = r.getProgramId() == null ? null : programRepository.findById(r.getProgramId())
                 .orElseThrow(() -> new IllegalArgumentException("Carrera no encontrada"));
-        LineInvestigacion line = r.getLineInvestigacionId() == null ? null
-                : lineInvestigacionRepository.findById(r.getLineInvestigacionId())
+        ResearchLine line = r.getResearchLineId() == null ? null
+                : researchLineRepository.findById(r.getResearchLineId())
                 .orElseThrow(() -> new IllegalArgumentException("Línea de investigación no encontrada"));
-        AreaTematica area = r.getAreaId() == null ? null : areaTematicaRepository.findById(r.getAreaId())
+        Subject area = r.getAreaId() == null ? null : subjectRepository.findById(r.getAreaId())
                 .orElseThrow(() -> new IllegalArgumentException("Área temática no encontrada"));
 
-        if (area != null && line != null && area.getLineInvestigacion() != null
-                && !area.getLineInvestigacion().getId().equals(line.getId())) {
+        if (area != null && line != null && area.getResearchLine() != null
+                && !area.getResearchLine().getId().equals(line.getId())) {
             throw new IllegalArgumentException("El área temática no pertenece a la línea de investigación indicada");
         }
 
         topic.setProgram(program);
-        topic.setLineInvestigacion(line);
+        topic.setResearchLine(line);
         topic.setArea(area);
     }
 
@@ -243,8 +243,8 @@ public class TopicServiceImpl implements TopicService {
         return t.isEmpty() ? null : t;
     }
 
-    private TopicPropuestoDTO mapToDTO(TopicPropuesto entity, Boolean guardado) {
-        return TopicPropuestoDTO.builder()
+    private TopicProposedDTO mapToDTO(TopicProposed entity, Boolean saved) {
+        return TopicProposedDTO.builder()
                 .id(entity.getId())
                 .titulo(entity.getTitulo())
                 .problema(entity.getProblema())
@@ -255,11 +255,11 @@ public class TopicServiceImpl implements TopicService {
                 .nivelDificultad(entity.getNivelDificultad())
                 .programId(entity.getProgram() != null ? entity.getProgram().getId() : null)
                 .programNombre(entity.getProgram() != null ? entity.getProgram().getNombre() : null)
-                .lineInvestigacionId(entity.getLineInvestigacion() != null ? entity.getLineInvestigacion().getId() : null)
-                .lineInvestigacionNombre(entity.getLineInvestigacion() != null ? entity.getLineInvestigacion().getNombre() : null)
+                .researchLineId(entity.getResearchLine() != null ? entity.getResearchLine().getId() : null)
+                .researchLineNombre(entity.getResearchLine() != null ? entity.getResearchLine().getNombre() : null)
                 .areaId(entity.getArea() != null ? entity.getArea().getId() : null)
                 .areaNombre(entity.getArea() != null ? entity.getArea().getNombre() : null)
-                .guardado(guardado)
+                .saved(saved)
                 .build();
     }
 }

@@ -1,7 +1,7 @@
 package ec.edu.uteq.presustentaciones.services;
 
-import ec.edu.uteq.presustentaciones.dto.BaseFisicaDTO;
-import ec.edu.uteq.presustentaciones.dto.EstadoWalDTO;
+import ec.edu.uteq.presustentaciones.dto.BasePhysicalDTO;
+import ec.edu.uteq.presustentaciones.dto.StatusWalDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -70,7 +70,7 @@ public class WalPitrService {
     /**
      * @return el estado del archivado de WAL, del directorio compartido y de las bases físicas
      */
-    public EstadoWalDTO estado() {
+    public StatusWalDTO status() {
         Map<String, Object> s;
         try {
             s = jdbc.queryForMap(
@@ -109,42 +109,42 @@ public class WalPitrService {
             }
         }
 
-        List<BaseFisicaDTO> bases = listBases();
-        boolean hayBase = !bases.isEmpty();
-        LocalDateTime baseMasAntigua = bases.stream()
-                .map(BaseFisicaDTO::getFechaCreacion).min(Comparator.naturalOrder()).orElse(null);
+        List<BasePhysicalDTO> baseBackups = listBaseBackups();
+        boolean hayBase = !baseBackups.isEmpty();
+        LocalDateTime baseMasAntigua = baseBackups.stream()
+                .map(BasePhysicalDTO::getDateCreacion).min(Comparator.naturalOrder()).orElse(null);
 
-        String pitrDesde;
+        String pitrFrom;
         String advertencia = null;
         if (!archivadoActivo) {
-            pitrDesde = "no disponible — el archivado de WAL está desactivado";
+            pitrFrom = "no disponible — el archivado de WAL está desactivado";
             advertencia = "Activa el archivado en docker-compose.yml para habilitar PITR.";
         } else if (!hayBase) {
-            pitrDesde = "no disponible — falta una base física";
+            pitrFrom = "no disponible — falta una base física";
             advertencia = "Hay WAL archivado pero ninguna base física. El WAL solo sirve para "
                     + "recuperar HACIA ADELANTE desde una base: genera una con «Crear base física».";
         } else {
             LocalDateTime ref = baseMasAntigua != null ? baseMasAntigua : masAntiguo;
-            pitrDesde = ref != null ? ref.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "—";
+            pitrFrom = ref != null ? ref.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "—";
         }
 
-        return EstadoWalDTO.builder()
+        return StatusWalDTO.builder()
                 .archivadoActivo(archivadoActivo)
                 .walLevel(str(s.get("wal_level")))
                 .archiveCommand(str(s.get("archive_command")))
                 .archiveTimeoutSegundos(parseInt(str(s.get("archive_timeout")), 0))
                 .segmentosArchivados(parseLong(s.get("archived_count")))
-                .ultimoSegmento(str(s.get("last_archived_wal")))
-                .ultimoArchivado(toLdt(s.get("last_archived_time")))
+                .lastSegmento(str(s.get("last_archived_wal")))
+                .lastArchivado(toLdt(s.get("last_archived_time")))
                 .fallos(parseLong(s.get("failed_count")))
-                .ultimoFallo(toLdt(s.get("last_failed_time")))
+                .lastFallo(toLdt(s.get("last_failed_time")))
                 .segmentosEnDisco(segmentos)
-                .tamanoArchivadoBytes(bytes)
-                .tamanoArchivadoLegible(formato(bytes))
+                .sizeArchivadoBytes(bytes)
+                .sizeArchivadoLegible(format(bytes))
                 .segmentoMasAntiguo(masAntiguo)
-                .pitrDisponibleDesde(pitrDesde)
-                .basesFisicas(bases)
-                .hayBaseFisica(hayBase)
+                .pitrAvailableFrom(pitrFrom)
+                .baseBackupsFisicas(baseBackups)
+                .hayBasePhysical(hayBase)
                 .advertencia(advertencia)
                 .build();
     }
@@ -156,7 +156,7 @@ public class WalPitrService {
      *
      * @return el nombre del segmento de WAL cerrado
      */
-    public String forzarSwitchWal() {
+    public String forceSwitchWal() {
         try {
             String wal = jdbc.queryForObject("SELECT pg_walfile_name(pg_switch_wal())", String.class);
             log.info("pg_switch_wal(): segmento {} cerrado para archivado", wal);
@@ -173,16 +173,16 @@ public class WalPitrService {
      * @param dias antigüedad mínima en días para que un segmento sea candidato a borrado
      * @return cantidad de segmentos eliminados
      */
-    public int limpiarWal(int dias) {
+    public int cleanWal(int dias) {
         Path dir = Paths.get(walDir);
         if (!Files.isDirectory(dir)) return 0;
 
-        LocalDateTime porDias = LocalDateTime.now().minusDays(Math.max(0, dias));
-        LocalDateTime baseMasAntigua = listBases().stream()
-                .map(BaseFisicaDTO::getFechaCreacion).min(Comparator.naturalOrder()).orElse(null);
+        LocalDateTime byDias = LocalDateTime.now().minusDays(Math.max(0, dias));
+        LocalDateTime baseMasAntigua = listBaseBackups().stream()
+                .map(BasePhysicalDTO::getDateCreacion).min(Comparator.naturalOrder()).orElse(null);
         // corte = el más conservador de los dos (no erase WAL que una base podría necesitar)
-        LocalDateTime corte = baseMasAntigua != null && baseMasAntigua.isBefore(porDias)
-                ? baseMasAntigua : porDias;
+        LocalDateTime corte = baseMasAntigua != null && baseMasAntigua.isBefore(byDias)
+                ? baseMasAntigua : byDias;
 
         int borrados = 0;
         try (Stream<Path> files = Files.list(dir)) {
@@ -211,15 +211,15 @@ public class WalPitrService {
     // ── Base física (pg_basebackup) ─────────────────────────────────────
 
     /** @return las bases físicas generadas, más recientes primero */
-    public List<BaseFisicaDTO> listBases() {
-        Path dir = basesDir();
+    public List<BasePhysicalDTO> listBaseBackups() {
+        Path dir = baseBackupsDir();
         if (!Files.isDirectory(dir)) return List.of();
         try (Stream<Path> hijos = Files.list(dir)) {
             return hijos.filter(Files::isDirectory)
                     .filter(p -> p.getFileName().toString().startsWith("base_"))
                     .map(this::aBaseDTO)
                     .filter(java.util.Objects::nonNull)
-                    .sorted(Comparator.comparing(BaseFisicaDTO::getFechaCreacion).reversed())
+                    .sorted(Comparator.comparing(BasePhysicalDTO::getDateCreacion).reversed())
                     .toList();
         } catch (IOException e) {
             throw new RuntimeException("No se pudo listar las bases físicas: " + e.getMessage(), e);
@@ -232,9 +232,9 @@ public class WalPitrService {
      * @return los metadatos de la base física generada
      * @throws RuntimeException si no se pudo create el directorio de bases, o {@code pg_basebackup} falla
      */
-    public BaseFisicaDTO generateBaseFisica() {
-        Conexion c = conexion();
-        Path dir = basesDir();
+    public BasePhysicalDTO generateBasePhysical() {
+        Connection c = connection();
+        Path dir = baseBackupsDir();
         try {
             Files.createDirectories(dir);
         } catch (IOException e) {
@@ -249,13 +249,13 @@ public class WalPitrService {
                 "-D", destino.toAbsolutePath().toString(),
                 "--format=tar", "--gzip", "--wal-method=stream", "--checkpoint=fast", "--progress");
 
-        ProcessResult r = correr(comando, "pg_basebackup");
-        if (r.codigo != 0) {
+        ProcessResult r = run(comando, "pg_basebackup");
+        if (r.code != 0) {
             // limpiar restos parciales
             try { eraseRec(destino); } catch (Exception ignore) {}
-            throw new RuntimeException("No se pudo generar la base física: " + ultimaLine(r.salida));
+            throw new RuntimeException("No se pudo generar la base física: " + lastLine(r.salida));
         }
-        log.info("Base física generada: {} ({})", nombre, formato(tamanoDir(destino)));
+        log.info("Base física generada: {} ({})", nombre, format(sizeDir(destino)));
         return aBaseDTO(destino);
     }
 
@@ -267,8 +267,8 @@ public class WalPitrService {
         if (nombre == null || !nombre.matches("^base_[0-9]{8}_[0-9]{6}$")) {
             throw new IllegalArgumentException("Nombre de base física inválido.");
         }
-        Path dir = basesDir().resolve(nombre).normalize();
-        if (!dir.getParent().equals(basesDir().toAbsolutePath().normalize()) && !dir.getParent().equals(basesDir())) {
+        Path dir = baseBackupsDir().resolve(nombre).normalize();
+        if (!dir.getParent().equals(baseBackupsDir().toAbsolutePath().normalize()) && !dir.getParent().equals(baseBackupsDir())) {
             throw new IllegalArgumentException("Nombre de base física inválido.");
         }
         if (!Files.isDirectory(dir)) {
@@ -284,23 +284,23 @@ public class WalPitrService {
 
     // ── Internos ────────────────────────────────────────────────────────
 
-    private record Conexion(String host, String port, String baseDatos, String appUser) {}
+    private record Connection(String host, String port, String baseData, String appUser) {}
 
-    private Conexion conexion() {
+    private Connection connection() {
         Matcher m = JDBC_URL.matcher(datasourceUrl == null ? "" : datasourceUrl.trim());
         if (!m.matches()) throw new IllegalStateException("URL de la base de datos no interpretable.");
-        return new Conexion(m.group(1), m.group(2) != null ? m.group(2) : "5432", m.group(3), dbUsername);
+        return new Connection(m.group(1), m.group(2) != null ? m.group(2) : "5432", m.group(3), dbUsername);
     }
 
-    private Path basesDir() {
+    private Path baseBackupsDir() {
         return Paths.get(backupsDir).getParent() != null
                 ? Paths.get(backupsDir).getParent().resolve("bases")
                 : Paths.get("uploads/bases");
     }
 
-    private record ProcessResult(int codigo, String salida) {}
+    private record ProcessResult(int code, String salida) {}
 
-    private ProcessResult correr(List<String> comando, String bin) {
+    private ProcessResult run(List<String> comando, String bin) {
         ProcessBuilder pb = new ProcessBuilder(comando);
         pb.environment().put("PGPASSWORD", dbPassword == null ? "" : dbPassword);
         pb.redirectErrorStream(true);
@@ -326,22 +326,22 @@ public class WalPitrService {
         return new ProcessResult(p.exitValue(), salida.trim());
     }
 
-    private BaseFisicaDTO aBaseDTO(Path d) {
+    private BasePhysicalDTO aBaseDTO(Path d) {
         try {
-            long bytes = tamanoDir(d);
+            long bytes = sizeDir(d);
             LocalDateTime creado = mtime(d);
-            return BaseFisicaDTO.builder()
+            return BasePhysicalDTO.builder()
                     .nombre(d.getFileName().toString())
-                    .tamanoBytes(bytes)
-                    .tamanoLegible(formato(bytes))
-                    .fechaCreacion(creado)
+                    .sizeBytes(bytes)
+                    .sizeLegible(format(bytes))
+                    .dateCreacion(creado)
                     .build();
         } catch (Exception e) {
             return null;
         }
     }
 
-    private static long tamanoDir(Path d) {
+    private static long sizeDir(Path d) {
         try (Stream<Path> w = Files.walk(d)) {
             return w.filter(Files::isRegularFile).mapToLong(WalPitrService::sizeOf).sum();
         } catch (IOException e) {
@@ -366,7 +366,7 @@ public class WalPitrService {
         } catch (IOException e) { return null; }
     }
 
-    private static String ultimaLine(String s) {
+    private static String lastLine(String s) {
         if (s == null || s.isBlank()) return "sin detalle (ver logs del backend).";
         String[] l = s.strip().split("\\r?\\n");
         String u = l[l.length - 1].trim();
@@ -384,7 +384,7 @@ public class WalPitrService {
         return null;
     }
 
-    private static String formato(long bytes) {
+    private static String format(long bytes) {
         if (bytes <= 0) return "0 B";
         double kb = bytes / 1024.0;
         if (kb < 1024) return String.format("%.1f KB", kb);

@@ -3,7 +3,7 @@ package ec.edu.uteq.presustentaciones.controllers;
 import ec.edu.uteq.presustentaciones.dto.UpdateStudentRequest;
 import ec.edu.uteq.presustentaciones.dto.CreateStudentRequest;
 import ec.edu.uteq.presustentaciones.dto.StudentDTO;
-import ec.edu.uteq.presustentaciones.entities.EstadoAcademico;
+import ec.edu.uteq.presustentaciones.entities.StatusAcademic;
 import ec.edu.uteq.presustentaciones.services.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,7 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/estudiantes")
 @RequiredArgsConstructor
-@PreAuthorize("@permissionService.tienePermission(authentication, 'ESTUDIANTES_GESTIONAR')")
+@PreAuthorize("@permissionService.hasPermission(authentication, 'ESTUDIANTES_GESTIONAR')")
 public class StudentController {
 
     private final StudentService studentService;
@@ -34,11 +34,11 @@ public class StudentController {
      * @return 200 con la página de students
      */
     @GetMapping("/paginado")
-    public ResponseEntity<Page<StudentDTO>> listPaginado(
+    public ResponseEntity<Page<StudentDTO>> listPaged(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @RequestParam(name = "q", required = false) String q) {
-        return ResponseEntity.ok(studentService.listPaginado(page, size, q));
+        return ResponseEntity.ok(studentService.listPaged(page, size, q));
     }
 
     /**
@@ -46,9 +46,9 @@ public class StudentController {
      * @return 200 con la ficha del student, o el error correspondiente si no existe
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> obtainPorId(@PathVariable("id") Long id) {
+    public ResponseEntity<?> obtainById(@PathVariable("id") Long id) {
         try {
-            return ResponseEntity.ok(studentService.obtainPorId(id));
+            return ResponseEntity.ok(studentService.obtainById(id));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -90,7 +90,7 @@ public class StudentController {
      * @return catálogo de estados académicos posibles, para poblar el selector del formulario
      */
     @GetMapping("/estados-academicos")
-    public List<EstadoAcademico> estadosAcademicos() {
-        return studentService.listEstadosAcademicos();
+    public List<StatusAcademic> statusesAcademic() {
+        return studentService.listStatusesAcademic();
     }
 }

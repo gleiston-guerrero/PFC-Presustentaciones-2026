@@ -33,17 +33,17 @@ public class EvaluationPanelistService {
      * register su nota; ADMIN/COORDINADOR (EVALUACION_CALIFICAR) pueden hacerlo en su
      * representación -- evita que un panelist registre una nota a nombre de otro (IDOR de
      * escritura). */
-    private void validatePuedeRegister(Panelist panelist) {
+    private void validateCanRegister(Panelist panelist) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             throw new AccessDeniedException("Usuario no autenticado");
         }
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        if (isAdmin || permissionService.tienePermission(auth, "EVALUACION_CALIFICAR")) {
+        if (isAdmin || permissionService.hasPermission(auth, "EVALUACION_CALIFICAR")) {
             return;
         }
-        if (!permissionService.esPropioTeacher(auth, panelist.getTeacher().getId())) {
+        if (!permissionService.isOwnTeacher(auth, panelist.getTeacher().getId())) {
             throw new AccessDeniedException("Solo puedes registrar tu propia evaluación como jurado");
         }
     }
@@ -55,14 +55,14 @@ public class EvaluationPanelistService {
      *
      * @param submissionId  id de la submission evaluada
      * @param panelistId     id del panelist que evalúa
-     * @param notaPanelist   nota asignada, debe estar entre 1 y 10
-     * @param observaciones observaciones opcionales del panelist
+     * @param gradePanelist   nota asignada, debe estar entre 1 y 10
+     * @param observations observaciones opcionales del panelist
      * @return la evaluación registrada, con resultado y comentario calculados
      * @throws RuntimeException si la submission o el panelist no existen, el panelist no
      *                          pertenece a esa submission, o la nota está fuera de 1-10
      */
     @Transactional
-    public EvaluationPanelistDTO saveEvaluation(Long submissionId, Long panelistId, Double notaPanelist, String observaciones) {
+    public EvaluationPanelistDTO saveEvaluation(Long submissionId, Long panelistId, Double gradePanelist, String observations) {
         Submission submission = submissionRepo.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada: " + submissionId));
 
@@ -73,32 +73,32 @@ public class EvaluationPanelistService {
             throw new RuntimeException("El jurado no pertenece a esta solicitud.");
         }
 
-        validatePuedeRegister(panelist);
+        validateCanRegister(panelist);
 
-        if (notaPanelist < 1 || notaPanelist > 10) {
+        if (gradePanelist < 1 || gradePanelist > 10) {
             throw new RuntimeException("La nota debe estar entre 1 y 10.");
         }
 
-        String resultado = notaPanelist >= 7 ? "APROBADO" : "REPROBADO";
-        String comentarioPreestablecido = generateComentarioPorRango(notaPanelist);
+        String result = gradePanelist >= 7 ? "APROBADO" : "REPROBADO";
+        String commentPreestablecido = generateCommentByRange(gradePanelist);
 
-        Optional<EvaluationPanelist> existente = evaluationPanelistRepo.findBySubmissionIdAndPanelistId(submissionId, panelistId);
+        Optional<EvaluationPanelist> existing = evaluationPanelistRepo.findBySubmissionIdAndPanelistId(submissionId, panelistId);
         
         EvaluationPanelist evaluation;
-        if (existente.isPresent()) {
-            evaluation = existente.get();
-            evaluation.setNotaPanelist(notaPanelist);
-            evaluation.setObservaciones(observaciones);
-            evaluation.setResultado(resultado);
-            evaluation.setComentarioPreestablecido(comentarioPreestablecido);
+        if (existing.isPresent()) {
+            evaluation = existing.get();
+            evaluation.setGradePanelist(gradePanelist);
+            evaluation.setObservations(observations);
+            evaluation.setResult(result);
+            evaluation.setCommentPreestablecido(commentPreestablecido);
         } else {
             evaluation = EvaluationPanelist.builder()
                     .submission(submission)
                     .panelist(panelist)
-                    .notaPanelist(notaPanelist)
-                    .observaciones(observaciones)
-                    .resultado(resultado)
-                    .comentarioPreestablecido(comentarioPreestablecido)
+                    .gradePanelist(gradePanelist)
+                    .observations(observations)
+                    .result(result)
+                    .commentPreestablecido(commentPreestablecido)
                     .build();
         }
 
@@ -115,7 +115,7 @@ public class EvaluationPanelistService {
     public EvaluationPanelistDTO obtainEvaluation(Long submissionId, Long panelistId) {
         Submission submission = submissionRepo.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada: " + submissionId));
-        submissionAccessService.validateAcceso(submission, "EVALUACION_CALIFICAR");
+        submissionAccessService.validateAccess(submission, "EVALUACION_CALIFICAR");
         return evaluationPanelistRepo.findBySubmissionIdAndPanelistId(submissionId, panelistId)
                 .map(this::toDTO)
                 .orElse(null);
@@ -126,10 +126,10 @@ public class EvaluationPanelistService {
      * @param submissionId id de la submission
      * @return las evaluations registradas por todos los panelists de esa submission
      */
-    public List<EvaluationPanelistDTO> obtainTribunal(Long submissionId) {
+    public List<EvaluationPanelistDTO> obtainPanel(Long submissionId) {
         Submission submission = submissionRepo.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada: " + submissionId));
-        submissionAccessService.validateAcceso(submission, "EVALUACION_CALIFICAR");
+        submissionAccessService.validateAccess(submission, "EVALUACION_CALIFICAR");
         return evaluationPanelistRepo.findBySubmissionId(submissionId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -147,19 +147,19 @@ public class EvaluationPanelistService {
                 .id(eval.getId())
                 .submissionId(eval.getSubmission().getId())
                 .panelistId(eval.getPanelist().getId())
-                .notaPanelist(eval.getNotaPanelist())
-                .observaciones(eval.getObservaciones())
-                .resultado(eval.getResultado())
-                .comentarioPreestablecido(eval.getComentarioPreestablecido())
+                .gradePanelist(eval.getGradePanelist())
+                .observations(eval.getObservations())
+                .result(eval.getResult())
+                .commentPreestablecido(eval.getCommentPreestablecido())
                 .nombrePanelist(nombrePanelist)
                 .rolePanelist(eval.getPanelist().getRole())
                 .build();
     }
 
-    private String generateComentarioPorRango(Double nota) {
-        if (nota <= 3) {
+    private String generateCommentByRange(Double grade) {
+        if (grade <= 3) {
             return "El trabajo no cumple con los requisitos mínimos esperados. Se evidencian falencias significativas que requieren correcciones sustanciales.";
-        } else if (nota <= 6) {
+        } else if (grade <= 6) {
             return "El trabajo presenta un nivel aceptable pero con aspectos que requieren mejoras o correcciones para alcanzar los estándares esperados.";
         } else {
             return "El trabajo cumple satisfactoriamente con los objetivos y requisitos establecidos, demostrando un desempeño adecuado.";

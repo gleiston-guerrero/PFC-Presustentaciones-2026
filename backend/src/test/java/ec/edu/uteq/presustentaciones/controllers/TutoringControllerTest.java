@@ -1,10 +1,10 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.dto.NuevoMensajeRequest;
+import ec.edu.uteq.presustentaciones.dto.NewMessageRequest;
 import ec.edu.uteq.presustentaciones.dto.ResponseWrapper;
-import ec.edu.uteq.presustentaciones.dto.TutoringFaseDTO;
-import ec.edu.uteq.presustentaciones.dto.TutoringMensajeDTO;
-import ec.edu.uteq.presustentaciones.dto.TutoringResumenDTO;
+import ec.edu.uteq.presustentaciones.dto.TutoringPhaseDTO;
+import ec.edu.uteq.presustentaciones.dto.TutoringMessageDTO;
+import ec.edu.uteq.presustentaciones.dto.TutoringSummaryDTO;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.services.TutoringService;
@@ -54,17 +54,17 @@ class TutoringControllerTest {
     private TutoringController controller;
 
     @AfterEach
-    void limpiarContexto() {
+    void cleanContexto() {
         SecurityContextHolder.clearContext();
     }
 
     @SuppressWarnings("unchecked")
-    private ResponseWrapper<Object> wrapperDe(ResponseEntity<?> response) {
+    private ResponseWrapper<Object> wrapperOf(ResponseEntity<?> response) {
         return (ResponseWrapper<Object>) response.getBody();
     }
 
     /** Autentica un appUser con el role dado y lo deja resoluble por email. */
-    private AppUser autenticar(Long id, String role) {
+    private AppUser authenticate(Long id, String role) {
         String email = "usuario" + id + "@uteq.edu.ec";
         AppUser appUser = AppUser.builder().id(id).email(email).role(role).build();
         SecurityContextHolder.getContext().setAuthentication(
@@ -77,8 +77,8 @@ class TutoringControllerTest {
     // ── resolveAppUserId: propiedad del resource ──────────────────────────────
 
     @Test
-    void unStudentNoPuedeConsultarLasTutoringsDeOtroAppUserAunqueLoPidaEnLaUrl() {
-        autenticar(50L, "ESTUDIANTE");
+    void unStudentNoCanConsultarLasTutoringsDeOtroAppUserAunqueLoPidaEnLaUrl() {
+        authenticate(50L, "ESTUDIANTE");
         when(tutoringService.obtainTutoringsStudent(50L)).thenReturn(List.of());
 
         // Pide explícitamente el appUser 99, pero el controlador ignora ese id
@@ -89,8 +89,8 @@ class TutoringControllerTest {
     }
 
     @Test
-    void unCoordinadorSiPuedeConsultarLasTutoringsDeOtroAppUser() {
-        autenticar(1L, "COORDINADOR");
+    void unCoordinatorSiCanConsultarLasTutoringsDeOtroAppUser() {
+        authenticate(1L, "COORDINADOR");
         when(tutoringService.obtainTutoringsTeacher(99L)).thenReturn(List.of());
 
         ResponseEntity<?> response = controller.obtainTutoringsTeacher(99L);
@@ -100,12 +100,12 @@ class TutoringControllerTest {
     }
 
     @Test
-    void unAdminSinAppUserIdExplicitoConsultaLasSuyas() {
-        autenticar(1L, "ADMIN");
-        when(tutoringService.obtainResumen(5L, 1L)).thenReturn(mock(TutoringResumenDTO.class));
+    void unAdminWithoutAppUserIdExplicitoConsultaLasSuyas() {
+        authenticate(1L, "ADMIN");
+        when(tutoringService.obtainSummary(5L, 1L)).thenReturn(mock(TutoringSummaryDTO.class));
 
-        assertEquals(HttpStatus.OK, controller.obtainResumen(5L, null).getStatusCode());
-        verify(tutoringService).obtainResumen(5L, 1L);
+        assertEquals(HttpStatus.OK, controller.obtainSummary(5L, null).getStatusCode());
+        verify(tutoringService).obtainSummary(5L, 1L);
     }
 
     @Test
@@ -113,12 +113,12 @@ class TutoringControllerTest {
         ResponseEntity<?> response = controller.obtainTutoringsStudent(1L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Usuario no autenticado", wrapperDe(response).getMessage());
+        assertEquals("Usuario no autenticado", wrapperOf(response).getMessage());
         verifyNoInteractions(tutoringService);
     }
 
     @Test
-    void conAppUserAnonimoElEndpointDevuelve400() {
+    void withAppUserAnonimoElEndpointDevuelve400() {
         SecurityContextHolder.getContext().setAuthentication(
                 new AnonymousAuthenticationToken("key", "anonymousUser",
                         List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
@@ -126,153 +126,153 @@ class TutoringControllerTest {
         ResponseEntity<?> response = controller.obtainTutoringsTeacher(1L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Usuario no autenticado", wrapperDe(response).getMessage());
+        assertEquals("Usuario no autenticado", wrapperOf(response).getMessage());
     }
 
     @Test
-    void conTokenDeAppUserYaBorradoElEndpointDevuelve400() {
+    void withTokenDeAppUserYaBorradoElEndpointDevuelve400() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("fantasma@uteq.edu.ec", null, List.of()));
         when(appUserRepository.findByEmail("fantasma@uteq.edu.ec")).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = controller.obtainFases(1L, null);
+        ResponseEntity<?> response = controller.obtainPhases(1L, null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Usuario autenticado no encontrado en el sistema", wrapperDe(response).getMessage());
+        assertEquals("Usuario autenticado no encontrado en el sistema", wrapperOf(response).getMessage());
     }
 
     // ── Consultas ─────────────────────────────────────────────────────────────
 
     @Test
-    void obtainFasesDevuelveLasFasesDelServicio() {
-        autenticar(50L, "ESTUDIANTE");
-        List<TutoringFaseDTO> fases = List.of(mock(TutoringFaseDTO.class));
-        when(tutoringService.obtainFases(5L, 50L)).thenReturn(fases);
+    void obtainPhasesDevuelveLasPhasesDelServicio() {
+        authenticate(50L, "ESTUDIANTE");
+        List<TutoringPhaseDTO> phases = List.of(mock(TutoringPhaseDTO.class));
+        when(tutoringService.obtainPhases(5L, 50L)).thenReturn(phases);
 
-        ResponseEntity<?> response = controller.obtainFases(5L, null);
+        ResponseEntity<?> response = controller.obtainPhases(5L, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(fases, wrapperDe(response).getData());
+        assertSame(phases, wrapperOf(response).getData());
     }
 
     @Test
-    void obtainResumenTraduceElErrorDelServicioA400() {
-        autenticar(50L, "ESTUDIANTE");
-        when(tutoringService.obtainResumen(5L, 50L))
+    void obtainSummaryTraduceElErrorDelServicioA400() {
+        authenticate(50L, "ESTUDIANTE");
+        when(tutoringService.obtainSummary(5L, 50L))
                 .thenThrow(new RuntimeException("No tienes acceso a esta tutoría"));
 
-        ResponseEntity<?> response = controller.obtainResumen(5L, null);
+        ResponseEntity<?> response = controller.obtainSummary(5L, null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("No tienes acceso a esta tutoría", wrapperDe(response).getMessage());
+        assertEquals("No tienes acceso a esta tutoría", wrapperOf(response).getMessage());
     }
 
     // ── Operaciones sobre fases ───────────────────────────────────────────────
 
     @Test
-    void createFaseUsaSiempreElAppUserAutenticadoNoElDelParametro() {
-        autenticar(60L, "DOCENTE");
-        TutoringFaseDTO fase = mock(TutoringFaseDTO.class);
-        when(tutoringService.createFaseConObservacion(5L, 60L, "Revisar capítulo 2")).thenReturn(fase);
+    void createPhaseUsaSiempreElAppUserAuthenticatedNoElDelParametro() {
+        authenticate(60L, "DOCENTE");
+        TutoringPhaseDTO phase = mock(TutoringPhaseDTO.class);
+        when(tutoringService.createPhaseWithObservation(5L, 60L, "Revisar capítulo 2")).thenReturn(phase);
 
-        ResponseEntity<?> response = controller.createFaseConObservacion(5L, "Revisar capítulo 2", 999L);
+        ResponseEntity<?> response = controller.createPhaseWithObservation(5L, "Revisar capítulo 2", 999L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(fase, wrapperDe(response).getData());
-        verify(tutoringService).createFaseConObservacion(5L, 60L, "Revisar capítulo 2");
+        assertSame(phase, wrapperOf(response).getData());
+        verify(tutoringService).createPhaseWithObservation(5L, 60L, "Revisar capítulo 2");
     }
 
     @Test
-    void uploadPdfCorregidoDelegaConElStudentAutenticado() {
-        autenticar(50L, "ESTUDIANTE");
-        MultipartFile archivo = new MockMultipartFile("archivo", "cap2.pdf",
+    void uploadPdfCorrectedDelegaWithElStudentAuthenticated() {
+        authenticate(50L, "ESTUDIANTE");
+        MultipartFile file = new MockMultipartFile("archivo", "cap2.pdf",
                 MediaType.APPLICATION_PDF_VALUE, "contenido".getBytes());
-        TutoringFaseDTO fase = mock(TutoringFaseDTO.class);
-        when(tutoringService.uploadPdfCorregido(7L, archivo, 50L)).thenReturn(fase);
+        TutoringPhaseDTO phase = mock(TutoringPhaseDTO.class);
+        when(tutoringService.uploadPdfCorrected(7L, file, 50L)).thenReturn(phase);
 
-        ResponseEntity<?> response = controller.uploadPdfCorregido(7L, archivo, null);
+        ResponseEntity<?> response = controller.uploadPdfCorrected(7L, file, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(fase, wrapperDe(response).getData());
+        assertSame(phase, wrapperOf(response).getData());
     }
 
     @Test
-    void uploadPdfCorregidoTraduceElErrorDelServicioA400() {
-        autenticar(50L, "ESTUDIANTE");
-        MultipartFile archivo = new MockMultipartFile("archivo", "malo.exe",
+    void uploadPdfCorrectedTraduceElErrorDelServicioA400() {
+        authenticate(50L, "ESTUDIANTE");
+        MultipartFile file = new MockMultipartFile("archivo", "malo.exe",
                 MediaType.APPLICATION_OCTET_STREAM_VALUE, new byte[]{1});
-        when(tutoringService.uploadPdfCorregido(7L, archivo, 50L))
+        when(tutoringService.uploadPdfCorrected(7L, file, 50L))
                 .thenThrow(new RuntimeException("Solo se admiten archivos PDF"));
 
-        ResponseEntity<?> response = controller.uploadPdfCorregido(7L, archivo, null);
+        ResponseEntity<?> response = controller.uploadPdfCorrected(7L, file, null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Solo se admiten archivos PDF", wrapperDe(response).getMessage());
+        assertEquals("Solo se admiten archivos PDF", wrapperOf(response).getMessage());
     }
 
     @Test
-    void approveFaseDelegaConElTutorAutenticado() {
-        autenticar(60L, "DOCENTE");
-        TutoringFaseDTO fase = mock(TutoringFaseDTO.class);
-        when(tutoringService.approveFase(7L, 60L, "Buen avance")).thenReturn(fase);
+    void approvePhaseDelegaWithElTutorAuthenticated() {
+        authenticate(60L, "DOCENTE");
+        TutoringPhaseDTO phase = mock(TutoringPhaseDTO.class);
+        when(tutoringService.approvePhase(7L, 60L, "Buen avance")).thenReturn(phase);
 
-        ResponseEntity<?> response = controller.approveFase(7L, null, "Buen avance");
+        ResponseEntity<?> response = controller.approvePhase(7L, null, "Buen avance");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(fase, wrapperDe(response).getData());
+        assertSame(phase, wrapperOf(response).getData());
     }
 
     @Test
-    void sendMensajeUsaElRemitenteAutenticadoYElCuerpoDelRequest() {
-        autenticar(50L, "ESTUDIANTE");
-        NuevoMensajeRequest request = new NuevoMensajeRequest();
+    void sendMessageUsaElSenderAuthenticatedYElCuerpoDelRequest() {
+        authenticate(50L, "ESTUDIANTE");
+        NewMessageRequest request = new NewMessageRequest();
         request.setContenido("¿Puede revisar el capítulo 3?");
-        request.setTipo("CONSULTA");
-        TutoringMensajeDTO mensaje = mock(TutoringMensajeDTO.class);
-        when(tutoringService.sendMensaje(7L, 50L, "¿Puede revisar el capítulo 3?", "CONSULTA"))
-                .thenReturn(mensaje);
+        request.setKind("CONSULTA");
+        TutoringMessageDTO message = mock(TutoringMessageDTO.class);
+        when(tutoringService.sendMessage(7L, 50L, "¿Puede revisar el capítulo 3?", "CONSULTA"))
+                .thenReturn(message);
 
-        ResponseEntity<?> response = controller.sendMensaje(7L, 999L, request);
+        ResponseEntity<?> response = controller.sendMessage(7L, 999L, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(mensaje, wrapperDe(response).getData());
-        verify(tutoringService).sendMensaje(7L, 50L, "¿Puede revisar el capítulo 3?", "CONSULTA");
+        assertSame(message, wrapperOf(response).getData());
+        verify(tutoringService).sendMessage(7L, 50L, "¿Puede revisar el capítulo 3?", "CONSULTA");
     }
 
     @Test
-    void marcarMensajesLeidosDevuelveOkSinCuerpoDeDatos() {
-        autenticar(50L, "ESTUDIANTE");
+    void markMessagesReadDevuelveOkWithoutCuerpoDeData() {
+        authenticate(50L, "ESTUDIANTE");
 
-        ResponseEntity<?> response = controller.marcarMensajesLeidos(7L, null);
+        ResponseEntity<?> response = controller.markMessagesRead(7L, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNull(wrapperDe(response).getData());
-        verify(tutoringService).marcarMensajesLeidos(7L, 50L);
+        assertNull(wrapperOf(response).getData());
+        verify(tutoringService).markMessagesRead(7L, 50L);
     }
 
     @Test
-    void marcarMensajesLeidosTraduceElErrorDelServicioA400() {
-        autenticar(50L, "ESTUDIANTE");
+    void markMessagesReadTraduceElErrorDelServicioA400() {
+        authenticate(50L, "ESTUDIANTE");
         doThrow(new RuntimeException("Fase inexistente"))
-                .when(tutoringService).marcarMensajesLeidos(7L, 50L);
+                .when(tutoringService).markMessagesRead(7L, 50L);
 
-        ResponseEntity<?> response = controller.marcarMensajesLeidos(7L, null);
+        ResponseEntity<?> response = controller.markMessagesRead(7L, null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Fase inexistente", wrapperDe(response).getMessage());
+        assertEquals("Fase inexistente", wrapperOf(response).getMessage());
     }
 
     // ── PDF ───────────────────────────────────────────────────────────────────
 
     @Test
-    void obtainPdfFaseDevuelveElResourceConCabeceraInline() {
-        autenticar(50L, "ESTUDIANTE");
+    void obtainPdfPhaseDevuelveElResourceWithCabeceraInline() {
+        authenticate(50L, "ESTUDIANTE");
         Resource resource = new ByteArrayResource("%PDF-1.4".getBytes()) {
             @Override public String getFilename() { return "fase-1.pdf"; }
         };
-        when(tutoringService.obtainPdfFase(7L, 50L)).thenReturn(resource);
+        when(tutoringService.obtainPdfPhase(7L, 50L)).thenReturn(resource);
 
-        ResponseEntity<?> response = controller.obtainPdfFase(7L, null);
+        ResponseEntity<?> response = controller.obtainPdfPhase(7L, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(MediaType.APPLICATION_PDF, response.getHeaders().getContentType());
@@ -281,68 +281,68 @@ class TutoringControllerTest {
     }
 
     @Test
-    void obtainPdfFaseTraduceElErrorDelServicioA400() {
-        autenticar(50L, "ESTUDIANTE");
-        when(tutoringService.obtainPdfFase(7L, 50L))
+    void obtainPdfPhaseTraduceElErrorDelServicioA400() {
+        authenticate(50L, "ESTUDIANTE");
+        when(tutoringService.obtainPdfPhase(7L, 50L))
                 .thenThrow(new RuntimeException("La fase no tiene PDF cargado"));
 
-        ResponseEntity<?> response = controller.obtainPdfFase(7L, null);
+        ResponseEntity<?> response = controller.obtainPdfPhase(7L, null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("La fase no tiene PDF cargado", wrapperDe(response).getMessage());
+        assertEquals("La fase no tiene PDF cargado", wrapperOf(response).getMessage());
     }
 
     // ── sp_register_tutoring_avance ───────────────────────────────────────────
 
     @Test
-    void registerAvanceConvierteElTamanoNumericoYLlamaAlProcedimiento() {
-        autenticar(50L, "ESTUDIANTE");
+    void registerProgressConvierteElSizeNumericoYLlamaAlProcedimiento() {
+        authenticate(50L, "ESTUDIANTE");
 
-        ResponseEntity<?> response = controller.registerAvanceSP(5L, Map.of(
+        ResponseEntity<?> response = controller.registerProgressSP(5L, Map.of(
                 "numeroFase", 2,
                 "archivoPdf", "capitulo2.pdf",
                 "tamanoBytes", 12345,   // Jackson lo entrega como Integer, el SP espera Long
                 "sha256", "abc123"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(tutoringService).registerAvanceSP(5L, 2, "capitulo2.pdf", 12345L, "abc123", 50L);
+        verify(tutoringService).registerProgressSP(5L, 2, "capitulo2.pdf", 12345L, "abc123", 50L);
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) wrapperDe(response).getData();
+        Map<String, Object> data = (Map<String, Object>) wrapperOf(response).getData();
         assertEquals(5L, data.get("tutorId"));
         assertEquals(2, data.get("numeroFase"));
     }
 
     @Test
-    void registerAvanceSinTamanoNiSha256PasaNullsAlProcedimiento() {
-        autenticar(50L, "ESTUDIANTE");
+    void registerProgressWithoutSizeNiSha256PasaNullsAlProcedimiento() {
+        authenticate(50L, "ESTUDIANTE");
 
-        ResponseEntity<?> response = controller.registerAvanceSP(5L, Map.of(
+        ResponseEntity<?> response = controller.registerProgressSP(5L, Map.of(
                 "numeroFase", 1, "archivoPdf", "capitulo1.pdf"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(tutoringService).registerAvanceSP(5L, 1, "capitulo1.pdf", null, null, 50L);
+        verify(tutoringService).registerProgressSP(5L, 1, "capitulo1.pdf", null, null, 50L);
     }
 
     @Test
-    void registerAvanceRechazaElCuerpoIncompletoSinLlamarAlProcedimiento() {
-        ResponseEntity<?> response = controller.registerAvanceSP(5L, Map.of("numeroFase", 1));
+    void registerProgressRechazaElCuerpoIncompletoWithoutLlamarAlProcedimiento() {
+        ResponseEntity<?> response = controller.registerProgressSP(5L, Map.of("numeroFase", 1));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Se requieren 'numeroFase' y 'archivoPdf'", wrapperDe(response).getMessage());
-        verify(tutoringService, never()).registerAvanceSP(any(), any(), any(), any(), any(), any());
+        assertEquals("Se requieren 'numeroFase' y 'archivoPdf'", wrapperOf(response).getMessage());
+        verify(tutoringService, never()).registerProgressSP(any(), any(), any(), any(), any(), any());
     }
 
     @Test
-    void registerAvanceTraduceElErrorDelProcedimientoA400() {
-        autenticar(50L, "ESTUDIANTE");
+    void registerProgressTraduceElErrorDelProcedimientoA400() {
+        authenticate(50L, "ESTUDIANTE");
         doThrow(new RuntimeException("No se puede registrar la fase 3, la fase 2 debe estar APROBADA"))
-                .when(tutoringService).registerAvanceSP(5L, 3, "capitulo3.pdf", null, null, 50L);
+                .when(tutoringService).registerProgressSP(5L, 3, "capitulo3.pdf", null, null, 50L);
 
-        ResponseEntity<?> response = controller.registerAvanceSP(5L, Map.of(
+        ResponseEntity<?> response = controller.registerProgressSP(5L, Map.of(
                 "numeroFase", 3, "archivoPdf", "capitulo3.pdf"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(wrapperDe(response).getMessage().contains("la fase 2 debe estar APROBADA"));
+        assertTrue(wrapperOf(response).getMessage().contains("la fase 2 debe estar APROBADA"));
     }
 }

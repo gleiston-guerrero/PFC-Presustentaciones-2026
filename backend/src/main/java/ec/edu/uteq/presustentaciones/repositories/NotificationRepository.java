@@ -21,15 +21,15 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      */
     Page<Notification> findAll(Pageable pageable);
 
-    @Query("SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.fecha DESC")
+    @Query("SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.date DESC")
     /**
      * Busca el/los registro(s) con app user id o der by fecha desc.
      * @param appUserId appUserId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Notification> findByAppUserIdOrderByFechaDesc(@Param("appUserId") Long appUserId);
+    List<Notification> findByAppUserIdOrderByDateDesc(@Param("appUserId") Long appUserId);
 
-    @Query(value = "SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.fecha DESC",
+    @Query(value = "SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.date DESC",
            countQuery = "SELECT COUNT(n) FROM Notification n WHERE n.appUser.id = :appUserId")
     /**
      * Busca el/los registro(s) con app user id o der by fecha desc.
@@ -37,20 +37,20 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      * @param pageable pageable
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    Page<Notification> findByAppUserIdOrderByFechaDesc(@Param("appUserId") Long appUserId, Pageable pageable);
+    Page<Notification> findByAppUserIdOrderByDateDesc(@Param("appUserId") Long appUserId, Pageable pageable);
 
     /**
      * Cuenta los registros con app user id y leida false.
      * @param appUserId appUserId
      * @return la cantidad de registros
      */
-    long countByAppUserIdAndLeidaFalse(Long appUserId);
+    long countByAppUserIdAndReadFalse(Long appUserId);
 
     /**
      * UPDATE en block en vez de traer + iterar + volver a save cada fila -- marcarTodasLeidas
      * antes cargaba TODAS las notifications del appUser (leídas incluidas) solo para reescribirlas.
      */
     @Modifying
-    @Query("UPDATE Notification n SET n.leida = true WHERE n.appUser.id = :appUserId AND n.leida = false")
-    int marcarTodasLeidasPorAppUser(@Param("appUserId") Long appUserId);
+    @Query("UPDATE Notification n SET n.read = true WHERE n.appUser.id = :appUserId AND n.read = false")
+    int markAllReadByAppUser(@Param("appUserId") Long appUserId);
 }

@@ -29,13 +29,13 @@ public interface PanelistService {
      * @param submissionId id de la submission
      * @return los panelists asignados a esa submission (0 a 3 registros)
      */
-    List<Panelist> listPorSubmission(Long submissionId);
+    List<Panelist> listBySubmission(Long submissionId);
 
     /**
      * @param pageable configuración de paginación
      * @return página de todos los registros de panelist del sistema
      */
-    Page<Panelist> listTodos(Pageable pageable);
+    Page<Panelist> listAll(Pageable pageable);
 
     /** @param panelistId id del registro de panelist a delete */
     void deletePanelist(Long panelistId);
@@ -53,7 +53,7 @@ public interface PanelistService {
      * @param submissionId id de la submission
      * @return el tutor asignado, si existe
      */
-    Optional<Tutor> obtainTutorDeSubmission(Long submissionId);
+    Optional<Tutor> obtainTutorOfSubmission(Long submissionId);
 
     /** @param tutorId id del registro de tutoría a delete */
     void deleteTutor(Long tutorId);
@@ -68,17 +68,17 @@ public interface PanelistService {
      * @param cantidad    número máximo de teachers a sugerir
      * @return lista de teachers candidatos, tamaño ≤ {@code cantidad}
      */
-    List<Teacher> sugerirTeachers(Long submissionId, int cantidad);
+    List<Teacher> suggestTeachers(Long submissionId, int cantidad);
 
     /**
      * Asigna automáticamente los 3 roles de tribunal (PRESIDENTE, VOCAL_1, VOCAL_2) para una
-     * submission, usando la misma lógica de sugerencia que {@link #sugerirTeachers}.
+     * submission, usando la misma lógica de sugerencia que {@link #suggestTeachers}.
      *
      * @param submissionId id de la submission
      * @throws RuntimeException si no hay suficientes teachers disponibles para completar el
      *                          tribunal
      */
-    void assignPanelistsAutomaticamente(Long submissionId);
+    void assignPanelistsAutomatically(Long submissionId);
 
     // ── Asignación masiva vía procedimiento almacenado (sp_assign_panelist_masivo) ─
 
@@ -90,12 +90,12 @@ public interface PanelistService {
      *
      * @param submissionIds ids de las submissions, en el mismo orden que {@code teacherIds}
      * @param teacherIds   ids de los teachers a assign, uno por cada submission del arreglo
-     * @param roleCodigo    código de role aplicado a todos los pares del lote
+     * @param roleCode    código de role aplicado a todos los pares del lote
      * @throws RuntimeException si los dos arreglos no tienen la misma longitud, o si el
      *                          procedimiento almacenado rechaza algún par (role inválido, FK
      *                          inexistente, o conflicto de horario)
      */
-    void assignPanelistMasivo(List<Long> submissionIds, List<Long> teacherIds, String roleCodigo);
+    void assignPanelistBulk(List<Long> submissionIds, List<Long> teacherIds, String roleCode);
 
     // ── Vista del teacher ─────────────────────────────────────────────────────
 
@@ -103,13 +103,13 @@ public interface PanelistService {
      * @param teacherId id del teacher
      * @return las asignaciones de panelist de ese teacher, en cualquier submission
      */
-    List<Panelist> listPorTeacher(Long teacherId);
+    List<Panelist> listByTeacher(Long teacherId);
 
     /**
      * @param teacherId id del teacher
      * @return las tutorías activas de ese teacher
      */
-    List<Tutor> listTutoringsPorTeacher(Long teacherId);
+    List<Tutor> listTutoringsByTeacher(Long teacherId);
 
     /**
      * @param submissionId id de la submission
@@ -119,7 +119,7 @@ public interface PanelistService {
     Optional<Panelist> obtainInfoPanelist(Long submissionId, Long appUserId);
 
     /**
-     * Variante de {@link #assignPanelistMasivo} que invoca directamente la sobrecarga de
+     * Variante de {@link #assignPanelistBulk} que invoca directamente la sobrecarga de
      * {@code sp_assign_panelist_masivo} que recibe arreglos SQL ({@code BIGINT[]}) en una sola
      * llamada, en vez de iterar en Java. Ver la nota de fusión de ramas en
      * {@code docs/basedatos/CATALOGO-SP.md} sobre por qué la variante scaler (iterando en
@@ -129,5 +129,5 @@ public interface PanelistService {
      * @param teacherIds   arreglo de ids de teacher, en el mismo orden
      * @param role          código de role aplicado a todo el lote
      */
-    void assignPanelistMasivoSP(Long[] submissionIds, Long[] teacherIds, String role);
+    void assignPanelistBulkSP(Long[] submissionIds, Long[] teacherIds, String role);
 }

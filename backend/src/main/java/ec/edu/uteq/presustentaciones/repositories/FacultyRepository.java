@@ -10,8 +10,8 @@ import java.util.Optional;
 public interface FacultyRepository extends JpaRepository<Faculty, Integer> {
     /**
      * Busca el/los registro(s) con codigo.
-     * @param codigo codigo
+     * @param code code
      * @return el registro si existe, vacío si no
      */
-    Optional<Faculty> findByCodigo(String codigo);
+    Optional<Faculty> findByCode(String code);
 }

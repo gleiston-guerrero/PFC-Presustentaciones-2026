@@ -1,46 +1,46 @@
 package ec.edu.uteq.presustentaciones.services;
 
 import ec.edu.uteq.presustentaciones.dto.GenerateTopicRequest;
-import ec.edu.uteq.presustentaciones.dto.SaveTopicPropuestoRequest;
-import ec.edu.uteq.presustentaciones.dto.TopicPropuestoDTO;
+import ec.edu.uteq.presustentaciones.dto.SaveTopicProposedRequest;
+import ec.edu.uteq.presustentaciones.dto.TopicProposedDTO;
 import java.util.List;
 
 public interface TopicService {
 
     /**
      * Explora el catálogo de topics propuestos con filtros opcionales.
-     * @param studentId si no es null, cada topic se marca con {@code guardado} según
+     * @param studentId si no es null, cada topic se marca con {@code saved} según
      *                     los topics que ya guardó ese student.
      */
-    List<TopicPropuestoDTO> explorar(Integer programId, Integer lineInvestigacionId,
+    List<TopicProposedDTO> explore(Integer programId, Integer researchLineId,
                                     Integer areaId, String nivelDificultad, Long studentId);
 
     /** Sugiere ideas de topic a partir de la program / línea del student. */
-    List<TopicPropuestoDTO> generateIdeas(GenerateTopicRequest request);
+    List<TopicProposedDTO> generateSuggestions(GenerateTopicRequest request);
 
     /** Detalle de un topic propuesto. */
-    TopicPropuestoDTO obtainDetalle(Integer topicPropuestoId);
+    TopicProposedDTO obtainDetail(Integer topicProposedId);
 
     /**
      * Save topic student.
      * @param studentId studentId
-     * @param topicPropuestoId topicPropuestoId
+     * @param topicProposedId topicProposedId
      */
-    void saveTopicStudent(Long studentId, Integer topicPropuestoId);
+    void saveTopicStudent(Long studentId, Integer topicProposedId);
 
     /**
      * Remove topic guardado.
      * @param studentId studentId
-     * @param topicPropuestoId topicPropuestoId
+     * @param topicProposedId topicProposedId
      */
-    void removeTopicGuardado(Long studentId, Integer topicPropuestoId);
+    void removeTopicSaved(Long studentId, Integer topicProposedId);
 
     /**
      * Obtain topics guardados.
      * @param studentId studentId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<TopicPropuestoDTO> obtainTopicsGuardados(Long studentId);
+    List<TopicProposedDTO> obtainTopicsSaved(Long studentId);
 
     // ── Gestión del catálogo (permission ORIENTACION_CATALOGO_GESTIONAR) ─────────
 
@@ -49,19 +49,19 @@ public interface TopicService {
      * @param request request
      * @return el TopicPropuestoDTO correspondiente
      */
-    TopicPropuestoDTO create(SaveTopicPropuestoRequest request);
+    TopicProposedDTO create(SaveTopicProposedRequest request);
 
     /**
      * Update.
-     * @param topicPropuestoId topicPropuestoId
+     * @param topicProposedId topicProposedId
      * @param request request
      * @return el TopicPropuestoDTO correspondiente
      */
-    TopicPropuestoDTO update(Integer topicPropuestoId, SaveTopicPropuestoRequest request);
+    TopicProposedDTO update(Integer topicProposedId, SaveTopicProposedRequest request);
 
     /**
      * Delete.
-     * @param topicPropuestoId topicPropuestoId
+     * @param topicProposedId topicProposedId
      */
-    void delete(Integer topicPropuestoId);
+    void delete(Integer topicProposedId);
 }

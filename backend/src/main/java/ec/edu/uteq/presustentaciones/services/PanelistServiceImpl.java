@@ -32,7 +32,7 @@ public class PanelistServiceImpl implements PanelistService {
     private final NotificationService notificationService;
     private final EmailService emailService;
     private final ec.edu.uteq.presustentaciones.repositories.RolePanelistRepository rolePanelistRepository;
-    private final ec.edu.uteq.presustentaciones.repositories.EstadoSubmissionRepository estadoSubmissionRepository;
+    private final ec.edu.uteq.presustentaciones.repositories.StatusSubmissionRepository statusSubmissionRepository;
 
     // ── Panelists ───────────────────────────────────────────────────────────────
 
@@ -58,7 +58,7 @@ public class PanelistServiceImpl implements PanelistService {
         Tutor tutor = tutorRepository.findBySubmissionId(submissionId)
                 .orElseThrow(() -> new RuntimeException(
                         "No puedes asignar tribunal: esta solicitud no tiene tutor asignado"));
-        if (!"COMPLETADA".equals(tutor.getEstado())) {
+        if (!"COMPLETADA".equals(tutor.getStatus())) {
             throw new RuntimeException(
                     "No puedes asignar tribunal: la tutoría aún no ha completado las 3 revisiones obligatorias");
         }
@@ -75,7 +75,7 @@ public class PanelistServiceImpl implements PanelistService {
             throw new RuntimeException("El docente ya es el tutor de esta solicitud y no puede además ser jurado (conflicto de interés).");
         }
 
-        if (teacher.getDisponible() != null && !teacher.getDisponible()) {
+        if (teacher.getAvailable() != null && !teacher.getAvailable()) {
             throw new RuntimeException("El docente no está disponible para ser asignado como jurado.");
         }
 
@@ -95,14 +95,14 @@ public class PanelistServiceImpl implements PanelistService {
             throw new RuntimeException("El rol '" + roleNormalizado + "' ya está asignado en esta solicitud.");
         }
 
-        Panelist guardado = createPanelistSinNotify(submission, teacher, roleNormalizado);
+        Panelist saved = createPanelistWithoutNotify(submission, teacher, roleNormalizado);
 
         // Change estado a EVALUACION
-        ec.edu.uteq.presustentaciones.entities.EstadoSubmission estadoEvaluation = estadoSubmissionRepository.findByCodigo("EVALUACION")
-                .orElseGet(() -> estadoSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.EstadoSubmission.builder()
-                        .codigo("EVALUACION").nombre("Evaluacion").build()));
+        ec.edu.uteq.presustentaciones.entities.StatusSubmission statusEvaluation = statusSubmissionRepository.findByCode("EVALUACION")
+                .orElseGet(() -> statusSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.StatusSubmission.builder()
+                        .code("EVALUACION").nombre("Evaluacion").build()));
 
-        submission.setEstado(estadoEvaluation);
+        submission.setStatus(statusEvaluation);
         submissionRepository.save(submission);
 
         // Notify al teacher asignado como panelist
@@ -111,7 +111,7 @@ public class PanelistServiceImpl implements PanelistService {
         // Notify al student que se le asignó un panelist
         notifyStudentPanelist(submission, teacher, roleNormalizado);
 
-        return guardado;
+        return saved;
     }
 
     /**
@@ -119,7 +119,7 @@ public class PanelistServiceImpl implements PanelistService {
      * @return los panelists asignados a esa submission (0 a 3 registros)
      */
     @Override
-    public List<Panelist> listPorSubmission(Long submissionId) {
+    public List<Panelist> listBySubmission(Long submissionId) {
         return panelistRepository.findBySubmissionId(submissionId);
     }
 
@@ -128,7 +128,7 @@ public class PanelistServiceImpl implements PanelistService {
      * @return página de todos los registros de panelist del sistema
      */
     @Override
-    public Page<Panelist> listTodos(Pageable pageable) {
+    public Page<Panelist> listAll(Pageable pageable) {
         return panelistRepository.findAll(pageable);
     }
 
@@ -164,18 +164,18 @@ public class PanelistServiceImpl implements PanelistService {
                 .orElse(Tutor.builder().submission(submission).build());
 
         tutor.setTeacher(teacher);
-        tutor.setEstado("ACTIVO");
+        tutor.setStatus("ACTIVO");
 
         // Re-fetch tras save para garantizar que todas las asociaciones estén cargadas
-        Tutor guardado = tutorRepository.findById(tutorRepository.save(tutor).getId())
+        Tutor saved = tutorRepository.findById(tutorRepository.save(tutor).getId())
                 .orElseThrow(() -> new RuntimeException("Error al recuperar el tutor guardado"));
 
         // Change estado a TUTORIA
-        ec.edu.uteq.presustentaciones.entities.EstadoSubmission estadoTutoring = estadoSubmissionRepository.findByCodigo("TUTORIA")
-                .orElseGet(() -> estadoSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.EstadoSubmission.builder()
-                        .codigo("TUTORIA").nombre("Tutoria").build()));
+        ec.edu.uteq.presustentaciones.entities.StatusSubmission statusTutoring = statusSubmissionRepository.findByCode("TUTORIA")
+                .orElseGet(() -> statusSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.StatusSubmission.builder()
+                        .code("TUTORIA").nombre("Tutoria").build()));
  
-        submission.setEstado(estadoTutoring);
+        submission.setStatus(statusTutoring);
         submissionRepository.save(submission);
 
         // Notify al teacher asignado como tutor
@@ -184,7 +184,7 @@ public class PanelistServiceImpl implements PanelistService {
         // Notify al student que tiene tutor asignado
         notifyStudentTutor(submission, teacher);
 
-        return guardado;
+        return saved;
     }
 
     /**
@@ -192,7 +192,7 @@ public class PanelistServiceImpl implements PanelistService {
      * @return el tutor asignado, si existe
      */
     @Override
-    public Optional<Tutor> obtainTutorDeSubmission(Long submissionId) {
+    public Optional<Tutor> obtainTutorOfSubmission(Long submissionId) {
         // Antes filtraba estado == "ACTIVO", pero cuando la tutoría termina el registro pasa a
         // "COMPLETADA" y ESE es justo el estado normal cuando ya hay minutes que sign. El filtro
         // hacía que "Firmar Acta" respondiera 404 ("No tienes un rol asignado") a todo tutor de
@@ -219,19 +219,19 @@ public class PanelistServiceImpl implements PanelistService {
      * @return lista de teachers candidatos, tamaño ≤ {@code cantidad}
      */
     @Override
-    public List<Teacher> sugerirTeachers(Long submissionId, int cantidad) {
+    public List<Teacher> suggestTeachers(Long submissionId, int cantidad) {
         List<Long> idsOcupados = new ArrayList<>();
         panelistRepository.findBySubmissionId(submissionId)
                 .forEach(j -> idsOcupados.add(j.getTeacher().getId()));
         tutorRepository.findBySubmissionId(submissionId)
                 .ifPresent(t -> idsOcupados.add(t.getTeacher().getId()));
 
-        List<Teacher> candidatos = teacherRepository.findDisponiblesOrdenadosPorCarga().stream()
+        List<Teacher> candidatos = teacherRepository.findAvailableOrdenadosByCarga().stream()
                 .filter(d -> !idsOcupados.contains(d.getId()))
                 .collect(Collectors.toList());
 
         if (candidatos.size() < cantidad) {
-            candidatos = teacherRepository.findTodosOrdenadosPorCarga().stream()
+            candidatos = teacherRepository.findAllOrdenadosByCarga().stream()
                     .filter(d -> !idsOcupados.contains(d.getId()))
                     .collect(Collectors.toList());
         }
@@ -241,7 +241,7 @@ public class PanelistServiceImpl implements PanelistService {
 
     /**
      * Asigna automáticamente los 3 roles de tribunal (PRESIDENTE, VOCAL_1, VOCAL_2) para una
-     * submission, usando la misma lógica de sugerencia que {@link #sugerirTeachers}.
+     * submission, usando la misma lógica de sugerencia que {@link #suggestTeachers}.
      *
      * @param submissionId id de la submission
      * @throws RuntimeException si no hay suficientes teachers disponibles para completar el
@@ -249,12 +249,12 @@ public class PanelistServiceImpl implements PanelistService {
      */
     @Override
     @Transactional
-    public void assignPanelistsAutomaticamente(Long submissionId) {
+    public void assignPanelistsAutomatically(Long submissionId) {
         // Validate tutoría completada (assignPanelist ya no se llama, validamos aquí)
         Tutor tutor = tutorRepository.findBySubmissionId(submissionId)
                 .orElseThrow(() -> new RuntimeException(
                         "No puedes asignar tribunal: esta solicitud no tiene tutor asignado"));
-        if (!"COMPLETADA".equals(tutor.getEstado())) {
+        if (!"COMPLETADA".equals(tutor.getStatus())) {
             throw new RuntimeException(
                     "No puedes asignar tribunal: la tutoría aún no ha completado las 3 revisiones obligatorias");
         }
@@ -269,7 +269,7 @@ public class PanelistServiceImpl implements PanelistService {
 
         if (rolesFaltantes.isEmpty()) return;
 
-        List<Teacher> sugeridos = sugerirTeachers(submissionId, rolesFaltantes.size());
+        List<Teacher> sugeridos = suggestTeachers(submissionId, rolesFaltantes.size());
         if (sugeridos.size() < rolesFaltantes.size()) {
             throw new RuntimeException(
                     "No hay suficientes docentes para asignar automáticamente. " +
@@ -285,25 +285,25 @@ public class PanelistServiceImpl implements PanelistService {
             // backup (findTodosOrdenadosPorCarga) ignora "disponible" a propósito -- es el
             // fallback para cuando no hay suficientes teachers disponibles y completar el
             // tribunal es preferible a fallar -- pero se deja constancia en el log.
-            if (teacher.getDisponible() != null && !teacher.getDisponible()) {
+            if (teacher.getAvailable() != null && !teacher.getAvailable()) {
                 log.warn("Asignación automática de jurado usó un docente no disponible (id={}) " +
                         "por falta de suficientes docentes disponibles para la solicitud {}.", teacher.getId(), submissionId);
             }
-            createPanelistSinNotify(submission, teacher, role);
+            createPanelistWithoutNotify(submission, teacher, role);
             notifyTeacherPanelist(teacher, submission, role);  // cada teacher es destinatario distinto
         }
  
         // Change estado a EVALUACION
-        ec.edu.uteq.presustentaciones.entities.EstadoSubmission estadoEvaluation = estadoSubmissionRepository.findByCodigo("EVALUACION")
-                .orElseGet(() -> estadoSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.EstadoSubmission.builder()
-                        .codigo("EVALUACION").nombre("Evaluacion").build()));
+        ec.edu.uteq.presustentaciones.entities.StatusSubmission statusEvaluation = statusSubmissionRepository.findByCode("EVALUACION")
+                .orElseGet(() -> statusSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.StatusSubmission.builder()
+                        .code("EVALUACION").nombre("Evaluacion").build()));
  
-        submission.setEstado(estadoEvaluation);
+        submission.setStatus(statusEvaluation);
         submissionRepository.save(submission);
 
         // Una sola notificación + correo agrupado al student
-        List<Panelist> todosPanelists = panelistRepository.findBySubmissionId(submissionId);
-        notifyStudentTribunalCompleto(submission, todosPanelists);
+        List<Panelist> allPanelists = panelistRepository.findBySubmissionId(submissionId);
+        notifyStudentPanelComplete(submission, allPanelists);
     }
 
     // ── Asignación masiva vía procedimiento almacenado ──────────────────────────
@@ -316,19 +316,19 @@ public class PanelistServiceImpl implements PanelistService {
      *
      * @param submissionIds ids de las submissions, en el mismo orden que {@code teacherIds}
      * @param teacherIds   ids de los teachers a assign, uno por cada submission del arreglo
-     * @param roleCodigo    código de role aplicado a todos los pares del lote
+     * @param roleCode    código de role aplicado a todos los pares del lote
      * @throws RuntimeException si los dos arreglos no tienen la misma longitud, o si el
      *                          procedimiento almacenado rechaza algún par (role inválido, FK
      *                          inexistente, o conflicto de horario)
      */
     @Override
     @Transactional
-    public void assignPanelistMasivo(List<Long> submissionIds, List<Long> teacherIds, String roleCodigo) {
+    public void assignPanelistBulk(List<Long> submissionIds, List<Long> teacherIds, String roleCode) {
         if (submissionIds == null || teacherIds == null || submissionIds.size() != teacherIds.size()) {
             throw new RuntimeException("Los arreglos de solicitudes y docentes deben tener la misma longitud");
         }
         for (int i = 0; i < submissionIds.size(); i++) {
-            panelistRepository.spAssignPanelistMasivo(submissionIds.get(i), teacherIds.get(i), roleCodigo);
+            panelistRepository.spAssignPanelistBulk(submissionIds.get(i), teacherIds.get(i), roleCode);
         }
     }
 
@@ -339,7 +339,7 @@ public class PanelistServiceImpl implements PanelistService {
      * @return las asignaciones de panelist de ese teacher, en cualquier submission
      */
     @Override
-    public List<Panelist> listPorTeacher(Long teacherId) {
+    public List<Panelist> listByTeacher(Long teacherId) {
         return panelistRepository.findByTeacherId(teacherId);
     }
 
@@ -348,7 +348,7 @@ public class PanelistServiceImpl implements PanelistService {
      * @return las tutorías activas de ese teacher
      */
     @Override
-    public List<Tutor> listTutoringsPorTeacher(Long teacherId) {
+    public List<Tutor> listTutoringsByTeacher(Long teacherId) {
         return tutorRepository.findByTeacherId(teacherId);
     }
 
@@ -371,17 +371,17 @@ public class PanelistServiceImpl implements PanelistService {
      * rompía la pantalla de Evaluar (busca literalmente esos códigos) y el chequeo de role
      * duplicado. Se guarda el código ya normalizado por el llamador, sin transformarlo.
      */
-    private Panelist createPanelistSinNotify(Submission submission, Teacher teacher, String role) {
+    private Panelist createPanelistWithoutNotify(Submission submission, Teacher teacher, String role) {
         teacher.setCargaHorariaSemanal(teacher.getCargaHorariaSemanal() + 1);
         teacherRepository.save(teacher);
 
-        String codigoRole = role.toUpperCase();
-        final String finalCodigoRole = codigoRole;
-        ec.edu.uteq.presustentaciones.entities.RolePanelist rolePanelist = rolePanelistRepository.findByCodigo(codigoRole)
+        String codeRole = role.toUpperCase();
+        final String finalCodeRole = codeRole;
+        ec.edu.uteq.presustentaciones.entities.RolePanelist rolePanelist = rolePanelistRepository.findByCode(codeRole)
                 .orElseGet(() -> {
                     return rolePanelistRepository.save(ec.edu.uteq.presustentaciones.entities.RolePanelist.builder()
-                            .codigo(finalCodigoRole)
-                            .nombre(finalCodigoRole.substring(0, 1).toUpperCase() + finalCodigoRole.substring(1).toLowerCase())
+                            .code(finalCodeRole)
+                            .nombre(finalCodeRole.substring(0, 1).toUpperCase() + finalCodeRole.substring(1).toLowerCase())
                             .build());
                 });
 
@@ -394,7 +394,7 @@ public class PanelistServiceImpl implements PanelistService {
     }
 
     /** Una sola notificación en BD + un solo correo al student con el tribunal completo. */
-    private void notifyStudentTribunalCompleto(Submission submission, List<Panelist> panelists) {
+    private void notifyStudentPanelComplete(Submission submission, List<Panelist> panelists) {
         try {
             String presidente = panelists.stream().filter(j -> "PRESIDENTE".equals(j.getRole()))
                     .map(j -> j.getTeacher().getAppUser().getNombre() + " " + j.getTeacher().getAppUser().getApellido())
@@ -406,19 +406,19 @@ public class PanelistServiceImpl implements PanelistService {
                     .map(j -> j.getTeacher().getAppUser().getNombre() + " " + j.getTeacher().getAppUser().getApellido())
                     .findFirst().orElse("-");
 
-            String mensaje = String.format(
+            String message = String.format(
                     "⚖️ Se ha asignado tu tribunal completo para tu pre-sustentación \"%s\". " +
                     "Presidente: %s, Vocal 1: %s, Vocal 2: %s. Tu solicitud ahora está en fase de evaluación.",
                     submission.getTituloTopic(), presidente, vocal1, vocal2);
 
             Long studentAppUserId = submission.getStudent().getAppUser().getId();
-            notificationService.createNotification(studentAppUserId, mensaje);
+            notificationService.createNotification(studentAppUserId, message);
 
             String email = submission.getStudent().getAppUser().getEmailNotifications();
             if (email == null || email.isBlank()) {
                 email = submission.getStudent().getAppUser().getEmail();
             }
-            emailService.sendNotification(email, mensaje);
+            emailService.sendNotification(email, message);
         } catch (Exception e) {
             log.warn("No se pudo notificar al estudiante sobre tribunal completo: {}", e.getMessage());
         }
@@ -492,7 +492,7 @@ public class PanelistServiceImpl implements PanelistService {
     }
 
     /**
-     * Variante de {@link #assignPanelistMasivo} que invoca directamente la sobrecarga de
+     * Variante de {@link #assignPanelistBulk} que invoca directamente la sobrecarga de
      * {@code sp_assign_panelist_masivo} que recibe arreglos SQL ({@code BIGINT[]}) en una sola
      * llamada, en vez de iterar en Java. Ver la nota de fusión de ramas en
      * {@code docs/basedatos/CATALOGO-SP.md} sobre por qué la variante scaler (iterando en
@@ -504,7 +504,7 @@ public class PanelistServiceImpl implements PanelistService {
      */
     @Override
     @Transactional
-    public void assignPanelistMasivoSP(Long[] submissionIds, Long[] teacherIds, String role) {
-        panelistRepository.spAssignPanelistMasivo(submissionIds, teacherIds, role);
+    public void assignPanelistBulkSP(Long[] submissionIds, Long[] teacherIds, String role) {
+        panelistRepository.spAssignPanelistBulk(submissionIds, teacherIds, role);
     }
 }

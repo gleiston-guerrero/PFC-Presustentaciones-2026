@@ -36,15 +36,15 @@ public class EvaluationFinal {
 
     @Column(name = "nota_instructor")
     @JsonProperty("notaInstructor")
-    private Double notaInstructor;
+    private Double gradeInstructor;
 
     @Column(name = "nota_jurado_promedio")
     @JsonProperty("notaPanelistPromedio")
-    private Double notaPanelistPromedio;
+    private Double gradePanelistAverage;
 
     @Column(name = "nota_final")
     @JsonProperty("notaFinal")
-    private Double notaFinal;
+    private Double gradeFinal;
 
     @Column(name = "peso_instructor", nullable = false)
     @Builder.Default
@@ -59,37 +59,37 @@ public class EvaluationFinal {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "resultado_id")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private ResultadoEvaluation resultado;
+    private ResultEvaluation result;
 
     @Column(name = "comentario_preestablecido", columnDefinition = "TEXT")
     @JsonProperty("comentarioPreestablecido")
-    private String comentarioPreestablecido;
+    private String commentPreestablecido;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
     @JsonProperty("observaciones")
-    private String observaciones;
+    private String observations;
 
     @Column(name = "fecha_calculo", nullable = false)
     @Builder.Default
     @JsonProperty("fechaCalculo")
-    private LocalDateTime fechaCalculo= LocalDateTime.now();
+    private LocalDateTime dateCalculo= LocalDateTime.now();
 
     @PrePersist
     protected void onCreate() {
-        if (fechaCalculo == null) {
-            fechaCalculo = LocalDateTime.now();
+        if (dateCalculo == null) {
+            dateCalculo = LocalDateTime.now();
         }
     }
 
     /**
      * Calculate nota final.
      */
-    public void calculateNotaFinal() {
-        if (notaInstructor != null && notaPanelistPromedio != null) {
-            this.notaFinal = (notaInstructor * pesoInstructor)
-                           + (notaPanelistPromedio * pesoPanelist);
+    public void calculateGradeFinal() {
+        if (gradeInstructor != null && gradePanelistAverage != null) {
+            this.gradeFinal = (gradeInstructor * pesoInstructor)
+                           + (gradePanelistAverage * pesoPanelist);
             // Scale de calificación
-            this.notaFinal = Math.round(this.notaFinal * 100.0) / 100.0;
+            this.gradeFinal = Math.round(this.gradeFinal * 100.0) / 100.0;
         }
     }
 }

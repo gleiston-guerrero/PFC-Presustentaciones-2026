@@ -87,7 +87,7 @@ class ChatbotControllerIntegrationTest {
     }
 
     @Test
-    void conTokenValidoDevuelveLaRespuestaDelChatbot() throws Exception {
+    void withTokenValidDevuelveLaRespuestaDelChatbot() throws Exception {
         String email = "estudiante@uteq.edu.ec";
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",
@@ -116,7 +116,7 @@ class ChatbotControllerIntegrationTest {
     }
 
     @Test
-    void mensajeMalFormadoDevuelve400() throws Exception {
+    void messageMalFormadoDevuelve400() throws Exception {
         String email = "estudiante@uteq.edu.ec";
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",

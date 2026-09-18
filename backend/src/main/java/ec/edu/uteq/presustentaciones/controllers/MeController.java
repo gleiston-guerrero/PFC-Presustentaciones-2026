@@ -39,7 +39,7 @@ public class MeController {
      * @return 200 con la lista de códigos de permission del appUser autenticado
      */
     @GetMapping("/permisos")
-    public ResponseEntity<?> misPermissions(Authentication authentication) {
-        return ResponseEntity.ok(ResponseWrapper.success(permissionService.permissionsDe(authentication)));
+    public ResponseEntity<?> myPermissions(Authentication authentication) {
+        return ResponseEntity.ok(ResponseWrapper.success(permissionService.permissionsOf(authentication)));
     }
 }

@@ -12,14 +12,14 @@ public interface AvailabilityRoomRepository extends JpaRepository<AvailabilityRo
     /**
      * Busca el/los registro(s) con room id y fecha.
      * @param roomId roomId
-     * @param fecha fecha
+     * @param date date
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<AvailabilityRoom> findByRoomIdAndFecha(Long roomId, LocalDate fecha);
+    List<AvailabilityRoom> findByRoomIdAndDate(Long roomId, LocalDate date);
     /**
      * Busca el/los registro(s) con fecha.
-     * @param fecha fecha
+     * @param date date
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<AvailabilityRoom> findByFecha(LocalDate fecha);
+    List<AvailabilityRoom> findByDate(LocalDate date);
 }

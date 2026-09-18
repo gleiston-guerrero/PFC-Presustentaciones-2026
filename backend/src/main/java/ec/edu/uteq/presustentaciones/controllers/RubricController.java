@@ -1,8 +1,8 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.entities.CriterioRubric;
+import ec.edu.uteq.presustentaciones.entities.CriterionRubric;
 import ec.edu.uteq.presustentaciones.entities.Rubric;
-import ec.edu.uteq.presustentaciones.repositories.CriterioRubricRepository;
+import ec.edu.uteq.presustentaciones.repositories.CriterionRubricRepository;
 import ec.edu.uteq.presustentaciones.repositories.RubricRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ import org.springframework.data.domain.Pageable;
 public class RubricController {
 
     private final RubricRepository rubricRepository;
-    private final CriterioRubricRepository criterioRepository;
+    private final CriterionRubricRepository criterionRepository;
 
     /**
      * @param pageable pagina y tamano solicitados
@@ -48,7 +48,7 @@ public class RubricController {
      * @return la rubric persistida con su id asignado
      */
     @PostMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'RUBRICA_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'RUBRICA_GESTIONAR')")
     public Rubric create(@RequestBody Rubric rubric) { return rubricRepository.save(rubric); }
 
     /**
@@ -56,7 +56,7 @@ public class RubricController {
      * @return 204 sin cuerpo
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'RUBRICA_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'RUBRICA_GESTIONAR')")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         rubricRepository.deleteById(id);
         return ResponseEntity.noContent().build();
@@ -66,17 +66,17 @@ public class RubricController {
      * Agrega un criterio a una rubric existente.
      *
      * @param rubricId rubric a la que se agrega el criterio
-     * @param criterio  criterio con su descripcion y peso
+     * @param criterion  criterio con su descripcion y peso
      * @return 200 con el criterio creado, o el error si la rubric no existe
      */
     @PostMapping("/{rubricId}/criterios")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'RUBRICA_GESTIONAR')")
-    public ResponseEntity<?> addCriterio(@PathVariable("rubricId") Long rubricId,
-                                              @RequestBody CriterioRubric criterio) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'RUBRICA_GESTIONAR')")
+    public ResponseEntity<?> addCriterion(@PathVariable("rubricId") Long rubricId,
+                                              @RequestBody CriterionRubric criterion) {
         Rubric rubric = rubricRepository.findById(rubricId)
                 .orElseThrow(() -> new RuntimeException("Rúbrica no encontrada"));
-        criterio.setRubric(rubric);
-        return ResponseEntity.ok(criterioRepository.save(criterio));
+        criterion.setRubric(rubric);
+        return ResponseEntity.ok(criterionRepository.save(criterion));
     }
 
     /**
@@ -84,8 +84,8 @@ public class RubricController {
      * @return criterios que componen esa rubric
      */
     @GetMapping("/{rubricId}/criterios")
-    public List<CriterioRubric> criterios(@PathVariable("rubricId") Long rubricId) {
-        return criterioRepository.findByRubricIdOrderByOrdenAsc(rubricId);
+    public List<CriterionRubric> criteria(@PathVariable("rubricId") Long rubricId) {
+        return criterionRepository.findByRubricIdOrderByOrdenAsc(rubricId);
     }
 
     /**
@@ -99,12 +99,12 @@ public class RubricController {
      * @return 200 con los criterios creados, o 400 si la rúbrica ya tiene criterios
      */
     @PostMapping("/{rubricId}/inicializar-criterios")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'RUBRICA_GESTIONAR')")
-    public ResponseEntity<?> inicializarCriteriosInstitucionales(@PathVariable("rubricId") Long rubricId) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'RUBRICA_GESTIONAR')")
+    public ResponseEntity<?> initializeCriteriaInstitutional(@PathVariable("rubricId") Long rubricId) {
         Rubric rubric = rubricRepository.findById(rubricId)
                 .orElseThrow(() -> new RuntimeException("Rúbrica no encontrada"));
 
-        List<CriterioRubric> existentes = criterioRepository.findByRubricIdOrderByOrdenAsc(rubricId);
+        List<CriterionRubric> existentes = criterionRepository.findByRubricIdOrderByOrdenAsc(rubricId);
         if (!existentes.isEmpty()) {
             // Si ya existen, devolver los existentes (no error, para re-uso en frontend)
             return ResponseEntity.ok(Map.of(
@@ -113,22 +113,22 @@ public class RubricController {
             ));
         }
 
-        criterioRepository.save(CriterioRubric.builder()
+        criterionRepository.save(CriterionRubric.builder()
                 .rubric(rubric)
                 .nombre("Propuesta")
-                .descripcion("La propuesta (software, algoritmos, dispositivos, etc.) está completamente desarrollada siguiendo buenas prácticas de Ingeniería de Software, cumpliendo los requisitos establecidos.")
+                .description("La propuesta (software, algoritmos, dispositivos, etc.) está completamente desarrollada siguiendo buenas prácticas de Ingeniería de Software, cumpliendo los requisitos establecidos.")
                 .ponderacion(6.0).orden(1).build());
 
-        criterioRepository.save(CriterioRubric.builder()
+        criterionRepository.save(CriterionRubric.builder()
                 .rubric(rubric)
                 .nombre("Documento")
-                .descripcion("El contenido del documento (informe) es de alta calidad, bien estructurado y redactado con claridad, cumpliendo buenas prácticas en la elaboración de informes técnicos.")
+                .description("El contenido del documento (informe) es de alta calidad, bien estructurado y redactado con claridad, cumpliendo buenas prácticas en la elaboración de informes técnicos.")
                 .ponderacion(3.0).orden(2).build());
 
-        criterioRepository.save(CriterioRubric.builder()
+        criterionRepository.save(CriterionRubric.builder()
                 .rubric(rubric)
                 .nombre("Exposición")
-                .descripcion("La exposición es clara, bien estructurada y adecuada para una defensa de titulación, demostrando dominio del tema.")
+                .description("La exposición es clara, bien estructurada y adecuada para una defensa de titulación, demostrando dominio del tema.")
                 .ponderacion(1.0).orden(3).build());
 
         rubric.setPuntajeMaximo(10.0);
@@ -136,7 +136,7 @@ public class RubricController {
 
         return ResponseEntity.ok(Map.of(
                 "mensaje", "Criterios institucionales UTEQ inicializados correctamente.",
-                "criterios", criterioRepository.findByRubricIdOrderByOrdenAsc(rubricId)
+                "criterios", criterionRepository.findByRubricIdOrderByOrdenAsc(rubricId)
         ));
     }
 }

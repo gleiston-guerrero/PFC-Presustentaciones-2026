@@ -44,7 +44,7 @@ class PanelistServiceImplTest {
     private RolePanelistRepository rolePanelistRepository;
 
     @Mock
-    private EstadoSubmissionRepository estadoSubmissionRepository;
+    private StatusSubmissionRepository statusSubmissionRepository;
 
     @InjectMocks
     private PanelistServiceImpl panelistService;
@@ -61,19 +61,19 @@ class PanelistServiceImplTest {
     @BeforeEach
     void setUp() {
         appUserTeacher1 = AppUser.builder().id(101L).nombre("Ana").apellido("Gomez").email("agomez@uteq.edu.ec").build();
-        teacher1 = Teacher.builder().id(1L).appUser(appUserTeacher1).disponible(true).cargaHorariaSemanal(0).build();
+        teacher1 = Teacher.builder().id(1L).appUser(appUserTeacher1).available(true).cargaHorariaSemanal(0).build();
 
         appUserTeacher2 = AppUser.builder().id(102L).nombre("Luis").apellido("Vera").email("lvera@uteq.edu.ec").build();
-        teacher2 = Teacher.builder().id(2L).appUser(appUserTeacher2).disponible(true).cargaHorariaSemanal(0).build();
+        teacher2 = Teacher.builder().id(2L).appUser(appUserTeacher2).available(true).cargaHorariaSemanal(0).build();
 
         appUserStudent = AppUser.builder().id(201L).nombre("Mario").apellido("Alvarado").email("malvarado@uteq.edu.ec").build();
         student = Student.builder().id(5L).appUser(appUserStudent).build();
 
         submission = Submission.builder().id(50L).student(student).tituloTopic("Tesis Inteligencia Artificial").build();
-        tutorCompletado = Tutor.builder().id(1L).submission(submission).teacher(teacher1).estado("COMPLETADA").build();
+        tutorCompletado = Tutor.builder().id(1L).submission(submission).teacher(teacher1).status("COMPLETADA").build();
 
-        lenient().when(rolePanelistRepository.findByCodigo(anyString()))
-                .thenAnswer(inv -> Optional.of(RolePanelist.builder().codigo(inv.getArgument(0)).build()));
+        lenient().when(rolePanelistRepository.findByCode(anyString()))
+                .thenAnswer(inv -> Optional.of(RolePanelist.builder().code(inv.getArgument(0)).build()));
     }
 
     @Test
@@ -97,8 +97,8 @@ class PanelistServiceImplTest {
     }
 
     @Test
-    void testAssignPanelistFallaSiTutoringNoEstaCompletada() {
-        tutorCompletado.setEstado("EN_PROCESO");
+    void testAssignPanelistFallaSiTutoringNoIsCompletada() {
+        tutorCompletado.setStatus("EN_PROCESO");
         when(submissionRepository.findById(50L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(2L)).thenReturn(Optional.of(teacher2));
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
@@ -109,13 +109,13 @@ class PanelistServiceImplTest {
     }
 
     @Test
-    void testAssignPanelistFallaSiTeacherYaEstaAsignado() {
-        Panelist existente = Panelist.builder().id(10L).submission(submission).teacher(teacher2)
-                .rolePanelist(RolePanelist.builder().codigo("VOCAL").build()).build();
+    void testAssignPanelistFallaSiTeacherYaIsAsignado() {
+        Panelist existing = Panelist.builder().id(10L).submission(submission).teacher(teacher2)
+                .rolePanelist(RolePanelist.builder().code("VOCAL").build()).build();
         when(submissionRepository.findById(50L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(2L)).thenReturn(Optional.of(teacher2));
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
-        when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of(existente));
+        when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of(existing));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
                 panelistService.assignPanelist(50L, 2L, "PRESIDENTE"));
@@ -124,8 +124,8 @@ class PanelistServiceImplTest {
 
     @Test
     void testDeletePanelist() {
-        Panelist existente = Panelist.builder().id(10L).submission(submission).teacher(teacher2).build();
-        when(panelistRepository.findById(10L)).thenReturn(Optional.of(existente));
+        Panelist existing = Panelist.builder().id(10L).submission(submission).teacher(teacher2).build();
+        when(panelistRepository.findById(10L)).thenReturn(Optional.of(existing));
 
         panelistService.deletePanelist(10L);
 
@@ -153,46 +153,46 @@ class PanelistServiceImplTest {
     // sp_assign_panelist_masivo (Fase 3 / Criterio P1) -- sin test dedicado pese a ser el
     // unico punto del codigo que invoca ese procedimiento.
     @Test
-    void testAssignPanelistMasivoRechazaArreglosDeLongitudDistinta() {
+    void testAssignPanelistBulkRechazaArreglosDeLongitudDistinta() {
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                panelistService.assignPanelistMasivo(List.of(50L, 51L), List.of(1L), "PRESIDENTE"));
+                panelistService.assignPanelistBulk(List.of(50L, 51L), List.of(1L), "PRESIDENTE"));
 
         assertTrue(ex.getMessage().contains("misma longitud"));
-        verify(panelistRepository, never()).spAssignPanelistMasivo(anyLong(), anyLong(), anyString());
+        verify(panelistRepository, never()).spAssignPanelistBulk(anyLong(), anyLong(), anyString());
     }
 
     @Test
-    void testAssignPanelistMasivoInvocaElProcedimientoUnaVezPorPar() {
-        panelistService.assignPanelistMasivo(List.of(50L, 51L), List.of(1L, 2L), "VOCAL_1");
+    void testAssignPanelistBulkInvocaElProcedimientoUnaVezByPar() {
+        panelistService.assignPanelistBulk(List.of(50L, 51L), List.of(1L, 2L), "VOCAL_1");
 
-        verify(panelistRepository).spAssignPanelistMasivo(50L, 1L, "VOCAL_1");
-        verify(panelistRepository).spAssignPanelistMasivo(51L, 2L, "VOCAL_1");
-        verify(panelistRepository, times(2)).spAssignPanelistMasivo(anyLong(), anyLong(), anyString());
+        verify(panelistRepository).spAssignPanelistBulk(50L, 1L, "VOCAL_1");
+        verify(panelistRepository).spAssignPanelistBulk(51L, 2L, "VOCAL_1");
+        verify(panelistRepository, times(2)).spAssignPanelistBulk(anyLong(), anyLong(), anyString());
     }
 
     @Test
-    void testAssignPanelistMasivoSiUnParFallaNoSigueConLosSiguientes() {
+    void testAssignPanelistBulkSiUnParFallaNoSigueWithLosSiguientes() {
         // Simula el rollback transaccional real: si el SP lanza excepcion en el segundo par,
         // el metodo debe propagarla (Spring revierte la transaccion @Transactional completa).
         // Mockito en modo estricto (default) exige stubear tambien la primera llamada:
         // sin esto, la interpreta como un posible error del test en vez de "sin comportamiento
         // especial" y lanza su propia excepcion de "stubbing argument mismatch" en su lugar.
-        doNothing().when(panelistRepository).spAssignPanelistMasivo(50L, 1L, "VOCAL_2");
+        doNothing().when(panelistRepository).spAssignPanelistBulk(50L, 1L, "VOCAL_2");
         doThrow(new RuntimeException("El docente ya tiene otra defensa en ese horario"))
-                .when(panelistRepository).spAssignPanelistMasivo(51L, 2L, "VOCAL_2");
+                .when(panelistRepository).spAssignPanelistBulk(51L, 2L, "VOCAL_2");
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                panelistService.assignPanelistMasivo(List.of(50L, 51L), List.of(1L, 2L), "VOCAL_2"));
+                panelistService.assignPanelistBulk(List.of(50L, 51L), List.of(1L, 2L), "VOCAL_2"));
         assertEquals("El docente ya tiene otra defensa en ese horario", ex.getMessage());
 
-        verify(panelistRepository).spAssignPanelistMasivo(50L, 1L, "VOCAL_2");
-        verify(panelistRepository).spAssignPanelistMasivo(51L, 2L, "VOCAL_2");
+        verify(panelistRepository).spAssignPanelistBulk(50L, 1L, "VOCAL_2");
+        verify(panelistRepository).spAssignPanelistBulk(51L, 2L, "VOCAL_2");
     }
 
     // ── assignPanelist: validaciones restantes ───────────────────────────────
 
     @Test
-    void assignPanelistLanzaSiSubmissionNoExiste() {
+    void assignPanelistLanzaSiSubmissionNoExists() {
         when(submissionRepository.findById(50L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> panelistService.assignPanelist(50L, 2L, "PRESIDENTE"));
@@ -200,7 +200,7 @@ class PanelistServiceImplTest {
     }
 
     @Test
-    void assignPanelistLanzaSiTeacherNoExiste() {
+    void assignPanelistLanzaSiTeacherNoExists() {
         when(submissionRepository.findById(50L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(2L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -231,8 +231,8 @@ class PanelistServiceImplTest {
     }
 
     @Test
-    void assignPanelistLanzaSiTeacherNoDisponible() {
-        teacher2.setDisponible(false);
+    void assignPanelistLanzaSiTeacherNoAvailable() {
+        teacher2.setAvailable(false);
         when(submissionRepository.findById(50L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(2L)).thenReturn(Optional.of(teacher2));
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
@@ -261,12 +261,12 @@ class PanelistServiceImplTest {
 
     @Test
     void assignPanelistLanzaSiRoleYaOcupado() {
-        Panelist presidenteExistente = Panelist.builder().id(9L).submission(submission).teacher(teacher1)
-                .rolePanelist(RolePanelist.builder().codigo("PRESIDENTE").build()).build();
+        Panelist presidenteExisting = Panelist.builder().id(9L).submission(submission).teacher(teacher1)
+                .rolePanelist(RolePanelist.builder().code("PRESIDENTE").build()).build();
         when(submissionRepository.findById(50L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(2L)).thenReturn(Optional.of(teacher2));
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
-        when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of(presidenteExistente));
+        when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of(presidenteExisting));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> panelistService.assignPanelist(50L, 2L, "presidente"));
@@ -274,12 +274,12 @@ class PanelistServiceImplTest {
     }
 
     @Test
-    void assignPanelistCreaRolePanelistNuevoSiNoEstaEnElCatalogo() {
+    void assignPanelistCreaRolePanelistNewSiNoIsEnElCatalog() {
         when(submissionRepository.findById(50L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(2L)).thenReturn(Optional.of(teacher2));
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
         when(panelistRepository.findBySubmissionId(50L)).thenReturn(new ArrayList<>());
-        when(rolePanelistRepository.findByCodigo("VOCAL_1")).thenReturn(Optional.empty());
+        when(rolePanelistRepository.findByCode("VOCAL_1")).thenReturn(Optional.empty());
         when(rolePanelistRepository.save(any(RolePanelist.class))).thenAnswer(inv -> inv.getArgument(0));
         when(panelistRepository.save(any(Panelist.class))).thenAnswer(inv -> {
             Panelist j = inv.getArgument(0);
@@ -289,31 +289,31 @@ class PanelistServiceImplTest {
 
         Panelist panelist = panelistService.assignPanelist(50L, 2L, "vocal_1");
 
-        assertEquals("VOCAL_1", panelist.getRolePanelist().getCodigo());
-        verify(rolePanelistRepository).save(argThat(r -> "VOCAL_1".equals(r.getCodigo()) && "Vocal_1".equals(r.getNombre())));
+        assertEquals("VOCAL_1", panelist.getRolePanelist().getCode());
+        verify(rolePanelistRepository).save(argThat(r -> "VOCAL_1".equals(r.getCode()) && "Vocal_1".equals(r.getNombre())));
     }
 
     // ── obtainTutorDeSubmission / deleteTutor / delegados simples ─────────
 
     @Test
-    void obtainTutorDeSubmissionDevuelveTutorCompletado() {
+    void obtainTutorOfSubmissionDevuelveTutorCompletado() {
         // El tutor de un proyecto ya calificado está en "COMPLETADA" y sigue siendo el tutor
         // que debe sign el minutes: no se filtra por estado.
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
-        assertEquals(Optional.of(tutorCompletado), panelistService.obtainTutorDeSubmission(50L));
+        assertEquals(Optional.of(tutorCompletado), panelistService.obtainTutorOfSubmission(50L));
     }
 
     @Test
-    void obtainTutorDeSubmissionDevuelveElActivo() {
-        Tutor activo = Tutor.builder().id(2L).estado("ACTIVO").build();
+    void obtainTutorOfSubmissionDevuelveElActivo() {
+        Tutor activo = Tutor.builder().id(2L).status("ACTIVO").build();
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(activo));
-        assertEquals(Optional.of(activo), panelistService.obtainTutorDeSubmission(50L));
+        assertEquals(Optional.of(activo), panelistService.obtainTutorOfSubmission(50L));
     }
 
     @Test
-    void obtainTutorDeSubmissionVacioSiNoHay() {
+    void obtainTutorOfSubmissionEmptySiNoHay() {
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.empty());
-        assertTrue(panelistService.obtainTutorDeSubmission(50L).isEmpty());
+        assertTrue(panelistService.obtainTutorOfSubmission(50L).isEmpty());
     }
 
     @Test
@@ -323,21 +323,21 @@ class PanelistServiceImplTest {
     }
 
     @Test
-    void listPorSubmissionDelega() {
+    void listBySubmissionDelega() {
         when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of());
-        assertTrue(panelistService.listPorSubmission(50L).isEmpty());
+        assertTrue(panelistService.listBySubmission(50L).isEmpty());
     }
 
     @Test
-    void listPorTeacherDelega() {
+    void listByTeacherDelega() {
         when(panelistRepository.findByTeacherId(1L)).thenReturn(List.of());
-        assertTrue(panelistService.listPorTeacher(1L).isEmpty());
+        assertTrue(panelistService.listByTeacher(1L).isEmpty());
     }
 
     @Test
-    void listTutoringsPorTeacherDelega() {
+    void listTutoringsByTeacherDelega() {
         when(tutorRepository.findByTeacherId(1L)).thenReturn(List.of());
-        assertTrue(panelistService.listTutoringsPorTeacher(1L).isEmpty());
+        assertTrue(panelistService.listTutoringsByTeacher(1L).isEmpty());
     }
 
     @Test
@@ -347,101 +347,101 @@ class PanelistServiceImplTest {
     }
 
     @Test
-    void assignPanelistMasivoSPDelega() {
+    void assignPanelistBulkSPDelega() {
         Long[] submissions = {50L, 51L};
         Long[] teachers = {1L, 2L};
-        panelistService.assignPanelistMasivoSP(submissions, teachers, "PRESIDENTE");
-        verify(panelistRepository).spAssignPanelistMasivo(submissions, teachers, "PRESIDENTE");
+        panelistService.assignPanelistBulkSP(submissions, teachers, "PRESIDENTE");
+        verify(panelistRepository).spAssignPanelistBulk(submissions, teachers, "PRESIDENTE");
     }
 
     // ── sugerirTeachers ──────────────────────────────────────────────────────
 
     @Test
-    void sugerirTeachersExcluyePanelistsYTutorYaAsignados() {
-        Panelist panelistExistente = Panelist.builder().id(1L).teacher(teacher1).build();
-        when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of(panelistExistente));
+    void suggestTeachersExcluyePanelistsYTutorYaAsignados() {
+        Panelist panelistExisting = Panelist.builder().id(1L).teacher(teacher1).build();
+        when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of(panelistExisting));
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado)); // teacher1 tambien
-        when(teacherRepository.findDisponiblesOrdenadosPorCarga()).thenReturn(List.of(teacher1, teacher2));
+        when(teacherRepository.findAvailableOrdenadosByCarga()).thenReturn(List.of(teacher1, teacher2));
 
         // cantidad=1: con teacher1 excluido queda exactamente 1 candidato, sin activate el
         // fallback a findTodosOrdenadosPorCarga() (ese camino se prueba aparte).
-        List<Teacher> sugeridos = panelistService.sugerirTeachers(50L, 1);
+        List<Teacher> sugeridos = panelistService.suggestTeachers(50L, 1);
 
         assertEquals(1, sugeridos.size());
         assertEquals(teacher2, sugeridos.get(0));
     }
 
     @Test
-    void sugerirTeachersUsaPoolCompletoSiNoHaySuficientesDisponibles() {
+    void suggestTeachersUsaPoolCompleteSiNoHaySuficientesAvailable() {
         when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of());
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.empty());
-        when(teacherRepository.findDisponiblesOrdenadosPorCarga()).thenReturn(List.of(teacher1));
-        when(teacherRepository.findTodosOrdenadosPorCarga()).thenReturn(List.of(teacher1, teacher2));
+        when(teacherRepository.findAvailableOrdenadosByCarga()).thenReturn(List.of(teacher1));
+        when(teacherRepository.findAllOrdenadosByCarga()).thenReturn(List.of(teacher1, teacher2));
 
-        List<Teacher> sugeridos = panelistService.sugerirTeachers(50L, 2);
+        List<Teacher> sugeridos = panelistService.suggestTeachers(50L, 2);
 
         assertEquals(2, sugeridos.size());
-        verify(teacherRepository).findTodosOrdenadosPorCarga();
+        verify(teacherRepository).findAllOrdenadosByCarga();
     }
 
     // ── assignPanelistsAutomaticamente ────────────────────────────────────────
 
     @Test
-    void assignPanelistsAutomaticamenteLanzaSiNoHayTutor() {
+    void assignPanelistsAutomaticallyLanzaSiNoHayTutor() {
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> panelistService.assignPanelistsAutomaticamente(50L));
+                () -> panelistService.assignPanelistsAutomatically(50L));
         assertTrue(ex.getMessage().contains("no tiene tutor asignado"));
     }
 
     @Test
-    void assignPanelistsAutomaticamenteLanzaSiTutoringNoCompletada() {
-        tutorCompletado.setEstado("EN_PROCESO");
+    void assignPanelistsAutomaticallyLanzaSiTutoringNoCompletada() {
+        tutorCompletado.setStatus("EN_PROCESO");
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
-        assertThrows(RuntimeException.class, () -> panelistService.assignPanelistsAutomaticamente(50L));
+        assertThrows(RuntimeException.class, () -> panelistService.assignPanelistsAutomatically(50L));
     }
 
     @Test
-    void assignPanelistsAutomaticamenteNoHaceNadaSiTribunalYaCompleto() {
+    void assignPanelistsAutomaticallyNoHaceNadaSiPanelYaComplete() {
         // Submission SI se consulta antes de revisar los roles (orden real del metodo);
         // el early-return ocurre despues, al ver que rolesFaltantes esta vacio.
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
         when(submissionRepository.findById(50L)).thenReturn(Optional.of(submission));
-        Panelist p = Panelist.builder().id(1L).rolePanelist(RolePanelist.builder().codigo("PRESIDENTE").build()).build();
-        Panelist v1 = Panelist.builder().id(2L).rolePanelist(RolePanelist.builder().codigo("VOCAL_1").build()).build();
-        Panelist v2 = Panelist.builder().id(3L).rolePanelist(RolePanelist.builder().codigo("VOCAL_2").build()).build();
+        Panelist p = Panelist.builder().id(1L).rolePanelist(RolePanelist.builder().code("PRESIDENTE").build()).build();
+        Panelist v1 = Panelist.builder().id(2L).rolePanelist(RolePanelist.builder().code("VOCAL_1").build()).build();
+        Panelist v2 = Panelist.builder().id(3L).rolePanelist(RolePanelist.builder().code("VOCAL_2").build()).build();
         when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of(p, v1, v2));
 
-        panelistService.assignPanelistsAutomaticamente(50L);
+        panelistService.assignPanelistsAutomatically(50L);
 
         verify(panelistRepository, never()).save(any());
         verify(submissionRepository, never()).save(any());
     }
 
     @Test
-    void assignPanelistsAutomaticamenteLanzaSiNoHaySuficientesTeachers() {
+    void assignPanelistsAutomaticallyLanzaSiNoHaySuficientesTeachers() {
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
         when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of()); // faltan los 3 roles
         when(submissionRepository.findById(50L)).thenReturn(Optional.of(submission));
-        when(teacherRepository.findDisponiblesOrdenadosPorCarga()).thenReturn(List.of(teacher1));
-        when(teacherRepository.findTodosOrdenadosPorCarga()).thenReturn(List.of(teacher1));
+        when(teacherRepository.findAvailableOrdenadosByCarga()).thenReturn(List.of(teacher1));
+        when(teacherRepository.findAllOrdenadosByCarga()).thenReturn(List.of(teacher1));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> panelistService.assignPanelistsAutomaticamente(50L));
+                () -> panelistService.assignPanelistsAutomatically(50L));
         assertTrue(ex.getMessage().contains("No hay suficientes docentes"));
     }
 
     @Test
-    void assignPanelistsAutomaticamenteAsignaLosTresRolesYNotificaUnaVez() {
+    void assignPanelistsAutomaticallyAsignaLosTresRolesYNotificaUnaVez() {
         Teacher teacher3 = Teacher.builder().id(3L).appUser(AppUser.builder().id(103L).nombre("Rosa").apellido("Diaz").build())
-                .disponible(true).cargaHorariaSemanal(0).build();
+                .available(true).cargaHorariaSemanal(0).build();
         // teacher1 es el tutor de la submission -- sugerirTeachers lo excluye tambien via
         // tutorRepository, asi que hacen falta 3 disponibles ADEMAS de el para cubrir los 3 roles.
         Teacher teacher4 = Teacher.builder().id(4L).appUser(AppUser.builder().id(104L).nombre("Ivan").apellido("Solis").build())
-                .disponible(true).cargaHorariaSemanal(0).build();
+                .available(true).cargaHorariaSemanal(0).build();
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
         when(submissionRepository.findById(50L)).thenReturn(Optional.of(submission));
-        when(teacherRepository.findDisponiblesOrdenadosPorCarga()).thenReturn(List.of(teacher1, teacher2, teacher3, teacher4));
+        when(teacherRepository.findAvailableOrdenadosByCarga()).thenReturn(List.of(teacher1, teacher2, teacher3, teacher4));
         when(panelistRepository.save(any(Panelist.class))).thenAnswer(inv -> {
             Panelist j = inv.getArgument(0);
             j.setId((long) (Math.random() * 1000));
@@ -449,10 +449,10 @@ class PanelistServiceImplTest {
         });
         // 3 llamadas a findBySubmissionId: 1ra (roles ocupados, al inicio), 2da (idsOcupados
         // dentro de sugerirTeachers), 3ra (armar el tribunal ya completo, al final para notify).
-        Panelist pFinal = Panelist.builder().id(1L).teacher(teacher1).rolePanelist(RolePanelist.builder().codigo("PRESIDENTE").build()).build();
+        Panelist pFinal = Panelist.builder().id(1L).teacher(teacher1).rolePanelist(RolePanelist.builder().code("PRESIDENTE").build()).build();
         when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of(), List.of(), List.of(pFinal));
 
-        panelistService.assignPanelistsAutomaticamente(50L);
+        panelistService.assignPanelistsAutomatically(50L);
 
         verify(panelistRepository, times(3)).save(any(Panelist.class));
         verify(notificationService, atLeastOnce()).createNotification(anyLong(), anyString());
@@ -460,22 +460,22 @@ class PanelistServiceImplTest {
     }
 
     @Test
-    void notifyStudentTribunalCompletoNoPropagaExcepcionSiFallaLaNotification() {
+    void notifyStudentPanelCompleteNoPropagaExcepcionSiFallaLaNotification() {
         Teacher teacher3 = Teacher.builder().id(3L).appUser(AppUser.builder().id(103L).nombre("Rosa").apellido("Diaz").build())
-                .disponible(true).cargaHorariaSemanal(0).build();
+                .available(true).cargaHorariaSemanal(0).build();
         // teacher1 es el tutor de la submission -- sugerirTeachers lo excluye tambien via
         // tutorRepository, asi que hacen falta 3 disponibles ADEMAS de el para cubrir los 3 roles.
         Teacher teacher4 = Teacher.builder().id(4L).appUser(AppUser.builder().id(104L).nombre("Ivan").apellido("Solis").build())
-                .disponible(true).cargaHorariaSemanal(0).build();
+                .available(true).cargaHorariaSemanal(0).build();
         when(tutorRepository.findBySubmissionId(50L)).thenReturn(Optional.of(tutorCompletado));
         when(submissionRepository.findById(50L)).thenReturn(Optional.of(submission));
-        when(teacherRepository.findDisponiblesOrdenadosPorCarga()).thenReturn(List.of(teacher1, teacher2, teacher3, teacher4));
+        when(teacherRepository.findAvailableOrdenadosByCarga()).thenReturn(List.of(teacher1, teacher2, teacher3, teacher4));
         when(panelistRepository.save(any(Panelist.class))).thenAnswer(inv -> inv.getArgument(0));
-        Panelist pFinal = Panelist.builder().id(1L).teacher(teacher1).rolePanelist(RolePanelist.builder().codigo("PRESIDENTE").build()).build();
+        Panelist pFinal = Panelist.builder().id(1L).teacher(teacher1).rolePanelist(RolePanelist.builder().code("PRESIDENTE").build()).build();
         when(panelistRepository.findBySubmissionId(50L)).thenReturn(List.of(), List.of(), List.of(pFinal));
         doThrow(new RuntimeException("fallo notificacion")).when(notificationService)
                 .createNotification(eq(201L), anyString());
 
-        assertDoesNotThrow(() -> panelistService.assignPanelistsAutomaticamente(50L));
+        assertDoesNotThrow(() -> panelistService.assignPanelistsAutomatically(50L));
     }
 }

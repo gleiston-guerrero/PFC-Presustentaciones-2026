@@ -19,8 +19,8 @@ public interface EvaluatorRepository extends JpaRepository<Evaluator, Long> {
      * Busca el/los registro(s) con submission id y teacher id y tipo evaluator codigo.
      * @param submissionId submissionId
      * @param teacherId teacherId
-     * @param tipoEvaluatorCodigo tipoEvaluatorCodigo
+     * @param kindEvaluatorCode kindEvaluatorCode
      * @return el registro si existe, vacío si no
      */
-    Optional<Evaluator> findBySubmissionIdAndTeacherIdAndTipoEvaluatorCodigo(Long submissionId, Long teacherId, String tipoEvaluatorCodigo);
+    Optional<Evaluator> findBySubmissionIdAndTeacherIdAndKindEvaluatorCode(Long submissionId, Long teacherId, String kindEvaluatorCode);
 }

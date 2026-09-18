@@ -32,29 +32,29 @@ public class EvaluationController {
      *
      * @param submissionId    submission de pre-sustentación que se está calificando
      * @param rubricId      rúbrica con la que se evaluó
-     * @param notaInstructor nota del teacher de Titulación (pesa 60 % por defecto)
-     * @param notaPanelist     nota promedio del tribunal (pesa 40 % por defecto)
-     * @param observaciones  comentario del evaluator, se persiste junto con la nota
+     * @param gradeInstructor nota del teacher de Titulación (pesa 60 % por defecto)
+     * @param gradePanelist     nota promedio del tribunal (pesa 40 % por defecto)
+     * @param observations  comentario del evaluator, se persiste junto con la nota
      * @param pesoInstructor peso de la nota del instructor; junto con {@code pesoPanelist} debe sumar 100
      * @param pesoPanelist     peso de la nota del tribunal
      * @return 200 con la {@link EvaluationFinal} persistida, o 400 con {@code {"error": ...}}
      *         si el servicio rechaza los pesos o el estado de la submission
      */
     @PostMapping("/evaluar-ponderado")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_CALIFICAR')")
-    public ResponseEntity<?> evaluarPonderado(
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'EVALUACION_CALIFICAR')")
+    public ResponseEntity<?> evaluateWeighted(
             @RequestParam(name = "solicitudId") Long submissionId,
             @RequestParam(name = "rubricaId") Long rubricId,
-            @RequestParam("notaInstructor") Double notaInstructor,
-            @RequestParam(name = "notaJurado") Double notaPanelist,
-            @RequestParam("observaciones") String observaciones,
+            @RequestParam("notaInstructor") Double gradeInstructor,
+            @RequestParam(name = "notaJurado") Double gradePanelist,
+            @RequestParam("observaciones") String observations,
             @RequestParam(name = "pesoInstructor", defaultValue = "60.0") Double pesoInstructor,
             @RequestParam(name = "pesoJurado", defaultValue = "40.0") Double pesoPanelist) {
         try {
-            EvaluationFinal e = evaluationService.evaluarSubmission(
+            EvaluationFinal e = evaluationService.evaluateSubmission(
                     submissionId, rubricId,
-                    notaInstructor, notaPanelist,
-                    observaciones, pesoInstructor, pesoPanelist);
+                    gradeInstructor, gradePanelist,
+                    observations, pesoInstructor, pesoPanelist);
             return ResponseEntity.ok(e);
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
@@ -67,17 +67,17 @@ public class EvaluationController {
      *
      * @param submissionId   submission que se califica
      * @param rubricId     rúbrica utilizada
-     * @param notaFinal     nota final ya calculada
-     * @param observaciones comentario del evaluator
+     * @param gradeFinal     nota final ya calculada
+     * @param observations comentario del evaluator
      * @return la {@link EvaluationFinal} persistida
      */
     @PostMapping("/evaluar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_CALIFICAR')")
-    public EvaluationFinal evaluar(@RequestParam(name = "solicitudId") Long submissionId,
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'EVALUACION_CALIFICAR')")
+    public EvaluationFinal evaluate(@RequestParam(name = "solicitudId") Long submissionId,
                               @RequestParam(name = "rubricaId") Long rubricId,
-                              @RequestParam("notaFinal") Double notaFinal,
-                              @RequestParam("observaciones") String observaciones) {
-        return evaluationService.evaluarSubmission(submissionId, rubricId, notaFinal, observaciones);
+                              @RequestParam("notaFinal") Double gradeFinal,
+                              @RequestParam("observaciones") String observations) {
+        return evaluationService.evaluateSubmission(submissionId, rubricId, gradeFinal, observations);
     }
 
     /**
@@ -87,7 +87,7 @@ public class EvaluationController {
      * @return 200 con la página de evaluations
      */
     @GetMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_CALIFICAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'EVALUACION_CALIFICAR')")
     public ResponseEntity<Page<EvaluationFinal>> list(Pageable pageable) {
         return ResponseEntity.ok(evaluationService.listEvaluations(pageable));
     }
@@ -100,8 +100,8 @@ public class EvaluationController {
      */
     @GetMapping("/estudiante/{studentId}")
     @PreAuthorize("isAuthenticated()")
-    public List<EvaluationFinal> listPorStudent(@PathVariable("studentId") Long studentId) {
-        return evaluationService.listPorStudent(studentId);
+    public List<EvaluationFinal> listByStudent(@PathVariable("studentId") Long studentId) {
+        return evaluationService.listByStudent(studentId);
     }
 
     /**
@@ -112,8 +112,8 @@ public class EvaluationController {
      */
     @GetMapping("/usuario/{appUserId}")
     @PreAuthorize("isAuthenticated()")
-    public List<EvaluationFinal> listPorAppUser(@PathVariable("appUserId") Long appUserId) {
-        return evaluationService.listPorAppUser(appUserId);
+    public List<EvaluationFinal> listByAppUser(@PathVariable("appUserId") Long appUserId) {
+        return evaluationService.listByAppUser(appUserId);
     }
 
     /**
@@ -124,8 +124,8 @@ public class EvaluationController {
      */
     @GetMapping("/solicitud/{submissionId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<EvaluationFinal> porSubmission(@PathVariable("submissionId") Long submissionId) {
-        return evaluationService.searchPorSubmission(submissionId)
+    public ResponseEntity<EvaluationFinal> bySubmission(@PathVariable("submissionId") Long submissionId) {
+        return evaluationService.searchBySubmission(submissionId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -141,11 +141,11 @@ public class EvaluationController {
      *         encuentra evaluations por criterio para esa submission
      */
     @PostMapping("/calcular-promedio/{submissionId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_CALIFICAR')")
-    public ResponseEntity<?> calculatePromedio(@PathVariable("submissionId") Long submissionId) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'EVALUACION_CALIFICAR')")
+    public ResponseEntity<?> calculateAverage(@PathVariable("submissionId") Long submissionId) {
         try {
-            Map<String, Object> resultado = evaluationService.calculatePromedioSP(submissionId);
-            return ResponseEntity.ok(resultado);
+            Map<String, Object> result = evaluationService.calculateAverageSP(submissionId);
+            return ResponseEntity.ok(result);
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         }

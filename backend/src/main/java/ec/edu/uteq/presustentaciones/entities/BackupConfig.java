@@ -57,11 +57,11 @@ public class BackupConfig {
     /** Programación del backup diferencial. */
     @Column(name = "diferencial_activo", nullable = false)
     @JsonProperty("diferencialActivo")
-    private boolean diferencialActivo;
+    private boolean differentialActivo;
 
     @Column(name = "cron_diferencial", nullable = false, length = 120)
     @JsonProperty("cronDiferencial")
-    private String cronDiferencial;
+    private String cronDifferential;
 
     @Column(name = "actualizado_en", nullable = false)
     @JsonProperty("actualizadoEn")
@@ -69,5 +69,5 @@ public class BackupConfig {
 
     @Column(name = "actualizado_por", length = 200)
     @JsonProperty("actualizadoPor")
-    private String actualizadoPor;
+    private String actualizadoBy;
 }

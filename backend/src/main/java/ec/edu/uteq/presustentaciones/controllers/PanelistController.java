@@ -44,7 +44,7 @@ public class PanelistController {
      *         rechaza (teacher ya asignado, role inexistente, etc.)
      */
     @PostMapping("/asignar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
     public ResponseEntity<?> assignPanelist(
             @RequestParam(name = "solicitudId") Long submissionId,
             @RequestParam(name = "docenteId") Long teacherId,
@@ -66,11 +66,11 @@ public class PanelistController {
      *         suficientes teachers disponibles
      */
     @PostMapping("/asignar-automatico/{submissionId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
-    public ResponseEntity<?> assignAutomaticamente(@PathVariable("submissionId") Long submissionId) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
+    public ResponseEntity<?> assignAutomatically(@PathVariable("submissionId") Long submissionId) {
         try {
-            panelistService.assignPanelistsAutomaticamente(submissionId);
-            List<Panelist> panelists = panelistService.listPorSubmission(submissionId);
+            panelistService.assignPanelistsAutomatically(submissionId);
+            List<Panelist> panelists = panelistService.listBySubmission(submissionId);
             return ResponseEntity.ok(ResponseWrapper.success(panelists, "Jurados asignados automáticamente"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
@@ -82,8 +82,8 @@ public class PanelistController {
      * @return 200 con los panelists asignados a esa submission
      */
     @GetMapping("/solicitud/{submissionId}")
-    public ResponseEntity<?> listPorSubmission(@PathVariable("submissionId") Long submissionId) {
-        return ResponseEntity.ok(ResponseWrapper.success(panelistService.listPorSubmission(submissionId)));
+    public ResponseEntity<?> listBySubmission(@PathVariable("submissionId") Long submissionId) {
+        return ResponseEntity.ok(ResponseWrapper.success(panelistService.listBySubmission(submissionId)));
     }
 
     /**
@@ -91,9 +91,9 @@ public class PanelistController {
      * @return 200 con la página de todas las asignaciones de tribunal
      */
     @GetMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
-    public ResponseEntity<?> listTodos(Pageable pageable) {
-        return ResponseEntity.ok(ResponseWrapper.success(panelistService.listTodos(pageable)));
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
+    public ResponseEntity<?> listAll(Pageable pageable) {
+        return ResponseEntity.ok(ResponseWrapper.success(panelistService.listAll(pageable)));
     }
 
     /**
@@ -103,7 +103,7 @@ public class PanelistController {
      * @return 204 sin cuerpo
      */
     @DeleteMapping("/{panelistId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
     public ResponseEntity<Void> deletePanelist(@PathVariable("panelistId") Long panelistId) {
         panelistService.deletePanelist(panelistId);
         return ResponseEntity.noContent().build();
@@ -117,11 +117,11 @@ public class PanelistController {
      * @return 200 con la lista de teachers sugeridos
      */
     @GetMapping("/sugerencias/{submissionId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
-    public ResponseEntity<?> sugerirTeachers(
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
+    public ResponseEntity<?> suggestTeachers(
             @PathVariable("submissionId") Long submissionId,
             @RequestParam(name = "cantidad", defaultValue = "5") int cantidad) {
-        return ResponseEntity.ok(ResponseWrapper.success(panelistService.sugerirTeachers(submissionId, cantidad)));
+        return ResponseEntity.ok(ResponseWrapper.success(panelistService.suggestTeachers(submissionId, cantidad)));
     }
 
     // ── Tutor ─────────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ public class PanelistController {
      * @return 200 con el {@link Tutor} creado, o 400 con el motivo si ya tiene tutor
      */
     @PostMapping("/tutor/asignar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
     public ResponseEntity<?> assignTutor(
             @RequestParam(name = "solicitudId") Long submissionId,
             @RequestParam(name = "docenteId") Long teacherId) {
@@ -152,7 +152,7 @@ public class PanelistController {
      */
     @GetMapping("/tutor/solicitud/{submissionId}")
     public ResponseEntity<?> obtainTutor(@PathVariable("submissionId") Long submissionId) {
-        return panelistService.obtainTutorDeSubmission(submissionId)
+        return panelistService.obtainTutorOfSubmission(submissionId)
                 .map(t -> ResponseEntity.ok(ResponseWrapper.success(t)))
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -164,7 +164,7 @@ public class PanelistController {
      * @return 204 sin cuerpo
      */
     @DeleteMapping("/tutor/{tutorId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
     public ResponseEntity<Void> deleteTutor(@PathVariable("tutorId") Long tutorId) {
         panelistService.deleteTutor(tutorId);
         return ResponseEntity.noContent().build();
@@ -177,9 +177,9 @@ public class PanelistController {
      * @return 200 con todas las submissions en las que ese teacher es panelist
      */
     @GetMapping("/docente/{teacherId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR') or @permissionService.esPropioTeacher(authentication, #teacherId)")
-    public ResponseEntity<?> listPorTeacher(@PathVariable("teacherId") Long teacherId) {
-        return ResponseEntity.ok(ResponseWrapper.success(panelistService.listPorTeacher(teacherId)));
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR') or @permissionService.isOwnTeacher(authentication, #teacherId)")
+    public ResponseEntity<?> listByTeacher(@PathVariable("teacherId") Long teacherId) {
+        return ResponseEntity.ok(ResponseWrapper.success(panelistService.listByTeacher(teacherId)));
     }
 
     /**
@@ -187,9 +187,9 @@ public class PanelistController {
      * @return 200 con todas las tutorías a cargo de ese teacher
      */
     @GetMapping("/tutor/docente/{teacherId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR') or @permissionService.esPropioTeacher(authentication, #teacherId)")
-    public ResponseEntity<?> listTutoringsPorTeacher(@PathVariable("teacherId") Long teacherId) {
-        return ResponseEntity.ok(ResponseWrapper.success(panelistService.listTutoringsPorTeacher(teacherId)));
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR') or @permissionService.isOwnTeacher(authentication, #teacherId)")
+    public ResponseEntity<?> listTutoringsByTeacher(@PathVariable("teacherId") Long teacherId) {
+        return ResponseEntity.ok(ResponseWrapper.success(panelistService.listTutoringsByTeacher(teacherId)));
     }
 
     /**
@@ -235,8 +235,8 @@ public class PanelistController {
      *         la transacción revierte el lote completo)
      */
     @PostMapping("/asignar-masivo")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
-    public ResponseEntity<?> assignMasivo(@RequestBody Map<String, Object> body) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
+    public ResponseEntity<?> assignBulk(@RequestBody Map<String, Object> body) {
         try {
             @SuppressWarnings("unchecked")
             List<Integer> submissionIdsList = (List<Integer>) body.get("solicitudIds");
@@ -251,7 +251,7 @@ public class PanelistController {
             Long[] submissionIds = submissionIdsList.stream().map(i -> i.longValue()).toArray(Long[]::new);
             Long[] teacherIds   = teacherIdsList.stream().map(i -> i.longValue()).toArray(Long[]::new);
 
-            panelistService.assignPanelistMasivoSP(submissionIds, teacherIds, role);
+            panelistService.assignPanelistBulkSP(submissionIds, teacherIds, role);
             return ResponseEntity.ok(ResponseWrapper.success(Map.of(
                     "mensaje", "Asignación masiva ejecutada correctamente",
                     "asignados", submissionIds.length,

@@ -27,16 +27,16 @@ public class EvaluationPanelistController {
      * @return 200 con la evaluación guardada, o 400 con el motivo del rechazo
      */
     @PostMapping("/guardar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_RUBRICA_REGISTRAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'EVALUACION_RUBRICA_REGISTRAR')")
     public ResponseEntity<?> save(@RequestBody Map<String, Object> request) {
         try {
             Long submissionId = Long.valueOf(request.get("solicitudId").toString());
             Long panelistId = Long.valueOf(request.get("juradoId").toString());
-            Double notaPanelist = Double.valueOf(request.get("notaJurado").toString());
-            String observaciones = request.get("observaciones") != null 
+            Double gradePanelist = Double.valueOf(request.get("notaJurado").toString());
+            String observations = request.get("observaciones") != null 
                     ? request.get("observaciones").toString() : "";
 
-            EvaluationPanelistDTO dto = service.saveEvaluation(submissionId, panelistId, notaPanelist, observaciones);
+            EvaluationPanelistDTO dto = service.saveEvaluation(submissionId, panelistId, gradePanelist, observations);
             return ResponseEntity.ok(dto);
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e; // deja que GlobalExceptionHandler lo traduzca a 403, no a 400
@@ -77,7 +77,7 @@ public class EvaluationPanelistController {
      * @return 200 con una entrada por member del tribunal
      */
     @GetMapping("/tribunal/{submissionId}")
-    public ResponseEntity<List<EvaluationPanelistDTO>> obtainTribunal(@PathVariable("submissionId") Long submissionId) {
-        return ResponseEntity.ok(service.obtainTribunal(submissionId));
+    public ResponseEntity<List<EvaluationPanelistDTO>> obtainPanel(@PathVariable("submissionId") Long submissionId) {
+        return ResponseEntity.ok(service.obtainPanel(submissionId));
     }
 }

@@ -75,7 +75,7 @@ public class GlobalExceptionHandler {
      * @return 404 en vez del 500 generico
      */
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ResponseWrapper<Object>> handleNoResource(NoResourceFoundException ex) {
+    public ResponseEntity<ResponseWrapper<Object>> handleMissingResource(NoResourceFoundException ex) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ResponseWrapper.error("Recurso no encontrado: " + ex.getResourcePath()));

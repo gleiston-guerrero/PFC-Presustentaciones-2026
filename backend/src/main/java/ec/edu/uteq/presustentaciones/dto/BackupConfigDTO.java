@@ -46,15 +46,15 @@ public class BackupConfigDTO {
 
     @NotNull
     @JsonProperty("diferencialActivo")
-    private Boolean diferencialActivo;
+    private Boolean differentialActivo;
 
     @NotBlank
     @JsonProperty("cronDiferencial")
-    private String cronDiferencial;
+    private String cronDifferential;
 
     /** Solo lectura: texto legible del cron ("Cada domingo a las 23:00"). */
     @JsonProperty("cronDescripcion")
-    private String cronDescripcion;
+    private String cronDescription;
     @JsonProperty("cronDiferencialDescripcion")
-    private String cronDiferencialDescripcion;
+    private String cronDifferentialDescription;
 }

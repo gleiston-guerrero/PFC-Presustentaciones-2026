@@ -1,7 +1,7 @@
 package ec.edu.uteq.presustentaciones.services;
 
 import ec.edu.uteq.presustentaciones.entities.Proposal;
-import ec.edu.uteq.presustentaciones.entities.EstadoSubmission;
+import ec.edu.uteq.presustentaciones.entities.StatusSubmission;
 import ec.edu.uteq.presustentaciones.entities.Student;
 import ec.edu.uteq.presustentaciones.entities.Submission;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
@@ -86,30 +86,30 @@ class ProposalServiceImplTest {
         when(proposalRepository.findBySubmissionId(10L)).thenReturn(Optional.empty());
         when(proposalRepository.save(any(Proposal.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        MockMultipartFile archivoPdf = new MockMultipartFile(
+        MockMultipartFile filePdf = new MockMultipartFile(
                 "archivo", "anteproyecto.pdf", "application/pdf", "%PDF-1.4 contenido".getBytes());
 
-        Proposal ap = proposalService.sendProposal(10L, archivoPdf);
+        Proposal ap = proposalService.sendProposal(10L, filePdf);
 
         assertNotNull(ap);
-        assertEquals("ENVIADO", ap.getEstado());
+        assertEquals("ENVIADO", ap.getStatus());
         assertNotNull(ap.getSha256Hash());
         verify(proposalRepository).save(any(Proposal.class));
     }
 
     @Test
     void testSendProposalFallaSiSubmissionSuspendida() {
-        EstadoSubmission susp = EstadoSubmission.builder().codigo("SUSPENDIDA").nombre("Suspendida").build();
-        submission.setEstado(susp);
+        StatusSubmission susp = StatusSubmission.builder().code("SUSPENDIDA").nombre("Suspendida").build();
+        submission.setStatus(susp);
         submission.setMotivoSuspension("Incumplimiento de fechas");
 
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
 
-        MockMultipartFile archivoPdf = new MockMultipartFile(
+        MockMultipartFile filePdf = new MockMultipartFile(
                 "archivo", "anteproyecto.pdf", "application/pdf", "%PDF-1.4 contenido".getBytes());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                proposalService.sendProposal(10L, archivoPdf));
+                proposalService.sendProposal(10L, filePdf));
         assertTrue(ex.getMessage().contains("suspendido"));
     }
 
@@ -117,11 +117,11 @@ class ProposalServiceImplTest {
     void testSendProposalFallaSiNoEsPdf() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
 
-        MockMultipartFile archivoTxt = new MockMultipartFile(
+        MockMultipartFile fileTxt = new MockMultipartFile(
                 "archivo", "anteproyecto.txt", "text/plain", "texto plano".getBytes());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                proposalService.sendProposal(10L, archivoTxt));
+                proposalService.sendProposal(10L, fileTxt));
         assertTrue(ex.getMessage().contains("Solo se permiten archivos PDF"));
     }
 
@@ -135,52 +135,52 @@ class ProposalServiceImplTest {
                 new UsernamePasswordAuthenticationToken("otro.estudiante@uteq.edu.ec", null,
                         org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_ESTUDIANTE")));
 
-        MockMultipartFile archivoPdf = new MockMultipartFile(
+        MockMultipartFile filePdf = new MockMultipartFile(
                 "archivo", "anteproyecto.pdf", "application/pdf", "%PDF-1.4 contenido".getBytes());
 
         assertThrows(org.springframework.security.access.AccessDeniedException.class,
-                () -> proposalService.sendProposal(10L, archivoPdf));
+                () -> proposalService.sendProposal(10L, filePdf));
     }
 
     @Test
-    void testSearchPorSubmissionPropagaAccessDeniedSiSubmissionAccessServiceLoRechaza() {
+    void testSearchBySubmissionPropagaAccessDeniedSiSubmissionAccessServiceLoRechaza() {
         // Caso IDOR de lectura: el proposal existe pero SubmissionAccessService decide que
         // este appUser no participa en la submission (student ajeno, ni panelist ni tutor).
-        Proposal ap = Proposal.builder().id(1L).submission(submission).estado("ENVIADO").build();
+        Proposal ap = Proposal.builder().id(1L).submission(submission).status("ENVIADO").build();
         when(proposalRepository.findBySubmissionId(10L)).thenReturn(Optional.of(ap));
         org.mockito.Mockito.doThrow(new org.springframework.security.access.AccessDeniedException(
                         "No tienes permiso para acceder a la información de esta solicitud"))
-                .when(submissionAccessService).validateAcceso(submission, "ANTEPROYECTO_REVISAR");
+                .when(submissionAccessService).validateAccess(submission, "ANTEPROYECTO_REVISAR");
 
         assertThrows(org.springframework.security.access.AccessDeniedException.class,
-                () -> proposalService.searchPorSubmission(10L));
+                () -> proposalService.searchBySubmission(10L));
     }
 
     @Test
     void testApproveProposal() {
-        Proposal ap = Proposal.builder().id(1L).submission(submission).estado("PENDIENTE").build();
+        Proposal ap = Proposal.builder().id(1L).submission(submission).status("PENDIENTE").build();
         when(proposalRepository.findById(1L)).thenReturn(Optional.of(ap));
         when(proposalRepository.save(any(Proposal.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Proposal resultado = proposalService.approveProposal(1L, "Cumple con todos los requisitos.");
+        Proposal result = proposalService.approveProposal(1L, "Cumple con todos los requisitos.");
 
-        assertNotNull(resultado);
-        assertEquals("APROBADO", resultado.getEstado());
-        assertEquals("Cumple con todos los requisitos.", resultado.getObservaciones());
+        assertNotNull(result);
+        assertEquals("APROBADO", result.getStatus());
+        assertEquals("Cumple con todos los requisitos.", result.getObservations());
         verify(notificationService).createNotification(eq(5L), anyString());
     }
 
     @Test
     void testRejectProposal() {
-        Proposal ap = Proposal.builder().id(1L).submission(submission).estado("PENDIENTE").build();
+        Proposal ap = Proposal.builder().id(1L).submission(submission).status("PENDIENTE").build();
         when(proposalRepository.findById(1L)).thenReturn(Optional.of(ap));
         when(proposalRepository.save(any(Proposal.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Proposal resultado = proposalService.rejectProposal(1L, "Falta marco teórico.");
+        Proposal result = proposalService.rejectProposal(1L, "Falta marco teórico.");
 
-        assertNotNull(resultado);
-        assertEquals("RECHAZADO", resultado.getEstado());
-        assertEquals("Falta marco teórico.", resultado.getObservaciones());
+        assertNotNull(result);
+        assertEquals("RECHAZADO", result.getStatus());
+        assertEquals("Falta marco teórico.", result.getObservations());
         verify(notificationService).createNotification(eq(5L), anyString());
     }
 }

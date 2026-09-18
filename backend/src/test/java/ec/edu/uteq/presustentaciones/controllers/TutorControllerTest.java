@@ -1,6 +1,6 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.dto.MiStudentTutoradoDTO;
+import ec.edu.uteq.presustentaciones.dto.MyStudentTuteeDTO;
 import ec.edu.uteq.presustentaciones.entities.Tutor;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
@@ -43,37 +43,37 @@ class TutorControllerTest {
     private TutorController controller;
 
     @BeforeEach
-    void autenticarTeacher() {
+    void authenticateTeacher() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("docente@uteq.edu.ec", null, List.of()));
     }
 
     @AfterEach
-    void limpiarContexto() {
+    void cleanContexto() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    void misStudentsResuelveElTeacherAutenticadoAntesDeConsultar() {
+    void myStudentsResuelveElTeacherAuthenticatedAntesDeConsultar() {
         AppUser teacher = AppUser.builder().id(50L).email("docente@uteq.edu.ec").build();
-        List<MiStudentTutoradoDTO> roster = List.of();
+        List<MyStudentTuteeDTO> roster = List.of();
         when(appUserRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.of(teacher));
-        when(tutorService.misStudents(50L)).thenReturn(roster);
+        when(tutorService.myStudents(50L)).thenReturn(roster);
 
-        ResponseEntity<List<MiStudentTutoradoDTO>> response = controller.misStudents();
+        ResponseEntity<List<MyStudentTuteeDTO>> response = controller.myStudents();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertSame(roster, response.getBody());
     }
 
     @Test
-    void misStudentsFallaSiElAppUserDelTokenYaNoExiste() {
+    void myStudentsFallaSiElAppUserDelTokenYaNoExists() {
         when(appUserRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.empty());
 
-        RuntimeException error = assertThrows(RuntimeException.class, () -> controller.misStudents());
+        RuntimeException error = assertThrows(RuntimeException.class, () -> controller.myStudents());
 
         assertEquals("Usuario autenticado no encontrado", error.getMessage());
-        verify(tutorService, never()).misStudents(any());
+        verify(tutorService, never()).myStudents(any());
     }
 
     @Test
@@ -88,7 +88,7 @@ class TutorControllerTest {
     }
 
     @Test
-    void assignDevuelve400SinCuerpoCuandoElServicioRechaza() {
+    void assignDevuelve400WithoutCuerpoCuandoElServicioRechaza() {
         when(tutorService.assignTutor(1L, 2L)).thenThrow(new RuntimeException("La solicitud ya tiene tutor"));
 
         ResponseEntity<Tutor> response = controller.assign(1L, 2L);
@@ -98,25 +98,25 @@ class TutorControllerTest {
     }
 
     @Test
-    void porSubmissionDevuelve404CuandoNoHayTutorAsignado() {
-        when(tutorService.searchPorSubmission(1L)).thenReturn(Optional.empty());
+    void bySubmissionDevuelve404CuandoNoHayTutorAsignado() {
+        when(tutorService.searchBySubmission(1L)).thenReturn(Optional.empty());
 
-        assertEquals(HttpStatus.NOT_FOUND, controller.porSubmission(1L).getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, controller.bySubmission(1L).getStatusCode());
     }
 
     @Test
-    void porSubmissionDevuelveElTutorCuandoExiste() {
+    void bySubmissionDevuelveElTutorCuandoExists() {
         Tutor tutor = Tutor.builder().id(1L).build();
-        when(tutorService.searchPorSubmission(1L)).thenReturn(Optional.of(tutor));
+        when(tutorService.searchBySubmission(1L)).thenReturn(Optional.of(tutor));
 
-        assertSame(tutor, controller.porSubmission(1L).getBody());
+        assertSame(tutor, controller.bySubmission(1L).getBody());
     }
 
     @Test
     void listPropagaLaPaginacionRecibida() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Tutor> pagina = new PageImpl<>(List.of(Tutor.builder().id(1L).build()));
-        when(tutorService.listTodos(pageable)).thenReturn(pagina);
+        when(tutorService.listAll(pageable)).thenReturn(pagina);
 
         assertSame(pagina, controller.list(pageable).getBody());
     }
@@ -130,24 +130,24 @@ class TutorControllerTest {
     // ── sp_obtain_estadisticas_tutores ───────────────────────────────────────
 
     @Test
-    void estadisticasDevuelveLasFilasDelProcedimientoAlmacenado() {
+    void statsDevuelveLasFilasDelProcedimientoAlmacenado() {
         List<Map<String, Object>> stats = List.of(Map.of(
                 "tutorDocenteId", 1L, "tutorNombre", "Ana Pérez",
                 "tutoriasActivas", 3L, "tutoriasCompletadas", 5L, "totalFasesAprobadas", 12L));
-        when(tutorService.obtainEstadisticasTutoresSP()).thenReturn(stats);
+        when(tutorService.obtainStatsTutorsSP()).thenReturn(stats);
 
-        ResponseEntity<?> response = controller.estadisticas();
+        ResponseEntity<?> response = controller.stats();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertSame(stats, response.getBody());
     }
 
     @Test
-    void estadisticasTraduceElErrorDelProcedimientoA400() {
-        when(tutorService.obtainEstadisticasTutoresSP())
+    void statsTraduceElErrorDelProcedimientoA400() {
+        when(tutorService.obtainStatsTutorsSP())
                 .thenThrow(new RuntimeException("function presus.sp_obtener_estadisticas_tutores() does not exist"));
 
-        ResponseEntity<?> response = controller.estadisticas();
+        ResponseEntity<?> response = controller.stats();
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         @SuppressWarnings("unchecked")

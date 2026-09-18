@@ -10,8 +10,8 @@ import java.util.Optional;
 public interface RoleAppUserRepository extends JpaRepository<RoleAppUser, Short> {
     /**
      * Busca el/los registro(s) con codigo.
-     * @param codigo codigo
+     * @param code code
      * @return el registro si existe, vacío si no
      */
-    Optional<RoleAppUser> findByCodigo(String codigo);
+    Optional<RoleAppUser> findByCode(String code);
 }

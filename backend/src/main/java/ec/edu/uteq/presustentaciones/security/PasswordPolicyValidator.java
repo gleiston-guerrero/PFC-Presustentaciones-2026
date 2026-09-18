@@ -33,13 +33,13 @@ public class PasswordPolicyValidator {
     public static final int LONGITUD_MINIMA = 8;
     private static final String RUTA_LISTA = "classpath:security/common-passwords.txt";
 
-    private final Set<String> comunes;
+    private final Set<String> common;
 
     /**
      * Construye PasswordPolicyValidator sin dependencias inyectadas.
      */
     public PasswordPolicyValidator() {
-        this.comunes = Collections.unmodifiableSet(loadComunes());
+        this.common = Collections.unmodifiableSet(loadCommon());
     }
 
     /**
@@ -54,7 +54,7 @@ public class PasswordPolicyValidator {
             throw new IllegalArgumentException(
                     "La contraseña debe tener al menos " + LONGITUD_MINIMA + " caracteres.");
         }
-        if (comunes.contains(password.toLowerCase())) {
+        if (common.contains(password.toLowerCase())) {
             throw new IllegalArgumentException(
                     "Esa contraseña es demasiado común. Elige una diferente.");
         }
@@ -64,7 +64,7 @@ public class PasswordPolicyValidator {
      * @param password contraseña en texto plano a evaluar
      * @return true si la contraseña cumple la política, sin lanzar excepción.
      */
-    public boolean cumple(String password) {
+    public boolean meets(String password) {
         try {
             validate(password);
             return true;
@@ -73,8 +73,8 @@ public class PasswordPolicyValidator {
         }
     }
 
-    private Set<String> loadComunes() {
-        Set<String> resultado = new HashSet<>();
+    private Set<String> loadCommon() {
+        Set<String> result = new HashSet<>();
         try {
             Resource resource = new PathMatchingResourcePatternResolver().getResource(RUTA_LISTA);
             try (BufferedReader lector = new BufferedReader(
@@ -83,14 +83,14 @@ public class PasswordPolicyValidator {
                 while ((line = lector.readLine()) != null) {
                     String limpia = line.strip().toLowerCase();
                     if (!limpia.isEmpty() && !limpia.startsWith("#")) {
-                        resultado.add(limpia);
+                        result.add(limpia);
                     }
                 }
             }
-            log.info("PasswordPolicyValidator: {} contraseñas comunes cargadas de {}", resultado.size(), RUTA_LISTA);
+            log.info("PasswordPolicyValidator: {} contraseñas comunes cargadas de {}", result.size(), RUTA_LISTA);
         } catch (IOException e) {
             log.error("No se pudo cargar la lista de contraseñas comunes ({}): {}", RUTA_LISTA, e.getMessage());
         }
-        return resultado;
+        return result;
     }
 }

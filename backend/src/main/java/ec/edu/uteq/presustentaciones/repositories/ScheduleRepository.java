@@ -39,39 +39,39 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     @Query("""
         SELECT c FROM Schedule c
         WHERE c.room.id = :roomId
-          AND c.estado.codigo = 'PROGRAMADO'
-          AND c.fechaInicio < :fin
+          AND c.status.code = 'PROGRAMADO'
+          AND c.dateStart < :fin
           /**
            * F u n c t i o n.
            * @param 'TIMESTAMPADD' 'TIMESTAMPADD'
            * @param MINUTE MINUTE
            * @param c.duracionMin c.duracionMin
-           * @param fin fin
+           * @param end end
            * @return el AND correspondiente
            */
-          AND FUNCTION('TIMESTAMPADD', MINUTE, c.duracionMin, c.fechaInicio) > :inicio
+          AND FUNCTION('TIMESTAMPADD', MINUTE, c.duracionMin, c.dateStart) > :inicio
     """)
     List<Schedule> findConflictos(@Param("roomId") Long roomId,
-                                    @Param("inicio") LocalDateTime inicio,
-                                    @Param("fin") LocalDateTime fin);
+                                    @Param("inicio") LocalDateTime start,
+                                    @Param("fin") LocalDateTime end);
 
     /** Todos los schedules activos de una fecha */
-    @Query("SELECT c FROM Schedule c WHERE c.estado.codigo = 'PROGRAMADO' AND CAST(c.fechaInicio AS date) = CAST(:fecha AS date)")
-    List<Schedule> findActivosPorFecha(@Param("fecha") LocalDateTime fecha);
+    @Query("SELECT c FROM Schedule c WHERE c.status.code = 'PROGRAMADO' AND CAST(c.dateStart AS date) = CAST(:fecha AS date)")
+    List<Schedule> findActiveByDate(@Param("fecha") LocalDateTime date);
 
     @Query("SELECT c FROM Schedule c " +
            "JOIN FETCH c.submission s " +
            "JOIN FETCH s.student e " +
            "JOIN FETCH e.appUser u " +
            "JOIN FETCH c.room sa " +
-           "JOIN FETCH c.estado es " +
+           "JOIN FETCH c.status es " +
            "JOIN FETCH c.announcement co " +
            "LEFT JOIN FETCH c.block b " +
-           "WHERE es.codigo = 'PROGRAMADO' " +
-           "ORDER BY c.fechaInicio ASC")
+           "WHERE es.code = 'PROGRAMADO' " +
+           "ORDER BY c.dateStart ASC")
     /**
      * Find reporte schedule.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Schedule> findReporteSchedule();
+    List<Schedule> findReportSchedule();
 }

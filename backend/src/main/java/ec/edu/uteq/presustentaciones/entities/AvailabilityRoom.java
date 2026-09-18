@@ -30,18 +30,18 @@ public class AvailabilityRoom {
 
     @Column(name = "fecha", nullable = false)
     @JsonProperty("fecha")
-    private LocalDate fecha;
+    private LocalDate date;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bloque_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @JsonProperty("bloque")
-    private BlockHorario block;
+    private TimeBlock block;
 
     @Column(name = "disponible", nullable = false)
     @Builder.Default
     @JsonProperty("disponible")
-    private Boolean disponible= true;
+    private Boolean available= true;
 
     @Column(name = "motivo", length = 200)
     @JsonProperty("motivo")

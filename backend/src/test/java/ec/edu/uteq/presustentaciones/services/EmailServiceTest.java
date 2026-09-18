@@ -42,7 +42,7 @@ class EmailServiceTest {
     // ── sendNotification(4 args) ───────────────────────────────────────────
 
     @Test
-    void sendNotificationNoEnviaNadaSiElFeatureFlagEstaDesactivado() {
+    void sendNotificationNoEnviaNadaSiElFeatureFlagIsDesactivado() {
         ReflectionTestUtils.setField(service, "enabled", false);
 
         service.sendNotification("x@uteq.edu.ec", "hola", "Ana", "ana@uteq.edu.ec");
@@ -60,7 +60,7 @@ class EmailServiceTest {
     }
 
     @Test
-    void sendNotificationEnviaElCorreoRealCuandoEstaHabilitado() throws Exception {
+    void sendNotificationEnviaElCorreoRealCuandoIsHabilitado() throws Exception {
         ReflectionTestUtils.setField(service, "enabled", true);
         when(mailSender.createMimeMessage()).thenReturn(mimeReal());
 
@@ -70,7 +70,7 @@ class EmailServiceTest {
     }
 
     @Test
-    void sendNotificationSinRemitenteUsaValorGenerico() {
+    void sendNotificationWithoutSenderUsaValorGenerico() {
         ReflectionTestUtils.setField(service, "enabled", true);
         when(mailSender.createMimeMessage()).thenReturn(mimeReal());
 
@@ -82,20 +82,20 @@ class EmailServiceTest {
     // ── sendRecuperacionPassword ───────────────────────────────────────────
 
     @Test
-    void sendRecuperacionPasswordNoEnviaNadaSiElFeatureFlagEstaDesactivado() {
+    void sendRecoveryPasswordNoEnviaNadaSiElFeatureFlagIsDesactivado() {
         ReflectionTestUtils.setField(service, "enabled", false);
 
-        service.sendRecuperacionPassword("x@uteq.edu.ec", "token-123");
+        service.sendRecoveryPassword("x@uteq.edu.ec", "token-123");
 
         verify(mailSender, never()).createMimeMessage();
     }
 
     @Test
-    void sendRecuperacionPasswordEnviaElCorreoRealCuandoEstaHabilitado() {
+    void sendRecoveryPasswordEnviaElCorreoRealCuandoIsHabilitado() {
         ReflectionTestUtils.setField(service, "enabled", true);
         when(mailSender.createMimeMessage()).thenReturn(mimeReal());
 
-        service.sendRecuperacionPassword("x@uteq.edu.ec", "token-123");
+        service.sendRecoveryPassword("x@uteq.edu.ec", "token-123");
 
         verify(mailSender).send((MimeMessage) org.mockito.ArgumentMatchers.any());
     }

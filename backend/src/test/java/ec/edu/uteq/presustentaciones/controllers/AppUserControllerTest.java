@@ -2,9 +2,9 @@ package ec.edu.uteq.presustentaciones.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ec.edu.uteq.presustentaciones.config.SecurityConfig;
-import ec.edu.uteq.presustentaciones.dto.PerfilRequest;
-import ec.edu.uteq.presustentaciones.dto.ResolveSupresionRequest;
-import ec.edu.uteq.presustentaciones.entities.SubmissionSupresion;
+import ec.edu.uteq.presustentaciones.dto.ProfileRequest;
+import ec.edu.uteq.presustentaciones.dto.ResolveErasureRequest;
+import ec.edu.uteq.presustentaciones.entities.SubmissionErasure;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.security.RateLimiterService;
@@ -12,7 +12,7 @@ import ec.edu.uteq.presustentaciones.security.dto.RegisterRequest;
 import ec.edu.uteq.presustentaciones.security.jwt.JwtTokenProvider;
 import ec.edu.uteq.presustentaciones.services.IAppUserService;
 import ec.edu.uteq.presustentaciones.services.PermissionService;
-import ec.edu.uteq.presustentaciones.services.SupresionDatosService;
+import ec.edu.uteq.presustentaciones.services.ErasureDataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +65,7 @@ class AppUserControllerTest {
     private IAppUserService appUserService;
 
     @MockBean
-    private SupresionDatosService supresionDatosService;
+    private ErasureDataService erasureDataService;
 
     @MockBean
     private AppUserRepository appUserRepository;
@@ -94,28 +94,28 @@ class AppUserControllerTest {
     @MockBean
     private ec.edu.uteq.presustentaciones.repositories.RoleAppUserRepository roleAppUserRepository;
 
-    private AppUser appUserActual;
+    private AppUser currentAppUser;
 
     @BeforeEach
     void setUp() {
-        appUserActual = new AppUser();
-        appUserActual.setId(50L);
-        appUserActual.setNombre("Ana");
-        appUserActual.setApellido("Torres");
-        appUserActual.setEmail("estudiante@uteq.edu.ec");
-        appUserActual.setActivo(true);
+        currentAppUser = new AppUser();
+        currentAppUser.setId(50L);
+        currentAppUser.setNombre("Ana");
+        currentAppUser.setApellido("Torres");
+        currentAppUser.setEmail("estudiante@uteq.edu.ec");
+        currentAppUser.setActivo(true);
 
-        when(appUserRepository.findByEmail("estudiante@uteq.edu.ec")).thenReturn(Optional.of(appUserActual));
+        when(appUserRepository.findByEmail("estudiante@uteq.edu.ec")).thenReturn(Optional.of(currentAppUser));
     }
 
-    private void autenticarComo(String email, String role, boolean tienePermission) {
+    private void authenticateAs(String email, String role, boolean hasPermission) {
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role)));
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(email);
         when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
-        when(permissionService.tienePermission(any(), any())).thenReturn(tienePermission);
+        when(permissionService.hasPermission(any(), any())).thenReturn(hasPermission);
     }
 
     private String bearer(String email) {
@@ -125,33 +125,33 @@ class AppUserControllerTest {
     // ── listTodos / listPaginado / listActivos ─────────────────────────────
 
     @Test
-    void listTodosSinTokenDevuelve401() throws Exception {
+    void listAllWithoutTokenDevuelve401() throws Exception {
         mockMvc.perform(get("/api/v1/usuarios"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void listTodosRechazaSinPermissionAppUsersGestionar() throws Exception {
-        autenticarComo("docente@uteq.edu.ec", "DOCENTE", false);
+    void listAllRechazaWithoutPermissionAppUsersGestionar() throws Exception {
+        authenticateAs("docente@uteq.edu.ec", "DOCENTE", false);
 
         mockMvc.perform(get("/api/v1/usuarios").header("Authorization", bearer("docente@uteq.edu.ec")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void listTodosPermiteAAdminConPermission() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(appUserService.listTodos()).thenReturn(List.of(appUserActual));
+    void listAllPermiteAAdminWithPermission() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(appUserService.listAll()).thenReturn(List.of(currentAppUser));
 
         mockMvc.perform(get("/api/v1/usuarios").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void listPaginadoDelegaEnElServicioConLosParametros() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        Page<AppUser> pagina = new PageImpl<>(List.of(appUserActual));
-        when(appUserService.listPaginado(0, 20, "torres")).thenReturn(pagina);
+    void listPagedDelegaEnElServicioWithLosParametros() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        Page<AppUser> pagina = new PageImpl<>(List.of(currentAppUser));
+        when(appUserService.listPaged(0, 20, "torres")).thenReturn(pagina);
 
         mockMvc.perform(get("/api/v1/usuarios/paginado")
                         .param("page", "0").param("size", "20").param("q", "torres")
@@ -160,9 +160,9 @@ class AppUserControllerTest {
     }
 
     @Test
-    void listActivosPermiteAAdmin() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(appUserService.listActivos()).thenReturn(List.of(appUserActual));
+    void listActivePermiteAAdmin() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(appUserService.listActive()).thenReturn(List.of(currentAppUser));
 
         mockMvc.perform(get("/api/v1/usuarios/activos").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
@@ -171,38 +171,38 @@ class AppUserControllerTest {
     // ── obtainPorId (control de propiedad real, no solo permission) ────────────────
 
     @Test
-    void obtainPorIdPermiteAlPropioAppUserSinPermissionAdmin() throws Exception {
-        autenticarComo("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
-        when(appUserService.obtainPorId(50L)).thenReturn(Optional.of(appUserActual));
+    void obtainByIdPermiteAlOwnAppUserWithoutPermissionAdmin() throws Exception {
+        authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
+        when(appUserService.obtainById(50L)).thenReturn(Optional.of(currentAppUser));
 
         mockMvc.perform(get("/api/v1/usuarios/50").header("Authorization", bearer("estudiante@uteq.edu.ec")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void obtainPorIdRechazaConsultarElPerfilDeOtroAppUser() throws Exception {
+    void obtainByIdRechazaConsultarElProfileDeOtroAppUser() throws Exception {
         // Caso IDOR: student 50 intenta ver la ficha del appUser 99 cambiando el id de la URL.
-        autenticarComo("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
+        authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
 
         mockMvc.perform(get("/api/v1/usuarios/99").header("Authorization", bearer("estudiante@uteq.edu.ec")))
                 .andExpect(status().isForbidden());
 
-        verify(appUserService, never()).obtainPorId(99L);
+        verify(appUserService, never()).obtainById(99L);
     }
 
     @Test
-    void obtainPorIdPermiteAAdminConsultarCualquierAppUser() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(appUserService.obtainPorId(99L)).thenReturn(Optional.of(appUserActual));
+    void obtainByIdPermiteAAdminConsultarCualquierAppUser() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(appUserService.obtainById(99L)).thenReturn(Optional.of(currentAppUser));
 
         mockMvc.perform(get("/api/v1/usuarios/99").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void obtainPorIdDevuelve404SiNoExiste() throws Exception {
-        autenticarComo("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
-        when(appUserService.obtainPorId(50L)).thenReturn(Optional.empty());
+    void obtainByIdDevuelve404SiNoExists() throws Exception {
+        authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
+        when(appUserService.obtainById(50L)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/usuarios/50").header("Authorization", bearer("estudiante@uteq.edu.ec")))
                 .andExpect(status().isNotFound());
@@ -211,18 +211,18 @@ class AppUserControllerTest {
     // ── searchPorEmail ────────────────────────────────────────────────────────────
 
     @Test
-    void searchPorEmailDevuelveElAppUserEncontrado() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(appUserService.obtainPorEmail("ana@uteq.edu.ec")).thenReturn(Optional.of(appUserActual));
+    void searchByEmailDevuelveElAppUserEncontrado() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(appUserService.obtainByEmail("ana@uteq.edu.ec")).thenReturn(Optional.of(currentAppUser));
 
         mockMvc.perform(get("/api/v1/usuarios/email/ana@uteq.edu.ec").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void searchPorEmailDevuelve404SiNoExiste() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(appUserService.obtainPorEmail("nadie@uteq.edu.ec")).thenReturn(Optional.empty());
+    void searchByEmailDevuelve404SiNoExists() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(appUserService.obtainByEmail("nadie@uteq.edu.ec")).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/usuarios/email/nadie@uteq.edu.ec").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isNotFound());
@@ -231,15 +231,15 @@ class AppUserControllerTest {
     // ── create / update / activate / deactivate / delete ─────────────────────
 
     @Test
-    void createDevuelve201ConElAppUserCreado() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+    void createDevuelve201WithElAppUserCreado() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         RegisterRequest req = new RegisterRequest();
         req.setNombre("Mario");
         req.setApellido("Rojas");
         req.setEmail("mario@uteq.edu.ec");
         req.setPassword("claveSegura123");
         req.setRole("ESTUDIANTE");
-        when(appUserService.create(any(AppUser.class))).thenReturn(appUserActual);
+        when(appUserService.create(any(AppUser.class))).thenReturn(currentAppUser);
 
         mockMvc.perform(post("/api/v1/usuarios")
                         .header("Authorization", bearer("admin@uteq.edu.ec"))
@@ -250,7 +250,7 @@ class AppUserControllerTest {
 
     @Test
     void createDevuelveBadRequestSiElServicioRechaza() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         RegisterRequest req = new RegisterRequest();
         req.setNombre("Mario");
         req.setApellido("Rojas");
@@ -268,19 +268,19 @@ class AppUserControllerTest {
 
     @Test
     void updateDevuelveElAppUserActualizado() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(appUserService.update(eq(50L), any(AppUser.class))).thenReturn(appUserActual);
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(appUserService.update(eq(50L), any(AppUser.class))).thenReturn(currentAppUser);
 
         mockMvc.perform(put("/api/v1/usuarios/50")
                         .header("Authorization", bearer("admin@uteq.edu.ec"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(appUserActual)))
+                        .content(objectMapper.writeValueAsString(currentAppUser)))
                 .andExpect(status().isOk());
     }
 
     @Test
     void activateInvocaElServicioYDevuelve200() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(patch("/api/v1/usuarios/50/activar").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
@@ -290,7 +290,7 @@ class AppUserControllerTest {
 
     @Test
     void deactivateInvocaElServicioYDevuelve200() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(patch("/api/v1/usuarios/50/desactivar").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
@@ -299,8 +299,8 @@ class AppUserControllerTest {
     }
 
     @Test
-    void deleteDevuelveBadRequestSiElServicioRechazaPorReferencias() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+    void deleteDevuelveBadRequestSiElServicioRechazaByReferencias() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         org.mockito.Mockito.doThrow(new RuntimeException("El usuario tiene solicitudes asociadas"))
                 .when(appUserService).delete(50L);
 
@@ -311,12 +311,12 @@ class AppUserControllerTest {
     // ── updatePerfil (auto-servicio, sin permission de admin) ───────────────────
 
     @Test
-    void updatePerfilPermiteAlPropioAppUser() throws Exception {
-        autenticarComo("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
-        PerfilRequest req = new PerfilRequest();
+    void updateProfilePermiteAlOwnAppUser() throws Exception {
+        authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
+        ProfileRequest req = new ProfileRequest();
         req.setEmailNotifications("alterno@gmail.com");
-        req.setTelefono("0999999999");
-        when(appUserService.updatePerfil(50L, "alterno@gmail.com", "0999999999")).thenReturn(appUserActual);
+        req.setPhone("0999999999");
+        when(appUserService.updateProfile(50L, "alterno@gmail.com", "0999999999")).thenReturn(currentAppUser);
 
         mockMvc.perform(patch("/api/v1/usuarios/50/perfil")
                         .header("Authorization", bearer("estudiante@uteq.edu.ec"))
@@ -326,10 +326,10 @@ class AppUserControllerTest {
     }
 
     @Test
-    void updatePerfilRechazaEditarElPerfilDeOtroAppUser() throws Exception {
-        autenticarComo("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
-        PerfilRequest req = new PerfilRequest();
-        req.setTelefono("0999999999");
+    void updateProfileRechazaEditarElProfileDeOtroAppUser() throws Exception {
+        authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
+        ProfileRequest req = new ProfileRequest();
+        req.setPhone("0999999999");
 
         mockMvc.perform(patch("/api/v1/usuarios/99/perfil")
                         .header("Authorization", bearer("estudiante@uteq.edu.ec"))
@@ -337,16 +337,16 @@ class AppUserControllerTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isForbidden());
 
-        verify(appUserService, never()).updatePerfil(eq(99L), anyString(), anyString());
+        verify(appUserService, never()).updateProfile(eq(99L), anyString(), anyString());
     }
 
     // ── supresion de datos personales (RNF-19) ───────────────────────────────────
 
     @Test
-    void solicitarSupresionPermiteAlPropioTitular() throws Exception {
-        autenticarComo("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
-        SubmissionSupresion submission = new SubmissionSupresion();
-        when(supresionDatosService.solicitar(50L)).thenReturn(submission);
+    void solicitarErasurePermiteAlOwnHolder() throws Exception {
+        authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
+        SubmissionErasure submission = new SubmissionErasure();
+        when(erasureDataService.solicitar(50L)).thenReturn(submission);
 
         mockMvc.perform(post("/api/v1/usuarios/50/solicitar-supresion")
                         .header("Authorization", bearer("estudiante@uteq.edu.ec")))
@@ -354,34 +354,34 @@ class AppUserControllerTest {
     }
 
     @Test
-    void solicitarSupresionRechazaEnNombreDeOtroAppUser() throws Exception {
-        autenticarComo("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
+    void solicitarErasureRechazaEnNombreDeOtroAppUser() throws Exception {
+        authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
 
         mockMvc.perform(post("/api/v1/usuarios/99/solicitar-supresion")
                         .header("Authorization", bearer("estudiante@uteq.edu.ec")))
                 .andExpect(status().isForbidden());
 
-        verify(supresionDatosService, never()).solicitar(99L);
+        verify(erasureDataService, never()).solicitar(99L);
     }
 
     @Test
-    void listSubmissionsSupresionPermiteAAdmin() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(supresionDatosService.list()).thenReturn(List.of());
+    void listSubmissionsErasurePermiteAAdmin() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(erasureDataService.list()).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/usuarios/solicitudes-supresion").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void resolveSupresionResuelveLaSubmissionComoAdmin() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(appUserRepository.findByEmail("admin@uteq.edu.ec")).thenReturn(Optional.of(appUserActual));
-        ResolveSupresionRequest req = new ResolveSupresionRequest();
+    void resolveErasureResuelveLaSubmissionAsAdmin() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(appUserRepository.findByEmail("admin@uteq.edu.ec")).thenReturn(Optional.of(currentAppUser));
+        ResolveErasureRequest req = new ResolveErasureRequest();
         req.setAceptar(true);
         req.setNotas("Procede");
-        when(supresionDatosService.resolve(eq(3L), eq(true), any(), eq("Procede")))
-                .thenReturn(new SubmissionSupresion());
+        when(erasureDataService.resolve(eq(3L), eq(true), any(), eq("Procede")))
+                .thenReturn(new SubmissionErasure());
 
         mockMvc.perform(post("/api/v1/usuarios/solicitudes-supresion/3/resolver")
                         .header("Authorization", bearer("admin@uteq.edu.ec"))

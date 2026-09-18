@@ -16,7 +16,7 @@ public class RoleDTO {
     @JsonProperty("id")
     private Short id;
     @JsonProperty("codigo")
-    private String codigo;
+    private String code;
     @JsonProperty("nombre")
     private String nombre;
     @JsonProperty("usuariosAsignados")

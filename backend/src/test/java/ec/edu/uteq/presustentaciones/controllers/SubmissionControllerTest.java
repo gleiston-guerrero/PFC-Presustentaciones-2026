@@ -52,22 +52,22 @@ class SubmissionControllerTest {
     private SubmissionController controller;
 
     @AfterEach
-    void limpiarContexto() {
+    void cleanContexto() {
         SecurityContextHolder.clearContext();
     }
 
     @SuppressWarnings("unchecked")
-    private ResponseWrapper<Object> wrapperDe(ResponseEntity<?> response) {
+    private ResponseWrapper<Object> wrapperOf(ResponseEntity<?> response) {
         return (ResponseWrapper<Object>) response.getBody();
     }
 
-    private void autenticar(String email, String... authorities) {
+    private void authenticate(String email, String... authorities) {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(email, null,
                         List.of(authorities).stream().map(SimpleGrantedAuthority::new).toList()));
     }
 
-    private Submission submissionDe(String emailPropietario) {
+    private Submission submissionOf(String emailPropietario) {
         return Submission.builder()
                 .id(1L)
                 .student(Student.builder().id(7L)
@@ -80,162 +80,162 @@ class SubmissionControllerTest {
 
     @Test
     void createDevuelveLaSubmissionCreada() {
-        Submission datos = Submission.builder().tituloTopic("Tema").build();
+        Submission data = Submission.builder().tituloTopic("Tema").build();
         Submission creada = Submission.builder().id(1L).build();
-        when(submissionService.createSubmission(7L, datos)).thenReturn(creada);
+        when(submissionService.createSubmission(7L, data)).thenReturn(creada);
 
-        ResponseEntity<?> response = controller.create(7L, datos);
+        ResponseEntity<?> response = controller.create(7L, data);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(creada, wrapperDe(response).getData());
-        assertEquals("Solicitud creada exitosamente", wrapperDe(response).getMessage());
+        assertSame(creada, wrapperOf(response).getData());
+        assertEquals("Solicitud creada exitosamente", wrapperOf(response).getMessage());
     }
 
     @Test
     void createTraduceElErrorDelServicioA400() {
-        Submission datos = Submission.builder().build();
-        when(submissionService.createSubmission(7L, datos))
+        Submission data = Submission.builder().build();
+        when(submissionService.createSubmission(7L, data))
                 .thenThrow(new RuntimeException("El estudiante ya tiene una solicitud activa"));
 
-        ResponseEntity<?> response = controller.create(7L, datos);
+        ResponseEntity<?> response = controller.create(7L, data);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("El estudiante ya tiene una solicitud activa", wrapperDe(response).getMessage());
+        assertEquals("El estudiante ya tiene una solicitud activa", wrapperOf(response).getMessage());
     }
 
     @Test
-    void createPorAppUserIgnoraElIdDelPathYUsaElDelToken() {
-        autenticar("est@uteq.edu.ec");
-        Submission datos = Submission.builder().build();
+    void createByAppUserIgnoraElIdDelPathYUsaElDelToken() {
+        authenticate("est@uteq.edu.ec");
+        Submission data = Submission.builder().build();
         Submission creada = Submission.builder().id(1L).build();
         when(appUserRepository.findByEmail("est@uteq.edu.ec"))
                 .thenReturn(Optional.of(AppUser.builder().id(50L).build()));
-        when(submissionService.createSubmissionPorAppUser(50L, datos)).thenReturn(creada);
+        when(submissionService.createSubmissionByAppUser(50L, data)).thenReturn(creada);
 
         // El cliente manda 999 en la URL; el backend debe resolve 50 desde el JWT
-        ResponseEntity<?> response = controller.createPorAppUser(999L, datos);
+        ResponseEntity<?> response = controller.createByAppUser(999L, data);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(submissionService).createSubmissionPorAppUser(50L, datos);
-        verify(submissionService, never()).createSubmissionPorAppUser(eq(999L), any());
+        verify(submissionService).createSubmissionByAppUser(50L, data);
+        verify(submissionService, never()).createSubmissionByAppUser(eq(999L), any());
     }
 
     @Test
-    void createPorAppUserConTokenDeAppUserInexistenteDevuelve400() {
-        autenticar("fantasma@uteq.edu.ec");
+    void createByAppUserWithTokenDeAppUserInexistenteDevuelve400() {
+        authenticate("fantasma@uteq.edu.ec");
         when(appUserRepository.findByEmail("fantasma@uteq.edu.ec")).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = controller.createPorAppUser(1L, Submission.builder().build());
+        ResponseEntity<?> response = controller.createByAppUser(1L, Submission.builder().build());
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Usuario no encontrado en el sistema", wrapperDe(response).getMessage());
+        assertEquals("Usuario no encontrado en el sistema", wrapperOf(response).getMessage());
     }
 
     // ── Listados propios ──────────────────────────────────────────────────────
 
     @Test
-    void misSubmissionsResuelveElAppUserDesdeElToken() {
-        autenticar("est@uteq.edu.ec");
+    void mySubmissionsResuelveElAppUserFromElToken() {
+        authenticate("est@uteq.edu.ec");
         List<Submission> submissions = List.of(Submission.builder().id(1L).build());
         when(appUserRepository.findByEmail("est@uteq.edu.ec"))
                 .thenReturn(Optional.of(AppUser.builder().id(50L).build()));
-        when(submissionService.listPorAppUser(50L)).thenReturn(submissions);
+        when(submissionService.listByAppUser(50L)).thenReturn(submissions);
 
-        ResponseEntity<?> response = controller.listMisSubmissions();
+        ResponseEntity<?> response = controller.listMySubmissions();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(submissions, wrapperDe(response).getData());
+        assertSame(submissions, wrapperOf(response).getData());
     }
 
     @Test
-    void misSubmissionsDevuelveListaVaciaEnVezDeErrorSiFallaLaResolucion() {
-        autenticar("fantasma@uteq.edu.ec");
+    void mySubmissionsDevuelveListaVaciaEnVezDeErrorSiFallaLaResolucion() {
+        authenticate("fantasma@uteq.edu.ec");
         when(appUserRepository.findByEmail("fantasma@uteq.edu.ec")).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = controller.listMisSubmissions();
+        ResponseEntity<?> response = controller.listMySubmissions();
 
         // Decisión de diseño del controlador: la pantalla del student no debe romperse,
         // muestra una lista vacía en vez de propagar el error.
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(List.of(), wrapperDe(response).getData());
+        assertEquals(List.of(), wrapperOf(response).getData());
     }
 
     @Test
-    void listPorAppUserDevuelveListaVaciaSiElServicioFalla() {
-        when(submissionService.listPorAppUser(50L)).thenThrow(new RuntimeException("boom"));
+    void listByAppUserDevuelveListaVaciaSiElServicioFalla() {
+        when(submissionService.listByAppUser(50L)).thenThrow(new RuntimeException("boom"));
 
-        ResponseEntity<?> response = controller.listPorAppUser(50L);
+        ResponseEntity<?> response = controller.listByAppUser(50L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(List.of(), wrapperDe(response).getData());
+        assertEquals(List.of(), wrapperOf(response).getData());
     }
 
     // ── Comprobación de propiedad (validateAccesoSubmission) ────────────────────
 
     @Test
-    void unStudentNoPuedeOpenLaSubmissionDeOtro() {
-        autenticar("otro@uteq.edu.ec");
-        when(permissionService.tienePermission(any(), any())).thenReturn(false);
-        when(submissionService.obtainPorId(1L)).thenReturn(Optional.of(submissionDe("dueno@uteq.edu.ec")));
+    void unStudentNoCanOpenLaSubmissionDeOtro() {
+        authenticate("otro@uteq.edu.ec");
+        when(permissionService.hasPermission(any(), any())).thenReturn(false);
+        when(submissionService.obtainById(1L)).thenReturn(Optional.of(submissionOf("dueno@uteq.edu.ec")));
 
         ResponseEntity<?> response = controller.obtain(1L);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         assertEquals("Acceso denegado: no eres propietario de esta solicitud",
-                wrapperDe(response).getMessage());
+                wrapperOf(response).getMessage());
     }
 
     @Test
-    void elPropietarioSiPuedeOpenSuSubmission() {
-        autenticar("dueno@uteq.edu.ec");
-        when(permissionService.tienePermission(any(), any())).thenReturn(false);
-        Submission propia = submissionDe("dueno@uteq.edu.ec");
-        when(submissionService.obtainPorId(1L)).thenReturn(Optional.of(propia));
+    void elPropietarioSiCanOpenSuSubmission() {
+        authenticate("dueno@uteq.edu.ec");
+        when(permissionService.hasPermission(any(), any())).thenReturn(false);
+        Submission propia = submissionOf("dueno@uteq.edu.ec");
+        when(submissionService.obtainById(1L)).thenReturn(Optional.of(propia));
 
         ResponseEntity<?> response = controller.obtain(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(propia, wrapperDe(response).getData());
+        assertSame(propia, wrapperOf(response).getData());
     }
 
     @Test
-    void unRevisorPuedeOpenCualquierSubmissionSinComprobarPropiedad() {
-        autenticar("coord@uteq.edu.ec", "SOLICITUDES_REVISAR");
-        when(permissionService.tienePermission(any(), any())).thenReturn(true);
-        Submission ajena = submissionDe("dueno@uteq.edu.ec");
-        when(submissionService.obtainPorId(1L)).thenReturn(Optional.of(ajena));
+    void unRevisorCanOpenCualquierSubmissionWithoutComprobarPropiedad() {
+        authenticate("coord@uteq.edu.ec", "SOLICITUDES_REVISAR");
+        when(permissionService.hasPermission(any(), any())).thenReturn(true);
+        Submission ajena = submissionOf("dueno@uteq.edu.ec");
+        when(submissionService.obtainById(1L)).thenReturn(Optional.of(ajena));
 
         ResponseEntity<?> response = controller.obtain(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(ajena, wrapperDe(response).getData());
+        assertSame(ajena, wrapperOf(response).getData());
     }
 
     @Test
-    void unAdminPuedeOpenCualquierSubmission() {
-        autenticar("admin@uteq.edu.ec", "ROLE_ADMIN");
-        when(submissionService.obtainPorId(1L)).thenReturn(Optional.of(submissionDe("dueno@uteq.edu.ec")));
+    void unAdminCanOpenCualquierSubmission() {
+        authenticate("admin@uteq.edu.ec", "ROLE_ADMIN");
+        when(submissionService.obtainById(1L)).thenReturn(Optional.of(submissionOf("dueno@uteq.edu.ec")));
 
         assertEquals(HttpStatus.OK, controller.obtain(1L).getStatusCode());
     }
 
     @Test
     void obtainDevuelve404CuandoElRevisorPideUnaSubmissionInexistente() {
-        autenticar("coord@uteq.edu.ec", "SOLICITUDES_REVISAR");
-        when(permissionService.tienePermission(any(), any())).thenReturn(true);
-        when(submissionService.obtainPorId(99L)).thenReturn(Optional.empty());
+        authenticate("coord@uteq.edu.ec", "SOLICITUDES_REVISAR");
+        when(permissionService.hasPermission(any(), any())).thenReturn(true);
+        when(submissionService.obtainById(99L)).thenReturn(Optional.empty());
 
         ResponseEntity<?> response = controller.obtain(99L);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Solicitud no encontrada", wrapperDe(response).getMessage());
+        assertEquals("Solicitud no encontrada", wrapperOf(response).getMessage());
     }
 
     @Test
     void sendExigeSerPropietarioAntesDeSendARevision() {
-        autenticar("otro@uteq.edu.ec");
-        when(permissionService.tienePermission(any(), any())).thenReturn(false);
-        when(submissionService.obtainPorId(1L)).thenReturn(Optional.of(submissionDe("dueno@uteq.edu.ec")));
+        authenticate("otro@uteq.edu.ec");
+        when(permissionService.hasPermission(any(), any())).thenReturn(false);
+        when(submissionService.obtainById(1L)).thenReturn(Optional.of(submissionOf("dueno@uteq.edu.ec")));
 
         ResponseEntity<?> response = controller.send(1L);
 
@@ -244,24 +244,24 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void sendFuncionaParaElPropietario() {
-        autenticar("dueno@uteq.edu.ec");
-        when(permissionService.tienePermission(any(), any())).thenReturn(false);
+    void sendFuncionaForElPropietario() {
+        authenticate("dueno@uteq.edu.ec");
+        when(permissionService.hasPermission(any(), any())).thenReturn(false);
         Submission enviada = Submission.builder().id(1L).build();
-        when(submissionService.obtainPorId(1L)).thenReturn(Optional.of(submissionDe("dueno@uteq.edu.ec")));
+        when(submissionService.obtainById(1L)).thenReturn(Optional.of(submissionOf("dueno@uteq.edu.ec")));
         when(submissionService.sendSubmission(1L)).thenReturn(enviada);
 
         ResponseEntity<?> response = controller.send(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Solicitud enviada a revisión", wrapperDe(response).getMessage());
+        assertEquals("Solicitud enviada a revisión", wrapperOf(response).getMessage());
     }
 
     @Test
     void obtainTrackingExigeLaMismaComprobacionDePropiedad() {
-        autenticar("otro@uteq.edu.ec");
-        when(permissionService.tienePermission(any(), any())).thenReturn(false);
-        when(submissionService.obtainPorId(1L)).thenReturn(Optional.of(submissionDe("dueno@uteq.edu.ec")));
+        authenticate("otro@uteq.edu.ec");
+        when(permissionService.hasPermission(any(), any())).thenReturn(false);
+        when(submissionService.obtainById(1L)).thenReturn(Optional.of(submissionOf("dueno@uteq.edu.ec")));
 
         assertEquals(HttpStatus.FORBIDDEN, controller.obtainTracking(1L).getStatusCode());
         verify(submissionService, never()).obtainTracking(any());
@@ -269,39 +269,39 @@ class SubmissionControllerTest {
 
     @Test
     void obtainTrackingDevuelveElHistoryAlPropietario() {
-        autenticar("dueno@uteq.edu.ec");
-        when(permissionService.tienePermission(any(), any())).thenReturn(false);
+        authenticate("dueno@uteq.edu.ec");
+        when(permissionService.hasPermission(any(), any())).thenReturn(false);
         TrackingDTO tracking = mock(TrackingDTO.class);
-        when(submissionService.obtainPorId(1L)).thenReturn(Optional.of(submissionDe("dueno@uteq.edu.ec")));
+        when(submissionService.obtainById(1L)).thenReturn(Optional.of(submissionOf("dueno@uteq.edu.ec")));
         when(submissionService.obtainTracking(1L)).thenReturn(tracking);
 
         ResponseEntity<?> response = controller.obtainTracking(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(tracking, wrapperDe(response).getData());
+        assertSame(tracking, wrapperOf(response).getData());
     }
 
     // ── Transiciones de estado (revisor) ──────────────────────────────────────
 
     @Test
-    void approveRejectYRejectConObservacionDeleganEnElServicio() {
-        Submission resultado = Submission.builder().id(1L).build();
-        when(submissionService.approveSubmission(1L)).thenReturn(resultado);
-        when(submissionService.rejectSubmission(2L)).thenReturn(resultado);
-        when(submissionService.rejectConObservacion(3L, "Falta el anteproyecto")).thenReturn(resultado);
+    void approveRejectYRejectWithObservationDeleganEnElServicio() {
+        Submission result = Submission.builder().id(1L).build();
+        when(submissionService.approveSubmission(1L)).thenReturn(result);
+        when(submissionService.rejectSubmission(2L)).thenReturn(result);
+        when(submissionService.rejectWithObservation(3L, "Falta el anteproyecto")).thenReturn(result);
 
-        assertEquals("Solicitud aprobada", wrapperDe(controller.approve(1L)).getMessage());
-        assertEquals("Solicitud rechazada", wrapperDe(controller.reject(2L)).getMessage());
+        assertEquals("Solicitud aprobada", wrapperOf(controller.approve(1L)).getMessage());
+        assertEquals("Solicitud rechazada", wrapperOf(controller.reject(2L)).getMessage());
         assertEquals("Solicitud rechazada con observaciones",
-                wrapperDe(controller.rejectConObservacion(3L, Map.of("observacion", "Falta el anteproyecto"))).getMessage());
+                wrapperOf(controller.rejectWithObservation(3L, Map.of("observacion", "Falta el anteproyecto"))).getMessage());
     }
 
     @Test
-    void rejectConObservacionSinObservacionUsaCadenaVacia() {
-        when(submissionService.rejectConObservacion(3L, "")).thenReturn(Submission.builder().id(3L).build());
+    void rejectWithObservationWithoutObservationUsaCadenaVacia() {
+        when(submissionService.rejectWithObservation(3L, "")).thenReturn(Submission.builder().id(3L).build());
 
-        assertEquals(HttpStatus.OK, controller.rejectConObservacion(3L, Map.of()).getStatusCode());
-        verify(submissionService).rejectConObservacion(3L, "");
+        assertEquals(HttpStatus.OK, controller.rejectWithObservation(3L, Map.of()).getStatusCode());
+        verify(submissionService).rejectWithObservation(3L, "");
     }
 
     @Test
@@ -312,49 +312,49 @@ class SubmissionControllerTest {
         ResponseEntity<?> response = controller.approve(1L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("La solicitud no está en estado ENVIADA", wrapperDe(response).getMessage());
+        assertEquals("La solicitud no está en estado ENVIADA", wrapperOf(response).getMessage());
     }
 
     @Test
-    void suspenderPasaElMotivoAlServicioYTraduceErrores() {
+    void suspendPasaElMotivoAlServicioYTraduceErrores() {
         Submission suspendida = Submission.builder().id(1L).build();
-        when(submissionService.suspenderSubmission(1L, "Estudiante retirado")).thenReturn(suspendida);
+        when(submissionService.suspendSubmission(1L, "Estudiante retirado")).thenReturn(suspendida);
         assertEquals("Solicitud suspendida",
-                wrapperDe(controller.suspender(1L, Map.of("motivo", "Estudiante retirado"))).getMessage());
+                wrapperOf(controller.suspend(1L, Map.of("motivo", "Estudiante retirado"))).getMessage());
 
-        when(submissionService.suspenderSubmission(2L, null))
+        when(submissionService.suspendSubmission(2L, null))
                 .thenThrow(new RuntimeException("El motivo es obligatorio"));
-        ResponseEntity<?> error = controller.suspender(2L, Map.of());
+        ResponseEntity<?> error = controller.suspend(2L, Map.of());
         assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
-        assertEquals("El motivo es obligatorio", wrapperDe(error).getMessage());
+        assertEquals("El motivo es obligatorio", wrapperOf(error).getMessage());
     }
 
     // ── Listados administrativos ──────────────────────────────────────────────
 
     @Test
-    void listYCountPorEstadoDeleganEnElServicio() {
-        List<Submission> todas = List.of(Submission.builder().id(1L).build());
+    void listYCountByStatusDeleganEnElServicio() {
+        List<Submission> all = List.of(Submission.builder().id(1L).build());
         Map<String, Long> count = Map.of("ENVIADA", 3L);
-        when(submissionService.listSubmissions()).thenReturn(todas);
-        doReturn(count).when(submissionService).countPorEstado();
+        when(submissionService.listSubmissions()).thenReturn(all);
+        doReturn(count).when(submissionService).countByStatus();
 
-        assertSame(todas, wrapperDe(controller.list()).getData());
-        assertSame(count, wrapperDe(controller.countPorEstado()).getData());
+        assertSame(all, wrapperOf(controller.list()).getData());
+        assertSame(count, wrapperOf(controller.countByStatus()).getData());
     }
 
     @Test
-    void listPaginadoArmaLaRespuestaConLosMetadatosDePagina() {
+    void listPagedArmaLaRespuestaWithLosMetadatosDePagina() {
         Page<Submission> pagina = new PageImpl<>(
                 List.of(Submission.builder().id(1L).build()), PageRequest.of(2, 20), 45);
-        LocalDate desde = LocalDate.of(2026, 1, 1);
-        LocalDate hasta = LocalDate.of(2026, 12, 31);
-        when(submissionService.listSubmissionsPaginado(2, 20, "ENVIADA", "tema", desde, hasta))
+        LocalDate from = LocalDate.of(2026, 1, 1);
+        LocalDate to = LocalDate.of(2026, 12, 31);
+        when(submissionService.listSubmissionsPaged(2, 20, "ENVIADA", "tema", from, to))
                 .thenReturn(pagina);
 
-        ResponseEntity<?> response = controller.listPaginado(2, 20, "ENVIADA", "tema", desde, hasta);
+        ResponseEntity<?> response = controller.listPaged(2, 20, "ENVIADA", "tema", from, to);
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) wrapperDe(response).getData();
+        Map<String, Object> data = (Map<String, Object>) wrapperOf(response).getData();
         assertEquals(1, ((List<?>) data.get("content")).size());
         // PageImpl recorta el total al offset+contenido cuando la ultima pagina viene
         // incompleta (40 elementos saltados + 1 en esta pagina), asi que el metadato real
@@ -366,34 +366,34 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void listPorStudentDelegaEnElServicio() {
+    void listByStudentDelegaEnElServicio() {
         List<Submission> submissions = List.of(Submission.builder().id(1L).build());
-        when(submissionService.listPorStudent(7L)).thenReturn(submissions);
+        when(submissionService.listByStudent(7L)).thenReturn(submissions);
 
-        assertSame(submissions, wrapperDe(controller.listPorStudent(7L)).getData());
+        assertSame(submissions, wrapperOf(controller.listByStudent(7L)).getData());
     }
 
     // ── sp_generate_reporte_defensas ───────────────────────────────────────────
 
     @Test
-    void reporteDefensasDevuelveLasFilasDelProcedimientoAlmacenado() {
-        List<Map<String, Object>> reporte = List.of(Map.of("estudianteNombre", "Ana Pérez"));
-        when(submissionService.generateReporteDefensasSP("Software")).thenReturn(reporte);
+    void reportDefensesDevuelveLasFilasDelProcedimientoAlmacenado() {
+        List<Map<String, Object>> report = List.of(Map.of("estudianteNombre", "Ana Pérez"));
+        when(submissionService.generateReportDefensesSP("Software")).thenReturn(report);
 
-        ResponseEntity<?> response = controller.reporteDefensas("Software");
+        ResponseEntity<?> response = controller.reportDefenses("Software");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(reporte, wrapperDe(response).getData());
+        assertSame(report, wrapperOf(response).getData());
     }
 
     @Test
-    void reporteDefensasTraduceElErrorDelProcedimientoA400() {
-        when(submissionService.generateReporteDefensasSP(""))
+    void reportDefensesTraduceElErrorDelProcedimientoA400() {
+        when(submissionService.generateReportDefensesSP(""))
                 .thenThrow(new RuntimeException("cursor \"reporte_defensas_cursor\" does not exist"));
 
-        ResponseEntity<?> response = controller.reporteDefensas("");
+        ResponseEntity<?> response = controller.reportDefenses("");
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(wrapperDe(response).getMessage().contains("reporte_defensas_cursor"));
+        assertTrue(wrapperOf(response).getMessage().contains("reporte_defensas_cursor"));
     }
 }

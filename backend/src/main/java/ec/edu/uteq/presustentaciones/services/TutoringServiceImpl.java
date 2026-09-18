@@ -1,10 +1,10 @@
 package ec.edu.uteq.presustentaciones.services;
 
-import ec.edu.uteq.presustentaciones.dto.TutoringFaseDTO;
-import ec.edu.uteq.presustentaciones.dto.TutoringMensajeDTO;
-import ec.edu.uteq.presustentaciones.dto.TutoringResumenDTO;
+import ec.edu.uteq.presustentaciones.dto.TutoringPhaseDTO;
+import ec.edu.uteq.presustentaciones.dto.TutoringMessageDTO;
+import ec.edu.uteq.presustentaciones.dto.TutoringSummaryDTO;
 import ec.edu.uteq.presustentaciones.entities.*;
-import ec.edu.uteq.presustentaciones.enums.EstadoSubmission;
+import ec.edu.uteq.presustentaciones.enums.StatusSubmission;
 import ec.edu.uteq.presustentaciones.repositories.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,8 +35,8 @@ import java.util.stream.Collectors;
 public class TutoringServiceImpl implements TutoringService {
 
     private final TutorRepository tutorRepository;
-    private final TutoringFaseRepository tutoringFaseRepository;
-    private final TutoringMensajeRepository tutoringMensajeRepository;
+    private final TutoringPhaseRepository tutoringPhaseRepository;
+    private final TutoringMessageRepository tutoringMessageRepository;
     private final AppUserRepository appUserRepository;
     private final ProposalRepository proposalRepository;
     private final NotificationService notificationService;
@@ -50,21 +50,21 @@ public class TutoringServiceImpl implements TutoringService {
     /**
      * Construye TutoringServiceImpl, inyectando tutorRepository, tutoringFaseRepository, tutoringMensajeRepository, appUserRepository, proposalRepository, notificationService.
      * @param tutorRepository tutorRepository
-     * @param tutoringFaseRepository tutoringFaseRepository
-     * @param tutoringMensajeRepository tutoringMensajeRepository
+     * @param tutoringPhaseRepository tutoringPhaseRepository
+     * @param tutoringMessageRepository tutoringMessageRepository
      * @param appUserRepository appUserRepository
      * @param proposalRepository proposalRepository
      * @param notificationService notificationService
      */
     public TutoringServiceImpl(TutorRepository tutorRepository,
-                              TutoringFaseRepository tutoringFaseRepository,
-                              TutoringMensajeRepository tutoringMensajeRepository,
+                              TutoringPhaseRepository tutoringPhaseRepository,
+                              TutoringMessageRepository tutoringMessageRepository,
                               AppUserRepository appUserRepository,
                               ProposalRepository proposalRepository,
                               NotificationService notificationService) {
         this.tutorRepository = tutorRepository;
-        this.tutoringFaseRepository = tutoringFaseRepository;
-        this.tutoringMensajeRepository = tutoringMensajeRepository;
+        this.tutoringPhaseRepository = tutoringPhaseRepository;
+        this.tutoringMessageRepository = tutoringMessageRepository;
         this.appUserRepository = appUserRepository;
         this.proposalRepository = proposalRepository;
         this.notificationService = notificationService;
@@ -79,12 +79,12 @@ public class TutoringServiceImpl implements TutoringService {
      * @throws RuntimeException si la tutoría no existe
      */
     @Override
-    public TutoringResumenDTO obtainResumen(Long tutorId, Long appUserId) {
+    public TutoringSummaryDTO obtainSummary(Long tutorId, Long appUserId) {
         Tutor tutor = tutorRepository.findById(tutorId)
                 .orElseThrow(() -> new RuntimeException("Tutor no encontrado"));
 
-        validateAccesoATutoring(tutor, appUserId);
-        return buildResumenParaTutor(tutor, appUserId);
+        validateAccessATutoring(tutor, appUserId);
+        return buildSummaryForTutor(tutor, appUserId);
     }
 
     // ── Fases ─────────────────────────────────────────────────────────────────
@@ -95,27 +95,27 @@ public class TutoringServiceImpl implements TutoringService {
      * @return las fases registradas de esa tutoría, en orden
      */
     @Override
-    public List<TutoringFaseDTO> obtainFases(Long tutorId, Long appUserId) {
+    public List<TutoringPhaseDTO> obtainPhases(Long tutorId, Long appUserId) {
         Tutor tutor = tutorRepository.findById(tutorId)
                 .orElseThrow(() -> new RuntimeException("Tutor no encontrado"));
                 
-        validateAccesoATutoring(tutor, appUserId);
+        validateAccessATutoring(tutor, appUserId);
         
-        return tutoringFaseRepository.findByTutorIdOrderByNumeroFaseAsc(tutorId).stream()
-                .map(this::mapFaseConMensajes)
+        return tutoringPhaseRepository.findByTutorIdOrderByNumeroPhaseAsc(tutorId).stream()
+                .map(this::mapPhaseWithMessages)
                 .collect(Collectors.toList());
     }
 
     /**
      * @param tutorId        id del registro de tutoría
      * @param tutorAppUserId id del appUser teacher que crea la fase
-     * @param observacion    observación inicial del teacher para esta fase
+     * @param observation    observación inicial del teacher para esta fase
      * @return la fase creada
      * @throws RuntimeException si la tutoría no existe
      */
     @Override
     @Transactional
-    public TutoringFaseDTO createFaseConObservacion(Long tutorId, Long tutorAppUserId, String observacion) {
+    public TutoringPhaseDTO createPhaseWithObservation(Long tutorId, Long tutorAppUserId, String observation) {
         Tutor tutor = tutorRepository.findById(tutorId)
                 .orElseThrow(() -> new RuntimeException("Tutor no encontrado"));
 
@@ -123,82 +123,82 @@ public class TutoringServiceImpl implements TutoringService {
             throw new org.springframework.security.access.AccessDeniedException("No autorizado");
         }
 
-        long totalFases = tutoringFaseRepository.countByTutorId(tutorId);
-        if (totalFases >= 3) {
+        long totalPhases = tutoringPhaseRepository.countByTutorId(tutorId);
+        if (totalPhases >= 3) {
             throw new RuntimeException("No se pueden crear más de 3 fases de revisión");
         }
 
-        if (totalFases > 0) {
-            List<TutoringFase> fases = tutoringFaseRepository.findByTutorIdOrderByNumeroFaseAsc(tutorId);
-            TutoringFase ultima = fases.get(fases.size() - 1);
-            if (!"APROBADA".equals(ultima.getEstado())) {
+        if (totalPhases > 0) {
+            List<TutoringPhase> phases = tutoringPhaseRepository.findByTutorIdOrderByNumeroPhaseAsc(tutorId);
+            TutoringPhase last = phases.get(phases.size() - 1);
+            if (!"APROBADA".equals(last.getStatus())) {
                 throw new RuntimeException("Debes aprobar la fase actual antes de crear una nueva");
             }
         }
 
-        TutoringFase fase = TutoringFase.builder()
+        TutoringPhase phase = TutoringPhase.builder()
                 .tutor(tutor)
-                .numeroFase((int) totalFases + 1)
-                .estado("PENDIENTE_ESTUDIANTE")
+                .numeroPhase((int) totalPhases + 1)
+                .status("PENDIENTE_ESTUDIANTE")
                 .build();
-        fase = tutoringFaseRepository.save(fase);
+        phase = tutoringPhaseRepository.save(phase);
 
         AppUser tutorAppUser = appUserRepository.findById(tutorAppUserId)
                 .orElseThrow(() -> new RuntimeException("Usuario tutor no encontrado"));
 
-        TutoringMensaje mensaje = TutoringMensaje.builder()
-                .fase(fase)
-                .remitente(tutorAppUser)
-                .contenido(observacion)
-                .tipo("OBSERVACION")
+        TutoringMessage message = TutoringMessage.builder()
+                .phase(phase)
+                .sender(tutorAppUser)
+                .contenido(observation)
+                .kind("OBSERVACION")
                 .leido(false)
                 .build();
-        tutoringMensajeRepository.save(mensaje);
+        tutoringMessageRepository.save(message);
 
-        return mapFaseConMensajes(fase);
+        return mapPhaseWithMessages(phase);
     }
 
     // ── Subida de PDF ─────────────────────────────────────────────────────────
 
     /**
-     * @param faseId              id de la fase de tutoría
-     * @param archivo             PDF corregido subido por el student
+     * @param phaseId              id de la fase de tutoría
+     * @param file             PDF corregido subido por el student
      * @param studentAppUserId id del appUser student que sube el archivo
      * @return la fase actualizada con el nuevo PDF
      * @throws RuntimeException si la fase no existe o el archivo no es un PDF válido
      */
     @Override
     @Transactional
-    public TutoringFaseDTO uploadPdfCorregido(Long faseId, MultipartFile archivo, Long studentAppUserId) {
-        TutoringFase fase = tutoringFaseRepository.findById(faseId)
+    public TutoringPhaseDTO uploadPdfCorrected(Long phaseId, MultipartFile file, Long studentAppUserId) {
+        TutoringPhase phase = tutoringPhaseRepository.findById(phaseId)
                 .orElseThrow(() -> new RuntimeException("Fase no encontrada"));
 
-        Long studentAppUserReal = fase.getTutor().getSubmission().getStudent().getAppUser().getId();
+        Long studentAppUserReal = phase.getTutor().getSubmission().getStudent().getAppUser().getId();
         if (!studentAppUserReal.equals(studentAppUserId)) {
             throw new org.springframework.security.access.AccessDeniedException("No autorizado");
         }
 
-        Submission submission = fase.getTutor().getSubmission();
-        if (submission.getEstado() != null && "SUSPENDIDA".equalsIgnoreCase(submission.getEstado().getCodigo())) {
+        Submission submission = phase.getTutor().getSubmission();
+        if (submission.getStatus() != null && "SUSPENDIDA".equalsIgnoreCase(submission.getStatus().getCode())) {
             throw new RuntimeException("No puedes subir más archivos. Este tema ha sido suspendido por: " + submission.getMotivoSuspension());
         }
 
-        if (!"PENDIENTE_ESTUDIANTE".equals(fase.getEstado())) {
+        if (!"PENDIENTE_ESTUDIANTE".equals(phase.getStatus())) {
             throw new RuntimeException("Solo puedes subir el PDF cuando el tutor ha enviado observaciones");
         }
 
-        String contentType = archivo.getContentType();
+        String contentType = file.getContentType();
         if (contentType == null || !contentType.equals("application/pdf")) {
             throw new RuntimeException("Solo se permiten archivos PDF");
         }
-        if (archivo.getSize() > 10L * 1024 * 1024) {
+        if (file.getSize() > 10L * 1024 * 1024) {
             throw new RuntimeException("El archivo no puede superar los 10 MB");
         }
 
-        Long tutorId = fase.getTutor().getId();
-        int numeroFase = fase.getNumeroFase();
+        Long tutorId = phase.getTutor().getId();
+        int numeroPhase = phase.getNumeroPhase();
 
-        Path dirPath = Paths.get(uploadDir, tutorId.toString(), "fase_" + numeroFase);
+        Path dirPath = Paths.get(uploadDir, tutorId.toString(), "fase_" + numeroPhase);
         try {
             Files.createDirectories(dirPath);
         } catch (IOException e) {
@@ -206,208 +206,208 @@ public class TutoringServiceImpl implements TutoringService {
         }
 
         // Delete archivo anterior si existe
-        if (fase.getArchivoPdfStudent() != null) {
+        if (phase.getFilePdfStudent() != null) {
             try {
-                Files.deleteIfExists(dirPath.resolve(fase.getArchivoPdfStudent()));
+                Files.deleteIfExists(dirPath.resolve(phase.getFilePdfStudent()));
             } catch (IOException e) {
                 log.warn("No se pudo eliminar el archivo anterior: {}", e.getMessage());
             }
         }
 
-        String nombreArchivo = "tutor_" + tutorId + "_fase" + numeroFase + "_" + UUID.randomUUID() + ".pdf";
-        Path rutaArchivo = dirPath.resolve(nombreArchivo);
-        String sha256 = calculateSha256YSave(archivo, rutaArchivo);
+        String nombreFile = "tutor_" + tutorId + "_fase" + numeroPhase + "_" + UUID.randomUUID() + ".pdf";
+        Path rutaFile = dirPath.resolve(nombreFile);
+        String sha256 = calculateSha256AndSave(file, rutaFile);
 
-        fase.setArchivoPdfStudent(nombreArchivo);
-        fase.setSha256Pdf(sha256);
-        fase.setTamanoPdfBytes(archivo.getSize());
-        fase.setEstado("PENDIENTE_TUTOR");
-        fase = tutoringFaseRepository.save(fase);
+        phase.setFilePdfStudent(nombreFile);
+        phase.setSha256Pdf(sha256);
+        phase.setSizePdfBytes(file.getSize());
+        phase.setStatus("PENDIENTE_TUTOR");
+        phase = tutoringPhaseRepository.save(phase);
 
         AppUser student = appUserRepository.findById(studentAppUserId)
                 .orElseThrow(() -> new RuntimeException("Usuario estudiante no encontrado"));
 
-        TutoringMensaje mensajeAuto = TutoringMensaje.builder()
-                .fase(fase)
-                .remitente(student)
+        TutoringMessage messageAuto = TutoringMessage.builder()
+                .phase(phase)
+                .sender(student)
                 .contenido("He subido las correcciones solicitadas.")
-                .tipo("RESPUESTA")
+                .kind("RESPUESTA")
                 .leido(false)
                 .build();
-        tutoringMensajeRepository.save(mensajeAuto);
+        tutoringMessageRepository.save(messageAuto);
 
-        return mapFaseConMensajes(fase);
+        return mapPhaseWithMessages(phase);
     }
 
     // ── Aprobación ────────────────────────────────────────────────────────────
 
     /**
-     * @param faseId         id de la fase a approve
+     * @param phaseId         id de la fase a approve
      * @param tutorAppUserId id del appUser teacher que aprueba
-     * @param comentario     comentario opcional de aprobación
+     * @param comment     comentario opcional de aprobación
      * @return la fase actualizada en estado aprobado
      * @throws RuntimeException si la fase no existe
      */
     @Override
     @Transactional
-    public TutoringFaseDTO approveFase(Long faseId, Long tutorAppUserId, String comentario) {
-        TutoringFase fase = tutoringFaseRepository.findById(faseId)
+    public TutoringPhaseDTO approvePhase(Long phaseId, Long tutorAppUserId, String comment) {
+        TutoringPhase phase = tutoringPhaseRepository.findById(phaseId)
                 .orElseThrow(() -> new RuntimeException("Fase no encontrada"));
 
-        if (!fase.getTutor().getTeacher().getAppUser().getId().equals(tutorAppUserId)) {
+        if (!phase.getTutor().getTeacher().getAppUser().getId().equals(tutorAppUserId)) {
             throw new org.springframework.security.access.AccessDeniedException("No autorizado");
         }
 
-        if (!"PENDIENTE_TUTOR".equals(fase.getEstado())) {
+        if (!"PENDIENTE_TUTOR".equals(phase.getStatus())) {
             throw new RuntimeException("No puedes aprobar una fase sin correcciones del estudiante");
         }
 
-        if (fase.getArchivoPdfStudent() == null) {
+        if (phase.getFilePdfStudent() == null) {
             throw new RuntimeException("No existe un PDF del estudiante para aprobar");
         }
 
-        fase.setEstado("APROBADA");
-        fase.setFechaAprobacion(LocalDateTime.now());
-        fase = tutoringFaseRepository.save(fase);
+        phase.setStatus("APROBADA");
+        phase.setDateAprobacion(LocalDateTime.now());
+        phase = tutoringPhaseRepository.save(phase);
 
         AppUser tutorAppUser = appUserRepository.findById(tutorAppUserId)
                 .orElseThrow(() -> new RuntimeException("Usuario tutor no encontrado"));
 
-        TutoringMensaje mensajeAprobacion = TutoringMensaje.builder()
-                .fase(fase)
-                .remitente(tutorAppUser)
-                .contenido(comentario != null && !comentario.isBlank() ? comentario : "Fase aprobada.")
-                .tipo("APROBACION")
+        TutoringMessage messageAprobacion = TutoringMessage.builder()
+                .phase(phase)
+                .sender(tutorAppUser)
+                .contenido(comment != null && !comment.isBlank() ? comment : "Fase aprobada.")
+                .kind("APROBACION")
                 .leido(false)
                 .build();
-        tutoringMensajeRepository.save(mensajeAprobacion);
+        tutoringMessageRepository.save(messageAprobacion);
 
         try {
-            Long studentAppUserId = fase.getTutor().getSubmission().getStudent().getAppUser().getId();
+            Long studentAppUserId = phase.getTutor().getSubmission().getStudent().getAppUser().getId();
             notificationService.createNotification(studentAppUserId,
-                    String.format("Tu tutor aprobó la fase %d de tutoría.", fase.getNumeroFase()));
+                    String.format("Tu tutor aprobó la fase %d de tutoría.", phase.getNumeroPhase()));
         } catch (Exception e) {
-            log.warn("No se pudo notificar la aprobación de fase {}: {}", fase.getId(), e.getMessage());
+            log.warn("No se pudo notificar la aprobación de fase {}: {}", phase.getId(), e.getMessage());
         }
 
         // Si las 3 fases están APROBADAS, marcar tutor como COMPLETADA y update el Proposal
-        Long tutorId = fase.getTutor().getId();
-        long totalFases = tutoringFaseRepository.countByTutorId(tutorId);
-        long fasesAprobadas = tutoringFaseRepository.countByTutorIdAndEstado(tutorId, "APROBADA");
-        if (totalFases == 3 && fasesAprobadas == 3) {
-            Tutor tutor = fase.getTutor();
-            tutor.setEstado("COMPLETADA");
+        Long tutorId = phase.getTutor().getId();
+        long totalPhases = tutoringPhaseRepository.countByTutorId(tutorId);
+        long phasesAprobadas = tutoringPhaseRepository.countByTutorIdAndStatus(tutorId, "APROBADA");
+        if (totalPhases == 3 && phasesAprobadas == 3) {
+            Tutor tutor = phase.getTutor();
+            tutor.setStatus("COMPLETADA");
             tutorRepository.save(tutor);
 
             // Reemplazar el PDF del Proposal con el PDF final aprobado de la Fase 3
-            TutoringFase fase3 = tutoringFaseRepository.findByTutorIdOrderByNumeroFaseAsc(tutorId)
+            TutoringPhase phase3 = tutoringPhaseRepository.findByTutorIdOrderByNumeroPhaseAsc(tutorId)
                     .stream()
-                    .filter(f -> f.getNumeroFase() == 3)
+                    .filter(f -> f.getNumeroPhase() == 3)
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Fase 3 no encontrada"));
 
             // Copiar físicamente el PDF de la Fase 3 a la carpeta de proposals
-            Path origen = Paths.get(uploadDir, tutorId.toString(), "fase_3", fase3.getArchivoPdfStudent());
+            Path source = Paths.get(uploadDir, tutorId.toString(), "fase_3", phase3.getFilePdfStudent());
             Path destDir = Paths.get(uploadDirProposals);
-            Path destino = destDir.resolve(fase3.getArchivoPdfStudent());
+            Path destino = destDir.resolve(phase3.getFilePdfStudent());
             try {
                 Files.createDirectories(destDir);
-                Files.copy(origen, destino, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(source, destino, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 throw new RuntimeException("No se pudo copiar el PDF de la Fase 3 al directorio de anteproyectos", e);
             }
 
             proposalRepository.findBySubmissionId(tutor.getSubmission().getId())
                     .ifPresent(proposal -> {
-                        proposal.setArchivoPdf(fase3.getArchivoPdfStudent());
-                        proposal.setSha256Hash(fase3.getSha256Pdf());
-                        proposal.setTamanoBytes(fase3.getTamanoPdfBytes());
-                        proposal.setEstado("APROBADO");
-                        proposal.setObservaciones("PDF final aprobado tras completar las 3 fases de tutoría");
+                        proposal.setFilePdf(phase3.getFilePdfStudent());
+                        proposal.setSha256Hash(phase3.getSha256Pdf());
+                        proposal.setSizeBytes(phase3.getSizePdfBytes());
+                        proposal.setStatus("APROBADO");
+                        proposal.setObservations("PDF final aprobado tras completar las 3 fases de tutoría");
                         proposalRepository.save(proposal);
                     });
         }
 
-        return mapFaseConMensajes(fase);
+        return mapPhaseWithMessages(phase);
     }
 
     // ── Mensajes ──────────────────────────────────────────────────────────────
 
     /**
-     * @param faseId      id de la fase de tutoría
-     * @param remitenteId id del appUser que envía el mensaje
+     * @param phaseId      id de la fase de tutoría
+     * @param senderId id del appUser que envía el mensaje
      * @param contenido   texto del mensaje
-     * @param tipo        tipo de mensaje (p. ej. comentario, corrección)
+     * @param kind        tipo de mensaje (p. ej. comentario, corrección)
      * @return el mensaje creado
      * @throws RuntimeException si la fase no existe
      */
     @Override
     @Transactional
-    public TutoringMensajeDTO sendMensaje(Long faseId, Long remitenteId, String contenido, String tipo) {
-        TutoringFase fase = tutoringFaseRepository.findById(faseId)
+    public TutoringMessageDTO sendMessage(Long phaseId, Long senderId, String contenido, String kind) {
+        TutoringPhase phase = tutoringPhaseRepository.findById(phaseId)
                 .orElseThrow(() -> new RuntimeException("Fase no encontrada"));
 
-        AppUser remitente = appUserRepository.findById(remitenteId)
+        AppUser sender = appUserRepository.findById(senderId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        Long tutorUserId = (fase.getTutor() != null && fase.getTutor().getTeacher() != null && fase.getTutor().getTeacher().getAppUser() != null)
-                ? fase.getTutor().getTeacher().getAppUser().getId() : null;
-        Long studentUserId = (fase.getTutor() != null && fase.getTutor().getSubmission() != null && fase.getTutor().getSubmission().getStudent() != null && fase.getTutor().getSubmission().getStudent().getAppUser() != null)
-                ? fase.getTutor().getSubmission().getStudent().getAppUser().getId() : null;
-        boolean esPrivilegiado = remitente.getRole() != null &&
-                ("ADMIN".equalsIgnoreCase(remitente.getRole()) || "COORDINADOR".equalsIgnoreCase(remitente.getRole()));
+        Long tutorUserId = (phase.getTutor() != null && phase.getTutor().getTeacher() != null && phase.getTutor().getTeacher().getAppUser() != null)
+                ? phase.getTutor().getTeacher().getAppUser().getId() : null;
+        Long studentUserId = (phase.getTutor() != null && phase.getTutor().getSubmission() != null && phase.getTutor().getSubmission().getStudent() != null && phase.getTutor().getSubmission().getStudent().getAppUser() != null)
+                ? phase.getTutor().getSubmission().getStudent().getAppUser().getId() : null;
+        boolean esPrivilegiado = sender.getRole() != null &&
+                ("ADMIN".equalsIgnoreCase(sender.getRole()) || "COORDINADOR".equalsIgnoreCase(sender.getRole()));
 
-        if (!remitenteId.equals(tutorUserId) && !remitenteId.equals(studentUserId) && !esPrivilegiado) {
+        if (!senderId.equals(tutorUserId) && !senderId.equals(studentUserId) && !esPrivilegiado) {
             throw new org.springframework.security.access.AccessDeniedException("No autorizado para enviar mensajes en esta tutoría");
         }
 
-        TutoringMensaje mensaje = TutoringMensaje.builder()
-                .fase(fase)
-                .remitente(remitente)
+        TutoringMessage message = TutoringMessage.builder()
+                .phase(phase)
+                .sender(sender)
                 .contenido(contenido)
-                .tipo(tipo)
+                .kind(kind)
                 .leido(false)
                 .build();
 
-        return mapMensaje(tutoringMensajeRepository.save(mensaje));
+        return mapMessage(tutoringMessageRepository.save(message));
     }
 
     /**
-     * @param faseId    id de la fase de tutoría
+     * @param phaseId    id de la fase de tutoría
      * @param appUserId id del appUser que marca los mensajes como leídos
      */
     @Override
     @Transactional
-    public void marcarMensajesLeidos(Long faseId, Long appUserId) {
-        List<TutoringMensaje> noLeidos = tutoringMensajeRepository
-                .findByFaseIdAndLeidoFalseAndRemitenteIdNot(faseId, appUserId);
-        noLeidos.forEach(m -> m.setLeido(true));
-        tutoringMensajeRepository.saveAll(noLeidos);
+    public void markMessagesRead(Long phaseId, Long appUserId) {
+        List<TutoringMessage> noRead = tutoringMessageRepository
+                .findByPhaseIdAndLeidoFalseAndSenderIdNot(phaseId, appUserId);
+        noRead.forEach(m -> m.setLeido(true));
+        tutoringMessageRepository.saveAll(noRead);
     }
 
     // ── PDF ───────────────────────────────────────────────────────────────────
 
     /**
-     * @param faseId    id de la fase de tutoría
+     * @param phaseId    id de la fase de tutoría
      * @param appUserId id del appUser que solicita el PDF
      * @return el resource PDF de esa fase, para descarga
      * @throws RuntimeException si la fase no existe o no tiene PDF
      */
     @Override
-    public Resource obtainPdfFase(Long faseId, Long appUserId) {
-        TutoringFase fase = tutoringFaseRepository.findById(faseId)
+    public Resource obtainPdfPhase(Long phaseId, Long appUserId) {
+        TutoringPhase phase = tutoringPhaseRepository.findById(phaseId)
                 .orElseThrow(() -> new RuntimeException("Fase no encontrada"));
 
-        validateAccesoATutoring(fase.getTutor(), appUserId);
+        validateAccessATutoring(phase.getTutor(), appUserId);
 
-        if (fase.getArchivoPdfStudent() == null) {
+        if (phase.getFilePdfStudent() == null) {
             throw new RuntimeException("Esta fase no tiene PDF cargado");
         }
 
         Path ruta = Paths.get(uploadDir,
-                fase.getTutor().getId().toString(),
-                "fase_" + fase.getNumeroFase(),
-                fase.getArchivoPdfStudent()).normalize();
+                phase.getTutor().getId().toString(),
+                "fase_" + phase.getNumeroPhase(),
+                phase.getFilePdfStudent()).normalize();
 
         try {
             Resource resource = new UrlResource(ruta.toUri());
@@ -427,9 +427,9 @@ public class TutoringServiceImpl implements TutoringService {
      * @return resúmenes de todas las tutorías de ese student
      */
     @Override
-    public List<TutoringResumenDTO> obtainTutoringsStudent(Long studentAppUserId) {
+    public List<TutoringSummaryDTO> obtainTutoringsStudent(Long studentAppUserId) {
         return tutorRepository.findBySubmissionStudentAppUserId(studentAppUserId).stream()
-                .map(tutor -> buildResumenParaTutor(tutor, studentAppUserId))
+                .map(tutor -> buildSummaryForTutor(tutor, studentAppUserId))
                 .collect(Collectors.toList());
     }
 
@@ -438,15 +438,15 @@ public class TutoringServiceImpl implements TutoringService {
      * @return resúmenes de todas las tutorías a cargo de ese teacher
      */
     @Override
-    public List<TutoringResumenDTO> obtainTutoringsTeacher(Long teacherAppUserId) {
+    public List<TutoringSummaryDTO> obtainTutoringsTeacher(Long teacherAppUserId) {
         return tutorRepository.findByTeacherAppUserId(teacherAppUserId).stream()
-                .map(tutor -> buildResumenParaTutor(tutor, teacherAppUserId))
+                .map(tutor -> buildSummaryForTutor(tutor, teacherAppUserId))
                 .collect(Collectors.toList());
     }
 
     // ── Helpers privados ──────────────────────────────────────────────────────
 
-    private void validateAccesoATutoring(Tutor tutor, Long appUserId) {
+    private void validateAccessATutoring(Tutor tutor, Long appUserId) {
         AppUser appUser = appUserRepository.findById(appUserId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
                 
@@ -467,16 +467,16 @@ public class TutoringServiceImpl implements TutoringService {
         }
     }
 
-    private TutoringResumenDTO buildResumenParaTutor(Tutor tutor, Long appUserId) {
+    private TutoringSummaryDTO buildSummaryForTutor(Tutor tutor, Long appUserId) {
         Long tutorId = tutor.getId();
-        List<TutoringFase> fases = tutoringFaseRepository.findByTutorIdOrderByNumeroFaseAsc(tutorId);
+        List<TutoringPhase> phases = tutoringPhaseRepository.findByTutorIdOrderByNumeroPhaseAsc(tutorId);
 
-        long mensajesNoLeidos = fases.stream()
-                .mapToLong(fase -> tutoringMensajeRepository
-                        .countByFaseIdAndLeidoFalseAndRemitenteIdNot(fase.getId(), appUserId))
+        long messagesNoRead = phases.stream()
+                .mapToLong(phase -> tutoringMessageRepository
+                        .countByPhaseIdAndLeidoFalseAndSenderIdNot(phase.getId(), appUserId))
                 .sum();
 
-        long fasesAprobadas = tutoringFaseRepository.countByTutorIdAndEstado(tutorId, "APROBADA");
+        long phasesAprobadas = tutoringPhaseRepository.countByTutorIdAndStatus(tutorId, "APROBADA");
 
         Submission submission = tutor.getSubmission();
         String nombreStudent = submission.getStudent().getAppUser().getNombre()
@@ -484,59 +484,59 @@ public class TutoringServiceImpl implements TutoringService {
         String nombreTutor = tutor.getTeacher().getAppUser().getNombre()
                 + " " + tutor.getTeacher().getAppUser().getApellido();
 
-        boolean submissionSuspendida = submission.getEstado() != null && "SUSPENDIDA".equals(submission.getEstado().getCodigo());
+        boolean submissionSuspendida = submission.getStatus() != null && "SUSPENDIDA".equals(submission.getStatus().getCode());
 
-        return TutoringResumenDTO.builder()
+        return TutoringSummaryDTO.builder()
                 .tutorId(tutorId)
                 .submissionId(submission.getId())
                 .tituloTopic(submission.getTituloTopic())
                 .nombreStudent(nombreStudent)
                 .nombreTutor(nombreTutor)
-                .totalFases(fases.size())
-                .fasesAprobadas(fasesAprobadas)
-                .estadoTutoring(tutor.getEstado())
-                .mensajesNoLeidos(mensajesNoLeidos)
+                .totalPhases(phases.size())
+                .phasesAprobadas(phasesAprobadas)
+                .statusTutoring(tutor.getStatus())
+                .messagesNoRead(messagesNoRead)
                 .submissionSuspendida(submissionSuspendida)
                 .build();
     }
 
-    private TutoringFaseDTO mapFaseConMensajes(TutoringFase fase) {
-        List<TutoringMensajeDTO> mensajes = tutoringMensajeRepository
-                .findByFaseIdOrderByFechaEnvioAsc(fase.getId()).stream()
-                .map(this::mapMensaje)
+    private TutoringPhaseDTO mapPhaseWithMessages(TutoringPhase phase) {
+        List<TutoringMessageDTO> messages = tutoringMessageRepository
+                .findByPhaseIdOrderByDateEnvioAsc(phase.getId()).stream()
+                .map(this::mapMessage)
                 .collect(Collectors.toList());
 
-        return TutoringFaseDTO.builder()
-                .id(fase.getId())
-                .tutorId(fase.getTutor().getId())
-                .numeroFase(fase.getNumeroFase())
-                .estado(fase.getEstado())
-                .fechaInicio(fase.getFechaInicio())
-                .fechaAprobacion(fase.getFechaAprobacion())
-                .archivoPdfStudent(fase.getArchivoPdfStudent())
-                .tamanoPdfBytes(fase.getTamanoPdfBytes())
-                .mensajes(mensajes)
+        return TutoringPhaseDTO.builder()
+                .id(phase.getId())
+                .tutorId(phase.getTutor().getId())
+                .numeroPhase(phase.getNumeroPhase())
+                .status(phase.getStatus())
+                .dateStart(phase.getDateStart())
+                .dateAprobacion(phase.getDateAprobacion())
+                .filePdfStudent(phase.getFilePdfStudent())
+                .sizePdfBytes(phase.getSizePdfBytes())
+                .messages(messages)
                 .build();
     }
 
-    private TutoringMensajeDTO mapMensaje(TutoringMensaje m) {
-        String nombreRemitente = m.getRemitente().getNombre() + " " + m.getRemitente().getApellido();
-        return TutoringMensajeDTO.builder()
+    private TutoringMessageDTO mapMessage(TutoringMessage m) {
+        String nombreSender = m.getSender().getNombre() + " " + m.getSender().getApellido();
+        return TutoringMessageDTO.builder()
                 .id(m.getId())
-                .faseId(m.getFase().getId())
-                .remitenteId(m.getRemitente().getId())
-                .nombreRemitente(nombreRemitente)
+                .phaseId(m.getPhase().getId())
+                .senderId(m.getSender().getId())
+                .nombreSender(nombreSender)
                 .contenido(m.getContenido())
-                .fechaEnvio(m.getFechaEnvio())
-                .tipo(m.getTipo())
+                .dateEnvio(m.getDateEnvio())
+                .kind(m.getKind())
                 .leido(m.getLeido())
                 .build();
     }
 
-    private String calculateSha256YSave(MultipartFile archivo, Path destino) {
+    private String calculateSha256AndSave(MultipartFile file, Path destino) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            try (InputStream is = archivo.getInputStream();
+            try (InputStream is = file.getInputStream();
                  DigestInputStream dis = new DigestInputStream(is, digest)) {
                 Files.copy(dis, destino, StandardCopyOption.REPLACE_EXISTING);
             }
@@ -550,20 +550,20 @@ public class TutoringServiceImpl implements TutoringService {
      * Registra el avance de una fase de tutoría vía procedimiento almacenado.
      *
      * @param tutorId     id del registro de tutoría
-     * @param numeroFase  número de fase que avanza
-     * @param archivoPdf  nombre del archivo PDF asociado al avance
-     * @param tamanoBytes tamaño en bytes del archivo
+     * @param numeroPhase  número de fase que avanza
+     * @param filePdf  nombre del archivo PDF asociado al avance
+     * @param sizeBytes tamaño en bytes del archivo
      * @param sha256      hash SHA-256 del archivo, para verificación de integridad posterior
      * @param appUserId   id del appUser student que registra el avance (para validacion)
      */
     @Override
     @Transactional
-    public void registerAvanceSP(Long tutorId, Integer numeroFase, String archivoPdf, Long tamanoBytes, String sha256, Long appUserId) {
+    public void registerProgressSP(Long tutorId, Integer numeroPhase, String filePdf, Long sizeBytes, String sha256, Long appUserId) {
         Tutor tutor = tutorRepository.findById(tutorId)
                 .orElseThrow(() -> new RuntimeException("Tutor no encontrado"));
                 
-        validateAccesoATutoring(tutor, appUserId);
+        validateAccessATutoring(tutor, appUserId);
 
-        tutoringFaseRepository.spRegisterTutoringAvance(tutorId, numeroFase, archivoPdf, tamanoBytes, sha256);
+        tutoringPhaseRepository.spRegisterTutoringProgress(tutorId, numeroPhase, filePdf, sizeBytes, sha256);
     }
 }

@@ -32,7 +32,7 @@ public class RoleAppUser {
     @JsonValue
     @Column(name = "codigo", nullable = false, unique = true, length = 30)
     @JsonProperty("codigo")
-    private String codigo;
+    private String code;
 
     @Column(name = "nombre", nullable = false, length = 80)
     @JsonProperty("nombre")
@@ -46,11 +46,11 @@ public class RoleAppUser {
      * pero eso es invisible para el cliente porque @JsonValue vuelve a colapsar la
      * respuesta al string de todos modos.
      *
-     * @param codigo código del role de appUser
+     * @param code código del role de appUser
      * @return una instancia con solo el código repoblado (id/nombre quedan null)
      */
     @JsonCreator
-    public static RoleAppUser fromCodigo(String codigo) {
-        return RoleAppUser.builder().codigo(codigo).build();
+    public static RoleAppUser fromCode(String code) {
+        return RoleAppUser.builder().code(code).build();
     }
 }

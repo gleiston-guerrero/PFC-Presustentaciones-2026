@@ -33,14 +33,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import ec.edu.uteq.presustentaciones.dto.BackupInfoDTO;
-import ec.edu.uteq.presustentaciones.dto.EstadoBackupsDTO;
+import ec.edu.uteq.presustentaciones.dto.StatusBackupsDTO;
 import ec.edu.uteq.presustentaciones.dto.BackupConfigDTO;
 import ec.edu.uteq.presustentaciones.entities.BackupConfig;
-import ec.edu.uteq.presustentaciones.entities.BackupPruebaRestauracion;
+import ec.edu.uteq.presustentaciones.entities.BackupDrillRestore;
 import ec.edu.uteq.presustentaciones.repositories.BackupConfigRepository;
-import ec.edu.uteq.presustentaciones.repositories.BackupPruebaRestauracionRepository;
-import ec.edu.uteq.presustentaciones.services.backup.OrigenBackup;
-import ec.edu.uteq.presustentaciones.services.backup.TipoBackup;
+import ec.edu.uteq.presustentaciones.repositories.BackupDrillRestoreRepository;
+import ec.edu.uteq.presustentaciones.services.backup.SourceBackup;
+import ec.edu.uteq.presustentaciones.services.backup.KindBackup;
 
 /**
  * Genera y administra los backups de la base de datos para el apartado "Gestión de
@@ -54,7 +54,7 @@ import ec.edu.uteq.presustentaciones.services.backup.TipoBackup;
  *   <li>Panel de estado + bitácora de pruebas de restauración.</li>
  * </ul>
  *
- * <p>El tipo ({@link TipoBackup}) y el origen ({@link OrigenBackup}) van codificados en
+ * <p>El tipo ({@link KindBackup}) y el origen ({@link SourceBackup}) van codificados en
  * el nombre del archivo: {@code backup_<TIPO>_<ORIGEN>_<yyyyMMdd_HHmmss>.dump}. Los
  * nombres del formato antiguo ({@code backup_<yyyyMMdd_HHmmss>.dump}) se interpretan
  * como FULL / MANUAL.
@@ -101,7 +101,7 @@ public class BackupService {
     private String dbPassword;
 
     private final BackupConfigRepository configRepo;
-    private final BackupPruebaRestauracionRepository pruebaRepo;
+    private final BackupDrillRestoreRepository drillRepo;
 
     // ── Consultas ────────────────────────────────────────────────────────────
 
@@ -123,7 +123,7 @@ public class BackupService {
                                    return n.endsWith(".dump") || n.endsWith(".tar.gz"); })
                     .map(this::aInfo)
                     .filter(Objects::nonNull)
-                    .sorted(Comparator.comparing(BackupInfoDTO::getFechaCreacion).reversed())
+                    .sorted(Comparator.comparing(BackupInfoDTO::getDateCreacion).reversed())
                     .toList();
         } catch (IOException e) {
             throw new RuntimeException("No se pudo listar el directorio de respaldos: " + e.getMessage(), e);
@@ -136,52 +136,52 @@ public class BackupService {
      * @return resumen con el último backup, la próxima ejecución programada, el uso de
      *         espacio en disco y el resultado de la última prueba de restauración
      */
-    public EstadoBackupsDTO estado() {
-        List<BackupInfoDTO> todos = list();
+    public StatusBackupsDTO status() {
+        List<BackupInfoDTO> all = list();
         BackupConfig cfg = config();
 
-        BackupInfoDTO ultimo = todos.isEmpty() ? null : todos.get(0);
+        BackupInfoDTO last = all.isEmpty() ? null : all.get(0);
         LocalDateTime ahora = LocalDateTime.now();
 
         LocalDateTime proximo = null;
         String proximoTexto = "programación pausada";
         String rpo = "sin protección automática — solo copias manuales";
         if (cfg.isActivo()) {
-            CronExpression cron = cronValido(cfg.getCron());
+            CronExpression cron = cronValid(cfg.getCron());
             if (cron != null) {
                 proximo = cron.next(ahora);
-                proximoTexto = proximo != null ? ("en " + humanizar(Duration.between(ahora, proximo))) : "—";
-                rpo = "≈ " + humanizarIntervaloCron(cron, ahora);
+                proximoTexto = proximo != null ? ("en " + humanize(Duration.between(ahora, proximo))) : "—";
+                rpo = "≈ " + humanizeIntervalCron(cron, ahora);
             } else {
                 proximoTexto = "expresión cron inválida";
             }
         }
 
-        long usado = todos.stream().mapToLong(BackupInfoDTO::getTamanoBytes).sum();
-        long libre = espacioLibre();
+        long usado = all.stream().mapToLong(BackupInfoDTO::getSizeBytes).sum();
+        long free = espacioFree();
 
-        BackupPruebaRestauracion ultimaPrueba = pruebaRepo.findFirstByOrderByFechaDesc();
+        BackupDrillRestore lastDrill = drillRepo.findFirstByOrderByDateDesc();
 
-        return EstadoBackupsDTO.builder()
-                .ultimoBackup(ultimo)
-                .ultimoBackupHace(ultimo != null ? "hace " + humanizar(Duration.between(ultimo.getFechaCreacion(), ahora)) : "—")
-                .programacionActiva(cfg.isActivo())
-                .proximoAutomatico(proximo)
-                .proximoAutomaticoTexto(proximoTexto)
-                .totalBackups(todos.size())
-                .countPorTipo(todos.stream().collect(Collectors.groupingBy(
-                        BackupInfoDTO::getTipo, LinkedHashMap::new, Collectors.counting())))
-                .countPorOrigen(todos.stream().collect(Collectors.groupingBy(
-                        BackupInfoDTO::getOrigen, LinkedHashMap::new, Collectors.counting())))
+        return StatusBackupsDTO.builder()
+                .lastBackup(last)
+                .lastBackupHace(last != null ? "hace " + humanize(Duration.between(last.getDateCreacion(), ahora)) : "—")
+                .schedulingActive(cfg.isActivo())
+                .proximoAutomatic(proximo)
+                .proximoAutomaticTexto(proximoTexto)
+                .totalBackups(all.size())
+                .countByKind(all.stream().collect(Collectors.groupingBy(
+                        BackupInfoDTO::getKind, LinkedHashMap::new, Collectors.counting())))
+                .countBySource(all.stream().collect(Collectors.groupingBy(
+                        BackupInfoDTO::getSource, LinkedHashMap::new, Collectors.counting())))
                 .espacioUsadoBytes(usado)
-                .espacioUsadoLegible(formatoTamano(usado))
-                .espacioLibreBytes(libre)
-                .espacioLibreLegible(formatoTamano(libre))
+                .espacioUsadoLegible(formatSize(usado))
+                .espacioFreeBytes(free)
+                .espacioFreeLegible(formatSize(free))
                 .rpoEstimado(rpo)
-                .ultimaPruebaRestauracion(ultimaPrueba != null ? ultimaPrueba.getFecha() : null)
-                .ultimaPruebaResultado(ultimaPrueba != null ? ultimaPrueba.getResultado() : "—")
-                .ultimaPruebaHace(ultimaPrueba != null
-                        ? "hace " + humanizar(Duration.between(ultimaPrueba.getFecha(), ahora)) : "nunca")
+                .lastDrillRestore(lastDrill != null ? lastDrill.getDate() : null)
+                .lastDrillResult(lastDrill != null ? lastDrill.getResult() : "—")
+                .lastDrillHace(lastDrill != null
+                        ? "hace " + humanize(Duration.between(lastDrill.getDate(), ahora)) : "nunca")
                 .build();
     }
 
@@ -203,15 +203,15 @@ public class BackupService {
                         .retenerSemanales((short) 5)
                         .retenerMensuales((short) 12)
                         .retenerDiasWal((short) 14)
-                        .diferencialActivo(false)
-                        .cronDiferencial("0 30 2 * * WED,FRI")
+                        .differentialActivo(false)
+                        .cronDifferential("0 30 2 * * WED,FRI")
                         .actualizadoEn(LocalDateTime.now())
                         .build()));
     }
 
     /**
      * Configuración vigente del schedule, en el DTO expuesto por la API (incluye la
-     * descripción legible del cron, ver {@link #describirCron(String)}).
+     * descripción legible del cron, ver {@link #describeCron(String)}).
      *
      * @return la configuración vigente, convertida a DTO
      */
@@ -229,14 +229,14 @@ public class BackupService {
      *                                   expresiones cron válidas de 6 campos
      */
     public BackupConfigDTO updateConfig(BackupConfigDTO dto) {
-        if (cronValido(dto.getCron()) == null) {
+        if (cronValid(dto.getCron()) == null) {
             throw new IllegalArgumentException(
                     "Expresión cron inválida: '" + dto.getCron() + "'. Usa el formato de 6 campos de Spring "
                     + "(ej. \"0 0 23 * * SUN\" = domingos 23:00).");
         }
-        if (cronValido(dto.getCronDiferencial()) == null) {
+        if (cronValid(dto.getCronDifferential()) == null) {
             throw new IllegalArgumentException(
-                    "Expresión cron del diferencial inválida: '" + dto.getCronDiferencial() + "'.");
+                    "Expresión cron del diferencial inválida: '" + dto.getCronDifferential() + "'.");
         }
         BackupConfig c = config();
         c.setActivo(Boolean.TRUE.equals(dto.getActivo()));
@@ -245,24 +245,24 @@ public class BackupService {
         c.setRetenerSemanales(dto.getRetenerSemanales().shortValue());
         c.setRetenerMensuales(dto.getRetenerMensuales().shortValue());
         c.setRetenerDiasWal(dto.getRetenerDiasWal().shortValue());
-        c.setDiferencialActivo(Boolean.TRUE.equals(dto.getDiferencialActivo()));
-        c.setCronDiferencial(dto.getCronDiferencial().trim());
+        c.setDifferentialActivo(Boolean.TRUE.equals(dto.getDifferentialActivo()));
+        c.setCronDifferential(dto.getCronDifferential().trim());
         c.setActualizadoEn(LocalDateTime.now());
-        c.setActualizadoPor(appUserActual());
-        BackupConfig guardado = configRepo.save(c);
+        c.setActualizadoBy(currentAppUser());
+        BackupConfig saved = configRepo.save(c);
         log.info("Cronograma de respaldos actualizado por {}: full activo={} cron='{}' retencion={}/{}/{} "
                 + "walDias={} diferencial activo={} cron='{}'",
-                appUserActual(), guardado.isActivo(), guardado.getCron(),
-                guardado.getRetenerDiarios(), guardado.getRetenerSemanales(), guardado.getRetenerMensuales(),
-                guardado.getRetenerDiasWal(), guardado.isDiferencialActivo(), guardado.getCronDiferencial());
-        return aConfigDTO(guardado);
+                currentAppUser(), saved.isActivo(), saved.getCron(),
+                saved.getRetenerDiarios(), saved.getRetenerSemanales(), saved.getRetenerMensuales(),
+                saved.getRetenerDiasWal(), saved.isDifferentialActivo(), saved.getCronDifferential());
+        return aConfigDTO(saved);
     }
 
     // ── Pruebas de restauración ─────────────────────────────────────────────
 
     /** @return las últimas 50 pruebas de restauración registradas, de la más reciente a la más antigua */
-    public List<BackupPruebaRestauracion> pruebas() {
-        return pruebaRepo.findTop50ByOrderByFechaDesc();
+    public List<BackupDrillRestore> drills() {
+        return drillRepo.findTop50ByOrderByDateDesc();
     }
 
     /**
@@ -271,7 +271,7 @@ public class BackupService {
      * exista, solo que el nombre tenga forma válida, para no save basura.
      *
      * @param backupNombre nombre del archivo de backup que se probó
-     * @param resultado      {@code "FALLIDA"} para marcarla como fallida; cualquier otro
+     * @param result      {@code "FALLIDA"} para marcarla como fallida; cualquier otro
      *                       valor (incluido {@code null}) se guarda como {@code "EXITOSA"}
      * @param responsable    quién ejecutó la prueba; si viene vacío se usa el appUser
      *                       autenticado actual
@@ -280,60 +280,60 @@ public class BackupService {
      * @throws IllegalArgumentException si {@code backupNombre} es nulo o no tiene la forma
      *                                   de un nombre de backup válido
      */
-    public BackupPruebaRestauracion registerPrueba(String backupNombre, String resultado,
+    public BackupDrillRestore registerDrill(String backupNombre, String result,
                                                       String responsable, String notas) {
         // el backup puede ya no existir (se probó y se borró) -> no se exige que exista,
         // pero el nombre sí se valida contra el patrón para no save basura.
         if (backupNombre == null || !NOMBRE_VALIDO.matcher(backupNombre).matches()) {
             throw new IllegalArgumentException("Nombre de respaldo inválido.");
         }
-        BackupPruebaRestauracion p = BackupPruebaRestauracion.builder()
+        BackupDrillRestore p = BackupDrillRestore.builder()
                 .backupNombre(backupNombre)
-                .fecha(LocalDateTime.now())
-                .resultado("FALLIDA".equals(resultado) ? "FALLIDA" : "EXITOSA")
-                .responsable(responsable != null && !responsable.isBlank() ? responsable.trim() : appUserActual())
+                .date(LocalDateTime.now())
+                .result("FALLIDA".equals(result) ? "FALLIDA" : "EXITOSA")
+                .responsable(responsable != null && !responsable.isBlank() ? responsable.trim() : currentAppUser())
                 .notas(notas != null && !notas.isBlank() ? notas.trim() : null)
                 .build();
-        return pruebaRepo.save(p);
+        return drillRepo.save(p);
     }
 
     // ── Generación ──────────────────────────────────────────────────────────
 
     /** Compat: FULL manual. @return el backup FULL manual generado */
     public BackupInfoDTO generate() {
-        return generate(TipoBackup.FULL, OrigenBackup.MANUAL);
+        return generate(KindBackup.FULL, SourceBackup.MANUAL);
     }
 
     /**
      * Genera un backup con {@code pg_dump -Fc} etiquetado con su tipo y origen.
      *
-     * @param tipo   FULL o DIFERENCIAL (para el diferencial real, ver
-     *               {@link #generateDiferencial(OrigenBackup)})
-     * @param origen quién lo disparó: MANUAL, AUTOMATICO o EVENTO
+     * @param kind   FULL o DIFERENCIAL (para el diferencial real, ver
+     *               {@link #generateDifferential(SourceBackup)})
+     * @param source quién lo disparó: MANUAL, AUTOMATICO o EVENTO
      * @return metadatos del archivo de backup generado
      * @throws RuntimeException si {@code pg_dump} falla o termina sin error pero deja el
      *                          archivo vacío
      */
-    public BackupInfoDTO generate(TipoBackup tipo, OrigenBackup origen) {
-        Conexion c = parsearConexion();
-        Path dir = createDirectorio();
-        String nombre = "respaldo_" + tipo.name() + "_" + origen.name() + "_"
+    public BackupInfoDTO generate(KindBackup kind, SourceBackup source) {
+        Connection c = parseConnection();
+        Path dir = createDirectory();
+        String nombre = "respaldo_" + kind.name() + "_" + source.name() + "_"
                 + LocalDateTime.now().format(SELLO) + ".dump";
         Path destino = dir.resolve(nombre);
 
         List<String> comando = List.of(
                 "pg_dump",
-                "-h", c.host, "-p", c.port, "-U", c.appUser, "-d", c.baseDatos,
+                "-h", c.host, "-p", c.port, "-U", c.appUser, "-d", c.baseData,
                 "--format=custom", "--compress=6", "--no-owner", "--no-privileges",
                 "-f", destino.toAbsolutePath().toString());
 
         execute(comando, "pg_dump", "generar el respaldo");
 
-        if (!Files.isRegularFile(destino) || tamano(destino) == 0L) {
+        if (!Files.isRegularFile(destino) || size(destino) == 0L) {
             throw new RuntimeException("pg_dump terminó sin error pero el archivo de respaldo quedó vacío.");
         }
         log.info("Respaldo {} / {} generado: {} ({} bytes) por {}",
-                tipo, origen, nombre, tamano(destino), appUserActual());
+                kind, source, nombre, size(destino), currentAppUser());
         return aInfo(destino);
     }
 
@@ -343,10 +343,10 @@ public class BackupService {
      * @return la fecha de creación del último backup automático, o {@code now() - 10 años}
      *         si nunca se ha generado uno (para que el scheduler lo trate como "ya toca")
      */
-    public LocalDateTime fechaUltimoAutomatico() {
+    public LocalDateTime dateLastAutomatic() {
         return list().stream()
-                .filter(b -> OrigenBackup.AUTOMATICO.name().equals(b.getOrigen()))
-                .map(BackupInfoDTO::getFechaCreacion)
+                .filter(b -> SourceBackup.AUTOMATICO.name().equals(b.getSource()))
+                .map(BackupInfoDTO::getDateCreacion)
                 .max(Comparator.naturalOrder())
                 .orElse(LocalDateTime.now().minusYears(10));
     }
@@ -357,11 +357,11 @@ public class BackupService {
      * @return la fecha de creación del último diferencial automático, o {@code now() - 10 años}
      *         si nunca se ha generado uno
      */
-    public LocalDateTime fechaUltimoDiferencialAutomatico() {
+    public LocalDateTime dateLastDifferentialAutomatic() {
         return list().stream()
-                .filter(b -> TipoBackup.DIFERENCIAL.name().equals(b.getTipo()))
-                .filter(b -> OrigenBackup.AUTOMATICO.name().equals(b.getOrigen()))
-                .map(BackupInfoDTO::getFechaCreacion)
+                .filter(b -> KindBackup.DIFERENCIAL.name().equals(b.getKind()))
+                .filter(b -> SourceBackup.AUTOMATICO.name().equals(b.getSource()))
+                .map(BackupInfoDTO::getDateCreacion)
                 .max(Comparator.naturalOrder())
                 .orElse(LocalDateTime.now().minusYears(10));
     }
@@ -372,23 +372,23 @@ public class BackupService {
      * El "qué cambió" se resuelve por la tabla de auditoría (V15). Se restaura aplicando
      * los CSV sobre una restauración del FULL base (procedimiento en el plan §4).
      *
-     * @param origen quién lo disparó: MANUAL o AUTOMATICO
+     * @param source quién lo disparó: MANUAL o AUTOMATICO
      * @return metadatos del archivo {@code .tar.gz} generado
      * @throws IllegalStateException si no existe ningún backup FULL del que partir
      * @throws RuntimeException      si falla la exportación con {@code psql}, la creación del
      *                                {@code .tar.gz}, o cualquier operación de archivo
      */
-    public BackupInfoDTO generateDiferencial(OrigenBackup origen) {
-        BackupInfoDTO ultimoFull = list().stream()
-                .filter(b -> TipoBackup.FULL.name().equals(b.getTipo()))
-                .max(Comparator.comparing(BackupInfoDTO::getFechaCreacion))
+    public BackupInfoDTO generateDifferential(SourceBackup source) {
+        BackupInfoDTO lastFull = list().stream()
+                .filter(b -> KindBackup.FULL.name().equals(b.getKind()))
+                .max(Comparator.comparing(BackupInfoDTO::getDateCreacion))
                 .orElseThrow(() -> new IllegalStateException(
                         "No hay ningún respaldo FULL del que partir. Genera un FULL primero."));
 
-        Conexion c = parsearConexion();
-        Path dir = createDirectorio();
+        Connection c = parseConnection();
+        Path dir = createDirectory();
         String sello = LocalDateTime.now().format(SELLO);
-        String fullTs = ultimoFull.getFechaCreacion().format(TS_SQL);
+        String fullTs = lastFull.getDateCreacion().format(TS_SQL);
         Path work = dir.resolve("dif_tmp_" + sello);
         try {
             Files.createDirectories(work);
@@ -398,19 +398,19 @@ public class BackupService {
 
         int totalFilas = 0;
         StringBuilder manifiesto = new StringBuilder()
-                .append("full_base=").append(ultimoFull.getNombre()).append('\n')
+                .append("full_base=").append(lastFull.getNombre()).append('\n')
                 .append("full_base_fecha=").append(fullTs).append('\n')
                 .append("generado=").append(LocalDateTime.now()).append('\n');
         try {
             for (String tabla : TABLAS_DIFERENCIAL) {
-                String archivo = work.resolve(tabla + ".csv").toAbsolutePath().toString();
+                String file = work.resolve(tabla + ".csv").toAbsolutePath().toString();
                 String sql = "\\copy (SELECT t.* FROM presus." + tabla + " t WHERE t.id IN "
                         + "(SELECT DISTINCT registro_id FROM presus.auditoria WHERE tabla = '" + tabla
                         + "' AND fecha > '" + fullTs + "' AND accion <> 'ELIMINAR' AND registro_id IS NOT NULL)) "
-                        + "TO '" + archivo + "' WITH (FORMAT csv, HEADER true)";
-                ProcessResult r = correr(List.of("psql", "-h", c.host, "-p", c.port, "-U", c.appUser,
-                        "-d", c.baseDatos, "-v", "ON_ERROR_STOP=1", "-q", "-c", sql), "psql");
-                if (r.codigo != 0) {
+                        + "TO '" + file + "' WITH (FORMAT csv, HEADER true)";
+                ProcessResult r = run(List.of("psql", "-h", c.host, "-p", c.port, "-U", c.appUser,
+                        "-d", c.baseData, "-v", "ON_ERROR_STOP=1", "-q", "-c", sql), "psql");
+                if (r.code != 0) {
                     throw new RuntimeException("psql falló exportando '" + tabla + "': " + summarizeError(r.salida));
                 }
                 long filas = countLinesCsv(work.resolve(tabla + ".csv"));
@@ -418,30 +418,30 @@ public class BackupService {
                 manifiesto.append("tabla.").append(tabla).append('=').append(filas).append('\n');
             }
             // ids eliminados desde el FULL (para que el restore también los quite)
-            String archivoDel = work.resolve("_eliminados.csv").toAbsolutePath().toString();
+            String fileDel = work.resolve("_eliminados.csv").toAbsolutePath().toString();
             String sqlDel = "\\copy (SELECT tabla, registro_id, fecha FROM presus.auditoria "
                     + "WHERE accion = 'ELIMINAR' AND fecha > '" + fullTs + "') "
-                    + "TO '" + archivoDel + "' WITH (FORMAT csv, HEADER true)";
-            correr(List.of("psql", "-h", c.host, "-p", c.port, "-U", c.appUser, "-d", c.baseDatos,
+                    + "TO '" + fileDel + "' WITH (FORMAT csv, HEADER true)";
+            run(List.of("psql", "-h", c.host, "-p", c.port, "-U", c.appUser, "-d", c.baseData,
                     "-v", "ON_ERROR_STOP=1", "-q", "-c", sqlDel), "psql");
 
             manifiesto.append("filas_total=").append(totalFilas).append('\n');
             Files.writeString(work.resolve("manifest.txt"), manifiesto.toString());
 
-            String nombre = "respaldo_DIFERENCIAL_" + origen.name() + "_" + sello + ".tar.gz";
+            String nombre = "respaldo_DIFERENCIAL_" + source.name() + "_" + sello + ".tar.gz";
             Path destino = dir.resolve(nombre);
-            ProcessResult tar = correr(List.of("tar", "-czf", destino.toAbsolutePath().toString(),
+            ProcessResult tar = run(List.of("tar", "-czf", destino.toAbsolutePath().toString(),
                     "-C", work.toAbsolutePath().toString(), "."), "tar");
-            if (tar.codigo != 0 || !Files.isRegularFile(destino)) {
+            if (tar.code != 0 || !Files.isRegularFile(destino)) {
                 throw new RuntimeException("No se pudo empaquetar el diferencial: " + summarizeError(tar.salida));
             }
             log.info("Respaldo DIFERENCIAL / {} generado: {} ({} filas desde {}) por {}",
-                    origen, nombre, totalFilas, fullTs, appUserActual());
+                    source, nombre, totalFilas, fullTs, currentAppUser());
             return aInfo(destino);
         } catch (IOException e) {
             throw new RuntimeException("Error generando el diferencial: " + e.getMessage(), e);
         } finally {
-            eraseDirRecursivo(work);
+            eraseDirRecursive(work);
         }
     }
 
@@ -454,7 +454,7 @@ public class BackupService {
         }
     }
 
-    private static void eraseDirRecursivo(Path d) {
+    private static void eraseDirRecursive(Path d) {
         if (d == null || !Files.exists(d)) return;
         try (Stream<Path> w = Files.walk(d)) {
             w.sorted(Comparator.reverseOrder()).forEach(p -> {
@@ -472,12 +472,12 @@ public class BackupService {
      *
      * @return nombres de los archivos eliminados
      */
-    public List<String> aplicarRetencion() {
+    public List<String> applyRetention() {
         BackupConfig cfg = config();
         List<BackupInfoDTO> autos = list().stream()
-                .filter(b -> TipoBackup.FULL.name().equals(b.getTipo()))
-                .filter(b -> OrigenBackup.AUTOMATICO.name().equals(b.getOrigen()))
-                .sorted(Comparator.comparing(BackupInfoDTO::getFechaCreacion).reversed())
+                .filter(b -> KindBackup.FULL.name().equals(b.getKind()))
+                .filter(b -> SourceBackup.AUTOMATICO.name().equals(b.getSource()))
+                .sorted(Comparator.comparing(BackupInfoDTO::getDateCreacion).reversed())
                 .toList();
         if (autos.isEmpty()) {
             return List.of();
@@ -495,8 +495,8 @@ public class BackupService {
         Set<String> semanas = new LinkedHashSet<>();
         for (BackupInfoDTO b : autos) {
             if (conservar.contains(b.getNombre())) continue;
-            String clave = b.getFechaCreacion().get(IsoFields.WEEK_BASED_YEAR)
-                    + "-W" + b.getFechaCreacion().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+            String clave = b.getDateCreacion().get(IsoFields.WEEK_BASED_YEAR)
+                    + "-W" + b.getDateCreacion().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
             if (semanas.contains(clave)) continue;
             if (semanas.size() >= cfg.getRetenerSemanales()) continue;
             semanas.add(clave);
@@ -507,7 +507,7 @@ public class BackupService {
         Set<String> meses = new LinkedHashSet<>();
         for (BackupInfoDTO b : autos) {
             if (conservar.contains(b.getNombre())) continue;
-            String clave = b.getFechaCreacion().getYear() + "-" + b.getFechaCreacion().getMonthValue();
+            String clave = b.getDateCreacion().getYear() + "-" + b.getDateCreacion().getMonthValue();
             if (meses.contains(clave)) continue;
             if (meses.size() >= cfg.getRetenerMensuales()) continue;
             meses.add(clave);
@@ -543,10 +543,10 @@ public class BackupService {
      *                                   directorio de backups, o el archivo no existe
      * @throws RuntimeException         si falla la lectura del archivo en disco
      */
-    public byte[] leer(String nombre) {
-        Path archivo = resolveExistente(nombre);
+    public byte[] read(String nombre) {
+        Path file = resolveExisting(nombre);
         try {
-            return Files.readAllBytes(archivo);
+            return Files.readAllBytes(file);
         } catch (IOException e) {
             throw new RuntimeException("No se pudo leer el respaldo: " + e.getMessage(), e);
         }
@@ -561,22 +561,22 @@ public class BackupService {
      *                                   un backup DIFERENCIAL (esos no se restauran solos)
      */
     public void restore(String nombre) {
-        Path archivo = resolveExistente(nombre);
+        Path file = resolveExisting(nombre);
         if (nombre.endsWith(".tar.gz")) {
             throw new IllegalArgumentException(
                     "Un respaldo DIFERENCIAL no se restaura solo: se aplica sobre una restauración del "
                     + "FULL base. Descárgalo y sigue el procedimiento del plan (§4): restaurar el FULL "
                     + "y luego \\copy de cada CSV del .tar.gz.");
         }
-        Conexion c = parsearConexion();
+        Connection c = parseConnection();
         List<String> comando = List.of(
                 "pg_restore",
-                "-h", c.host, "-p", c.port, "-U", c.appUser, "-d", c.baseDatos,
+                "-h", c.host, "-p", c.port, "-U", c.appUser, "-d", c.baseData,
                 "--clean", "--if-exists", "--no-owner", "--no-privileges",
-                archivo.toAbsolutePath().toString());
-        int codigo = executeTolerante(comando, "pg_restore");
+                file.toAbsolutePath().toString());
+        int code = executeTolerant(comando, "pg_restore");
         log.warn("Restauración de base ejecutada desde {} por {} (código pg_restore={})",
-                nombre, appUserActual(), codigo);
+                nombre, currentAppUser(), code);
     }
 
     /**
@@ -587,10 +587,10 @@ public class BackupService {
      * @throws RuntimeException         si falla el borrado en disco
      */
     public void delete(String nombre) {
-        Path archivo = resolveExistente(nombre);
+        Path file = resolveExisting(nombre);
         try {
-            Files.delete(archivo);
-            log.info("Respaldo eliminado: {} por {}", nombre, appUserActual());
+            Files.delete(file);
+            log.info("Respaldo eliminado: {} por {}", nombre, currentAppUser());
         } catch (IOException e) {
             throw new RuntimeException("No se pudo eliminar el respaldo: " + e.getMessage(), e);
         }
@@ -598,9 +598,9 @@ public class BackupService {
 
     // ── Internos ────────────────────────────────────────────────────────────
 
-    private record Conexion(String host, String port, String baseDatos, String appUser) {}
+    private record Connection(String host, String port, String baseData, String appUser) {}
 
-    private Conexion parsearConexion() {
+    private Connection parseConnection() {
         Matcher m = JDBC_URL.matcher(datasourceUrl == null ? "" : datasourceUrl.trim());
         if (!m.matches()) {
             throw new IllegalStateException(
@@ -608,10 +608,10 @@ public class BackupService {
         }
         String host = m.group(1);
         String port = m.group(2) != null ? m.group(2) : "5432";
-        return new Conexion(host, port, m.group(3), dbUsername);
+        return new Connection(host, port, m.group(3), dbUsername);
     }
 
-    private Path createDirectorio() {
+    private Path createDirectory() {
         try {
             Path dir = Paths.get(backupsDir);
             Files.createDirectories(dir);
@@ -621,40 +621,40 @@ public class BackupService {
         }
     }
 
-    private Path resolveExistente(String nombre) {
+    private Path resolveExisting(String nombre) {
         if (nombre == null || !NOMBRE_VALIDO.matcher(nombre).matches() || nombre.contains("..")) {
             throw new IllegalArgumentException("Nombre de respaldo inválido.");
         }
         Path dir = Paths.get(backupsDir).toAbsolutePath().normalize();
-        Path archivo = dir.resolve(nombre).normalize();
-        if (!archivo.getParent().equals(dir)) {
+        Path file = dir.resolve(nombre).normalize();
+        if (!file.getParent().equals(dir)) {
             throw new IllegalArgumentException("Nombre de respaldo inválido.");
         }
-        if (!Files.isRegularFile(archivo)) {
+        if (!Files.isRegularFile(file)) {
             throw new IllegalArgumentException("El respaldo '" + nombre + "' no existe.");
         }
-        return archivo;
+        return file;
     }
 
-    private void execute(List<String> comando, String binario, String descripcion) {
-        ProcessResult r = correr(comando, binario);
-        if (r.codigo != 0) {
-            log.error("{} falló (código {}): {}", binario, r.codigo, r.salida);
-            throw new RuntimeException("No se pudo " + descripcion + ": " + summarizeError(r.salida));
+    private void execute(List<String> comando, String binario, String description) {
+        ProcessResult r = run(comando, binario);
+        if (r.code != 0) {
+            log.error("{} falló (código {}): {}", binario, r.code, r.salida);
+            throw new RuntimeException("No se pudo " + description + ": " + summarizeError(r.salida));
         }
     }
 
-    private int executeTolerante(List<String> comando, String binario) {
-        ProcessResult r = correr(comando, binario);
+    private int executeTolerant(List<String> comando, String binario) {
+        ProcessResult r = run(comando, binario);
         if (!r.salida.isBlank()) {
             log.warn("{} avisos: {}", binario, r.salida);
         }
-        return r.codigo;
+        return r.code;
     }
 
-    private record ProcessResult(int codigo, String salida) {}
+    private record ProcessResult(int code, String salida) {}
 
-    private ProcessResult correr(List<String> comando, String binario) {
+    private ProcessResult run(List<String> comando, String binario) {
         ProcessBuilder pb = new ProcessBuilder(comando);
         pb.environment().put("PGPASSWORD", dbPassword == null ? "" : dbPassword);
         pb.redirectErrorStream(true);
@@ -686,8 +686,8 @@ public class BackupService {
     private static String summarizeError(String salida) {
         if (salida == null || salida.isBlank()) return "sin detalle (revisa los logs del backend).";
         String[] lines = salida.strip().split("\\r?\\n");
-        String ultima = lines[lines.length - 1].trim();
-        return ultima.length() > 300 ? ultima.substring(0, 300) + "…" : ultima;
+        String last = lines[lines.length - 1].trim();
+        return last.length() > 300 ? last.substring(0, 300) + "…" : last;
     }
 
     private BackupInfoDTO aInfo(Path p) {
@@ -697,21 +697,21 @@ public class BackupService {
             LocalDateTime creado = LocalDateTime.ofInstant(
                     Files.getLastModifiedTime(p).toInstant(), ZoneId.systemDefault());
 
-            String tipo = TipoBackup.FULL.name();
-            String origen = OrigenBackup.MANUAL.name();
-            Matcher nuevo = NOMBRE_NUEVO.matcher(nombre);
-            if (nuevo.matches()) {
-                tipo = nuevo.group(1);
-                origen = nuevo.group(2);
+            String kind = KindBackup.FULL.name();
+            String source = SourceBackup.MANUAL.name();
+            Matcher target = NOMBRE_NUEVO.matcher(nombre);
+            if (target.matches()) {
+                kind = target.group(1);
+                source = target.group(2);
             }
 
             return BackupInfoDTO.builder()
                     .nombre(nombre)
-                    .tipo(tipo)
-                    .origen(origen)
-                    .tamanoBytes(bytes)
-                    .tamanoLegible(formatoTamano(bytes))
-                    .fechaCreacion(creado)
+                    .kind(kind)
+                    .source(source)
+                    .sizeBytes(bytes)
+                    .sizeLegible(formatSize(bytes))
+                    .dateCreacion(creado)
                     .build();
         } catch (IOException e) {
             log.warn("No se pudo leer metadatos de {}: {}", p, e.getMessage());
@@ -719,7 +719,7 @@ public class BackupService {
         }
     }
 
-    private long tamano(Path p) {
+    private long size(Path p) {
         try {
             return Files.size(p);
         } catch (IOException e) {
@@ -727,15 +727,15 @@ public class BackupService {
         }
     }
 
-    private long espacioLibre() {
+    private long espacioFree() {
         try {
-            return Files.getFileStore(createDirectorio()).getUsableSpace();
+            return Files.getFileStore(createDirectory()).getUsableSpace();
         } catch (Exception e) {
             return -1L;
         }
     }
 
-    private static CronExpression cronValido(String cron) {
+    private static CronExpression cronValid(String cron) {
         if (cron == null || cron.isBlank()) return null;
         try {
             return CronExpression.parse(cron.trim());
@@ -752,15 +752,15 @@ public class BackupService {
                 .retenerSemanales((int) c.getRetenerSemanales())
                 .retenerMensuales((int) c.getRetenerMensuales())
                 .retenerDiasWal(c.getRetenerDiasWal() == null ? 14 : (int) c.getRetenerDiasWal())
-                .diferencialActivo(c.isDiferencialActivo())
-                .cronDiferencial(c.getCronDiferencial() != null ? c.getCronDiferencial() : "0 30 2 * * WED,FRI")
-                .cronDescripcion(describirCron(c.getCron()))
-                .cronDiferencialDescripcion(describirCron(c.getCronDiferencial()))
+                .differentialActivo(c.isDifferentialActivo())
+                .cronDifferential(c.getCronDifferential() != null ? c.getCronDifferential() : "0 30 2 * * WED,FRI")
+                .cronDescription(describeCron(c.getCron()))
+                .cronDifferentialDescription(describeCron(c.getCronDifferential()))
                 .build();
     }
 
     /** Descripción best-effort para los presets comunes; si no reconoce, muestra el cron crudo. */
-    private static String describirCron(String cron) {
+    private static String describeCron(String cron) {
         if (cron == null) return "—";
         return switch (cron.trim()) {
             case "0 0 23 * * SUN" -> "Cada domingo a las 23:00";
@@ -775,7 +775,7 @@ public class BackupService {
     }
 
     /** "2 días", "5 horas", "12 minutos". */
-    private static String humanizar(Duration d) {
+    private static String humanize(Duration d) {
         long s = Math.abs(d.getSeconds());
         if (s < 60) return "menos de 1 minuto";
         if (s < 3600) return (s / 60) + " min";
@@ -785,15 +785,15 @@ public class BackupService {
     }
 
     /** Intervalo aproximado entre dos disparos consecutivos del cron. */
-    private static String humanizarIntervaloCron(CronExpression cron, LocalDateTime desde) {
-        LocalDateTime n1 = cron.next(desde);
+    private static String humanizeIntervalCron(CronExpression cron, LocalDateTime from) {
+        LocalDateTime n1 = cron.next(from);
         if (n1 == null) return "desconocido";
         LocalDateTime n2 = cron.next(n1);
         if (n2 == null) return "desconocido";
-        return humanizar(Duration.between(n1, n2));
+        return humanize(Duration.between(n1, n2));
     }
 
-    private static String formatoTamano(long bytes) {
+    private static String formatSize(long bytes) {
         if (bytes < 0) return "—";
         if (bytes < 1024) return bytes + " B";
         double kb = bytes / 1024.0;
@@ -805,7 +805,7 @@ public class BackupService {
         return String.format("%.2f TB", gb / 1024.0);
     }
 
-    private static String appUserActual() {
+    private static String currentAppUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null && auth.getName() != null ? auth.getName() : "sistema";
     }

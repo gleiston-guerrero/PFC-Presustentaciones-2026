@@ -25,11 +25,11 @@ public class Minutes {
 
     @Column(name = "fecha_generacion", nullable = false)
     @JsonProperty("fechaGeneracion")
-    private LocalDate fechaGeneracion;
+    private LocalDate dateGeneracion;
 
     @Column(name = "archivo_pdf")
     @JsonProperty("archivoPdf")
-    private String archivoPdf;
+    private String filePdf;
 
     // ── Firma multi-actor (RF-08) ─────────────────────────────────────────────
 
@@ -41,7 +41,7 @@ public class Minutes {
 
     @Column(name = "fecha_firma_presidente")
     @JsonProperty("fechaFirmaPresidente")
-    private LocalDateTime fechaFirmaPresidente;
+    private LocalDateTime dateSignaturePresidente;
 
     /** ¿Ha firmado el vocal 1? */
     @Column(name = "firmada_vocal1", nullable = false)
@@ -51,7 +51,7 @@ public class Minutes {
 
     @Column(name = "fecha_firma_vocal1")
     @JsonProperty("fechaFirmaVocal1")
-    private LocalDateTime fechaFirmaVocal1;
+    private LocalDateTime dateSignatureVocal1;
 
     /** ¿Ha firmado el vocal 2? */
     @Column(name = "firmada_vocal2", nullable = false)
@@ -61,7 +61,7 @@ public class Minutes {
 
     @Column(name = "fecha_firma_vocal2")
     @JsonProperty("fechaFirmaVocal2")
-    private LocalDateTime fechaFirmaVocal2;
+    private LocalDateTime dateSignatureVocal2;
 
     /** ¿Ha firmado el tutor? */
     @Column(name = "firmada_tutor", nullable = false)
@@ -71,7 +71,7 @@ public class Minutes {
 
     @Column(name = "fecha_firma_tutor")
     @JsonProperty("fechaFirmaTutor")
-    private LocalDateTime fechaFirmaTutor;
+    private LocalDateTime dateSignatureTutor;
 
     /** true solo cuando TODOS los actores requeridos han firmado */
     @Column(name = "firmada", nullable = false)
@@ -81,7 +81,7 @@ public class Minutes {
 
     @Column(name = "observaciones_acta", columnDefinition = "TEXT")
     @JsonProperty("observacionesMinutes")
-    private String observacionesMinutes;
+    private String observationsMinutes;
 
     /**
      * Estado del minutes en el flujo GENERADA -> REVISADA -> FINALIZADA (catálogo
@@ -93,7 +93,7 @@ public class Minutes {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "estado_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private EstadoMinutes estado;
+    private StatusMinutes status;
 
     @OneToOne
     @JoinColumn(name = "solicitud_id", nullable = false)
@@ -102,12 +102,12 @@ public class Minutes {
 
     // ── Helper ───────────────────────────────────────────────────────────────
     /** El minutes queda totalmente firmada cuando presidente + ambos vocales + tutor firmaron */
-    public void updateEstadoFirma() {
+    public void updateStatusSignature() {
         this.firmada = firmadaPresidente && firmadaVocal1 && firmadaVocal2 && firmadaTutor;
     }
 
     /** @return los firmantes pendientes como texto, o cadena vacía si ya firmaron todos */
-    public String getFirmantesPendientes() {
+    public String getSignersPending() {
         StringBuilder sb = new StringBuilder();
         if (!firmadaPresidente) sb.append("Presidente, ");
         if (!firmadaVocal1)     sb.append("Vocal 1, ");

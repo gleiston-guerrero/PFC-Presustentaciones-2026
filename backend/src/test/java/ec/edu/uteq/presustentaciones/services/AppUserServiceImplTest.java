@@ -51,37 +51,37 @@ class AppUserServiceImplTest {
         appUser.setRole("ESTUDIANTE");
         appUser.setActivo(true);
 
-        lenient().when(roleAppUserRepository.findByCodigo(anyString()))
-                .thenAnswer(inv -> Optional.of(RoleAppUser.builder().codigo(inv.getArgument(0)).build()));
+        lenient().when(roleAppUserRepository.findByCode(anyString()))
+                .thenAnswer(inv -> Optional.of(RoleAppUser.builder().code(inv.getArgument(0)).build()));
     }
 
     @Test
-    void testListTodos() {
+    void testListAll() {
         when(appUserRepository.findAll()).thenReturn(Arrays.asList(appUser));
-        List<AppUser> resultado = appUserService.listTodos();
-        assertEquals(1, resultado.size());
-        assertEquals("Juan", resultado.get(0).getNombre());
+        List<AppUser> result = appUserService.listAll();
+        assertEquals(1, result.size());
+        assertEquals("Juan", result.get(0).getNombre());
     }
 
     @Test
-    void testObtainPorIdExitoso() {
+    void testObtainByIdExitoso() {
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(appUser));
-        Optional<AppUser> resultado = appUserService.obtainPorId(1L);
-        assertTrue(resultado.isPresent());
-        assertEquals("jperez@uteq.edu.ec", resultado.get().getEmail());
+        Optional<AppUser> result = appUserService.obtainById(1L);
+        assertTrue(result.isPresent());
+        assertEquals("jperez@uteq.edu.ec", result.get().getEmail());
     }
 
     @Test
     void testCreateAppUser() {
         when(passwordEncoder.encode(any())).thenReturn("hash-encriptado");
         when(appUserRepository.save(any(AppUser.class))).thenReturn(appUser);
-        AppUser guardado = appUserService.create(appUser);
-        assertNotNull(guardado);
-        assertEquals("jperez@uteq.edu.ec", guardado.getEmail());
+        AppUser saved = appUserService.create(appUser);
+        assertNotNull(saved);
+        assertEquals("jperez@uteq.edu.ec", saved.getEmail());
     }
 
     @Test
-    void testCreateAppUserIgnoraIdDelClienteParaEvitarSobrescribirAppUserExistente() {
+    void testCreateAppUserIgnoraIdDelClienteForEvitarSobrescribirAppUserExisting() {
         // Hallazgo real: save el "usuario" recibido tal cual, con save(appUser), es solo
         // seguro si id=null. Si el id llega no-nulo (por ejemplo, 1L = el appUser ADMIN real),
         // Spring Data JPA hace merge() en vez de persist() y SOBRESCRIBE esa fila existente en
@@ -104,9 +104,9 @@ class AppUserServiceImplTest {
         when(passwordEncoder.encode("claveEnTextoPlano")).thenReturn("hash-bcrypt-simulado");
         when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        AppUser guardado = appUserService.create(appUser);
+        AppUser saved = appUserService.create(appUser);
 
-        assertEquals("hash-bcrypt-simulado", guardado.getPassword());
+        assertEquals("hash-bcrypt-simulado", saved.getPassword());
         verify(passwordEncoder).encode("claveEnTextoPlano");
     }
 
@@ -117,20 +117,20 @@ class AppUserServiceImplTest {
         when(passwordEncoder.encode(any())).thenReturn("hash");
         when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        AppUser guardado = appUserService.create(appUser);
+        AppUser saved = appUserService.create(appUser);
 
-        assertNotNull(guardado.getRoleAppUser());
-        assertEquals("ESTUDIANTE", guardado.getRoleAppUser().getCodigo());
+        assertNotNull(saved.getRoleAppUser());
+        assertEquals("ESTUDIANTE", saved.getRoleAppUser().getCode());
     }
 
     @Test
     void testUpdateSincronizaRoleAppUserAlChangeRole() {
-        AppUser existente = new AppUser();
-        existente.setId(1L);
-        existente.setRole("ESTUDIANTE");
-        existente.setRoleAppUser(RoleAppUser.builder().codigo("ESTUDIANTE").build());
+        AppUser existing = new AppUser();
+        existing.setId(1L);
+        existing.setRole("ESTUDIANTE");
+        existing.setRoleAppUser(RoleAppUser.builder().code("ESTUDIANTE").build());
 
-        when(appUserRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
 
         AppUser cambios = new AppUser();
@@ -142,7 +142,7 @@ class AppUserServiceImplTest {
         AppUser actualizado = appUserService.update(1L, cambios);
 
         assertEquals("COORDINADOR", actualizado.getRole());
-        assertEquals("COORDINADOR", actualizado.getRoleAppUser().getCodigo());
+        assertEquals("COORDINADOR", actualizado.getRoleAppUser().getCode());
     }
 
     @Test
@@ -153,7 +153,7 @@ class AppUserServiceImplTest {
     }
 
     @Test
-    void testChangeEstadoActivo() {
+    void testChangeStatusActivo() {
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(appUser));
         when(appUserRepository.save(any(AppUser.class))).thenReturn(appUser);
         

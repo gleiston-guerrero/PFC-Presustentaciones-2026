@@ -56,8 +56,8 @@ class RefreshTokenRotationTest {
     @BeforeEach
     @SuppressWarnings("unchecked")
     void setUp() {
-        ValueOperations<String, String> valueOps = mock(ValueOperations.class, this::responderValueOps);
-        SetOperations<String, String> setOps = mock(SetOperations.class, this::responderSetOps);
+        ValueOperations<String, String> valueOps = mock(ValueOperations.class, this::respondValueOps);
+        SetOperations<String, String> setOps = mock(SetOperations.class, this::respondSetOps);
         StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(redisTemplate.opsForSet()).thenReturn(setOps);
@@ -102,7 +102,7 @@ class RefreshTokenRotationTest {
     }
 
     /** Respuestas de ValueOperations respaldadas por {@code valores}, igual que refresh_token:/used_refresh_token: en Redis real. */
-    private Object responderValueOps(InvocationOnMock inv) {
+    private Object respondValueOps(InvocationOnMock inv) {
         switch (inv.getMethod().getName()) {
             case "set":
                 valores.put(inv.getArgument(0), inv.getArgument(1));
@@ -115,7 +115,7 @@ class RefreshTokenRotationTest {
     }
 
     /** Respuestas de SetOperations respaldadas por {@code conjuntos}, igual que user_refresh_tokens:<email> en Redis real. */
-    private Object responderSetOps(InvocationOnMock inv) {
+    private Object respondSetOps(InvocationOnMock inv) {
         String key = inv.getArgument(0);
         Object[] args = inv.getArguments();
         switch (inv.getMethod().getName()) {
@@ -143,7 +143,7 @@ class RefreshTokenRotationTest {
         }
     }
 
-    private MockHttpServletRequest peticionConRefresh(String refreshToken) {
+    private MockHttpServletRequest requestWithRefresh(String refreshToken) {
         MockHttpServletRequest request = new MockHttpServletRequest();
         if (refreshToken != null) {
             request.setCookies(new Cookie("refreshToken", refreshToken));
@@ -152,47 +152,47 @@ class RefreshTokenRotationTest {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> datosDe(ResponseEntity<?> response) {
+    private Map<String, Object> dataOf(ResponseEntity<?> response) {
         return (Map<String, Object>) ((ResponseWrapper<?>) response.getBody()).getData();
     }
 
     @Test
-    void refreshVigenteDevuelveAccessNuevoYRefreshNuevo() {
+    void refreshVigenteDevuelveAccessNewYRefreshNew() {
         String refreshToken = jwtTokenProvider.generateRefreshToken(EMAIL);
 
-        ResponseEntity<?> respuesta = authController.refresh(peticionConRefresh(refreshToken), new MockHttpServletResponse());
+        ResponseEntity<?> respuesta = authController.refresh(requestWithRefresh(refreshToken), new MockHttpServletResponse());
 
         assertEquals(HttpStatus.OK, respuesta.getStatusCode());
-        Map<String, Object> datos = datosDe(respuesta);
-        assertNotNull(datos.get("token"));
-        assertNotNull(datos.get("refreshToken"));
-        assertNotEquals(refreshToken, datos.get("refreshToken"));
+        Map<String, Object> data = dataOf(respuesta);
+        assertNotNull(data.get("token"));
+        assertNotNull(data.get("refreshToken"));
+        assertNotEquals(refreshToken, data.get("refreshToken"));
     }
 
     @Test
     void elRefreshUsadoDejaDeValerDeInmediato() {
         String refreshToken = jwtTokenProvider.generateRefreshToken(EMAIL);
 
-        ResponseEntity<?> primerUso = authController.refresh(peticionConRefresh(refreshToken), new MockHttpServletResponse());
+        ResponseEntity<?> primerUso = authController.refresh(requestWithRefresh(refreshToken), new MockHttpServletResponse());
         assertEquals(HttpStatus.OK, primerUso.getStatusCode());
 
-        ResponseEntity<?> segundoUso = authController.refresh(peticionConRefresh(refreshToken), new MockHttpServletResponse());
+        ResponseEntity<?> segundoUso = authController.refresh(requestWithRefresh(refreshToken), new MockHttpServletResponse());
         assertEquals(HttpStatus.UNAUTHORIZED, segundoUso.getStatusCode());
     }
 
     @Test
-    void reutilizarUnRefreshYaUsadoRevocaTodasLasSesionesActivasDelAppUser() {
+    void reutilizarUnRefreshYaUsadoRevocaAllLasSesionesActiveDelAppUser() {
         String primerRefresh = jwtTokenProvider.generateRefreshToken(EMAIL);
         // Segunda sesión activa del mismo appUser (p.ej. otro dispositivo), sin relación con el ataque.
         String segundoRefresh = jwtTokenProvider.generateRefreshToken(EMAIL);
 
         // Uso legítimo: rota el primer refresh y emite uno nuevo.
-        ResponseEntity<?> usoLegitimo = authController.refresh(peticionConRefresh(primerRefresh), new MockHttpServletResponse());
+        ResponseEntity<?> usoLegitimo = authController.refresh(requestWithRefresh(primerRefresh), new MockHttpServletResponse());
         assertEquals(HttpStatus.OK, usoLegitimo.getStatusCode());
-        String refreshRotado = (String) datosDe(usoLegitimo).get("refreshToken");
+        String refreshRotado = (String) dataOf(usoLegitimo).get("refreshToken");
 
         // El atacante reutiliza el refresh ya usado (robado antes de la rotación).
-        ResponseEntity<?> reutilizacion = authController.refresh(peticionConRefresh(primerRefresh), new MockHttpServletResponse());
+        ResponseEntity<?> reutilizacion = authController.refresh(requestWithRefresh(primerRefresh), new MockHttpServletResponse());
 
         assertEquals(HttpStatus.UNAUTHORIZED, reutilizacion.getStatusCode());
         // No basta con el 401: revokeAllUserTokens debe haber cerrado TODAS las sesiones activas,
@@ -204,8 +204,8 @@ class RefreshTokenRotationTest {
     }
 
     @Test
-    void sinRefreshTokenEnLaPeticionDevuelve400() {
-        ResponseEntity<?> respuesta = authController.refresh(peticionConRefresh(null), new MockHttpServletResponse());
+    void sinRefreshTokenEnLaRequestDevuelve400() {
+        ResponseEntity<?> respuesta = authController.refresh(requestWithRefresh(null), new MockHttpServletResponse());
         assertEquals(HttpStatus.BAD_REQUEST, respuesta.getStatusCode());
     }
 }

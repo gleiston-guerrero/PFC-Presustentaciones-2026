@@ -27,12 +27,12 @@ public class AppUserServiceImpl implements IAppUserService {
     private final AuditService auditService;
 
     /** role (string) y roleAppUser (FK a roles_appUser) son dos columnas paralelas para el mismo dato — hay que mantenerlas sincronizadas. */
-    private RoleAppUser resolveRole(String codigoRole) {
-        if (codigoRole == null || codigoRole.trim().isEmpty()) {
+    private RoleAppUser resolveRole(String codeRole) {
+        if (codeRole == null || codeRole.trim().isEmpty()) {
             throw new IllegalArgumentException("El rol del usuario es requerido");
         }
-        return roleAppUserRepository.findByCodigo(codigoRole)
-                .orElseThrow(() -> new IllegalArgumentException("Rol inválido o no existe: " + codigoRole));
+        return roleAppUserRepository.findByCode(codeRole)
+                .orElseThrow(() -> new IllegalArgumentException("Rol inválido o no existe: " + codeRole));
     }
 
     /**
@@ -43,10 +43,10 @@ public class AppUserServiceImpl implements IAppUserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<AppUser> listPaginado(int page, int size, String q) {
+    public Page<AppUser> listPaged(int page, int size, String q) {
         int paginaSegura = Math.max(page, 0);
         int tamanioSeguro = Math.min(Math.max(size, 1), 100);
-        return appUserRepository.searchPaginado(q, PageRequest.of(paginaSegura, tamanioSeguro));
+        return appUserRepository.searchPaged(q, PageRequest.of(paginaSegura, tamanioSeguro));
     }
 
     /**
@@ -61,7 +61,7 @@ public class AppUserServiceImpl implements IAppUserService {
     public AppUser create(AppUser appUser) {
         log.info("Creando usuario con email: {}", appUser.getEmail());
 
-        if (existePorEmail(appUser.getEmail())) {
+        if (existsByEmail(appUser.getEmail())) {
             throw new IllegalArgumentException("Ya existe un usuario con el email: " + appUser.getEmail());
         }
 
@@ -73,7 +73,7 @@ public class AppUserServiceImpl implements IAppUserService {
         // (incluida potencialmente la del propio ADMIN). "crear" nunca debe poder update un
         // registro existente, así que se fuerza id=null aquí mismo, sin depender del caller.
         appUser.setId(null);
-        auditService.marcarActorActual();
+        auditService.markActorActual();
         appUser.setPassword(passwordEncoder.encode(appUser.getPassword()));
         appUser.setRoleAppUser(resolveRole(appUser.getRole()));
         return appUserRepository.save(appUser);
@@ -92,22 +92,22 @@ public class AppUserServiceImpl implements IAppUserService {
     public AppUser update(Long id, AppUser appUser) {
         log.info("Actualizando usuario con ID: {}", id);
 
-        auditService.marcarActorActual();
-        AppUser existente = appUserRepository.findById(id)
+        auditService.markActorActual();
+        AppUser existing = appUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
-        existente.setNombre(appUser.getNombre());
-        existente.setApellido(appUser.getApellido());
-        existente.setEmail(appUser.getEmail());
-        if (appUser.getRole() != null && !appUser.getRole().equals(existente.getRole())) {
-            existente.setRole(appUser.getRole());
-            existente.setRoleAppUser(resolveRole(appUser.getRole()));
+        existing.setNombre(appUser.getNombre());
+        existing.setApellido(appUser.getApellido());
+        existing.setEmail(appUser.getEmail());
+        if (appUser.getRole() != null && !appUser.getRole().equals(existing.getRole())) {
+            existing.setRole(appUser.getRole());
+            existing.setRoleAppUser(resolveRole(appUser.getRole()));
         }
-        if (appUser.getTelefono() != null) {
-            existente.setTelefono(appUser.getTelefono());
+        if (appUser.getPhone() != null) {
+            existing.setPhone(appUser.getPhone());
         }
 
-        return appUserRepository.save(existente);
+        return appUserRepository.save(existing);
     }
 
     /**
@@ -122,7 +122,7 @@ public class AppUserServiceImpl implements IAppUserService {
             throw new IllegalArgumentException("Usuario no encontrado con ID: " + id);
         }
 
-        auditService.marcarActorActual();
+        auditService.markActorActual();
         appUserRepository.deleteById(id);
     }
 
@@ -132,7 +132,7 @@ public class AppUserServiceImpl implements IAppUserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Optional<AppUser> obtainPorId(Long id) {
+    public Optional<AppUser> obtainById(Long id) {
         return appUserRepository.findById(id);
     }
 
@@ -142,21 +142,21 @@ public class AppUserServiceImpl implements IAppUserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Optional<AppUser> obtainPorEmail(String email) {
+    public Optional<AppUser> obtainByEmail(String email) {
         return appUserRepository.findByEmail(email);
     }
 
     /** @return todos los appUsers del sistema, sin paginar */
     @Override
     @Transactional(readOnly = true)
-    public List<AppUser> listTodos() {
+    public List<AppUser> listAll() {
         return appUserRepository.findAll();
     }
 
     /** @return los appUsers con {@code activo = true} */
     @Override
     @Transactional(readOnly = true)
-    public List<AppUser> listActivos() {
+    public List<AppUser> listActive() {
         return appUserRepository.findByActivoTrue();
     }
 
@@ -166,7 +166,7 @@ public class AppUserServiceImpl implements IAppUserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public boolean existePorEmail(String email) {
+    public boolean existsByEmail(String email) {
         return appUserRepository.existsByEmail(email);
     }
 
@@ -176,7 +176,7 @@ public class AppUserServiceImpl implements IAppUserService {
      */
     @Override
     public void activate(Long id) {
-        auditService.marcarActorActual();
+        auditService.markActorActual();
         AppUser appUser = appUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
@@ -190,7 +190,7 @@ public class AppUserServiceImpl implements IAppUserService {
      */
     @Override
     public void deactivate(Long id) {
-        auditService.marcarActorActual();
+        auditService.markActorActual();
         AppUser appUser = appUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
@@ -204,14 +204,14 @@ public class AppUserServiceImpl implements IAppUserService {
      *
      * @param id                  id del appUser
      * @param emailNotifications correo alterno para recibir notifications, o {@code null}
-     * @param telefono            teléfono de contacto, o {@code null}
+     * @param phone            teléfono de contacto, o {@code null}
      * @return el appUser actualizado
      * @throws RuntimeException si el appUser no existe
      */
     @Override
     @Transactional
-    public AppUser updatePerfil(Long id, String emailNotifications, String telefono) {
-        int updated = appUserRepository.updatePerfil(id, emailNotifications, telefono);
+    public AppUser updateProfile(Long id, String emailNotifications, String phone) {
+        int updated = appUserRepository.updateProfile(id, emailNotifications, phone);
         if (updated == 0) {
             throw new IllegalArgumentException("Usuario no encontrado con ID: " + id);
         }

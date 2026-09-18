@@ -30,11 +30,11 @@ public class HistorySchedule {
 
     @Column(name = "fecha_anterior", nullable = false)
     @JsonProperty("fechaAnterior")
-    private LocalDateTime fechaAnterior;
+    private LocalDateTime dateAnterior;
 
     @Column(name = "fecha_nueva", nullable = false)
     @JsonProperty("fechaNueva")
-    private LocalDateTime fechaNueva;
+    private LocalDateTime dateNueva;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sala_anterior_id")
@@ -61,12 +61,12 @@ public class HistorySchedule {
     @Column(name = "fecha_cambio", nullable = false, updatable = false)
     @Builder.Default
     @JsonProperty("fechaCambio")
-    private LocalDateTime fechaCambio= LocalDateTime.now();
+    private LocalDateTime dateCambio= LocalDateTime.now();
 
     @PrePersist
     protected void onCreate() {
-        if (fechaCambio == null) {
-            fechaCambio = LocalDateTime.now();
+        if (dateCambio == null) {
+            dateCambio = LocalDateTime.now();
         }
     }
 }

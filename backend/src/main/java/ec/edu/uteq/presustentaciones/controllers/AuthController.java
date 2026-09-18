@@ -5,7 +5,7 @@ import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
 import ec.edu.uteq.presustentaciones.security.dto.LoginRequest;
 import ec.edu.uteq.presustentaciones.security.dto.LoginResponse;
 import ec.edu.uteq.presustentaciones.security.dto.ChangePasswordRequest;
-import ec.edu.uteq.presustentaciones.security.dto.RecuperarPasswordRequest;
+import ec.edu.uteq.presustentaciones.security.dto.RecoverPasswordRequest;
 import ec.edu.uteq.presustentaciones.security.dto.RegisterRequest;
 import ec.edu.uteq.presustentaciones.security.dto.ResetPasswordRequest;
 import ec.edu.uteq.presustentaciones.security.PasswordPolicyValidator;
@@ -257,7 +257,7 @@ public class AuthController {
      * @return 200 con el appUser creado, o 400 si el email ya existe o el role no es válido
      */
     @PostMapping("/register")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'USUARIOS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Registrar nuevo usuario", description = "Permite a un administrador crear nuevos usuarios en el sistema.")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         // RNF-06: @Size en el DTO ya cubre la longitud minima; la lista de contrasenas
@@ -299,14 +299,14 @@ public class AuthController {
         // por el email del JWT, nunca por el id de la ruta -- ni siquiera un Administrador puede
         // change la contraseña de otra cuenta por aquí.
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        AppUser titular = appUserRepository.findByEmail(auth.getName())
+        AppUser holder = appUserRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-        if (!titular.getId().equals(id)) {
+        if (!holder.getId().equals(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ResponseWrapper.error("No puedes cambiar la contraseña de otro usuario"));
         }
 
-        if (!passwordEncoder.matches(request.getPasswordActual(), titular.getPassword())) {
+        if (!passwordEncoder.matches(request.getPasswordActual(), holder.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ResponseWrapper.error("La contraseña actual no es correcta"));
         }
@@ -317,8 +317,8 @@ public class AuthController {
         // RNF-06, mismo validador que RF-04 (alta): longitud minima y lista de comunes.
         passwordPolicyValidator.validate(request.getPasswordNueva());
 
-        titular.setPassword(passwordEncoder.encode(request.getPasswordNueva()));
-        appUserRepository.save(titular);
+        holder.setPassword(passwordEncoder.encode(request.getPasswordNueva()));
+        appUserRepository.save(holder);
 
         // Revoca todas las sesiones activas SALVO la actual -- revocar tambien esa dejaria al
         // appUser fuera justo despues de un cambio legitimo.
@@ -331,7 +331,7 @@ public class AuthController {
                 }
             }
         }
-        jwtTokenProvider.revokeAllUserTokensExcept(titular.getEmail(), refreshActual);
+        jwtTokenProvider.revokeAllUserTokensExcept(holder.getEmail(), refreshActual);
 
         return ResponseEntity.ok(ResponseWrapper.success(null, "Contraseña actualizada correctamente"));
     }
@@ -344,7 +344,7 @@ public class AuthController {
      * <p>Responde exactamente el mismo cuerpo, con el mismo código, exista o no una cuenta con
      * ese correo -- de lo contrario el propio endpoint sería una forma de enumerar cuentas
      * registradas. La diferencia de trabajo interno (send el correo o no) vive en
-     * {@link PasswordRecoveryService#solicitarRecuperacion}, que iguala también el costo para
+     * {@link PasswordRecoveryService#solicitarRecovery}, que iguala también el costo para
      * no filtrar la respuesta por el tiempo.
      *
      * @param request correo de la cuenta a recuperar
@@ -353,7 +353,7 @@ public class AuthController {
      */
     @PostMapping("/recuperar")
     @Operation(summary = "Solicitar recuperación de contraseña", description = "Responde igual exista o no la cuenta, para no permitir enumerarlas.")
-    public ResponseEntity<?> recuperar(@Valid @RequestBody RecuperarPasswordRequest request) {
+    public ResponseEntity<?> recover(@Valid @RequestBody RecoverPasswordRequest request) {
         String correo = request.getEmail().trim().toLowerCase();
         try {
             if (!rateLimiterService.isAllowed("ratelimit:recuperar:" + correo, 3, 3600)) {
@@ -366,7 +366,7 @@ public class AuthController {
                     .body(ResponseWrapper.error("Servicio de recuperación no disponible temporalmente. Intenta de nuevo en un momento."));
         }
 
-        passwordRecoveryService.solicitarRecuperacion(correo);
+        passwordRecoveryService.solicitarRecovery(correo);
 
         return ResponseEntity.ok(ResponseWrapper.success(null,
                 "Si existe una cuenta con ese correo, recibirás un enlace de recuperación en unos minutos."));
@@ -374,7 +374,7 @@ public class AuthController {
 
     /**
      * RF-05: aplica el restablecimiento con el token de un solo uso recibido por correo.
-     * Endpoint público, mismo motivo que {@link #recuperar}.
+     * Endpoint público, mismo motivo que {@link #recover}.
      *
      * @param request token y nueva contraseña
      * @return 200 si el restablecimiento se aplicó; 400 si el token es inválido/expirado/ya

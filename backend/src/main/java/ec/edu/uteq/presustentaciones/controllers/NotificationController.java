@@ -29,14 +29,14 @@ public class NotificationController {
      * Crea una notification dirigida a un appUser concreto.
      *
      * @param appUserId destinatario de la notification
-     * @param mensaje   texto que vera el appUser
+     * @param message   texto que vera el appUser
      * @return 200 con la notification creada
      */
     @PostMapping("/crear")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'NOTIFICACIONES_ENVIAR')")
-    public ResponseEntity<?> create(@RequestParam("appUserId") Long appUserId, @RequestParam("mensaje") String mensaje) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'NOTIFICACIONES_ENVIAR')")
+    public ResponseEntity<?> create(@RequestParam("appUserId") Long appUserId, @RequestParam("mensaje") String message) {
         try {
-            return ResponseEntity.ok(ResponseWrapper.success(notificationService.createNotification(appUserId, mensaje)));
+            return ResponseEntity.ok(ResponseWrapper.success(notificationService.createNotification(appUserId, message)));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -47,7 +47,7 @@ public class NotificationController {
      * @return 200 con la pagina de notifications del sistema
      */
     @GetMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'NOTIFICACIONES_GLOBAL_VER')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'NOTIFICACIONES_GLOBAL_VER')")
     public ResponseEntity<?> list(Pageable pageable) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(notificationService.listNotifications(pageable)));
@@ -63,9 +63,9 @@ public class NotificationController {
      */
     @GetMapping("/usuario/{appUserId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> listPorAppUser(@PathVariable("appUserId") Long appUserId, Pageable pageable) {
+    public ResponseEntity<?> listByAppUser(@PathVariable("appUserId") Long appUserId, Pageable pageable) {
         try {
-            return ResponseEntity.ok(ResponseWrapper.success(notificationService.listPorAppUser(appUserId, pageable)));
+            return ResponseEntity.ok(ResponseWrapper.success(notificationService.listByAppUser(appUserId, pageable)));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -79,9 +79,9 @@ public class NotificationController {
      */
     @GetMapping("/usuario/{appUserId}/no-leidas")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> countNoLeidas(@PathVariable("appUserId") Long appUserId) {
+    public ResponseEntity<?> countUnread(@PathVariable("appUserId") Long appUserId) {
         try {
-            return ResponseEntity.ok(ResponseWrapper.success(java.util.Map.of("total", notificationService.countNoLeidas(appUserId))));
+            return ResponseEntity.ok(ResponseWrapper.success(java.util.Map.of("total", notificationService.countUnread(appUserId))));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -93,9 +93,9 @@ public class NotificationController {
      */
     @PatchMapping("/{id}/marcar-leida")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> marcarLeida(@PathVariable("id") Long id) {
+    public ResponseEntity<?> markRead(@PathVariable("id") Long id) {
         try {
-            return ResponseEntity.ok(ResponseWrapper.success(notificationService.marcarComoLeida(id), "Notificación marcada como leída"));
+            return ResponseEntity.ok(ResponseWrapper.success(notificationService.markAsRead(id), "Notificación marcada como leída"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -107,9 +107,9 @@ public class NotificationController {
      */
     @PatchMapping("/usuario/{appUserId}/marcar-todas-leidas")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> marcarTodasLeidas(@PathVariable("appUserId") Long appUserId) {
+    public ResponseEntity<?> markAllRead(@PathVariable("appUserId") Long appUserId) {
         try {
-            notificationService.marcarTodasLeidas(appUserId);
+            notificationService.markAllRead(appUserId);
             return ResponseEntity.ok(ResponseWrapper.success(null, "Todas las notificaciones marcadas como leídas"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));

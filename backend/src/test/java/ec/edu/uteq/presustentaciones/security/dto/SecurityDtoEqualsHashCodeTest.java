@@ -14,42 +14,42 @@ import org.junit.jupiter.api.Test;
 class SecurityDtoEqualsHashCodeTest {
 
     @Test
-    void loginResponseCumpleElContratoEqualsHashCode() {
+    void loginResponseMeetsElContratoEqualsHashCode() {
         EqualsVerifier.forClass(LoginResponse.class)
                 .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
                 .verify();
     }
 
     @Test
-    void registerRequestCumpleElContratoEqualsHashCode() {
+    void registerRequestMeetsElContratoEqualsHashCode() {
         EqualsVerifier.forClass(RegisterRequest.class)
                 .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
                 .verify();
     }
 
     @Test
-    void loginRequestCumpleElContratoEqualsHashCode() {
+    void loginRequestMeetsElContratoEqualsHashCode() {
         EqualsVerifier.forClass(LoginRequest.class)
                 .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
                 .verify();
     }
 
     @Test
-    void changePasswordRequestCumpleElContratoEqualsHashCode() {
+    void changePasswordRequestMeetsElContratoEqualsHashCode() {
         EqualsVerifier.forClass(ChangePasswordRequest.class)
                 .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
                 .verify();
     }
 
     @Test
-    void recuperarPasswordRequestCumpleElContratoEqualsHashCode() {
-        EqualsVerifier.forClass(RecuperarPasswordRequest.class)
+    void recoverPasswordRequestMeetsElContratoEqualsHashCode() {
+        EqualsVerifier.forClass(RecoverPasswordRequest.class)
                 .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
                 .verify();
     }
 
     @Test
-    void resetPasswordRequestCumpleElContratoEqualsHashCode() {
+    void resetPasswordRequestMeetsElContratoEqualsHashCode() {
         EqualsVerifier.forClass(ResetPasswordRequest.class)
                 .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
                 .verify();

@@ -65,7 +65,7 @@ public class ProposalServiceImpl implements ProposalService {
      * incluido como vía administrativa, igual que en el resto de los servicios de este
      * block) -- evita que un tercero suba/reemplace el PDF de otra submission (IDOR de
      * escritura). */
-    private void validatePuedeUpload(Submission submission) {
+    private void validateCanUpload(Submission submission) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             throw new AccessDeniedException("Usuario no autenticado");
@@ -87,26 +87,26 @@ public class ProposalServiceImpl implements ProposalService {
      * deja el proposal en estado pendiente de revisión.
      *
      * @param submissionId id de la submission a la que pertenece el proposal
-     * @param archivo     archivo PDF subido por el student
+     * @param file     archivo PDF subido por el student
      * @return el proposal creado o actualizado
      * @throws RuntimeException si la submission no existe o el archivo no es un PDF válido
      */
     @Override
-    public Proposal sendProposal(Long submissionId, MultipartFile archivo) {
+    public Proposal sendProposal(Long submissionId, MultipartFile file) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
 
-        validatePuedeUpload(submission);
+        validateCanUpload(submission);
 
-        if (submission.getEstado() != null && "SUSPENDIDA".equalsIgnoreCase(submission.getEstado().getCodigo())) {
+        if (submission.getStatus() != null && "SUSPENDIDA".equalsIgnoreCase(submission.getStatus().getCode())) {
             throw new RuntimeException("Tu trabajo ha sido suspendido y no puedes subir archivos. Motivo: " + submission.getMotivoSuspension());
         }
 
-        String contentType = archivo.getContentType();
+        String contentType = file.getContentType();
         if (contentType == null || !contentType.equals("application/pdf")) {
             throw new RuntimeException("Solo se permiten archivos PDF");
         }
-        if (archivo.getSize() > 10L * 1024 * 1024) {
+        if (file.getSize() > 10L * 1024 * 1024) {
             throw new RuntimeException("El archivo no puede superar los 10 MB");
         }
 
@@ -115,41 +115,41 @@ public class ProposalServiceImpl implements ProposalService {
             throw new RuntimeException("No se pudo crear el directorio de uploads", e);
         }
 
-        String nombreArchivo = "solicitud_" + submissionId + "_" + UUID.randomUUID() + ".pdf";
-        Path rutaArchivo = dirPath.resolve(nombreArchivo);
-        String sha256 = calculateSha256YSave(archivo, rutaArchivo);
+        String nombreFile = "solicitud_" + submissionId + "_" + UUID.randomUUID() + ".pdf";
+        Path rutaFile = dirPath.resolve(nombreFile);
+        String sha256 = calculateSha256AndSave(file, rutaFile);
 
         Proposal proposal = proposalRepository
                 .findBySubmissionId(submissionId).orElse(null);
 
         if (proposal != null
-                && proposal.getArchivoPdf() != null
-                && !"RECHAZADO".equals(proposal.getEstado())) {
+                && proposal.getFilePdf() != null
+                && !"RECHAZADO".equals(proposal.getStatus())) {
             throw new RuntimeException(
                     "No puedes reemplazar el PDF. El coordinador debe rechazar el anteproyecto para permitir una nueva carga.");
         }
 
         if (proposal == null) proposal = new Proposal();
 
-        proposal.setArchivoPdf(nombreArchivo);
-        proposal.setFechaEnvio(LocalDate.now());
-        proposal.setEstado("ENVIADO");
+        proposal.setFilePdf(nombreFile);
+        proposal.setDateEnvio(LocalDate.now());
+        proposal.setStatus("ENVIADO");
         proposal.setSubmission(submission);
         proposal.setSha256Hash(sha256);
-        proposal.setTamanoBytes(archivo.getSize());
+        proposal.setSizeBytes(file.getSize());
 
-        Proposal guardado = proposalRepository.save(proposal);
+        Proposal saved = proposalRepository.save(proposal);
 
         // Notify a los admins que hay un proposal nuevo para revisar
-        notifyAdminsNuevoProposal(submission);
+        notifyAdminsNewProposal(submission);
 
-        return guardado;
+        return saved;
     }
 
-    private String calculateSha256YSave(MultipartFile archivo, Path destino) {
+    private String calculateSha256AndSave(MultipartFile file, Path destino) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            try (InputStream is = archivo.getInputStream();
+            try (InputStream is = file.getInputStream();
                  DigestInputStream dis = new DigestInputStream(is, digest)) {
                 Files.copy(dis, destino, StandardCopyOption.REPLACE_EXISTING);
             }
@@ -170,17 +170,17 @@ public class ProposalServiceImpl implements ProposalService {
      *                          en disco
      */
     @Override
-    public boolean verifyIntegridad(Long submissionId) {
+    public boolean verifyIntegrity(Long submissionId) {
         Proposal ap = proposalRepository.findBySubmissionId(submissionId)
                 .orElseThrow(() -> new RuntimeException("Anteproyecto no encontrado"));
-        submissionAccessService.validateAcceso(ap.getSubmission(), "ANTEPROYECTO_REVISAR");
+        submissionAccessService.validateAccess(ap.getSubmission(), "ANTEPROYECTO_REVISAR");
 
         if (ap.getSha256Hash() == null) return false;
 
-        Path rutaArchivo = Paths.get(uploadDir).resolve(ap.getArchivoPdf()).normalize();
+        Path rutaFile = Paths.get(uploadDir).resolve(ap.getFilePdf()).normalize();
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] bytes = Files.readAllBytes(rutaArchivo);
+            byte[] bytes = Files.readAllBytes(rutaFile);
             byte[] hashActual = digest.digest(bytes);
             byte[] hashEsperado = HexFormat.of().parseHex(ap.getSha256Hash());
             // Comparacion en tiempo constante para evitar timing attacks (find-sec-bugs: UNSAFE_HASH_EQUALS)
@@ -200,14 +200,14 @@ public class ProposalServiceImpl implements ProposalService {
     public Proposal approveProposal(Long id, String obs) {
         Proposal ap = proposalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Anteproyecto no encontrado"));
-        ap.setEstado("APROBADO");
-        ap.setObservaciones(obs);
-        Proposal guardado = proposalRepository.save(ap);
+        ap.setStatus("APROBADO");
+        ap.setObservations(obs);
+        Proposal saved = proposalRepository.save(ap);
 
         // Notify al student
         notifyStudentProposal(ap, true, obs);
 
-        return guardado;
+        return saved;
     }
 
     /**
@@ -220,14 +220,14 @@ public class ProposalServiceImpl implements ProposalService {
     public Proposal rejectProposal(Long id, String obs) {
         Proposal ap = proposalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Anteproyecto no encontrado"));
-        ap.setEstado("RECHAZADO");
-        ap.setObservaciones(obs);
-        Proposal guardado = proposalRepository.save(ap);
+        ap.setStatus("RECHAZADO");
+        ap.setObservations(obs);
+        Proposal saved = proposalRepository.save(ap);
 
         // Notify al student
         notifyStudentProposal(ap, false, obs);
 
-        return guardado;
+        return saved;
     }
 
     /**
@@ -235,15 +235,15 @@ public class ProposalServiceImpl implements ProposalService {
      * @return el proposal de esa submission, si ya fue enviado
      */
     @Override
-    public Optional<Proposal> searchPorSubmission(Long submissionId) {
+    public Optional<Proposal> searchBySubmission(Long submissionId) {
         Optional<Proposal> proposal = proposalRepository.findBySubmissionId(submissionId);
-        proposal.ifPresent(ap -> submissionAccessService.validateAcceso(ap.getSubmission(), "ANTEPROYECTO_REVISAR"));
+        proposal.ifPresent(ap -> submissionAccessService.validateAccess(ap.getSubmission(), "ANTEPROYECTO_REVISAR"));
         return proposal;
     }
 
     // ── Helpers de notificación ───────────────────────────────────────────────
 
-    private void notifyAdminsNuevoProposal(Submission submission) {
+    private void notifyAdminsNewProposal(Submission submission) {
         try {
             List<AppUser> admins = appUserRepository.findByRole("ADMIN");
             String nombreEst = submission.getStudent().getAppUser().getNombre()

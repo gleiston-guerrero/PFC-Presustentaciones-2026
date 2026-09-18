@@ -1,8 +1,8 @@
 package ec.edu.uteq.presustentaciones.services;
 
 import ec.edu.uteq.presustentaciones.entities.Minutes;
-import ec.edu.uteq.presustentaciones.dto.MinutesDetalleDTO;
-import ec.edu.uteq.presustentaciones.dto.MinutesResumenDTO;
+import ec.edu.uteq.presustentaciones.dto.MinutesDetailDTO;
+import ec.edu.uteq.presustentaciones.dto.MinutesSummaryDTO;
 import ec.edu.uteq.presustentaciones.dto.HistoryMinutesDTO;
 
 import org.springframework.data.domain.Page;
@@ -25,12 +25,12 @@ public interface MinutesService {
      * @param minutesId      id del minutes a sign
      * @param role         role que firma ({@code PRESIDENTE}, {@code VOCAL_1}, {@code VOCAL_2}
      *                    o {@code TUTOR}); no distingue mayúsculas/minúsculas
-     * @param observacion observación opcional del firmante, o {@code null}
+     * @param observation observación opcional del firmante, o {@code null}
      * @return el minutes actualizada; si con esta firma quedan las 4 completas, la submission pasa
      *         a "COMPLETADA" y el PDF se regenera con el estado final de las firmas
      * @throws RuntimeException si el minutes no existe o {@code role} no es uno de los 4 válidos
      */
-    Minutes signMinutes(Long minutesId, String role, String observacion);
+    Minutes signMinutes(Long minutesId, String role, String observation);
 
     /** Retorna el path del PDF generado para descarga
      * @param minutesId id del minutes
@@ -49,7 +49,7 @@ public interface MinutesService {
      * @param submissionId id de la submission
      * @return el minutes de esa submission, si ya fue generada
      */
-    Optional<Minutes> searchPorSubmission(Long submissionId);
+    Optional<Minutes> searchBySubmission(Long submissionId);
 
     /**
      * Elimina un minutes si el appUser tiene permission.
@@ -63,12 +63,12 @@ public interface MinutesService {
      * "Mis actas" del teacher: minutes de las pre-sustentaciones en las que es tutor o panelist.
      * @param email email del appUser autenticado
      */
-    Page<MinutesResumenDTO> listMisMinutes(String email, Pageable pageable);
+    Page<MinutesSummaryDTO> listMyMinutes(String email, Pageable pageable);
 
     /**
      * Búsqueda/filtrado administrativo de minutes. Parámetros nulos/vacíos no filtran.
      */
-    Page<MinutesResumenDTO> searchMinutes(String estado, String program, LocalDate desde, LocalDate hasta,
+    Page<MinutesSummaryDTO> searchMinutes(String status, String program, LocalDate from, LocalDate to,
                                      String q, Pageable pageable);
 
     /**
@@ -76,11 +76,11 @@ public interface MinutesService {
      * o el student dueño / panelist / tutor de la submission. Lanza excepción si el appUser
      * no participa en esa minutes (previene IDOR/BOLA).
      */
-    MinutesDetalleDTO obtainDetalle(Long minutesId);
+    MinutesDetailDTO obtainDetail(Long minutesId);
 
     /**
      * History de trazabilidad (timeline) del minutes, más reciente primero. Mismo control
-     * de acceso que {@link #obtainDetalle(Long)}.
+     * de acceso que {@link #obtainDetail(Long)}.
      */
     List<HistoryMinutesDTO> obtainHistory(Long minutesId);
 
@@ -89,8 +89,8 @@ public interface MinutesService {
      * validando la transición y registrando el cambio en history_estados_minutes con el
      * appUser, su role, el estado anterior/nuevo y el motivo.
      * @param minutesId            id del minutes
-     * @param nuevoEstadoCodigo código del catálogo estados_minutes
+     * @param targetStatusCode código del catálogo estados_minutes
      * @param motivo            motivo/observación (obligatorio para OBSERVADA y ANULADA)
      */
-    Minutes changeEstado(Long minutesId, String nuevoEstadoCodigo, String motivo);
+    Minutes changeStatus(Long minutesId, String targetStatusCode, String motivo);
 }

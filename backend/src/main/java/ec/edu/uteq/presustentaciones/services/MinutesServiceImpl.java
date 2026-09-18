@@ -14,19 +14,19 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.io.font.constants.StandardFonts;
 import ec.edu.uteq.presustentaciones.entities.Minutes;
-import ec.edu.uteq.presustentaciones.entities.EstadoMinutes;
+import ec.edu.uteq.presustentaciones.entities.StatusMinutes;
 import ec.edu.uteq.presustentaciones.entities.EvaluationFinal;
-import ec.edu.uteq.presustentaciones.entities.HistoryEstadoMinutes;
+import ec.edu.uteq.presustentaciones.entities.HistoryStatusMinutes;
 import ec.edu.uteq.presustentaciones.entities.Panelist;
 import ec.edu.uteq.presustentaciones.entities.Submission;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
-import ec.edu.uteq.presustentaciones.dto.MinutesDetalleDTO;
-import ec.edu.uteq.presustentaciones.dto.MinutesResumenDTO;
+import ec.edu.uteq.presustentaciones.dto.MinutesDetailDTO;
+import ec.edu.uteq.presustentaciones.dto.MinutesSummaryDTO;
 import ec.edu.uteq.presustentaciones.dto.HistoryMinutesDTO;
 import ec.edu.uteq.presustentaciones.repositories.MinutesRepository;
-import ec.edu.uteq.presustentaciones.repositories.EstadoMinutesRepository;
+import ec.edu.uteq.presustentaciones.repositories.StatusMinutesRepository;
 import ec.edu.uteq.presustentaciones.repositories.EvaluationFinalRepository;
-import ec.edu.uteq.presustentaciones.repositories.HistoryEstadoMinutesRepository;
+import ec.edu.uteq.presustentaciones.repositories.HistoryStatusMinutesRepository;
 import ec.edu.uteq.presustentaciones.repositories.PanelistRepository;
 import ec.edu.uteq.presustentaciones.repositories.SubmissionRepository;
 import ec.edu.uteq.presustentaciones.repositories.TutorRepository;
@@ -63,13 +63,13 @@ public class MinutesServiceImpl implements MinutesService {
     private final SubmissionRepository submissionRepository;
     private final EvaluationFinalRepository evaluationRepository;
     private final PanelistRepository panelistRepository;
-    private final ec.edu.uteq.presustentaciones.repositories.EstadoSubmissionRepository estadoSubmissionRepository;
+    private final ec.edu.uteq.presustentaciones.repositories.StatusSubmissionRepository statusSubmissionRepository;
     private final jakarta.persistence.EntityManager entityManager;
     private final NotificationService notificationService;
     private final AuditService auditService;
     private final TutorRepository tutorRepository;
-    private final EstadoMinutesRepository estadoMinutesRepository;
-    private final HistoryEstadoMinutesRepository historyEstadoMinutesRepository;
+    private final StatusMinutesRepository statusMinutesRepository;
+    private final HistoryStatusMinutesRepository historyStatusMinutesRepository;
     private final AppUserRepository appUserRepository;
     private final PermissionService permissionService;
 
@@ -91,7 +91,7 @@ public class MinutesServiceImpl implements MinutesService {
     private static final DeviceRgb LIGHT_GRAY   = new DeviceRgb(245, 245, 245);
     private static final DeviceRgb MEDIUM_GRAY  = new DeviceRgb(200, 200, 200);
 
-    private void validateAcceso(Minutes minutes) {
+    private void validateAccess(Minutes minutes) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             throw new RuntimeException("Usuario no autenticado");
@@ -101,10 +101,10 @@ public class MinutesServiceImpl implements MinutesService {
         if (isAdmin) return;
 
         // ADMIN / COORDINADOR: acceso completo de lectura vía el sistema de permissions dinámico
-        // (mismo mecanismo que @permissionService.tienePermission en los controllers). Un DOCENTE
+        // (mismo mecanismo que @permissionService.hasPermission en los controllers). Un DOCENTE
         // NO tiene ACTAS_VER, así que cae a la comprobación de propiedad de abajo.
-        if (permissionService.tienePermission(auth, "ACTAS_VER")
-                || permissionService.tienePermission(auth, "ACTAS_GESTIONAR")) {
+        if (permissionService.hasPermission(auth, "ACTAS_VER")
+                || permissionService.hasPermission(auth, "ACTAS_GESTIONAR")) {
             return;
         }
 
@@ -137,7 +137,7 @@ public class MinutesServiceImpl implements MinutesService {
     @Override
     @Transactional
     public Minutes generateMinutes(Long submissionId) {
-        auditService.marcarActorActual();
+        auditService.markActorActual();
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada: " + submissionId));
 
@@ -149,19 +149,19 @@ public class MinutesServiceImpl implements MinutesService {
         List<Panelist> panelists = panelistRepository.findBySubmissionId(submissionId);
 
         // Si ya existe el minutes, retornar la misma
-        Optional<Minutes> existente = minutesRepository.findBySubmissionId(submissionId);
-        if (existente.isPresent()) {
-            return existente.get();
+        Optional<Minutes> existing = minutesRepository.findBySubmissionId(submissionId);
+        if (existing.isPresent()) {
+            return existing.get();
         }
 
         String fileName = "acta_" + submissionId + "_" + System.currentTimeMillis() + ".pdf";
-        EstadoMinutes estadoGenerada = estadoMinutesRepository.findByCodigo("GENERADA")
+        StatusMinutes statusGenerada = statusMinutesRepository.findByCode("GENERADA")
                 .orElseThrow(() -> new RuntimeException("Catálogo estados_acta sin 'GENERADA' (revisar migración V19)"));
         Minutes minutes = Minutes.builder()
                 .submission(submission)
-                .archivoPdf(fileName)
-                .fechaGeneracion(LocalDate.now())
-                .estado(estadoGenerada)
+                .filePdf(fileName)
+                .dateGeneracion(LocalDate.now())
+                .status(statusGenerada)
                 .build();
 
         // Create directorio de subida si no existe
@@ -171,11 +171,11 @@ public class MinutesServiceImpl implements MinutesService {
             throw new RuntimeException("No se pudo crear el directorio de actas: " + e.getMessage());
         }
 
-        String rutaCompleta = minutesDir + "/" + fileName;
-        generatePdf(rutaCompleta, submission, evalOpt.orElse(null), panelists, minutes);
+        String rutaComplete = minutesDir + "/" + fileName;
+        generatePdf(rutaComplete, submission, evalOpt.orElse(null), panelists, minutes);
 
         Minutes guardada = minutesRepository.save(minutes);
-        registerHistory(guardada, null, estadoGenerada, "CREAR", "Acta generada a partir de la evaluación final");
+        registerHistory(guardada, null, statusGenerada, "CREAR", "Acta generada a partir de la evaluación final");
         return guardada;
     }
 
@@ -185,7 +185,7 @@ public class MinutesServiceImpl implements MinutesService {
      * @param minutesId      id del minutes a sign
      * @param role         role que firma ({@code PRESIDENTE}, {@code VOCAL_1}, {@code VOCAL_2}
      *                    o {@code TUTOR}); no distingue mayúsculas/minúsculas
-     * @param observacion observación opcional del firmante, o {@code null}
+     * @param observation observación opcional del firmante, o {@code null}
      * @return el minutes actualizada; si con esta firma quedan las 4 completas, la submission pasa
      *         a "COMPLETADA" y el PDF se regenera con el estado final de las firmas
      * @throws RuntimeException si el minutes no existe, {@code role} no es uno de los 4 válidos, el
@@ -193,8 +193,8 @@ public class MinutesServiceImpl implements MinutesService {
      */
     @Override
     @Transactional
-    public Minutes signMinutes(Long minutesId, String role, String observacion) {
-        auditService.marcarActorActual();
+    public Minutes signMinutes(Long minutesId, String role, String observation) {
+        auditService.markActorActual();
         Minutes minutes = minutesRepository.findById(minutesId)
                 .orElseThrow(() -> new RuntimeException("Acta no encontrada: " + minutesId));
 
@@ -231,12 +231,12 @@ public class MinutesServiceImpl implements MinutesService {
         // se refresca la entidad para que el resto del método (incluida observaciones_minutes,
         // que antes de esta fase no se escribía desde Java) vea lo que el SP realmente
         // persistió, en vez de sobreescribirlo con el save() final de abajo.
-        minutesRepository.signMinutesDigital(minutesId, roleNormalizado, observacion);
+        minutesRepository.signMinutesDigital(minutesId, roleNormalizado, observation);
         entityManager.refresh(minutes);
 
         // firmada_*/fecha_firma_*/observaciones_minutes ya quedaron persistidos y reflejados
         // en memoria por el refresh() de arriba; solo falta recalculate el flag agregado.
-        minutes.updateEstadoFirma();
+        minutes.updateStatusSignature();
 
         try {
             Long studentAppUserId = minutes.getSubmission().getStudent().getAppUser().getId();
@@ -251,19 +251,19 @@ public class MinutesServiceImpl implements MinutesService {
             Submission submission = minutes.getSubmission();
 
             // El minutes pasa a FINALIZADA con la última firma (si no lo estaba ya). Queda en el history.
-            if (minutes.getEstado() == null || !"FINALIZADA".equals(minutes.getEstado().getCodigo())) {
-                EstadoMinutes anterior = minutes.getEstado();
-                EstadoMinutes finalizada = estadoMinutesRepository.findByCodigo("FINALIZADA")
+            if (minutes.getStatus() == null || !"FINALIZADA".equals(minutes.getStatus().getCode())) {
+                StatusMinutes anterior = minutes.getStatus();
+                StatusMinutes finalizada = statusMinutesRepository.findByCode("FINALIZADA")
                         .orElseThrow(() -> new RuntimeException("Catálogo estados_acta sin 'FINALIZADA' (revisar migración V19)"));
-                minutes.setEstado(finalizada);
+                minutes.setStatus(finalizada);
                 registerHistory(minutes, anterior, finalizada, "FIRMA_COMPLETA",
                         "Acta finalizada automáticamente: firmada por presidente, ambos vocales y tutor");
             }
 
-            ec.edu.uteq.presustentaciones.entities.EstadoSubmission estadoCompletada = estadoSubmissionRepository.findByCodigo("COMPLETADA")
-                    .orElseGet(() -> estadoSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.EstadoSubmission.builder()
-                            .codigo("COMPLETADA").nombre("Completada").build()));
-            submission.setEstado(estadoCompletada);
+            ec.edu.uteq.presustentaciones.entities.StatusSubmission statusCompletada = statusSubmissionRepository.findByCode("COMPLETADA")
+                    .orElseGet(() -> statusSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.StatusSubmission.builder()
+                            .code("COMPLETADA").nombre("Completada").build()));
+            submission.setStatus(statusCompletada);
             submissionRepository.save(submission);
             log.info("Solicitud {} completada - todas las firmas del acta han sido aplicadas", submission.getId());
 
@@ -274,11 +274,11 @@ public class MinutesServiceImpl implements MinutesService {
                 log.warn("No se pudo notificar la finalización del acta {}: {}", minutesId, e.getMessage());
             }
 
-            if (minutes.getArchivoPdf() != null) {
+            if (minutes.getFilePdf() != null) {
                 Optional<EvaluationFinal> evalOpt = evaluationRepository.findBySubmissionId(submission.getId());
                 List<Panelist> panelists = panelistRepository.findBySubmissionId(submission.getId());
-                String rutaCompleta = minutesDir + "/" + minutes.getArchivoPdf();
-                generatePdf(rutaCompleta, submission, evalOpt.orElse(null), panelists, minutes);
+                String rutaComplete = minutesDir + "/" + minutes.getFilePdf();
+                generatePdf(rutaComplete, submission, evalOpt.orElse(null), panelists, minutes);
             }
         }
 
@@ -295,11 +295,11 @@ public class MinutesServiceImpl implements MinutesService {
     public byte[] obtainPdfBytes(Long minutesId) {
         Minutes minutes = minutesRepository.findById(minutesId)
                 .orElseThrow(() -> new RuntimeException("Acta no encontrada"));
-        validateAcceso(minutes);
-        if (minutes.getArchivoPdf() == null) {
+        validateAccess(minutes);
+        if (minutes.getFilePdf() == null) {
             throw new RuntimeException("El acta no tiene PDF generado aún.");
         }
-        Path path = Paths.get(minutesDir, minutes.getArchivoPdf());
+        Path path = Paths.get(minutesDir, minutes.getFilePdf());
         try {
             return Files.readAllBytes(path);
         } catch (IOException e) {
@@ -321,9 +321,9 @@ public class MinutesServiceImpl implements MinutesService {
      * @return el minutes de esa submission, si ya fue generada
      */
     @Override
-    public Optional<Minutes> searchPorSubmission(Long submissionId) {
+    public Optional<Minutes> searchBySubmission(Long submissionId) {
         Optional<Minutes> minutes = minutesRepository.findBySubmissionId(submissionId);
-        minutes.ifPresent(this::validateAcceso);
+        minutes.ifPresent(this::validateAccess);
         return minutes;
     }
 
@@ -338,32 +338,32 @@ public class MinutesServiceImpl implements MinutesService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<MinutesResumenDTO> listMisMinutes(String email, Pageable pageable) {
-        return minutesRepository.findMisMinutes(email, pageable).map(MinutesResumenDTO::de);
+    public Page<MinutesSummaryDTO> listMyMinutes(String email, Pageable pageable) {
+        return minutesRepository.findMyMinutes(email, pageable).map(MinutesSummaryDTO::from);
     }
 
     /**
      * Búsqueda/filtrado administrativo de minutes. Parámetros nulos/vacíos no filtran.
      *
-     * @param estado   código de estado del minutes a filtrar, o {@code null}/vacío
+     * @param status   código de estado del minutes a filtrar, o {@code null}/vacío
      * @param program  program de la submission a filtrar, o {@code null}/vacío
-     * @param desde    fecha mínima de generación, o {@code null} para no acotar
-     * @param hasta    fecha máxima de generación, o {@code null} para no acotar
+     * @param from    fecha mínima de generación, o {@code null} para no acotar
+     * @param to    fecha máxima de generación, o {@code null} para no acotar
      * @param q        texto libre de búsqueda, o {@code null}/vacío
      * @param pageable configuración de paginación
      * @return página de resúmenes de minutes que cumplen los filtros
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<MinutesResumenDTO> searchMinutes(String estado, String program, LocalDate desde, LocalDate hasta,
+    public Page<MinutesSummaryDTO> searchMinutes(String status, String program, LocalDate from, LocalDate to,
                                             String q, Pageable pageable) {
         // Postgres no puede inferir el tipo de un parámetro de fecha que llega null dentro de
         // "(:desde IS NULL OR ...)" -> se sustituye por un rango abierto (mismo enfoque que
         // SubmissionRepository.searchConFiltros).
-        LocalDate desdeSeguro = desde != null ? desde : LocalDate.of(1900, 1, 1);
-        LocalDate hastaSeguro = hasta != null ? hasta : LocalDate.of(9999, 12, 31);
-        return minutesRepository.searchConFiltros(limpiar(estado), limpiar(program), desdeSeguro, hastaSeguro, limpiar(q), pageable)
-                .map(MinutesResumenDTO::de);
+        LocalDate fromSeguro = from != null ? from : LocalDate.of(1900, 1, 1);
+        LocalDate toSeguro = to != null ? to : LocalDate.of(9999, 12, 31);
+        return minutesRepository.searchWithFiltros(clean(status), clean(program), fromSeguro, toSeguro, clean(q), pageable)
+                .map(MinutesSummaryDTO::from);
     }
 
     /**
@@ -377,17 +377,17 @@ public class MinutesServiceImpl implements MinutesService {
      */
     @Override
     @Transactional(readOnly = true)
-    public MinutesDetalleDTO obtainDetalle(Long minutesId) {
-        Minutes minutes = minutesRepository.findDetalleById(minutesId)
+    public MinutesDetailDTO obtainDetail(Long minutesId) {
+        Minutes minutes = minutesRepository.findDetailById(minutesId)
                 .orElseThrow(() -> new RuntimeException("Acta no encontrada: " + minutesId));
-        validateAcceso(minutes); // ADMIN/COORDINADOR o participante (student/panelist/tutor) -- previene IDOR
+        validateAccess(minutes); // ADMIN/COORDINADOR o participante (student/panelist/tutor) -- previene IDOR
         List<Panelist> panelists = panelistRepository.findBySubmissionId(minutes.getSubmission().getId());
-        return MinutesDetalleDTO.de(minutes, panelists);
+        return MinutesDetailDTO.from(minutes, panelists);
     }
 
     /**
      * History de trazabilidad (timeline) del minutes, más reciente primero. Mismo control
-     * de acceso que {@link #obtainDetalle(Long)}.
+     * de acceso que {@link #obtainDetail(Long)}.
      *
      * @param minutesId id del minutes
      * @return los cambios de estado del minutes, del más reciente al más antiguo
@@ -396,11 +396,11 @@ public class MinutesServiceImpl implements MinutesService {
     @Override
     @Transactional(readOnly = true)
     public List<HistoryMinutesDTO> obtainHistory(Long minutesId) {
-        Minutes minutes = minutesRepository.findDetalleById(minutesId)
+        Minutes minutes = minutesRepository.findDetailById(minutesId)
                 .orElseThrow(() -> new RuntimeException("Acta no encontrada: " + minutesId));
-        validateAcceso(minutes); // mismo control de acceso que el detalle
-        return historyEstadoMinutesRepository.findByMinutesIdOrderByFechaCambioDesc(minutesId).stream()
-                .map(HistoryMinutesDTO::de)
+        validateAccess(minutes); // mismo control de acceso que el detalle
+        return historyStatusMinutesRepository.findByMinutesIdOrderByDateCambioDesc(minutesId).stream()
+                .map(HistoryMinutesDTO::from)
                 .toList();
     }
 
@@ -410,7 +410,7 @@ public class MinutesServiceImpl implements MinutesService {
      * appUser, su role, el estado anterior/nuevo y el motivo.
      *
      * @param minutesId            id del minutes
-     * @param nuevoEstadoCodigo código del catálogo estados_minutes
+     * @param targetStatusCode código del catálogo estados_minutes
      * @param motivo            motivo/observación (obligatorio para OBSERVADA y ANULADA)
      * @return el minutes con el nuevo estado aplicado
      * @throws RuntimeException si el minutes no existe, el estado no es válido, la transición no
@@ -418,49 +418,49 @@ public class MinutesServiceImpl implements MinutesService {
      */
     @Override
     @Transactional
-    public Minutes changeEstado(Long minutesId, String nuevoEstadoCodigo, String motivo) {
-        auditService.marcarActorActual();
-        if (nuevoEstadoCodigo == null || nuevoEstadoCodigo.isBlank()) {
+    public Minutes changeStatus(Long minutesId, String targetStatusCode, String motivo) {
+        auditService.markActorActual();
+        if (targetStatusCode == null || targetStatusCode.isBlank()) {
             throw new RuntimeException("Debe indicar el nuevo estado del acta");
         }
-        String destino = nuevoEstadoCodigo.trim().toUpperCase();
+        String destino = targetStatusCode.trim().toUpperCase();
 
-        Minutes minutes = minutesRepository.findDetalleById(minutesId)
+        Minutes minutes = minutesRepository.findDetailById(minutesId)
                 .orElseThrow(() -> new RuntimeException("Acta no encontrada: " + minutesId));
 
-        EstadoMinutes actual = minutes.getEstado();
-        String origen = actual != null ? actual.getCodigo() : "GENERADA";
-        if (origen.equals(destino)) {
+        StatusMinutes actual = minutes.getStatus();
+        String source = actual != null ? actual.getCode() : "GENERADA";
+        if (source.equals(destino)) {
             throw new RuntimeException("El acta ya está en estado " + destino);
         }
 
-        EstadoMinutes estadoDestino = estadoMinutesRepository.findByCodigo(destino)
-                .orElseThrow(() -> new RuntimeException("Estado de acta inválido: " + nuevoEstadoCodigo
+        StatusMinutes statusDestino = statusMinutesRepository.findByCode(destino)
+                .orElseThrow(() -> new RuntimeException("Estado de acta inválido: " + targetStatusCode
                         + ". Válidos: GENERADA, REVISADA, OBSERVADA, FINALIZADA, ANULADA"));
 
-        boolean isAdmin = esAdminActual();
-        Set<String> permitidas = TRANSICIONES.getOrDefault(origen, Set.of());
+        boolean isAdmin = isCurrentAdmin();
+        Set<String> permitidas = TRANSICIONES.getOrDefault(source, Set.of());
         // El ADMIN puede anular en cualquier momento (gestión completa); el resto sigue el flujo.
         if (!permitidas.contains(destino) && !(isAdmin && "ANULADA".equals(destino))) {
-            throw new RuntimeException("Transición de estado no permitida: " + origen + " -> " + destino
-                    + ". Desde " + origen + " solo se puede pasar a " + permitidas);
+            throw new RuntimeException("Transición de estado no permitida: " + source + " -> " + destino
+                    + ". Desde " + source + " solo se puede pasar a " + permitidas);
         }
         if (ESTADOS_QUE_EXIGEN_MOTIVO.contains(destino) && (motivo == null || motivo.isBlank())) {
             throw new RuntimeException("Debe indicar un motivo para pasar el acta a " + destino);
         }
 
-        minutes.setEstado(estadoDestino);
+        minutes.setStatus(statusDestino);
         if (motivo != null && !motivo.isBlank()) {
-            minutes.setObservacionesMinutes(motivo.trim());
+            minutes.setObservationsMinutes(motivo.trim());
         }
         Minutes guardada = minutesRepository.save(minutes);
-        registerHistory(guardada, actual, estadoDestino, "CAMBIO_ESTADO",
+        registerHistory(guardada, actual, statusDestino, "CAMBIO_ESTADO",
                 motivo != null && !motivo.isBlank() ? motivo.trim() : null);
 
         try {
             Long studentAppUserId = minutes.getSubmission().getStudent().getAppUser().getId();
             notificationService.createNotification(studentAppUserId,
-                    String.format("El acta de tu pre-sustentación cambió de estado: %s -> %s", origen, destino));
+                    String.format("El acta de tu pre-sustentación cambió de estado: %s -> %s", source, destino));
         } catch (Exception e) {
             log.warn("No se pudo notificar el cambio de estado del acta {}: {}", minutesId, e.getMessage());
         }
@@ -469,12 +469,12 @@ public class MinutesServiceImpl implements MinutesService {
 
     // ── Helpers ─────────────────────────────────────────────────────────────
 
-    private static String limpiar(String s) {
+    private static String clean(String s) {
         return (s == null || s.isBlank()) ? null : s.trim();
     }
 
     /** Escribe una fila en history_estados_minutes con el appUser autenticado y su role. */
-    private void registerHistory(Minutes minutes, EstadoMinutes anterior, EstadoMinutes nuevo, String accion, String comentario) {
+    private void registerHistory(Minutes minutes, StatusMinutes anterior, StatusMinutes target, String accion, String comment) {
         AppUser autor = null;
         String role = null;
         try {
@@ -482,29 +482,29 @@ public class MinutesServiceImpl implements MinutesService {
             if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(String.valueOf(auth.getPrincipal()))) {
                 autor = appUserRepository.findByEmail(auth.getName()).orElse(null);
                 if (autor != null) {
-                    role = autor.getRoleAppUser() != null ? autor.getRoleAppUser().getCodigo() : autor.getRole();
+                    role = autor.getRoleAppUser() != null ? autor.getRoleAppUser().getCode() : autor.getRole();
                 }
             }
         } catch (Exception e) {
             log.warn("No se pudo resolver el autor del historial del acta {}: {}", minutes.getId(), e.getMessage());
         }
-        historyEstadoMinutesRepository.save(HistoryEstadoMinutes.builder()
+        historyStatusMinutesRepository.save(HistoryStatusMinutes.builder()
                 .minutes(minutes)
-                .estadoAnterior(anterior)
-                .estadoNuevo(nuevo)
+                .statusAnterior(anterior)
+                .statusNew(target)
                 .appUser(autor)
                 .roleAppUser(role)
                 .accion(accion)
-                .comentario(comentario)
-                .fechaCambio(LocalDateTime.now())
+                .comment(comment)
+                .dateCambio(LocalDateTime.now())
                 .build());
     }
 
-    private boolean esAdminActual() {
+    private boolean isCurrentAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null && auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))
-                || (auth != null && permissionService.tienePermission(auth, "ACTAS_GESTIONAR"));
+                || (auth != null && permissionService.hasPermission(auth, "ACTAS_GESTIONAR"));
     }
 
     // ── Generación PDF ────────────────────────────────────────────────────────
@@ -573,43 +573,43 @@ public class MinutesServiceImpl implements MinutesService {
 
             // ── Datos del student ──────────────────────────────────────────
             document.add(sectionTitle("1. DATOS DEL ESTUDIANTE", fontBold));
-            Table datosStudent = new Table(UnitValue.createPercentArray(new float[]{30f, 70f}))
+            Table dataStudent = new Table(UnitValue.createPercentArray(new float[]{30f, 70f}))
                     .setWidth(UnitValue.createPercentValue(100)).setMarginBottom(10);
             String nombreEst = submission.getStudent() != null && submission.getStudent().getAppUser() != null
                     ? submission.getStudent().getAppUser().getNombre() + " "
                       + submission.getStudent().getAppUser().getApellido()
                     : "—";
-            addRow(datosStudent, "Estudiante:", nombreEst, fontBold, fontRegular);
-            addRow(datosStudent, "Carrera:", submission.getStudent() != null
+            addRow(dataStudent, "Estudiante:", nombreEst, fontBold, fontRegular);
+            addRow(dataStudent, "Carrera:", submission.getStudent() != null
                     ? nvl(submission.getStudent().getProgram()) : "—", fontBold, fontRegular);
-            addRow(datosStudent, "Título del tema:", nvl(submission.getTituloTopic()), fontBold, fontRegular);
-            addRow(datosStudent, "Modalidad:", submission.getModalityTitulacion() != null ? nvl(submission.getModalityTitulacion().getNombre()) : "—", fontBold, fontRegular);
-            addRow(datosStudent, "Fecha de solicitud:",
-                    submission.getFechaRegistro() != null ? submission.getFechaRegistro().format(fmtDt) : "—",
+            addRow(dataStudent, "Título del tema:", nvl(submission.getTituloTopic()), fontBold, fontRegular);
+            addRow(dataStudent, "Modalidad:", submission.getModalityDegree() != null ? nvl(submission.getModalityDegree().getNombre()) : "—", fontBold, fontRegular);
+            addRow(dataStudent, "Fecha de solicitud:",
+                    submission.getDateRecord() != null ? submission.getDateRecord().format(fmtDt) : "—",
                     fontBold, fontRegular);
-            document.add(datosStudent);
+            document.add(dataStudent);
 
             // ── Tribunal ───────────────────────────────────────────────────────
             document.add(sectionTitle("2. TRIBUNAL EVALUADOR", fontBold));
-            Table tribunal = new Table(UnitValue.createPercentArray(new float[]{40f, 40f, 20f}))
+            Table panel = new Table(UnitValue.createPercentArray(new float[]{40f, 40f, 20f}))
                     .setWidth(UnitValue.createPercentValue(100)).setMarginBottom(10);
-            addHeaderRow(tribunal, new String[]{"Docente", "Rol", "Confirmado"}, fontBold);
+            addHeaderRow(panel, new String[]{"Docente", "Rol", "Confirmado"}, fontBold);
             if (panelists.isEmpty()) {
                 Cell noPanelists = new Cell(1, 3)
                         .add(new Paragraph("No hay jurados asignados").setFont(fontRegular).setFontSize(9))
                         .setTextAlignment(TextAlignment.CENTER).setPadding(8).setBackgroundColor(LIGHT_GRAY);
-                tribunal.addCell(noPanelists);
+                panel.addCell(noPanelists);
             } else {
                 for (Panelist j : panelists) {
                     String docNombre = j.getTeacher() != null && j.getTeacher().getAppUser() != null
                             ? j.getTeacher().getAppUser().getNombre() + " " + j.getTeacher().getAppUser().getApellido()
                             : "—";
-                    tribunal.addCell(dataCell(docNombre, fontRegular));
-                    tribunal.addCell(dataCell(j.getRole(), fontRegular));
-                    tribunal.addCell(dataCell(j.isConfirmado() ? "✓" : "Pendiente", fontRegular));
+                    panel.addCell(dataCell(docNombre, fontRegular));
+                    panel.addCell(dataCell(j.getRole(), fontRegular));
+                    panel.addCell(dataCell(j.isConfirmado() ? "✓" : "Pendiente", fontRegular));
                 }
             }
-            document.add(tribunal);
+            document.add(panel);
 
             // ── Evaluación y calificación ────────────────────────────────────
             document.add(sectionTitle("3. EVALUACIÓN Y CALIFICACIÓN", fontBold));
@@ -619,13 +619,13 @@ public class MinutesServiceImpl implements MinutesService {
                 addHeaderRow(evalTable, new String[]{"Concepto", "Peso (%)", "Nota"}, fontBold);
                 evalTable.addCell(dataCell("Instructor del curso (Titulación II)", fontRegular));
                 evalTable.addCell(dataCell(String.format("%.0f%%", (evaluation.getPesoInstructor() != null ? evaluation.getPesoInstructor() : 0.6) * 100.0), fontRegular));
-                evalTable.addCell(dataCell(evaluation.getNotaInstructor() != null
-                        ? String.format("%.2f", evaluation.getNotaInstructor()) : "—", fontRegular));
+                evalTable.addCell(dataCell(evaluation.getGradeInstructor() != null
+                        ? String.format("%.2f", evaluation.getGradeInstructor()) : "—", fontRegular));
  
                 evalTable.addCell(dataCell("Tribunal evaluador", fontRegular));
                 evalTable.addCell(dataCell(String.format("%.0f%%", (evaluation.getPesoPanelist() != null ? evaluation.getPesoPanelist() : 0.4) * 100.0), fontRegular));
-                evalTable.addCell(dataCell(evaluation.getNotaPanelistPromedio() != null
-                        ? String.format("%.2f", evaluation.getNotaPanelistPromedio()) : "—", fontRegular));
+                evalTable.addCell(dataCell(evaluation.getGradePanelistAverage() != null
+                        ? String.format("%.2f", evaluation.getGradePanelistAverage()) : "—", fontRegular));
  
                 // Fila de total
                 Cell totalLabel = new Cell().add(new Paragraph("NOTA FINAL").setFont(fontBold).setFontSize(10))
@@ -634,28 +634,28 @@ public class MinutesServiceImpl implements MinutesService {
                 Cell totalPeso = new Cell().add(new Paragraph("100%").setFont(fontBold).setFontSize(10)
                         .setFontColor(ColorConstants.WHITE))
                         .setBackgroundColor(UTEQ_BLUE).setPadding(6).setBorder(Border.NO_BORDER);
-                Cell totalNota = new Cell().add(new Paragraph(evaluation.getNotaFinal() != null
-                        ? String.format("%.2f / 10", evaluation.getNotaFinal()) : "—")
+                Cell totalGrade = new Cell().add(new Paragraph(evaluation.getGradeFinal() != null
+                        ? String.format("%.2f / 10", evaluation.getGradeFinal()) : "—")
                         .setFont(fontBold).setFontSize(10).setFontColor(UTEQ_GOLD))
                         .setBackgroundColor(UTEQ_BLUE).setPadding(6).setBorder(Border.NO_BORDER);
                 evalTable.addCell(totalLabel);
                 evalTable.addCell(totalPeso);
-                evalTable.addCell(totalNota);
+                evalTable.addCell(totalGrade);
                 document.add(evalTable);
  
                 // Resultado
-                String resultado = evaluation.getResultado() != null ? nvl(evaluation.getResultado().getNombre()) : "—";
-                String resultadoCodigo = evaluation.getResultado() != null ? evaluation.getResultado().getCodigo() : "";
-                DeviceRgb resultColor = "APROBADO".equals(resultadoCodigo)
+                String result = evaluation.getResult() != null ? nvl(evaluation.getResult().getNombre()) : "—";
+                String resultCode = evaluation.getResult() != null ? evaluation.getResult().getCode() : "";
+                DeviceRgb resultColor = "APROBADO".equals(resultCode)
                         ? new DeviceRgb(0, 128, 0) : new DeviceRgb(180, 0, 0);
-                document.add(new Paragraph("RESULTADO: " + resultado)
+                document.add(new Paragraph("RESULTADO: " + result)
                         .setFont(fontBold).setFontSize(14).setFontColor(resultColor)
                         .setTextAlignment(TextAlignment.CENTER)
                         .setBorder(new SolidBorder(resultColor, 2)).setPadding(8).setMarginBottom(10));
 
-                if (evaluation.getObservaciones() != null && !evaluation.getObservaciones().isBlank()) {
+                if (evaluation.getObservations() != null && !evaluation.getObservations().isBlank()) {
                     document.add(sectionTitle("Observaciones del tribunal:", fontBold));
-                    document.add(new Paragraph(evaluation.getObservaciones())
+                    document.add(new Paragraph(evaluation.getObservations())
                             .setFont(fontRegular).setFontSize(9).setBackgroundColor(LIGHT_GRAY)
                             .setPadding(8).setMarginBottom(10));
                 }
@@ -666,7 +666,7 @@ public class MinutesServiceImpl implements MinutesService {
 
             // ── Firmas ────────────────────────────────────────────────────────
             document.add(sectionTitle("4. FIRMAS ELECTRÓNICAS", fontBold));
-            Table firmasTable = new Table(UnitValue.createPercentArray(new float[]{25f, 25f, 25f, 25f}))
+            Table signaturesTable = new Table(UnitValue.createPercentArray(new float[]{25f, 25f, 25f, 25f}))
                     .setWidth(UnitValue.createPercentValue(100)).setMarginBottom(15);
 
             String[] rolesLabel = {"Presidente", "Vocal 1", "Vocal 2", "Tutor"};
@@ -676,32 +676,32 @@ public class MinutesServiceImpl implements MinutesService {
                 minutes != null && minutes.isFirmadaVocal2(),
                 minutes != null && minutes.isFirmadaTutor()
             };
-            LocalDateTime[] fechasFirma = {
-                minutes != null ? minutes.getFechaFirmaPresidente() : null,
-                minutes != null ? minutes.getFechaFirmaVocal1() : null,
-                minutes != null ? minutes.getFechaFirmaVocal2() : null,
-                minutes != null ? minutes.getFechaFirmaTutor() : null
+            LocalDateTime[] fechasSignature = {
+                minutes != null ? minutes.getDateSignaturePresidente() : null,
+                minutes != null ? minutes.getDateSignatureVocal1() : null,
+                minutes != null ? minutes.getDateSignatureVocal2() : null,
+                minutes != null ? minutes.getDateSignatureTutor() : null
             };
 
             for (int i = 0; i < 4; i++) {
                 boolean firmado = firmados[i];
-                Cell firmaCell = new Cell()
+                Cell signatureCell = new Cell()
                         .add(new Paragraph(rolesLabel[i]).setFont(fontBold).setFontSize(9)
                                 .setTextAlignment(TextAlignment.CENTER))
                         .add(new Paragraph(firmado ? "✓ FIRMADO" : "PENDIENTE")
                                 .setFont(fontBold).setFontSize(10)
                                 .setFontColor(firmado ? new DeviceRgb(0, 128, 0) : new DeviceRgb(150, 150, 150))
                                 .setTextAlignment(TextAlignment.CENTER))
-                        .add(new Paragraph(firmado && fechasFirma[i] != null
-                                ? fechasFirma[i].format(fmtDt) : " ")
+                        .add(new Paragraph(firmado && fechasSignature[i] != null
+                                ? fechasSignature[i].format(fmtDt) : " ")
                                 .setFont(fontRegular).setFontSize(7)
                                 .setTextAlignment(TextAlignment.CENTER))
                         .setBackgroundColor(firmado ? new DeviceRgb(230, 255, 230) : LIGHT_GRAY)
                         .setBorder(new SolidBorder(firmado ? new DeviceRgb(0, 128, 0) : MEDIUM_GRAY, 1))
                         .setPadding(10).setMargin(3);
-                firmasTable.addCell(firmaCell);
+                signaturesTable.addCell(signatureCell);
             }
-            document.add(firmasTable);
+            document.add(signaturesTable);
 
             // ── Pie de página ─────────────────────────────────────────────────
             document.add(new LineSeparator(new com.itextpdf.kernel.pdf.canvas.draw.SolidLine(1f))
@@ -767,11 +767,11 @@ public class MinutesServiceImpl implements MinutesService {
         Minutes minutes = minutesRepository.findById(minutesId)
                 .orElseThrow(() -> new RuntimeException("Acta no encontrada: " + minutesId));
         // Validate que el appUser tenga permissions (ya sea admin, student dueño, panelist o tutor)
-        validateAcceso(minutes);
+        validateAccess(minutes);
         
         // Si hay un archivo físico, intentar eliminarlo
-        if (minutes.getArchivoPdf() != null) {
-            Path path = Paths.get(minutesDir, minutes.getArchivoPdf());
+        if (minutes.getFilePdf() != null) {
+            Path path = Paths.get(minutesDir, minutes.getFilePdf());
             try {
                 Files.deleteIfExists(path);
             } catch (IOException e) {

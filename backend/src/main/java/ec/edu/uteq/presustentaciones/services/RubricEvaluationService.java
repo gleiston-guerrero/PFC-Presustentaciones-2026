@@ -2,7 +2,7 @@ package ec.edu.uteq.presustentaciones.services;
 
 import ec.edu.uteq.presustentaciones.dto.EvaluationRubricRequest;
 import ec.edu.uteq.presustentaciones.dto.EvaluationRubricResponse;
-import ec.edu.uteq.presustentaciones.dto.ObservacionesSubmissionDTO;
+import ec.edu.uteq.presustentaciones.dto.ObservationsSubmissionDTO;
 
 import java.util.List;
 
@@ -32,11 +32,11 @@ public interface RubricEvaluationService {
      * @return el promedio, redondeado a 2 decimales, de las notas de los panelists que ya
      *         evaluaron; {@code 0.0} si ninguno ha evaluado todavía
      */
-    Double calculateNotaTribunal(Long submissionId);
+    Double calculateGradePanel(Long submissionId);
 
     /** Obtain todas las observaciones de una submission (tutor, panelists, coordinador)
      * @param submissionId id de la submission
      * @return observaciones consolidadas de todos los actores que han evaluado la submission
      */
-    ObservacionesSubmissionDTO obtainObservacionesSubmission(Long submissionId);
+    ObservationsSubmissionDTO obtainObservationsSubmission(Long submissionId);
 }

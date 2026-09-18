@@ -22,7 +22,7 @@ public class Room {
     
     @Column(name = "codigo", unique = true, nullable = false, length = 40)
     @JsonProperty("codigo")
-    private String codigo;
+    private String code;
     
     @Column(name = "nombre", nullable = false, length = 120)
     @JsonProperty("nombre")
@@ -34,5 +34,5 @@ public class Room {
     
     @Column(name = "disponible", nullable = false)
     @JsonProperty("disponible")
-    private Boolean disponible= true;
+    private Boolean available= true;
 }

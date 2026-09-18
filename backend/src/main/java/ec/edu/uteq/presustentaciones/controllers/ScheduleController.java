@@ -31,19 +31,19 @@ public class ScheduleController {
      *
      * @param submissionId submission que se va a programar
      * @param roomId      room donde se realizará la defensa
-     * @param fecha       día de la defensa
+     * @param date       día de la defensa
      * @param hora        hora de inicio
      * @return 200 con el {@link Schedule} creado, o 400 con el motivo del rechazo si la
      *         room está ocupada o algún panelist tiene conflicto de horario
      */
     @PostMapping("/crear")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'CRONOGRAMA_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'CRONOGRAMA_GESTIONAR')")
     public ResponseEntity<?> create(@RequestParam(name = "solicitudId") Long submissionId,
                                    @RequestParam(name = "salaId") Long roomId,
-                                   @RequestParam("fecha") LocalDate fecha,
+                                   @RequestParam("fecha") LocalDate date,
                                    @RequestParam("hora") LocalTime hora) {
         try {
-            return ResponseEntity.ok(scheduleService.createSchedule(submissionId, roomId, fecha, hora));
+            return ResponseEntity.ok(scheduleService.createSchedule(submissionId, roomId, date, hora));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -57,10 +57,10 @@ public class ScheduleController {
      *         ninguna franja disponible
      */
     @PostMapping("/auto/{submissionId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'CRONOGRAMA_GESTIONAR')")
-    public ResponseEntity<?> assignAutomatico(@PathVariable("submissionId") Long submissionId) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'CRONOGRAMA_GESTIONAR')")
+    public ResponseEntity<?> assignAutomatic(@PathVariable("submissionId") Long submissionId) {
         try {
-            return ResponseEntity.ok(scheduleService.assignAutomatico(submissionId));
+            return ResponseEntity.ok(scheduleService.assignAutomatic(submissionId));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -69,34 +69,34 @@ public class ScheduleController {
     /**
      * RF-04: Franjas horarias libres de un día, para poblar el selector del frontend.
      *
-     * @param fecha    día consultado
+     * @param date    día consultado
      * @param duracion duración de cada franja en minutos (45 por defecto)
      * @return 200 con fecha, duracionMin y la lista de franjas libres
      */
     @GetMapping("/disponibilidad")
     public ResponseEntity<Map<String, Object>> availability(
-            @RequestParam("fecha") LocalDate fecha,
+            @RequestParam("fecha") LocalDate date,
             @RequestParam(name = "duracion", defaultValue = "45") int duracion) {
-        List<LocalDateTime> franjas = scheduleService.franjasDisponibles(fecha, duracion);
-        return ResponseEntity.ok(Map.of("fecha", fecha, "duracionMin", duracion, "franjas", franjas));
+        List<LocalDateTime> slots = scheduleService.slotsAvailable(date, duracion);
+        return ResponseEntity.ok(Map.of("fecha", date, "duracionMin", duracion, "franjas", slots));
     }
 
     /**
      * RF-04: Comprueba si una room concreta está libre en una franja.
      *
      * @param roomId   room consultada
-     * @param inicio   inicio de la franja
+     * @param start   inicio de la franja
      * @param duracion duración en minutos (45 por defecto)
      * @return 200 con el indicador de availability y un mensaje legible para la UI
      */
     @GetMapping("/verificar-disponibilidad")
     public ResponseEntity<Map<String, Object>> verifyAvailability(
             @RequestParam("roomId") Long roomId,
-            @RequestParam("inicio") LocalDateTime inicio,
+            @RequestParam("inicio") LocalDateTime start,
             @RequestParam(name = "duracion", defaultValue = "45") int duracion) {
-        boolean disponible = scheduleService.estaDisponible(roomId, inicio, duracion);
-        return ResponseEntity.ok(Map.of("disponible", disponible,
-                "mensaje", disponible ? "✓ Sala disponible en esa franja" : "✗ Sala ocupada en esa franja"));
+        boolean available = scheduleService.isAvailable(roomId, start, duracion);
+        return ResponseEntity.ok(Map.of("disponible", available,
+                "mensaje", available ? "✓ Sala disponible en esa franja" : "✗ Sala ocupada en esa franja"));
     }
 
     /**
@@ -109,20 +109,20 @@ public class ScheduleController {
      * @param id identificador del perfil de student
      * @return schedules de ese student, vacío si aún no tiene defensa programada
      */
-    @GetMapping("/estudiante/{id}") public List<Schedule> porStudent(@PathVariable("id") Long id) { return scheduleService.listPorStudent(id); }
+    @GetMapping("/estudiante/{id}") public List<Schedule> byStudent(@PathVariable("id") Long id) { return scheduleService.listByStudent(id); }
 
     /**
      * @param id identificador del appUser autenticable
      * @return schedules asociados a ese appUser
      */
-    @GetMapping("/usuario/{id}") public List<Schedule> porAppUser(@PathVariable("id") Long id) { return scheduleService.listPorAppUser(id); }
+    @GetMapping("/usuario/{id}") public List<Schedule> byAppUser(@PathVariable("id") Long id) { return scheduleService.listByAppUser(id); }
 
     /**
      * @param id submission consultada
      * @return 200 con el schedule de la submission, o 404 si no tiene defensa programada
      */
-    @GetMapping("/solicitud/{id}") public ResponseEntity<Schedule> porSubmission(@PathVariable("id") Long id) {
-        return scheduleService.searchPorSubmission(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    @GetMapping("/solicitud/{id}") public ResponseEntity<Schedule> bySubmission(@PathVariable("id") Long id) {
+        return scheduleService.searchBySubmission(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
     /**
      * Cancela una defensa programada liberando su franja y su room.
@@ -131,7 +131,7 @@ public class ScheduleController {
      * @return 204 sin cuerpo
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'CRONOGRAMA_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'CRONOGRAMA_GESTIONAR')")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         scheduleService.delete(id); return ResponseEntity.noContent().build();
     }

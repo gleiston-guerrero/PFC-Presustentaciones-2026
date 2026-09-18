@@ -38,17 +38,17 @@ class NotificationServiceImplTest {
     private NotificationServiceImpl notificationService;
 
     @AfterEach
-    void limpiarContextoDeSeguridad() {
+    void cleanContextoDeSeguridad() {
         SecurityContextHolder.clearContext();
     }
 
-    private AppUser receptorCon(String emailNotifications) {
+    private AppUser receiverWith(String emailNotifications) {
         return AppUser.builder().id(1L).nombre("Ana").apellido("Torres")
                 .email("atorres@uteq.edu.ec").emailNotifications(emailNotifications).build();
     }
 
     @Test
-    void createNotificationLanzaExcepcionSiElAppUserNoExiste() {
+    void createNotificationLanzaExcepcionSiElAppUserNoExists() {
         when(appUserRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> notificationService.createNotification(99L, "hola"));
@@ -56,22 +56,22 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void createNotificationGuardaLaNotificationAunSinEmailConfigurado() {
-        AppUser receptor = receptorCon(null);
-        when(appUserRepository.findById(1L)).thenReturn(Optional.of(receptor));
+    void createNotificationGuardaLaNotificationAunWithoutEmailConfigurado() {
+        AppUser receiver = receiverWith(null);
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(receiver));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Notification resultado = notificationService.createNotification(1L, "Tu solicitud fue aprobada");
+        Notification result = notificationService.createNotification(1L, "Tu solicitud fue aprobada");
 
-        assertEquals("Tu solicitud fue aprobada", resultado.getMensaje());
-        assertFalse(resultado.isLeida());
+        assertEquals("Tu solicitud fue aprobada", result.getMessage());
+        assertFalse(result.isRead());
         verify(emailService, never()).sendNotification(any(), any(), any(), any());
     }
 
     @Test
-    void createNotificationEnviaEmailSiElReceptorTieneEmailNotificationsConfigurado() {
-        AppUser receptor = receptorCon("atorres.notif@gmail.com");
-        when(appUserRepository.findById(1L)).thenReturn(Optional.of(receptor));
+    void createNotificationEnviaEmailSiElReceiverTieneEmailNotificationsConfigurado() {
+        AppUser receiver = receiverWith("atorres.notif@gmail.com");
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(receiver));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
         // Sin autenticacion en el contexto -> remitente generico.
         SecurityContextHolder.clearContext();
@@ -84,9 +84,9 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void createNotificationNoEnviaEmailSiEmailNotificationsEstaEnBlanco() {
-        AppUser receptor = receptorCon("   ");
-        when(appUserRepository.findById(1L)).thenReturn(Optional.of(receptor));
+    void createNotificationNoEnviaEmailSiEmailNotificationsIsEnBlanco() {
+        AppUser receiver = receiverWith("   ");
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(receiver));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
 
         notificationService.createNotification(1L, "hola");
@@ -95,12 +95,12 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void createNotificationUsaNombreYEmailDelAppUserAutenticadoComoRemitente() {
-        AppUser receptor = receptorCon("atorres.notif@gmail.com");
-        AppUser coordinador = AppUser.builder().id(2L).nombre("Jorge").apellido("Coordinador")
+    void createNotificationUsaNombreYEmailDelAppUserAuthenticatedAsSender() {
+        AppUser receiver = receiverWith("atorres.notif@gmail.com");
+        AppUser coordinator = AppUser.builder().id(2L).nombre("Jorge").apellido("Coordinador")
                 .email("jcoordinador@uteq.edu.ec").build();
-        when(appUserRepository.findById(1L)).thenReturn(Optional.of(receptor));
-        when(appUserRepository.findByEmail("jcoordinador@uteq.edu.ec")).thenReturn(Optional.of(coordinador));
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(receiver));
+        when(appUserRepository.findByEmail("jcoordinador@uteq.edu.ec")).thenReturn(Optional.of(coordinator));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
 
         SecurityContextHolder.getContext().setAuthentication(
@@ -114,9 +114,9 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void marcarComoLeidaLanzaExcepcionSiLaNotificationNoExiste() {
+    void markAsReadLanzaExcepcionSiLaNotificationNoExists() {
         when(notificationRepository.findById(5L)).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> notificationService.marcarComoLeida(5L));
+        assertThrows(RuntimeException.class, () -> notificationService.markAsRead(5L));
     }
 
     // Hallazgo real (2026-09-01): NotificationServiceImpl.validateAcceso(Long) es codigo nuevo
@@ -128,45 +128,45 @@ class NotificationServiceImplTest {
     // ADMIN en MinutesServiceImplTest.
 
     @Test
-    void marcarComoLeidaActualizaElFlagYGuarda() {
+    void markAsReadActualizaElFlagYGuarda() {
         AppUser propietario = AppUser.builder().id(1L).email("atorres@uteq.edu.ec").build();
-        Notification n = Notification.builder().id(5L).mensaje("x").leida(false).appUser(propietario).build();
+        Notification n = Notification.builder().id(5L).message("x").read(false).appUser(propietario).build();
         when(notificationRepository.findById(5L)).thenReturn(Optional.of(n));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin@uteq.edu.ec", null,
                         AuthorityUtils.createAuthorityList("ROLE_ADMIN")));
 
-        Notification resultado = notificationService.marcarComoLeida(5L);
+        Notification result = notificationService.markAsRead(5L);
 
-        assertTrue(resultado.isLeida());
+        assertTrue(result.isRead());
         verify(notificationRepository).save(n);
     }
 
     @Test
-    void countNoLeidasDelegaAlRepositorio() {
+    void countUnreadDelegaAlRepositorio() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin@uteq.edu.ec", null,
                         AuthorityUtils.createAuthorityList("ROLE_ADMIN")));
-        when(notificationRepository.countByAppUserIdAndLeidaFalse(1L)).thenReturn(3L);
-        assertEquals(3L, notificationService.countNoLeidas(1L));
+        when(notificationRepository.countByAppUserIdAndReadFalse(1L)).thenReturn(3L);
+        assertEquals(3L, notificationService.countUnread(1L));
     }
 
     @Test
-    void marcarTodasLeidasDelegaAlRepositorio() {
+    void markAllReadDelegaAlRepositorio() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin@uteq.edu.ec", null,
                         AuthorityUtils.createAuthorityList("ROLE_ADMIN")));
-        notificationService.marcarTodasLeidas(1L);
-        verify(notificationRepository).marcarTodasLeidasPorAppUser(1L);
+        notificationService.markAllRead(1L);
+        verify(notificationRepository).markAllReadByAppUser(1L);
     }
 
     @Test
     void deleteNotificationExitosoSiEsPropietario() {
-        AppUser receptor = AppUser.builder().id(1L).email("atorres@uteq.edu.ec").build();
-        Notification n = Notification.builder().id(5L).appUser(receptor).build();
+        AppUser receiver = AppUser.builder().id(1L).email("atorres@uteq.edu.ec").build();
+        Notification n = Notification.builder().id(5L).appUser(receiver).build();
         when(notificationRepository.findById(5L)).thenReturn(Optional.of(n));
-        when(appUserRepository.findByEmail("atorres@uteq.edu.ec")).thenReturn(Optional.of(receptor));
+        when(appUserRepository.findByEmail("atorres@uteq.edu.ec")).thenReturn(Optional.of(receiver));
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("atorres@uteq.edu.ec", null,
@@ -178,9 +178,9 @@ class NotificationServiceImplTest {
 
     @Test
     void deleteNotificationLanzaAccessDeniedSiNoEsPropietario() {
-        AppUser receptor = AppUser.builder().id(1L).email("atorres@uteq.edu.ec").build();
+        AppUser receiver = AppUser.builder().id(1L).email("atorres@uteq.edu.ec").build();
         AppUser otro = AppUser.builder().id(2L).email("otro@uteq.edu.ec").build();
-        Notification n = Notification.builder().id(5L).appUser(receptor).build();
+        Notification n = Notification.builder().id(5L).appUser(receiver).build();
         when(notificationRepository.findById(5L)).thenReturn(Optional.of(n));
         when(appUserRepository.findByEmail("otro@uteq.edu.ec")).thenReturn(Optional.of(otro));
 

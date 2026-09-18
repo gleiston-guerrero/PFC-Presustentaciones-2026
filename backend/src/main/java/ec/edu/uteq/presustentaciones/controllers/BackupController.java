@@ -1,13 +1,13 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
 import ec.edu.uteq.presustentaciones.dto.BackupInfoDTO;
-import ec.edu.uteq.presustentaciones.dto.RegisterPruebaRestauracionRequest;
+import ec.edu.uteq.presustentaciones.dto.RegisterDrillRestoreRequest;
 import ec.edu.uteq.presustentaciones.dto.BackupConfigDTO;
 import ec.edu.uteq.presustentaciones.dto.ResponseWrapper;
 import ec.edu.uteq.presustentaciones.services.BackupService;
 import ec.edu.uteq.presustentaciones.services.WalPitrService;
-import ec.edu.uteq.presustentaciones.services.backup.OrigenBackup;
-import ec.edu.uteq.presustentaciones.services.backup.TipoBackup;
+import ec.edu.uteq.presustentaciones.services.backup.SourceBackup;
+import ec.edu.uteq.presustentaciones.services.backup.KindBackup;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -33,7 +33,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/backups")
 @RequiredArgsConstructor
-@PreAuthorize("@permissionService.tienePermission(authentication, 'BACKUPS_GESTIONAR')")
+@PreAuthorize("@permissionService.hasPermission(authentication, 'BACKUPS_GESTIONAR')")
 public class BackupController {
 
     private final BackupService backupService;
@@ -50,26 +50,26 @@ public class BackupController {
     /**
      * Genera un backup FULL ahora.
      *
-     * @param origen opcional: MANUAL (por defecto) o EVENTO
+     * @param source opcional: MANUAL (por defecto) o EVENTO
      * @return 200 con los metadatos del backup, o 400/409 si {@code pg_dump} falla
      */
     @PostMapping
-    public ResponseEntity<?> generate(@RequestParam(name = "origen", defaultValue = "MANUAL") String origen) {
-        OrigenBackup o = "EVENTO".equalsIgnoreCase(origen) ? OrigenBackup.EVENTO : OrigenBackup.MANUAL;
-        BackupInfoDTO info = backupService.generate(TipoBackup.FULL, o);
+    public ResponseEntity<?> generate(@RequestParam(name = "origen", defaultValue = "MANUAL") String source) {
+        SourceBackup o = "EVENTO".equalsIgnoreCase(source) ? SourceBackup.EVENTO : SourceBackup.MANUAL;
+        BackupInfoDTO info = backupService.generate(KindBackup.FULL, o);
         return ResponseEntity.ok(ResponseWrapper.success(info, "Respaldo generado correctamente"));
     }
 
     /**
      * Genera un backup DIFERENCIAL (filas cambiadas desde el último FULL). Fase 2.
      *
-     * @param origen opcional: MANUAL (por defecto) o EVENTO
+     * @param source opcional: MANUAL (por defecto) o EVENTO
      * @return 200 con los metadatos del diferencial generado
      */
     @PostMapping("/diferencial")
-    public ResponseEntity<?> generateDiferencial(@RequestParam(name = "origen", defaultValue = "MANUAL") String origen) {
-        OrigenBackup o = "EVENTO".equalsIgnoreCase(origen) ? OrigenBackup.EVENTO : OrigenBackup.MANUAL;
-        BackupInfoDTO info = backupService.generateDiferencial(o);
+    public ResponseEntity<?> generateDifferential(@RequestParam(name = "origen", defaultValue = "MANUAL") String source) {
+        SourceBackup o = "EVENTO".equalsIgnoreCase(source) ? SourceBackup.EVENTO : SourceBackup.MANUAL;
+        BackupInfoDTO info = backupService.generateDifferential(o);
         return ResponseEntity.ok(ResponseWrapper.success(info, "Respaldo diferencial generado"));
     }
 
@@ -81,7 +81,7 @@ public class BackupController {
      */
     @GetMapping("/{nombre}/descargar")
     public ResponseEntity<byte[]> download(@PathVariable("nombre") String nombre) {
-        byte[] contenido = backupService.leer(nombre);
+        byte[] contenido = backupService.read(nombre);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombre + "\"")
@@ -122,8 +122,8 @@ public class BackupController {
      * @return 200 con el estado consolidado de backups
      */
     @GetMapping("/estado")
-    public ResponseEntity<?> estado() {
-        return ResponseEntity.ok(ResponseWrapper.success(backupService.estado()));
+    public ResponseEntity<?> status() {
+        return ResponseEntity.ok(ResponseWrapper.success(backupService.status()));
     }
 
     // ── Schedule (programación + retención) ────────────────────────────────
@@ -148,8 +148,8 @@ public class BackupController {
 
     /** Aplica la retención GFS ahora mismo. @return 200 con los nombres eliminados */
     @PostMapping("/retencion")
-    public ResponseEntity<?> aplicarRetencion() {
-        List<String> eliminados = backupService.aplicarRetencion();
+    public ResponseEntity<?> applyRetention() {
+        List<String> eliminados = backupService.applyRetention();
         String msg = eliminados.isEmpty()
                 ? "Retención aplicada: no había copias para eliminar."
                 : "Retención aplicada: " + eliminados.size() + " copia(s) eliminada(s).";
@@ -160,8 +160,8 @@ public class BackupController {
 
     /** @return 200 con las últimas 50 pruebas de restauración registradas */
     @GetMapping("/pruebas")
-    public ResponseEntity<?> listPruebas() {
-        return ResponseEntity.ok(ResponseWrapper.success(backupService.pruebas()));
+    public ResponseEntity<?> listDrills() {
+        return ResponseEntity.ok(ResponseWrapper.success(backupService.drills()));
     }
 
     /**
@@ -169,9 +169,9 @@ public class BackupController {
      * @return 200 con la prueba registrada
      */
     @PostMapping("/pruebas")
-    public ResponseEntity<?> registerPrueba(@Valid @RequestBody RegisterPruebaRestauracionRequest req) {
+    public ResponseEntity<?> registerDrill(@Valid @RequestBody RegisterDrillRestoreRequest req) {
         return ResponseEntity.ok(ResponseWrapper.success(
-                backupService.registerPrueba(req.getBackupNombre(), req.getResultado(),
+                backupService.registerDrill(req.getBackupNombre(), req.getResult(),
                         req.getResponsable(), req.getNotas()),
                 "Prueba de restauración registrada"));
     }
@@ -184,8 +184,8 @@ public class BackupController {
      * @return 200 con el estado del archivado de WAL
      */
     @GetMapping("/wal")
-    public ResponseEntity<?> estadoWal() {
-        return ResponseEntity.ok(ResponseWrapper.success(walPitrService.estado()));
+    public ResponseEntity<?> statusWal() {
+        return ResponseEntity.ok(ResponseWrapper.success(walPitrService.status()));
     }
 
     /**
@@ -195,7 +195,7 @@ public class BackupController {
      */
     @PostMapping("/wal/switch")
     public ResponseEntity<?> switchWal() {
-        String wal = walPitrService.forzarSwitchWal();
+        String wal = walPitrService.forceSwitchWal();
         return ResponseEntity.ok(ResponseWrapper.success(wal, "Segmento " + wal + " cerrado y en cola de archivado"));
     }
 
@@ -205,9 +205,9 @@ public class BackupController {
      * @return 200 con la cantidad de segmentos eliminados
      */
     @PostMapping("/wal/limpiar")
-    public ResponseEntity<?> limpiarWal() {
+    public ResponseEntity<?> cleanWal() {
         int dias = backupService.config().getRetenerDiasWal();
-        int borrados = walPitrService.limpiarWal(dias);
+        int borrados = walPitrService.cleanWal(dias);
         return ResponseEntity.ok(ResponseWrapper.success(borrados,
                 borrados == 0 ? "No había WAL para limpiar." : borrados + " segmento(s) de WAL eliminados."));
     }
@@ -218,9 +218,9 @@ public class BackupController {
      * @return 200 con los metadatos de la base física generada
      */
     @PostMapping("/bases")
-    public ResponseEntity<?> generateBaseFisica() {
+    public ResponseEntity<?> generateBasePhysical() {
         return ResponseEntity.ok(ResponseWrapper.success(
-                walPitrService.generateBaseFisica(), "Base física generada"));
+                walPitrService.generateBasePhysical(), "Base física generada"));
     }
 
     /**

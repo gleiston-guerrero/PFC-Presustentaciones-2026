@@ -35,39 +35,39 @@ class EvaluationControllerTest {
     private EvaluationController controller;
 
     @SuppressWarnings("unchecked")
-    private String errorDe(ResponseEntity<?> response) {
+    private String errorOf(ResponseEntity<?> response) {
         return ((Map<String, String>) response.getBody()).get("error");
     }
 
     @Test
-    void evaluarPonderadoDevuelveLaEvaluationCalculada() {
-        EvaluationFinal evaluation = EvaluationFinal.builder().id(1L).notaFinal(8.6).build();
-        when(evaluationService.evaluarSubmission(1L, 2L, 9.0, 8.0, "Buen trabajo", 60.0, 40.0))
+    void evaluateWeightedDevuelveLaEvaluationCalculada() {
+        EvaluationFinal evaluation = EvaluationFinal.builder().id(1L).gradeFinal(8.6).build();
+        when(evaluationService.evaluateSubmission(1L, 2L, 9.0, 8.0, "Buen trabajo", 60.0, 40.0))
                 .thenReturn(evaluation);
 
-        ResponseEntity<?> response = controller.evaluarPonderado(1L, 2L, 9.0, 8.0, "Buen trabajo", 60.0, 40.0);
+        ResponseEntity<?> response = controller.evaluateWeighted(1L, 2L, 9.0, 8.0, "Buen trabajo", 60.0, 40.0);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertSame(evaluation, response.getBody());
     }
 
     @Test
-    void evaluarPonderadoConPesosInvalidosDevuelve400ConElMensajeDelServicio() {
-        when(evaluationService.evaluarSubmission(1L, 2L, 9.0, 8.0, "obs", 70.0, 40.0))
+    void evaluateWeightedWithPesosInvalidosDevuelve400WithElMessageDelServicio() {
+        when(evaluationService.evaluateSubmission(1L, 2L, 9.0, 8.0, "obs", 70.0, 40.0))
                 .thenThrow(new RuntimeException("Los pesos deben sumar 100"));
 
-        ResponseEntity<?> response = controller.evaluarPonderado(1L, 2L, 9.0, 8.0, "obs", 70.0, 40.0);
+        ResponseEntity<?> response = controller.evaluateWeighted(1L, 2L, 9.0, 8.0, "obs", 70.0, 40.0);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Los pesos deben sumar 100", errorDe(response));
+        assertEquals("Los pesos deben sumar 100", errorOf(response));
     }
 
     @Test
-    void evaluarLegadoDelegaEnElServicioConLaNotaFinalDirecta() {
+    void evaluateLegadoDelegaEnElServicioWithLaGradeFinalDirecta() {
         EvaluationFinal evaluation = EvaluationFinal.builder().id(1L).build();
-        when(evaluationService.evaluarSubmission(1L, 2L, 7.5, "obs")).thenReturn(evaluation);
+        when(evaluationService.evaluateSubmission(1L, 2L, 7.5, "obs")).thenReturn(evaluation);
 
-        assertSame(evaluation, controller.evaluar(1L, 2L, 7.5, "obs"));
+        assertSame(evaluation, controller.evaluate(1L, 2L, 7.5, "obs"));
     }
 
     @Test
@@ -80,53 +80,53 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void listPorStudentYPorAppUserDeleganEnElServicio() {
-        List<EvaluationFinal> porStudent = List.of(EvaluationFinal.builder().id(1L).build());
-        List<EvaluationFinal> porAppUser = List.of(EvaluationFinal.builder().id(2L).build());
-        when(evaluationService.listPorStudent(7L)).thenReturn(porStudent);
-        when(evaluationService.listPorAppUser(50L)).thenReturn(porAppUser);
+    void listByStudentYByAppUserDeleganEnElServicio() {
+        List<EvaluationFinal> byStudent = List.of(EvaluationFinal.builder().id(1L).build());
+        List<EvaluationFinal> byAppUser = List.of(EvaluationFinal.builder().id(2L).build());
+        when(evaluationService.listByStudent(7L)).thenReturn(byStudent);
+        when(evaluationService.listByAppUser(50L)).thenReturn(byAppUser);
 
-        assertSame(porStudent, controller.listPorStudent(7L));
-        assertSame(porAppUser, controller.listPorAppUser(50L));
+        assertSame(byStudent, controller.listByStudent(7L));
+        assertSame(byAppUser, controller.listByAppUser(50L));
     }
 
     @Test
-    void porSubmissionDevuelve404CuandoLaSubmissionNoTieneEvaluation() {
-        when(evaluationService.searchPorSubmission(1L)).thenReturn(Optional.empty());
+    void bySubmissionDevuelve404CuandoLaSubmissionNoTieneEvaluation() {
+        when(evaluationService.searchBySubmission(1L)).thenReturn(Optional.empty());
 
-        assertEquals(HttpStatus.NOT_FOUND, controller.porSubmission(1L).getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, controller.bySubmission(1L).getStatusCode());
     }
 
     @Test
-    void porSubmissionDevuelveLaEvaluationCuandoExiste() {
+    void bySubmissionDevuelveLaEvaluationCuandoExists() {
         EvaluationFinal evaluation = EvaluationFinal.builder().id(1L).build();
-        when(evaluationService.searchPorSubmission(1L)).thenReturn(Optional.of(evaluation));
+        when(evaluationService.searchBySubmission(1L)).thenReturn(Optional.of(evaluation));
 
-        assertSame(evaluation, controller.porSubmission(1L).getBody());
+        assertSame(evaluation, controller.bySubmission(1L).getBody());
     }
 
     // ── sp_calculate_promedio_evaluation ───────────────────────────────────────
 
     @Test
-    void calculatePromedioDevuelveElResultadoDelProcedimientoAlmacenado() {
-        Map<String, Object> resultado = Map.of(
+    void calculateAverageDevuelveElResultDelProcedimientoAlmacenado() {
+        Map<String, Object> result = Map.of(
                 "solicitudId", 1L, "notaFinal", 8.6, "estadoResultado", "APROBADO");
-        when(evaluationService.calculatePromedioSP(1L)).thenReturn(resultado);
+        when(evaluationService.calculateAverageSP(1L)).thenReturn(result);
 
-        ResponseEntity<?> response = controller.calculatePromedio(1L);
+        ResponseEntity<?> response = controller.calculateAverage(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(resultado, response.getBody());
+        assertSame(result, response.getBody());
     }
 
     @Test
-    void calculatePromedioTraduceElErrorDelProcedimientoA400() {
-        when(evaluationService.calculatePromedioSP(99L))
+    void calculateAverageTraduceElErrorDelProcedimientoA400() {
+        when(evaluationService.calculateAverageSP(99L))
                 .thenThrow(new RuntimeException("La solicitud 99 no tiene evaluaciones por criterio"));
 
-        ResponseEntity<?> response = controller.calculatePromedio(99L);
+        ResponseEntity<?> response = controller.calculateAverage(99L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("La solicitud 99 no tiene evaluaciones por criterio", errorDe(response));
+        assertEquals("La solicitud 99 no tiene evaluaciones por criterio", errorOf(response));
     }
 }

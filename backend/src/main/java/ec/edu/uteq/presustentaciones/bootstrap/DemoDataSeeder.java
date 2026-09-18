@@ -71,8 +71,8 @@ public class DemoDataSeeder implements CommandLineRunner {
                 log.warn("Verificación de catálogo de roles: {}", e.getMessage());
             }
 
-            RoleAppUser adminRole = roleAppUserRepository.findByCodigo("ADMIN").orElse(null);
-            RoleAppUser coordinadorRole = roleAppUserRepository.findByCodigo("COORDINADOR").orElse(null);
+            RoleAppUser adminRole = roleAppUserRepository.findByCode("ADMIN").orElse(null);
+            RoleAppUser coordinatorRole = roleAppUserRepository.findByCode("COORDINADOR").orElse(null);
 
             // AppUser administrador del sistema
             if (!appUserRepository.existsByEmail("admin@uteq.edu.ec")) {
@@ -100,15 +100,15 @@ public class DemoDataSeeder implements CommandLineRunner {
                     .email("demo@uteq.edu.ec")
                     .password(passwordEncoder.encode("Demo2026!"))
                     .role("COORDINADOR")
-                    .roleAppUser(coordinadorRole)
+                    .roleAppUser(coordinatorRole)
                     .activo(true)
                     .build();
                 appUserRepository.save(demo);
                 log.info("Usuario de demostración inicial verificado.");
             }
 
-            RoleAppUser teacherRole = roleAppUserRepository.findByCodigo("DOCENTE").orElse(null);
-            RoleAppUser studentRole = roleAppUserRepository.findByCodigo("ESTUDIANTE").orElse(null);
+            RoleAppUser teacherRole = roleAppUserRepository.findByCode("DOCENTE").orElse(null);
+            RoleAppUser studentRole = roleAppUserRepository.findByCode("ESTUDIANTE").orElse(null);
 
             // AppUser Teacher / Tutor / Panelist
             if (!appUserRepository.existsByEmail("docente@uteq.edu.ec")) {

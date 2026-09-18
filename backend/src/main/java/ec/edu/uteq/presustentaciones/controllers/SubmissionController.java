@@ -42,14 +42,14 @@ public class SubmissionController {
      * Crea una submission en nombre de un student (uso administrativo).
      *
      * @param studentId perfil de student al que pertenecerá la submission
-     * @param datos        cuerpo de la submission (topic, modality, línea, área)
+     * @param data        cuerpo de la submission (topic, modality, línea, área)
      * @return 200 con la submission creada, o 400 con el motivo del rechazo
      */
     @PostMapping("/crear/{studentId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> create(@PathVariable("studentId") Long studentId, @RequestBody Submission datos) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_REVISAR')")
+    public ResponseEntity<?> create(@PathVariable("studentId") Long studentId, @RequestBody Submission data) {
         try {
-            return ResponseEntity.ok(ResponseWrapper.success(submissionService.createSubmission(studentId, datos), "Solicitud creada exitosamente"));
+            return ResponseEntity.ok(ResponseWrapper.success(submissionService.createSubmission(studentId, data), "Solicitud creada exitosamente"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -61,13 +61,13 @@ public class SubmissionController {
      * no puede create submissions a nombre de otra persona.
      *
      * @param appUserId ignorado; se conserva en la ruta por compatibilidad del frontend
-     * @param datos     cuerpo de la submission (topic, modality, línea, área)
+     * @param data     cuerpo de la submission (topic, modality, línea, área)
      * @return 200 con la submission creada, o 400 si el appUser del token no existe o el
      *         servicio rechaza la creación
      */
     @PostMapping("/crear-por-usuario/{appUserId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> createPorAppUser(@PathVariable("appUserId") Long appUserId, @RequestBody Submission datos) {
+    public ResponseEntity<?> createByAppUser(@PathVariable("appUserId") Long appUserId, @RequestBody Submission data) {
         try {
             // Obtain email desde el JWT (más seguro que el id del path)
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -75,7 +75,7 @@ public class SubmissionController {
             Long realAppUserId = appUserRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado en el sistema"))
                     .getId();
-            return ResponseEntity.ok(ResponseWrapper.success(submissionService.createSubmissionPorAppUser(realAppUserId, datos), "Solicitud creada exitosamente"));
+            return ResponseEntity.ok(ResponseWrapper.success(submissionService.createSubmissionByAppUser(realAppUserId, data), "Solicitud creada exitosamente"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -89,14 +89,14 @@ public class SubmissionController {
      *         200 con lista vacía en vez de un error, para no romper la pantalla del student
      */
     @GetMapping("/mis-solicitudes")
-    public ResponseEntity<?> listMisSubmissions() {
+    public ResponseEntity<?> listMySubmissions() {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String email = auth.getName(); // el subject del JWT es el email
             Long appUserId = appUserRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"))
                     .getId();
-            return ResponseEntity.ok(ResponseWrapper.success(submissionService.listPorAppUser(appUserId)));
+            return ResponseEntity.ok(ResponseWrapper.success(submissionService.listByAppUser(appUserId)));
         } catch (RuntimeException e) {
             log.error("Error al listar mis-solicitudes: {}", e.getMessage(), e);
             return ResponseEntity.ok(ResponseWrapper.success(java.util.List.of()));
@@ -110,10 +110,10 @@ public class SubmissionController {
      * @param appUserId appUser cuyas submissions se consultan
      * @return 200 con las submissions, o 200 con lista vacía si el servicio falla
      */
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> listPorAppUser(@PathVariable("appUserId") Long appUserId) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_REVISAR')")
+    public ResponseEntity<?> listByAppUser(@PathVariable("appUserId") Long appUserId) {
         try {
-            return ResponseEntity.ok(ResponseWrapper.success(submissionService.listPorAppUser(appUserId)));
+            return ResponseEntity.ok(ResponseWrapper.success(submissionService.listByAppUser(appUserId)));
         } catch (RuntimeException e) {
             log.error("Error al listar solicitudes por usuario {}: {}", appUserId, e.getMessage(), e);
             return ResponseEntity.ok(ResponseWrapper.success(java.util.List.of()));
@@ -133,7 +133,7 @@ public class SubmissionController {
     public ResponseEntity<?> send(@PathVariable("id") Long id) {
         try {
             // Verify propiedad o permission
-            validateAccesoSubmission(id);
+            validateAccessSubmission(id);
             return ResponseEntity.ok(ResponseWrapper.success(submissionService.sendSubmission(id), "Solicitud enviada a revisión"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
@@ -145,7 +145,7 @@ public class SubmissionController {
      * @return 200 con la submission aprobada, o 400 si no está en un estado que lo permita
      */
     @PostMapping("/aprobar/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_REVISAR')")
     public ResponseEntity<?> approve(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(submissionService.approveSubmission(id), "Solicitud aprobada"));
@@ -159,7 +159,7 @@ public class SubmissionController {
      * @return 200 con la submission rechazada, o 400 si la transición no es válida
      */
     @PostMapping("/rechazar/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_REVISAR')")
     public ResponseEntity<?> reject(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(submissionService.rejectSubmission(id), "Solicitud rechazada"));
@@ -176,13 +176,13 @@ public class SubmissionController {
      * @return 200 con la submission rechazada, o 400 si la transición no es válida
      */
     @PostMapping("/rechazar-con-observacion/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> rejectConObservacion(
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_REVISAR')")
+    public ResponseEntity<?> rejectWithObservation(
             @PathVariable("id") Long id,
             @RequestBody java.util.Map<String, String> body) {
         try {
-            String observacion = body.getOrDefault("observacion", "");
-            return ResponseEntity.ok(ResponseWrapper.success(submissionService.rejectConObservacion(id, observacion), "Solicitud rechazada con observaciones"));
+            String observation = body.getOrDefault("observacion", "");
+            return ResponseEntity.ok(ResponseWrapper.success(submissionService.rejectWithObservation(id, observation), "Solicitud rechazada con observaciones"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -197,13 +197,13 @@ public class SubmissionController {
      *         no es válida
      */
     @PostMapping("/suspender/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_SUSPENDER')")
-    public ResponseEntity<?> suspender(
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_SUSPENDER')")
+    public ResponseEntity<?> suspend(
             @PathVariable("id") Long id,
             @RequestBody Map<String, String> body) {
         try {
             String motivo = body.get("motivo");
-            return ResponseEntity.ok(ResponseWrapper.success(submissionService.suspenderSubmission(id, motivo), "Solicitud suspendida"));
+            return ResponseEntity.ok(ResponseWrapper.success(submissionService.suspendSubmission(id, motivo), "Solicitud suspendida"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -216,7 +216,7 @@ public class SubmissionController {
      * @return 200 con todas las submissions
      */
     @GetMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_REVISAR')")
     public ResponseEntity<?> list() {
         return ResponseEntity.ok(ResponseWrapper.success(submissionService.listSubmissions()));
     }
@@ -229,28 +229,28 @@ public class SubmissionController {
      *
      * @param page        número de página, base 0
      * @param size        tamaño de página
-     * @param estado      código de estado a filtrar, o {@code null} para no filtrar
+     * @param status      código de estado a filtrar, o {@code null} para no filtrar
      * @param q           texto libre de búsqueda, o {@code null} para no filtrar
-     * @param fechaDesde  fecha mínima a incluir, o {@code null} para no acotar
-     * @param fechaHasta  fecha máxima a incluir, o {@code null} para no acotar
+     * @param dateFrom  fecha mínima a incluir, o {@code null} para no acotar
+     * @param dateTo  fecha máxima a incluir, o {@code null} para no acotar
      * @return 200 con la página de submissions y sus metadatos de paginación
      */
     @GetMapping("/paginado")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> listPaginado(
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_REVISAR')")
+    public ResponseEntity<?> listPaged(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
-            @RequestParam(name = "estado", required = false) String estado,
+            @RequestParam(name = "estado", required = false) String status,
             @RequestParam(name = "q", required = false) String q,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate fechaDesde,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate fechaHasta) {
-        Page<Submission> resultado = submissionService.listSubmissionsPaginado(page, size, estado, q, fechaDesde, fechaHasta);
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate dateFrom,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate dateTo) {
+        Page<Submission> result = submissionService.listSubmissionsPaged(page, size, status, q, dateFrom, dateTo);
         return ResponseEntity.ok(ResponseWrapper.success(Map.of(
-                "content", resultado.getContent(),
-                "totalElements", resultado.getTotalElements(),
-                "totalPages", resultado.getTotalPages(),
-                "page", resultado.getNumber(),
-                "size", resultado.getSize()
+                "content", result.getContent(),
+                "totalElements", result.getTotalElements(),
+                "totalPages", result.getTotalPages(),
+                "page", result.getNumber(),
+                "size", result.getSize()
         )));
     }
 
@@ -261,9 +261,9 @@ public class SubmissionController {
      * @return 200 con un mapa estado a cantidad
      */
     @GetMapping("/contar-por-estado")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> countPorEstado() {
-        return ResponseEntity.ok(ResponseWrapper.success(submissionService.countPorEstado()));
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_REVISAR')")
+    public ResponseEntity<?> countByStatus() {
+        return ResponseEntity.ok(ResponseWrapper.success(submissionService.countByStatus()));
     }
 
     /**
@@ -271,9 +271,9 @@ public class SubmissionController {
      * @return 200 con las submissions de ese student
      */
     @GetMapping("/estudiante/{studentId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> listPorStudent(@PathVariable("studentId") Long studentId) {
-        return ResponseEntity.ok(ResponseWrapper.success(submissionService.listPorStudent(studentId)));
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_REVISAR')")
+    public ResponseEntity<?> listByStudent(@PathVariable("studentId") Long studentId) {
+        return ResponseEntity.ok(ResponseWrapper.success(submissionService.listByStudent(studentId)));
     }
 
     /**
@@ -286,8 +286,8 @@ public class SubmissionController {
     @GetMapping("/{id}")
     public ResponseEntity<?> obtain(@PathVariable("id") Long id) {
         try {
-            validateAccesoSubmission(id);
-            return submissionService.obtainPorId(id)
+            validateAccessSubmission(id);
+            return submissionService.obtainById(id)
                     .map(s -> ResponseEntity.ok(ResponseWrapper.success(s)))
                     .orElse(ResponseEntity.status(404).body(ResponseWrapper.error("Solicitud no encontrada")));
         } catch (RuntimeException e) {
@@ -306,12 +306,12 @@ public class SubmissionController {
      *         error si el cursor del procedimiento falla
      */
     @GetMapping("/reporte-defensas")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'SOLICITUDES_REVISAR')")
-    public ResponseEntity<?> reporteDefensas(
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'SOLICITUDES_REVISAR')")
+    public ResponseEntity<?> reportDefenses(
             @RequestParam(name = "program", defaultValue = "") String program) {
         try {
-            List<Map<String, Object>> reporte = submissionService.generateReporteDefensasSP(program);
-            return ResponseEntity.ok(ResponseWrapper.success(reporte));
+            List<Map<String, Object>> report = submissionService.generateReportDefensesSP(program);
+            return ResponseEntity.ok(ResponseWrapper.success(report));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
         }
@@ -327,7 +327,7 @@ public class SubmissionController {
     @GetMapping("/{id}/seguimiento")
     public ResponseEntity<?> obtainTracking(@PathVariable("id") Long id) {
         try {
-            validateAccesoSubmission(id);
+            validateAccessSubmission(id);
             return ResponseEntity.ok(ResponseWrapper.success(submissionService.obtainTracking(id)));
         } catch (RuntimeException e) {
             return ResponseEntity.status(403).body(ResponseWrapper.error(e.getMessage()));
@@ -342,7 +342,7 @@ public class SubmissionController {
      * @throws RuntimeException si la submission no existe o si el appUser autenticado no es
      *                          revisor ni propietario
      */
-    private void validateAccesoSubmission(Long submissionId) {
+    private void validateAccessSubmission(Long submissionId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         // CustomUserDetailsService solo carga "ROLE_<rol>" como authority, nunca los permissions
@@ -351,10 +351,10 @@ public class SubmissionController {
         // propietario". Se usa el mismo permissionService que protege el resto del controlador.
         boolean esRevisor = auth.getAuthorities().stream()
                         .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))
-                || permissionService.tienePermission(auth, "SOLICITUDES_REVISAR");
+                || permissionService.hasPermission(auth, "SOLICITUDES_REVISAR");
 
         if (!esRevisor) {
-            Submission submission = submissionService.obtainPorId(submissionId)
+            Submission submission = submissionService.obtainById(submissionId)
                     .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
             if (!submission.getStudent().getAppUser().getEmail().equals(email)) {
                 throw new RuntimeException("Acceso denegado: no eres propietario de esta solicitud");

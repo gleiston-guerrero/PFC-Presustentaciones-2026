@@ -38,7 +38,7 @@ public class AuditService {
      * fila de auditoría que dispare el siguiente trigger (o {@code NULL} si no hay appUser
      * autenticado). Sin parámetros ni valor de retorno: opera sobre el contexto de seguridad
      * y la conexión JDBC actuales. */
-    public void marcarActorActual() {
+    public void markActorActual() {
         Long appUserId = resolveAppUserIdActual();
         String valor = appUserId != null ? appUserId.toString() : "";
         try {

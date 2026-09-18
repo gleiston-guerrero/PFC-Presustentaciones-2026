@@ -17,12 +17,12 @@ public interface AuditRepository extends JpaRepository<Audit, Long> {
     /**
      * RNF-19: depuración automática de la bitácora (nunca vía API -- ver RNF-18). Bulk delete
      * de JPA: no dispara ningún trigger ni evento de aplicación, es un {@code DELETE} directo,
-     * y devuelve cuántas filas borró para que {@code CleanupBitacoraScheduler} pueda dejar
+     * y devuelve cuántas filas borró para que {@code CleanupLogScheduler} pueda dejar
      * traza exacta.
      */
     @Modifying
-    @Query("DELETE FROM Audit a WHERE a.fecha < :fechaCorte")
-    int eraseAnterioresA(@Param("fechaCorte") LocalDateTime fechaCorte);
+    @Query("DELETE FROM Audit a WHERE a.date < :fechaCorte")
+    int eraseAnterioresA(@Param("fechaCorte") LocalDateTime dateCorte);
 
     @Query("SELECT a FROM Audit a WHERE " +
            "(:tabla IS NULL OR :tabla = '' OR a.tabla = :tabla) " +
@@ -40,7 +40,7 @@ public interface AuditRepository extends JpaRepository<Audit, Long> {
      * @param pageable pageable
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    Page<Audit> searchConFiltros(@Param("tabla") String tabla,
+    Page<Audit> searchWithFiltros(@Param("tabla") String tabla,
                                       @Param("accion") String accion,
                                       @Param("appUserId") Long appUserId,
                                       @Param("texto") String texto,

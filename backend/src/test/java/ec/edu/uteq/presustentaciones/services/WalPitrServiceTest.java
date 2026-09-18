@@ -1,7 +1,7 @@
 package ec.edu.uteq.presustentaciones.services;
 
-import ec.edu.uteq.presustentaciones.dto.BaseFisicaDTO;
-import ec.edu.uteq.presustentaciones.dto.EstadoWalDTO;
+import ec.edu.uteq.presustentaciones.dto.BasePhysicalDTO;
+import ec.edu.uteq.presustentaciones.dto.StatusWalDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +36,7 @@ class WalPitrServiceTest {
     Path tempDir;
 
     private Path walDir;
-    private Path basesParentDir;
+    private Path baseBackupsParentDir;
 
     @Mock
     private JdbcTemplate jdbc;
@@ -47,32 +47,32 @@ class WalPitrServiceTest {
     void setUp() throws IOException {
         walDir = tempDir.resolve("wal");
         Files.createDirectories(walDir);
-        basesParentDir = tempDir.resolve("backups");
-        Files.createDirectories(basesParentDir);
+        baseBackupsParentDir = tempDir.resolve("backups");
+        Files.createDirectories(baseBackupsParentDir);
 
         service = new WalPitrService(jdbc);
         ReflectionTestUtils.setField(service, "walDir", walDir.toString());
-        ReflectionTestUtils.setField(service, "backupsDir", basesParentDir.resolve("respaldos").toString());
+        ReflectionTestUtils.setField(service, "backupsDir", baseBackupsParentDir.resolve("respaldos").toString());
         ReflectionTestUtils.setField(service, "datasourceUrl", "jdbc:postgresql://localhost:5432/BdPresustentaciones");
         ReflectionTestUtils.setField(service, "dbUsername", "postgres");
         ReflectionTestUtils.setField(service, "dbPassword", "x");
     }
 
-    private Map<String, Object> filaArchiver(String archiveMode) {
-        Map<String, Object> fila = new java.util.HashMap<>();
-        fila.put("archive_mode", archiveMode);
-        fila.put("wal_level", "replica");
-        fila.put("archive_command", "test ! -f /wal/%f && cp %p /wal/%f");
-        fila.put("archive_timeout", "60");
-        fila.put("archived_count", "42");
-        fila.put("last_archived_wal", "000000010000000000000005");
-        fila.put("last_archived_time", null);
-        fila.put("failed_count", "0");
-        fila.put("last_failed_time", null);
-        return fila;
+    private Map<String, Object> rowArchiver(String archiveMode) {
+        Map<String, Object> row = new java.util.HashMap<>();
+        row.put("archive_mode", archiveMode);
+        row.put("wal_level", "replica");
+        row.put("archive_command", "test ! -f /wal/%f && cp %p /wal/%f");
+        row.put("archive_timeout", "60");
+        row.put("archived_count", "42");
+        row.put("last_archived_wal", "000000010000000000000005");
+        row.put("last_archived_time", null);
+        row.put("failed_count", "0");
+        row.put("last_failed_time", null);
+        return row;
     }
 
-    private void createBaseFisica(String nombre) throws IOException {
+    private void createBasePhysical(String nombre) throws IOException {
         Path base = tempDir.resolve("backups").resolve("bases").resolve(nombre);
         Files.createDirectories(base);
         Files.writeString(base.resolve("base.tar.gz"), "contenido");
@@ -81,57 +81,57 @@ class WalPitrServiceTest {
     // ── estado ───────────────────────────────────────────────────────────────
 
     @Test
-    void estadoAdviertePitrNoDisponibleSiElArchivadoEstaDesactivado() {
-        when(jdbc.queryForMap(anyString())).thenReturn(filaArchiver("off"));
+    void statusAdviertePitrNoAvailableSiElArchivadoIsDesactivado() {
+        when(jdbc.queryForMap(anyString())).thenReturn(rowArchiver("off"));
 
-        EstadoWalDTO dto = service.estado();
+        StatusWalDTO dto = service.status();
 
         assertFalse(dto.isArchivadoActivo());
-        assertTrue(dto.getPitrDisponibleDesde().contains("desactivado"));
+        assertTrue(dto.getPitrAvailableFrom().contains("desactivado"));
         assertNotNull(dto.getAdvertencia());
     }
 
     @Test
-    void estadoAdviertePitrNoDisponibleSiFaltaBaseFisicaAunConArchivadoActivo() {
-        when(jdbc.queryForMap(anyString())).thenReturn(filaArchiver("on"));
+    void statusAdviertePitrNoAvailableSiFaltaBasePhysicalAunWithArchivadoActivo() {
+        when(jdbc.queryForMap(anyString())).thenReturn(rowArchiver("on"));
 
-        EstadoWalDTO dto = service.estado();
+        StatusWalDTO dto = service.status();
 
         assertTrue(dto.isArchivadoActivo());
-        assertFalse(dto.isHayBaseFisica());
-        assertTrue(dto.getPitrDisponibleDesde().contains("falta una base"));
+        assertFalse(dto.isHayBasePhysical());
+        assertTrue(dto.getPitrAvailableFrom().contains("falta una base"));
         assertNotNull(dto.getAdvertencia());
     }
 
     @Test
-    void estadoReportaPitrDisponibleConArchivadoActivoYBaseFisica() throws IOException {
-        when(jdbc.queryForMap(anyString())).thenReturn(filaArchiver("on"));
-        createBaseFisica("base_20260101_000000");
+    void statusReportaPitrAvailableWithArchivadoActivoYBasePhysical() throws IOException {
+        when(jdbc.queryForMap(anyString())).thenReturn(rowArchiver("on"));
+        createBasePhysical("base_20260101_000000");
 
-        EstadoWalDTO dto = service.estado();
+        StatusWalDTO dto = service.status();
 
-        assertTrue(dto.isHayBaseFisica());
+        assertTrue(dto.isHayBasePhysical());
         assertNull(dto.getAdvertencia());
-        assertFalse(dto.getPitrDisponibleDesde().contains("no disponible"));
+        assertFalse(dto.getPitrAvailableFrom().contains("no disponible"));
     }
 
     @Test
-    void estadoNoRompeSiLaConsultaAPostgresFalla() {
+    void statusNoRompeSiLaConsultaAPostgresFalla() {
         when(jdbc.queryForMap(anyString())).thenThrow(new RuntimeException("conexión rechazada"));
 
-        EstadoWalDTO dto = service.estado();
+        StatusWalDTO dto = service.status();
 
         assertFalse(dto.isArchivadoActivo());
-        assertNotNull(dto.getPitrDisponibleDesde());
+        assertNotNull(dto.getPitrAvailableFrom());
     }
 
     @Test
-    void estadoCuentaLosSegmentosWalRealesEnElDirectorio() throws IOException {
-        when(jdbc.queryForMap(anyString())).thenReturn(filaArchiver("on"));
+    void statusCuentaLosSegmentosWalRealesEnElDirectory() throws IOException {
+        when(jdbc.queryForMap(anyString())).thenReturn(rowArchiver("on"));
         Files.writeString(walDir.resolve("0000000100000000000000A1"), "segmento-real");
         Files.writeString(walDir.resolve("no-es-un-segmento.txt"), "ignorar");
 
-        EstadoWalDTO dto = service.estado();
+        StatusWalDTO dto = service.status();
 
         assertEquals(1, dto.getSegmentosEnDisco());
     }
@@ -139,29 +139,29 @@ class WalPitrServiceTest {
     // ── forzarSwitchWal ──────────────────────────────────────────────────────
 
     @Test
-    void forzarSwitchWalDevuelveElNombreDelSegmentoCerrado() {
+    void forceSwitchWalDevuelveElNombreDelSegmentoCerrado() {
         when(jdbc.queryForObject(anyString(), (Class<String>) any())).thenReturn("000000010000000000000009");
 
-        assertEquals("000000010000000000000009", service.forzarSwitchWal());
+        assertEquals("000000010000000000000009", service.forceSwitchWal());
     }
 
     @Test
-    void forzarSwitchWalPropagaUnErrorClaroSiPostgresFalla() {
+    void forceSwitchWalPropagaUnErrorClaroSiPostgresFalla() {
         when(jdbc.queryForObject(anyString(), (Class<String>) any())).thenThrow(new RuntimeException("sin permisos"));
 
-        assertThrows(RuntimeException.class, () -> service.forzarSwitchWal());
+        assertThrows(RuntimeException.class, () -> service.forceSwitchWal());
     }
 
     // ── limpiarWal ───────────────────────────────────────────────────────────
 
     @Test
-    void limpiarWalDevuelveCeroSiElDirectorioNoExiste() {
+    void cleanWalDevuelveCeroSiElDirectoryNoExists() {
         ReflectionTestUtils.setField(service, "walDir", tempDir.resolve("no-existe").toString());
-        assertEquals(0, service.limpiarWal(7));
+        assertEquals(0, service.cleanWal(7));
     }
 
     @Test
-    void limpiarWalBorraSegmentosMasViejosQueElCorteYConservaLosRecientes() throws IOException {
+    void cleanWalBorraSegmentosMasViejosQueElCorteYConservaLosRecientes() throws IOException {
         Path viejo = walDir.resolve("0000000100000000000000A1");
         Path reciente = walDir.resolve("0000000100000000000000A2");
         Files.writeString(viejo, "x");
@@ -170,7 +170,7 @@ class WalPitrServiceTest {
                 java.time.Instant.now().minusSeconds(30L * 86400)));
         // 'reciente' conserva su mtime real (ahora), asi que sobrevive al corte de 7 dias.
 
-        int borrados = service.limpiarWal(7);
+        int borrados = service.cleanWal(7);
 
         assertEquals(1, borrados);
         assertFalse(Files.exists(viejo));
@@ -178,35 +178,46 @@ class WalPitrServiceTest {
     }
 
     @Test
-    void limpiarWalIgnoraArchivosQueNoSonSegmentosNiBackupNiHistory() throws IOException {
+    void cleanWalIgnoraArchivosQueNoSonSegmentosNiBackupNiHistory() throws IOException {
         Path ajeno = walDir.resolve("readme.txt");
         Files.writeString(ajeno, "no tocar");
         Files.setLastModifiedTime(ajeno, java.nio.file.attribute.FileTime.from(
                 java.time.Instant.now().minusSeconds(365L * 86400)));
 
-        assertEquals(0, service.limpiarWal(7));
+        assertEquals(0, service.cleanWal(7));
         assertTrue(Files.exists(ajeno));
     }
 
     // ── listBases / deleteBase ───────────────────────────────────────────
 
     @Test
-    void listBasesDevuelveListaVaciaSiNoHayNinguna() {
-        assertEquals(List.of(), service.listBases());
+    void listBaseBackupsDevuelveListaVaciaSiNoHayNinguna() {
+        assertEquals(List.of(), service.listBaseBackups());
     }
 
     @Test
-    void listBasesEncuentraLasCarpetasBaseOrdenadasPorFechaDescendente() throws IOException {
-        createBaseFisica("base_20260101_000000");
+    void listBaseBackupsEncuentraLasCarpetasBaseOrdenadasByDateDescendente() throws IOException {
+        // Las dos fechas se fijan a mano, con un mes de diferencia. Antes solo se
+        // fijaba la de la segunda carpeta y la de la primera quedaba en su hora
+        // real de creacion: las separaba ~1 ms, y bastaba con que la maquina
+        // fuera mas lenta (p. ej. bajo la instrumentacion de JaCoCo) para que
+        // empataran y el orden quedara indefinido. El test no mide el reloj,
+        // comprueba que se ordena por fecha descendente.
+        createBasePhysical("base_20260101_000000");
+        Path primera = tempDir.resolve("backups").resolve("bases").resolve("base_20260101_000000");
+        Files.setLastModifiedTime(primera, java.nio.file.attribute.FileTime.from(
+                java.time.Instant.parse("2026-01-01T00:00:00Z")));
+
         Path segunda = tempDir.resolve("backups").resolve("bases").resolve("base_20260201_000000");
         Files.createDirectories(segunda);
         Files.writeString(segunda.resolve("x.tar.gz"), "y");
-        Files.setLastModifiedTime(segunda, java.nio.file.attribute.FileTime.from(java.time.Instant.now()));
+        Files.setLastModifiedTime(segunda, java.nio.file.attribute.FileTime.from(
+                java.time.Instant.parse("2026-02-01T00:00:00Z")));
 
-        List<BaseFisicaDTO> bases = service.listBases();
+        List<BasePhysicalDTO> baseBackups = service.listBaseBackups();
 
-        assertEquals(2, bases.size());
-        assertEquals("base_20260201_000000", bases.get(0).getNombre());
+        assertEquals(2, baseBackups.size());
+        assertEquals("base_20260201_000000", baseBackups.get(0).getNombre());
     }
 
     @Test
@@ -215,13 +226,13 @@ class WalPitrServiceTest {
     }
 
     @Test
-    void deleteBaseRechazaUnaBaseQueNoExiste() {
+    void deleteBaseRechazaUnaBaseQueNoExists() {
         assertThrows(IllegalArgumentException.class, () -> service.deleteBase("base_20260101_000000"));
     }
 
     @Test
-    void deleteBaseBorraLaCarpetaCompleta() throws IOException {
-        createBaseFisica("base_20260101_000000");
+    void deleteBaseBorraLaCarpetaComplete() throws IOException {
+        createBasePhysical("base_20260101_000000");
 
         service.deleteBase("base_20260101_000000");
 
@@ -231,9 +242,9 @@ class WalPitrServiceTest {
     // ── generateBaseFisica: solo la validacion previa al binario externo ──────
 
     @Test
-    void generateBaseFisicaFallaTempranoSiLaUrlDeConexionNoEsInterpretable() {
+    void generateBasePhysicalFallaTempranoSiLaUrlDeConnectionNoEsInterpretable() {
         ReflectionTestUtils.setField(service, "datasourceUrl", "no-es-una-url-jdbc");
 
-        assertThrows(IllegalStateException.class, () -> service.generateBaseFisica());
+        assertThrows(IllegalStateException.class, () -> service.generateBasePhysical());
     }
 }

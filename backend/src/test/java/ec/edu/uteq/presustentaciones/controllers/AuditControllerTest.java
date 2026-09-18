@@ -22,8 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Cubre RF-60 (consulta de auditoría) contra AuditController real, con Postgres real
- * (mismo criterio que {@code PreSustentacionesApplicationTests}/
- * {@code TopicPropuestoRepositoryIntegrationTest}: {@code @AutoConfigureTestDatabase(replace = NONE)}
+ * (mismo criterio que {@code PreDefenseApplicationTests}/
+ * {@code TopicProposedRepositoryIntegrationTest}: {@code @AutoConfigureTestDatabase(replace = NONE)}
  * para no sustituir el datasource por H2). Hace falta el contexto completo -- no un
  * {@code @WebMvcTest} con {@code permissionService} mockeado como en {@code MinutesControllerTest} --
  * porque el permission AUDITORIA_VER se resuelve con una consulta real (role_id -> role_permissions,
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * código Java que se pueda mockear: solo se puede comprobar contra la fila que ese trigger
  * escribió de verdad.
  *
- * <p>Usa los appUsers semilla (ver {@code PreSustentacionesApplication.initDemoData}):
+ * <p>Usa los appUsers semilla (ver {@code PreDefenseApplication.initDemoData}):
  * admin@uteq.edu.ec (ADMIN, único role con AUDITORIA_VER -- V15 lo asigna solo a role_id=1) y
  * demo@uteq.edu.ec (COORDINADOR).
  */
@@ -57,21 +57,21 @@ class AuditControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void sinAutenticarDevuelve401() throws Exception {
+    void sinAuthenticateDevuelve401() throws Exception {
         mockMvc.perform(get("/api/v1/auditoria/paginado"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(username = DOCENTE)
-    void sinPermissionAuditVerDevuelve403() throws Exception {
+    void sinPermissionAuditViewDevuelve403() throws Exception {
         mockMvc.perform(get("/api/v1/auditoria/paginado"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(username = COORDINADOR)
-    void coordinadorTambienRecibe403PorqueElPermissionEsExclusivoDeAdmin() throws Exception {
+    void coordinatorTambienRecibe403PorqueElPermissionEsExclusivoDeAdmin() throws Exception {
         // Asimetria deliberada (SRS §6.4): a diferencia de otros permissions administrativos que
         // ADMIN y COORDINADOR comparten, AUDITORIA_VER solo se asigna al role ADMIN en V15.
         mockMvc.perform(get("/api/v1/auditoria/paginado"))
@@ -80,11 +80,11 @@ class AuditControllerTest {
 
     @Test
     @WithMockUser(username = ADMIN)
-    void adminConPermissionObtieneLaPaginaFiltradaPorTabla() throws Exception {
+    void adminWithPermissionObtieneLaPaginaFiltradaByTabla() throws Exception {
         // Garantiza al menos una fila real con tabla=appUsers antes de filtrar.
-        modificarTelefonoDeUnAppUserDemo();
+        modifyDemoAppUserPhone();
 
-        MvcResult resultado = mockMvc.perform(get("/api/v1/auditoria/paginado")
+        MvcResult result = mockMvc.perform(get("/api/v1/auditoria/paginado")
                         .param("tabla", "usuarios")
                         .param("size", "50"))
                 .andExpect(status().isOk())
@@ -92,58 +92,58 @@ class AuditControllerTest {
 
         // Un ResponseBodyAdvice global envuelve toda respuesta en ResponseWrapper (success/data/...),
         // aunque el controller devuelva el Page directamente: el body real es data.content, no content.
-        JsonNode contenido = objectMapper.readTree(resultado.getResponse().getContentAsString()).get("data").get("content");
+        JsonNode contenido = objectMapper.readTree(result.getResponse().getContentAsString()).get("data").get("content");
         assertNotNull(contenido);
         assertTrue(contenido.size() > 0, "Debe existir al menos un evento de auditoria para 'usuarios'");
-        for (JsonNode fila : contenido) {
-            assertEquals("usuarios", fila.get("tabla").asText());
+        for (JsonNode row : contenido) {
+            assertEquals("usuarios", row.get("tabla").asText());
         }
     }
 
     @Test
     @WithMockUser(username = ADMIN)
     void ningunaEntradaDeAuditDeAppUsersExponeElPassword() throws Exception {
-        Long registroId = modificarTelefonoDeUnAppUserDemo();
+        Long recordId = modifyDemoAppUserPhone();
 
-        MvcResult resultado = mockMvc.perform(get("/api/v1/auditoria/paginado")
+        MvcResult result = mockMvc.perform(get("/api/v1/auditoria/paginado")
                         .param("tabla", "usuarios")
                         .param("size", "50"))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String cuerpo = resultado.getResponse().getContentAsString();
+        String cuerpo = result.getResponse().getContentAsString();
         // Comprobacion sobre el resultado completo tal cual lo recibe el cliente: ni siquiera
         // como texto plano dentro del JSON (datos_anteriores/datos_nuevos viajan como string).
         assertFalse(cuerpo.contains("\"password\""),
                 "La respuesta de auditoria no debe exponer el campo password en ninguna entrada: " + cuerpo);
 
         JsonNode contenido = objectMapper.readTree(cuerpo).get("data").get("content");
-        JsonNode filaDelCambio = searchPorRegistroId(contenido, registroId);
-        assertNotNull(filaDelCambio, "Debe aparecer el evento generado por el cambio de telefono de esta prueba");
+        JsonNode rowDelCambio = searchByRecordId(contenido, recordId);
+        assertNotNull(rowDelCambio, "Debe aparecer el evento generado por el cambio de telefono de esta prueba");
 
-        JsonNode datosNuevos = objectMapper.readTree(filaDelCambio.get("datosNuevos").asText());
-        assertFalse(datosNuevos.has("password"), "fn_auditoria_generica debe haber quitado 'password' de datos_nuevos");
+        JsonNode dataNuevos = objectMapper.readTree(rowDelCambio.get("datosNuevos").asText());
+        assertFalse(dataNuevos.has("password"), "fn_auditoria_generica debe haber quitado 'password' de datos_nuevos");
         // Prueba de que sí se guardó el resto de la fila (no es un objeto vacío por otra razón).
-        assertTrue(datosNuevos.has("telefono"));
+        assertTrue(dataNuevos.has("telefono"));
 
-        if (filaDelCambio.hasNonNull("datosAnteriores")) {
-            JsonNode datosAnteriores = objectMapper.readTree(filaDelCambio.get("datosAnteriores").asText());
-            assertFalse(datosAnteriores.has("password"), "fn_auditoria_generica debe haber quitado 'password' de datos_anteriores");
+        if (rowDelCambio.hasNonNull("datosAnteriores")) {
+            JsonNode dataAnteriores = objectMapper.readTree(rowDelCambio.get("datosAnteriores").asText());
+            assertFalse(dataAnteriores.has("password"), "fn_auditoria_generica debe haber quitado 'password' de datos_anteriores");
         }
     }
 
     @Test
     @WithMockUser(username = ADMIN)
-    void tablasAuditadasDevuelveElCatalogoFijoDeTablas() throws Exception {
+    void tablesAuditedDevuelveElCatalogFijoDeTables() throws Exception {
         mockMvc.perform(get("/api/v1/auditoria/tablas"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("usuarios")));
     }
 
-    private JsonNode searchPorRegistroId(JsonNode contenido, Long registroId) {
-        for (JsonNode fila : contenido) {
-            if (fila.get("registroId").asLong() == registroId) {
-                return fila;
+    private JsonNode searchByRecordId(JsonNode contenido, Long recordId) {
+        for (JsonNode row : contenido) {
+            if (row.get("registroId").asLong() == recordId) {
+                return row;
             }
         }
         return null;
@@ -154,9 +154,9 @@ class AuditControllerTest {
      * appUser teacher demo). Corre dentro de la transacción de la prueba (@Transactional hace
      * rollback al terminar), así que no deja rastro en los datos semilla.
      */
-    private Long modificarTelefonoDeUnAppUserDemo() {
+    private Long modifyDemoAppUserPhone() {
         AppUser appUser = appUserRepository.findByEmail(DOCENTE).orElseThrow();
-        appUser.setTelefono("099" + (System.nanoTime() % 10_000_000L));
+        appUser.setPhone("099" + (System.nanoTime() % 10_000_000L));
         appUserRepository.saveAndFlush(appUser);
         return appUser.getId();
     }

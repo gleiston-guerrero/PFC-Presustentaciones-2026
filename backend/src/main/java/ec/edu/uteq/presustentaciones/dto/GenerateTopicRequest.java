@@ -11,13 +11,13 @@ public class GenerateTopicRequest {
     private Integer programId;
     
     @JsonProperty("lineaInvestigacionId")
-    private Integer lineInvestigacionId;
+    private Integer researchLineId;
     @JsonProperty("areaId")
     private Integer areaId;
     @JsonProperty("areaInteres")
     private String areaInteres;
     @JsonProperty("tipoProblema")
-    private String tipoProblema;
+    private String kindProblema;
     @JsonProperty("poblacion")
     private String poblacion;
 }

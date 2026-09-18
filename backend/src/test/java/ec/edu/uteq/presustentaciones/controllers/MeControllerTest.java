@@ -74,7 +74,7 @@ class MeControllerTest {
     }
 
     @Test
-    void devuelveLosPermissionsDelAppUserAutenticado() throws Exception {
+    void devuelveLosPermissionsDelAppUserAuthenticated() throws Exception {
         String email = "docente@uteq.edu.ec";
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",
@@ -82,7 +82,7 @@ class MeControllerTest {
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(email);
         when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
-        when(permissionService.permissionsDe(any(Authentication.class)))
+        when(permissionService.permissionsOf(any(Authentication.class)))
                 .thenReturn(List.of("SOLICITUDES_VER", "ACTAS_VER_PROPIAS"));
 
         mockMvc.perform(get("/api/v1/me/permisos")

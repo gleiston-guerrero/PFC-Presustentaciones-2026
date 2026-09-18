@@ -40,9 +40,9 @@ public class AppUser {
     @JsonProperty("activo")
     private Boolean activo= true;
 
-    @Column
+    @Column(name = "telefono")
     @JsonProperty("telefono")
-    private String telefono;
+    private String phone;
 
     /** Correo donde llegan las notifications del sistema (puede ser distinto al de login) */
     @Column(name = "email_notificaciones")

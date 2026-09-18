@@ -22,7 +22,7 @@ public class RolePanelist {
 
     @Column(name = "codigo", nullable = false, unique = true, length = 30)
     @JsonProperty("codigo")
-    private String codigo;
+    private String code;
 
     @Column(name = "nombre", nullable = false, length = 80)
     @JsonProperty("nombre")

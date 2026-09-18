@@ -3,18 +3,18 @@ package ec.edu.uteq.presustentaciones.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ec.edu.uteq.presustentaciones.config.SecurityConfig;
 import ec.edu.uteq.presustentaciones.dto.BackupInfoDTO;
-import ec.edu.uteq.presustentaciones.dto.EstadoBackupsDTO;
-import ec.edu.uteq.presustentaciones.dto.RegisterPruebaRestauracionRequest;
+import ec.edu.uteq.presustentaciones.dto.StatusBackupsDTO;
+import ec.edu.uteq.presustentaciones.dto.RegisterDrillRestoreRequest;
 import ec.edu.uteq.presustentaciones.dto.BackupConfigDTO;
 import ec.edu.uteq.presustentaciones.entities.BackupConfig;
-import ec.edu.uteq.presustentaciones.entities.BackupPruebaRestauracion;
+import ec.edu.uteq.presustentaciones.entities.BackupDrillRestore;
 import ec.edu.uteq.presustentaciones.security.RateLimiterService;
 import ec.edu.uteq.presustentaciones.security.jwt.JwtTokenProvider;
 import ec.edu.uteq.presustentaciones.services.BackupService;
 import ec.edu.uteq.presustentaciones.services.PermissionService;
 import ec.edu.uteq.presustentaciones.services.WalPitrService;
-import ec.edu.uteq.presustentaciones.services.backup.OrigenBackup;
-import ec.edu.uteq.presustentaciones.services.backup.TipoBackup;
+import ec.edu.uteq.presustentaciones.services.backup.SourceBackup;
+import ec.edu.uteq.presustentaciones.services.backup.KindBackup;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -91,14 +91,14 @@ class BackupControllerTest {
     @MockBean
     private ec.edu.uteq.presustentaciones.repositories.AppUserRepository appUserRepository;
 
-    private void autenticarComo(String email, String role, boolean tienePermission) {
+    private void authenticateAs(String email, String role, boolean hasPermission) {
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role)));
         when(jwtTokenProvider.validateToken(token)).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(email);
         when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
-        when(permissionService.tienePermission(any(), any())).thenReturn(tienePermission);
+        when(permissionService.hasPermission(any(), any())).thenReturn(hasPermission);
     }
 
     private String bearer(String email) {
@@ -106,13 +106,13 @@ class BackupControllerTest {
     }
 
     @Test
-    void listSinTokenDevuelve401() throws Exception {
+    void listWithoutTokenDevuelve401() throws Exception {
         mockMvc.perform(get("/api/v1/backups")).andExpect(status().isUnauthorized());
     }
 
     @Test
-    void listRechazaSinBackupsGestionar() throws Exception {
-        autenticarComo("docente@uteq.edu.ec", "DOCENTE", false);
+    void listRechazaWithoutBackupsGestionar() throws Exception {
+        authenticateAs("docente@uteq.edu.ec", "DOCENTE", false);
 
         mockMvc.perform(get("/api/v1/backups").header("Authorization", bearer("docente@uteq.edu.ec")))
                 .andExpect(status().isForbidden());
@@ -121,8 +121,8 @@ class BackupControllerTest {
     }
 
     @Test
-    void listPermiteAAdminConBackupsGestionar() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+    void listPermiteAAdminWithBackupsGestionar() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(backupService.list()).thenReturn(List.of(BackupInfoDTO.builder().nombre("full-1.dump").build()));
 
         mockMvc.perform(get("/api/v1/backups").header("Authorization", bearer("admin@uteq.edu.ec")))
@@ -130,21 +130,21 @@ class BackupControllerTest {
     }
 
     @Test
-    void generateInvocaElServicioConOrigenManualPorDefecto() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(backupService.generate(TipoBackup.FULL, OrigenBackup.MANUAL))
+    void generateInvocaElServicioWithSourceManualByDefault() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(backupService.generate(KindBackup.FULL, SourceBackup.MANUAL))
                 .thenReturn(BackupInfoDTO.builder().nombre("full-2.dump").build());
 
         mockMvc.perform(post("/api/v1/backups").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
 
-        verify(backupService).generate(TipoBackup.FULL, OrigenBackup.MANUAL);
+        verify(backupService).generate(KindBackup.FULL, SourceBackup.MANUAL);
     }
 
     @Test
-    void generateDiferencialInvocaElServicio() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(backupService.generateDiferencial(OrigenBackup.MANUAL))
+    void generateDifferentialInvocaElServicio() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(backupService.generateDifferential(SourceBackup.MANUAL))
                 .thenReturn(BackupInfoDTO.builder().nombre("diff-1.dump").build());
 
         mockMvc.perform(post("/api/v1/backups/diferencial").header("Authorization", bearer("admin@uteq.edu.ec")))
@@ -152,9 +152,9 @@ class BackupControllerTest {
     }
 
     @Test
-    void downloadDevuelveElContenidoComoAdjunto() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(backupService.leer("full-1.dump")).thenReturn(new byte[]{1, 2, 3});
+    void downloadDevuelveElContenidoAsAdjunto() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(backupService.read("full-1.dump")).thenReturn(new byte[]{1, 2, 3});
 
         mockMvc.perform(get("/api/v1/backups/full-1.dump/descargar").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
@@ -162,7 +162,7 @@ class BackupControllerTest {
 
     @Test
     void restoreInvocaElServicio() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(post("/api/v1/backups/full-1.dump/restaurar").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
@@ -172,7 +172,7 @@ class BackupControllerTest {
 
     @Test
     void deleteInvocaElServicio() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(delete("/api/v1/backups/full-1.dump").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
@@ -181,9 +181,9 @@ class BackupControllerTest {
     }
 
     @Test
-    void estadoDevuelveElResumenDelPanel() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(backupService.estado()).thenReturn(new EstadoBackupsDTO());
+    void statusDevuelveElSummaryDelPanel() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(backupService.status()).thenReturn(new StatusBackupsDTO());
 
         mockMvc.perform(get("/api/v1/backups/estado").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
@@ -191,7 +191,7 @@ class BackupControllerTest {
 
     @Test
     void obtainConfigDevuelveLaConfiguracionVigente() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(backupService.configDTO()).thenReturn(new BackupConfigDTO());
 
         mockMvc.perform(get("/api/v1/backups/config").header("Authorization", bearer("admin@uteq.edu.ec")))
@@ -200,7 +200,7 @@ class BackupControllerTest {
 
     @Test
     void updateConfigDelegaEnElServicio() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         BackupConfigDTO dto = new BackupConfigDTO();
         dto.setActivo(true);
         dto.setCron("0 0 23 * * SUN");
@@ -208,8 +208,8 @@ class BackupControllerTest {
         dto.setRetenerSemanales(4);
         dto.setRetenerMensuales(12);
         dto.setRetenerDiasWal(7);
-        dto.setDiferencialActivo(false);
-        dto.setCronDiferencial("0 0 3 * * *");
+        dto.setDifferentialActivo(false);
+        dto.setCronDifferential("0 0 3 * * *");
         when(backupService.updateConfig(any(BackupConfigDTO.class))).thenReturn(dto);
 
         mockMvc.perform(put("/api/v1/backups/config")
@@ -220,33 +220,33 @@ class BackupControllerTest {
     }
 
     @Test
-    void aplicarRetencionDevuelveLosNombresEliminados() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(backupService.aplicarRetencion()).thenReturn(List.of("full-viejo.dump"));
+    void applyRetentionDevuelveLosNombresEliminados() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(backupService.applyRetention()).thenReturn(List.of("full-viejo.dump"));
 
         mockMvc.perform(post("/api/v1/backups/retencion").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void listPruebasDevuelveLaBitacora() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(backupService.pruebas()).thenReturn(List.of(BackupPruebaRestauracion.builder().build()));
+    void listDrillsDevuelveLaLog() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(backupService.drills()).thenReturn(List.of(BackupDrillRestore.builder().build()));
 
         mockMvc.perform(get("/api/v1/backups/pruebas").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void registerPruebaDelegaEnElServicioConLosCuatroCampos() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        RegisterPruebaRestauracionRequest req = new RegisterPruebaRestauracionRequest();
+    void registerDrillDelegaEnElServicioWithLosCuatroCampos() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        RegisterDrillRestoreRequest req = new RegisterDrillRestoreRequest();
         req.setBackupNombre("full-1.dump");
-        req.setResultado("EXITOSA");
+        req.setResult("EXITOSA");
         req.setResponsable("admin@uteq.edu.ec");
         req.setNotas("Restauracion de prueba en entorno aislado");
-        when(backupService.registerPrueba(eq("full-1.dump"), eq("EXITOSA"), eq("admin@uteq.edu.ec"), any()))
-                .thenReturn(BackupPruebaRestauracion.builder().build());
+        when(backupService.registerDrill(eq("full-1.dump"), eq("EXITOSA"), eq("admin@uteq.edu.ec"), any()))
+                .thenReturn(BackupDrillRestore.builder().build());
 
         mockMvc.perform(post("/api/v1/backups/pruebas")
                         .header("Authorization", bearer("admin@uteq.edu.ec"))
@@ -256,9 +256,9 @@ class BackupControllerTest {
     }
 
     @Test
-    void estadoWalDevuelveElEstadoDelArchivado() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(walPitrService.estado()).thenReturn(new ec.edu.uteq.presustentaciones.dto.EstadoWalDTO());
+    void statusWalDevuelveElStatusDelArchivado() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(walPitrService.status()).thenReturn(new ec.edu.uteq.presustentaciones.dto.StatusWalDTO());
 
         mockMvc.perform(get("/api/v1/backups/wal").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
@@ -266,31 +266,31 @@ class BackupControllerTest {
 
     @Test
     void switchWalCierraElSegmentoActual() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(walPitrService.forzarSwitchWal()).thenReturn("000000010000000000000005");
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(walPitrService.forceSwitchWal()).thenReturn("000000010000000000000005");
 
         mockMvc.perform(post("/api/v1/backups/wal/switch").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void limpiarWalUsaLaRetencionConfigurada() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+    void cleanWalUsaLaRetentionConfigurada() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         BackupConfig config = BackupConfig.builder().retenerDiasWal((short) 7).build();
         when(backupService.config()).thenReturn(config);
-        when(walPitrService.limpiarWal(7)).thenReturn(2);
+        when(walPitrService.cleanWal(7)).thenReturn(2);
 
         mockMvc.perform(post("/api/v1/backups/wal/limpiar").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
 
-        verify(walPitrService).limpiarWal(7);
+        verify(walPitrService).cleanWal(7);
     }
 
     @Test
-    void generateBaseFisicaInvocaElServicio() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
-        when(walPitrService.generateBaseFisica())
-                .thenReturn(ec.edu.uteq.presustentaciones.dto.BaseFisicaDTO.builder().nombre("base-1").build());
+    void generateBasePhysicalInvocaElServicio() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
+        when(walPitrService.generateBasePhysical())
+                .thenReturn(ec.edu.uteq.presustentaciones.dto.BasePhysicalDTO.builder().nombre("base-1").build());
 
         mockMvc.perform(post("/api/v1/backups/bases").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());
@@ -298,7 +298,7 @@ class BackupControllerTest {
 
     @Test
     void deleteBaseInvocaElServicio() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN", true);
+        authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(delete("/api/v1/backups/bases/base-1").header("Authorization", bearer("admin@uteq.edu.ec")))
                 .andExpect(status().isOk());

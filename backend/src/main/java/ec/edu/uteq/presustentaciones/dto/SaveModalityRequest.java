@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class SaveModalityRequest {
     @JsonProperty("codigo")
-    private String codigo;
+    private String code;
     @JsonProperty("nombre")
     private String nombre;
 }

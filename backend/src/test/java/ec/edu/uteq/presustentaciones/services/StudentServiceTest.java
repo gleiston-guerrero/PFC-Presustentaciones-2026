@@ -35,8 +35,8 @@ class StudentServiceTest {
     @Mock private AppUserRepository appUserRepository;
     @Mock private RoleAppUserRepository roleAppUserRepository;
     @Mock private ProgramRepository programRepository;
-    @Mock private PeriodAcademicoRepository periodAcademicoRepository;
-    @Mock private EstadoAcademicoRepository estadoAcademicoRepository;
+    @Mock private PeriodAcademicRepository periodAcademicRepository;
+    @Mock private StatusAcademicRepository statusAcademicRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuditService auditService;
 
@@ -46,94 +46,94 @@ class StudentServiceTest {
     private AppUser appUser;
     private Student student;
     private Program program;
-    private PeriodAcademico period;
-    private EstadoAcademico activo;
+    private PeriodAcademic period;
+    private StatusAcademic activo;
     private RoleAppUser roleStudent;
 
     @BeforeEach
     void setUp() {
         appUser = AppUser.builder().id(1L).nombre("Ana").apellido("Torres").email("ana@uteq.edu.ec").activo(true).build();
         program = Program.builder().id(1).nombre("Ingeniería de Software").build();
-        period = PeriodAcademico.builder().id(1).nombre("2026-1").build();
-        activo = EstadoAcademico.builder().codigo("ACTIVO").nombre("Activo").build();
-        roleStudent = RoleAppUser.builder().codigo("ESTUDIANTE").build();
+        period = PeriodAcademic.builder().id(1).nombre("2026-1").build();
+        activo = StatusAcademic.builder().code("ACTIVO").nombre("Activo").build();
+        roleStudent = RoleAppUser.builder().code("ESTUDIANTE").build();
         student = Student.builder().id(1L).appUser(appUser).programEntidad(program)
-                .periodIngreso(period).semestreActual((short) 3).telefono("0999999999")
-                .expedienteCodigo("EXP-001").estadoAcademico(activo).build();
+                .periodIngreso(period).semestreActual((short) 3).phone("0999999999")
+                .expedienteCode("EXP-001").statusAcademic(activo).build();
     }
 
     // ---- listPaginado ----
 
     @Test
-    void listPaginadoDevuelveDtosConProyectoCuandoExiste() {
+    void listPagedDevuelveDtosWithProyectoCuandoExists() {
         Page<Student> pagina = new PageImpl<>(List.of(student));
-        when(studentRepository.searchPaginado(eq("ana"), any(PageRequest.class))).thenReturn(pagina);
-        when(studentRepository.findUltimoProyectoPorStudentIds(List.of(1L)))
+        when(studentRepository.searchPaged(eq("ana"), any(PageRequest.class))).thenReturn(pagina);
+        when(studentRepository.findLastProyectoByStudentIds(List.of(1L)))
                 .thenReturn(List.<Object[]>of(new Object[]{1L, "Tema X", "EN_EVALUACION"}));
 
-        Page<StudentDTO> resultado = studentService.listPaginado(0, 10, "ana");
+        Page<StudentDTO> result = studentService.listPaged(0, 10, "ana");
 
-        assertEquals(1, resultado.getTotalElements());
-        StudentDTO dto = resultado.getContent().get(0);
+        assertEquals(1, result.getTotalElements());
+        StudentDTO dto = result.getContent().get(0);
         assertEquals("Tema X", dto.getProyectoTitulo());
-        assertEquals("EN_EVALUACION", dto.getProyectoEstado());
+        assertEquals("EN_EVALUACION", dto.getProyectoStatus());
         assertEquals("Ingeniería de Software", dto.getProgramNombre());
     }
 
     @Test
-    void listPaginadoSinResultadosNoConsultaProyectos() {
-        when(studentRepository.searchPaginado(isNull(), any(PageRequest.class)))
+    void listPagedWithoutResultsNoConsultaProyectos() {
+        when(studentRepository.searchPaged(isNull(), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        Page<StudentDTO> resultado = studentService.listPaginado(0, 10, null);
+        Page<StudentDTO> result = studentService.listPaged(0, 10, null);
 
-        assertTrue(resultado.getContent().isEmpty());
-        verify(studentRepository, never()).findUltimoProyectoPorStudentIds(any());
+        assertTrue(result.getContent().isEmpty());
+        verify(studentRepository, never()).findLastProyectoByStudentIds(any());
     }
 
     @Test
-    void listPaginadoAcotaPaginaYTamanioFueraDeRango() {
-        when(studentRepository.searchPaginado(any(), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of()));
+    void listPagedAcotaPaginaYTamanioFueraDeRange() {
+        when(studentRepository.searchPaged(any(), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of()));
 
-        studentService.listPaginado(-5, 500, null);
+        studentService.listPaged(-5, 500, null);
 
-        verify(studentRepository).searchPaginado(any(), eq(PageRequest.of(0, 100)));
+        verify(studentRepository).searchPaged(any(), eq(PageRequest.of(0, 100)));
     }
 
     // ---- obtainPorId ----
 
     @Test
-    void obtainPorIdDevuelveDtoConProyecto() {
+    void obtainByIdDevuelveDtoWithProyecto() {
         when(studentRepository.findByIdWithAppUser(1L)).thenReturn(Optional.of(student));
-        when(studentRepository.findUltimoProyectoPorStudentIds(List.of(1L)))
+        when(studentRepository.findLastProyectoByStudentIds(List.of(1L)))
                 .thenReturn(List.<Object[]>of(new Object[]{1L, "Tema Y", "APROBADA"}));
 
-        StudentDTO dto = studentService.obtainPorId(1L);
+        StudentDTO dto = studentService.obtainById(1L);
 
         assertEquals("Tema Y", dto.getProyectoTitulo());
     }
 
     @Test
-    void obtainPorIdDevuelveDtoSinProyectoSiNoTiene() {
+    void obtainByIdDevuelveDtoWithoutProyectoSiNoTiene() {
         when(studentRepository.findByIdWithAppUser(1L)).thenReturn(Optional.of(student));
-        when(studentRepository.findUltimoProyectoPorStudentIds(List.of(1L))).thenReturn(List.of());
+        when(studentRepository.findLastProyectoByStudentIds(List.of(1L))).thenReturn(List.of());
 
-        StudentDTO dto = studentService.obtainPorId(1L);
+        StudentDTO dto = studentService.obtainById(1L);
 
         assertNull(dto.getProyectoTitulo());
     }
 
     @Test
-    void obtainPorIdLanzaSiNoExiste() {
+    void obtainByIdLanzaSiNoExists() {
         when(studentRepository.findByIdWithAppUser(99L)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.obtainPorId(99L));
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.obtainById(99L));
         assertEquals("Estudiante no encontrado", ex.getMessage());
     }
 
     // ---- create ----
 
-    private CreateStudentRequest requestValido() {
+    private CreateStudentRequest requestValid() {
         CreateStudentRequest req = new CreateStudentRequest();
         req.setNombre("Ana");
         req.setApellido("Torres");
@@ -148,13 +148,13 @@ class StudentServiceTest {
         CreateStudentRequest req = new CreateStudentRequest();
         RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.create(req));
         assertTrue(ex.getMessage().contains("obligatorios"));
-        verify(auditService).marcarActorActual();
+        verify(auditService).markActorActual();
         verifyNoInteractions(appUserRepository);
     }
 
     @Test
-    void createLanzaSiEmailYaExiste() {
-        CreateStudentRequest req = requestValido();
+    void createLanzaSiEmailYaExists() {
+        CreateStudentRequest req = requestValid();
         when(appUserRepository.existsByEmail("ana@uteq.edu.ec")).thenReturn(true);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.create(req));
@@ -162,8 +162,8 @@ class StudentServiceTest {
     }
 
     @Test
-    void createLanzaSiProgramNoExiste() {
-        CreateStudentRequest req = requestValido();
+    void createLanzaSiProgramNoExists() {
+        CreateStudentRequest req = requestValid();
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
         when(programRepository.findById(1)).thenReturn(Optional.empty());
 
@@ -172,54 +172,54 @@ class StudentServiceTest {
     }
 
     @Test
-    void createLanzaSiPeriodIngresoIndicadoNoExiste() {
-        CreateStudentRequest req = requestValido();
+    void createLanzaSiPeriodIngresoIndicadoNoExists() {
+        CreateStudentRequest req = requestValid();
         req.setPeriodIngresoId(5);
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
         when(programRepository.findById(1)).thenReturn(Optional.of(program));
-        when(periodAcademicoRepository.findById(5)).thenReturn(Optional.empty());
+        when(periodAcademicRepository.findById(5)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.create(req));
         assertEquals("Período académico no encontrado", ex.getMessage());
     }
 
     @Test
-    void createLanzaSiEstadoActivoNoSembrado() {
-        CreateStudentRequest req = requestValido();
+    void createLanzaSiStatusActivoNoSembrado() {
+        CreateStudentRequest req = requestValid();
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
         when(programRepository.findById(1)).thenReturn(Optional.of(program));
-        when(estadoAcademicoRepository.findByCodigo("ACTIVO")).thenReturn(Optional.empty());
+        when(statusAcademicRepository.findByCode("ACTIVO")).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.create(req));
         assertEquals("Catálogo de estados académicos no sembrado", ex.getMessage());
     }
 
     @Test
-    void createLanzaSiRoleStudentNoExiste() {
-        CreateStudentRequest req = requestValido();
+    void createLanzaSiRoleStudentNoExists() {
+        CreateStudentRequest req = requestValid();
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
         when(programRepository.findById(1)).thenReturn(Optional.of(program));
-        when(estadoAcademicoRepository.findByCodigo("ACTIVO")).thenReturn(Optional.of(activo));
-        when(roleAppUserRepository.findByCodigo("ESTUDIANTE")).thenReturn(Optional.empty());
+        when(statusAcademicRepository.findByCode("ACTIVO")).thenReturn(Optional.of(activo));
+        when(roleAppUserRepository.findByCode("ESTUDIANTE")).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.create(req));
         assertEquals("Rol ESTUDIANTE no existe en el catálogo", ex.getMessage());
     }
 
     @Test
-    void createExitosoSinPeriodUsaSemestrePorDefecto() {
-        CreateStudentRequest req = requestValido(); // sin periodIngresoId ni semestreActual
+    void createExitosoWithoutPeriodUsaSemestreByDefault() {
+        CreateStudentRequest req = requestValid(); // sin periodIngresoId ni semestreActual
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
         when(programRepository.findById(1)).thenReturn(Optional.of(program));
-        when(estadoAcademicoRepository.findByCodigo("ACTIVO")).thenReturn(Optional.of(activo));
-        when(roleAppUserRepository.findByCodigo("ESTUDIANTE")).thenReturn(Optional.of(roleStudent));
+        when(statusAcademicRepository.findByCode("ACTIVO")).thenReturn(Optional.of(activo));
+        when(roleAppUserRepository.findByCode("ESTUDIANTE")).thenReturn(Optional.of(roleStudent));
         when(passwordEncoder.encode("secreto123")).thenReturn("hash");
         when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> {
             AppUser u = inv.getArgument(0);
             u.setId(10L);
             return u;
         });
-        when(studentRepository.generateCodigoExpediente(null, null)).thenReturn("EXP-010");
+        when(studentRepository.generateCodeExpediente(null, null)).thenReturn("EXP-010");
         when(studentRepository.save(any(Student.class))).thenAnswer(inv -> inv.getArgument(0));
 
         StudentDTO dto = studentService.create(req);
@@ -231,18 +231,18 @@ class StudentServiceTest {
     }
 
     @Test
-    void createExitosoConPeriodYSemestreExplicitos() {
-        CreateStudentRequest req = requestValido();
+    void createExitosoWithPeriodYSemestreExplicitos() {
+        CreateStudentRequest req = requestValid();
         req.setPeriodIngresoId(1);
         req.setSemestreActual((short) 4);
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
         when(programRepository.findById(1)).thenReturn(Optional.of(program));
-        when(periodAcademicoRepository.findById(1)).thenReturn(Optional.of(period));
-        when(estadoAcademicoRepository.findByCodigo("ACTIVO")).thenReturn(Optional.of(activo));
-        when(roleAppUserRepository.findByCodigo("ESTUDIANTE")).thenReturn(Optional.of(roleStudent));
+        when(periodAcademicRepository.findById(1)).thenReturn(Optional.of(period));
+        when(statusAcademicRepository.findByCode("ACTIVO")).thenReturn(Optional.of(activo));
+        when(roleAppUserRepository.findByCode("ESTUDIANTE")).thenReturn(Optional.of(roleStudent));
         when(passwordEncoder.encode(anyString())).thenReturn("hash");
         when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(studentRepository.generateCodigoExpediente(null, null)).thenReturn("EXP-011");
+        when(studentRepository.generateCodeExpediente(null, null)).thenReturn("EXP-011");
         when(studentRepository.save(any(Student.class))).thenAnswer(inv -> inv.getArgument(0));
 
         StudentDTO dto = studentService.create(req);
@@ -254,7 +254,7 @@ class StudentServiceTest {
     // ---- update ----
 
     @Test
-    void updateLanzaSiStudentNoExiste() {
+    void updateLanzaSiStudentNoExists() {
         when(studentRepository.findById(99L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> studentService.update(99L, new UpdateStudentRequest()));
@@ -270,11 +270,11 @@ class StudentServiceTest {
 
         assertEquals((short) 3, dto.getSemestreActual());
         assertEquals("Ingeniería de Software", dto.getProgramNombre());
-        verifyNoInteractions(programRepository, periodAcademicoRepository);
+        verifyNoInteractions(programRepository, periodAcademicRepository);
     }
 
     @Test
-    void updateLanzaSiProgramNuevaNoExiste() {
+    void updateLanzaSiProgramNuevaNoExists() {
         UpdateStudentRequest req = new UpdateStudentRequest();
         req.setProgramId(99);
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
@@ -285,43 +285,43 @@ class StudentServiceTest {
     }
 
     @Test
-    void updateLanzaSiPeriodNuevoNoExiste() {
+    void updateLanzaSiPeriodNewNoExists() {
         UpdateStudentRequest req = new UpdateStudentRequest();
         req.setPeriodIngresoId(77);
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
-        when(periodAcademicoRepository.findById(77)).thenReturn(Optional.empty());
+        when(periodAcademicRepository.findById(77)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.update(1L, req));
         assertEquals("Período académico no encontrado", ex.getMessage());
     }
 
     @Test
-    void updateLanzaSiEstadoAcademicoInvalido() {
+    void updateLanzaSiStatusAcademicInvalido() {
         UpdateStudentRequest req = new UpdateStudentRequest();
-        req.setEstadoAcademicoCodigo("INEXISTENTE");
+        req.setStatusAcademicCode("INEXISTENTE");
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
-        when(estadoAcademicoRepository.findByCodigo("INEXISTENTE")).thenReturn(Optional.empty());
+        when(statusAcademicRepository.findByCode("INEXISTENTE")).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.update(1L, req));
         assertTrue(ex.getMessage().contains("INEXISTENTE"));
     }
 
     @Test
-    void updateAplicaTodosLosCamposCuandoVienenTodos() {
+    void updateAplicaAllLosCamposCuandoVienenAll() {
         Program nuevaProgram = Program.builder().id(2).nombre("Sistemas").build();
-        PeriodAcademico nuevoPeriod = PeriodAcademico.builder().id(2).nombre("2026-2").build();
-        EstadoAcademico suspendido = EstadoAcademico.builder().codigo("SUSPENDIDO").nombre("Suspendido").build();
+        PeriodAcademic targetPeriod = PeriodAcademic.builder().id(2).nombre("2026-2").build();
+        StatusAcademic suspendido = StatusAcademic.builder().code("SUSPENDIDO").nombre("Suspendido").build();
         UpdateStudentRequest req = new UpdateStudentRequest();
         req.setProgramId(2);
         req.setPeriodIngresoId(2);
         req.setSemestreActual((short) 6);
-        req.setTelefono("0888888888");
-        req.setEstadoAcademicoCodigo("SUSPENDIDO");
+        req.setPhone("0888888888");
+        req.setStatusAcademicCode("SUSPENDIDO");
 
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
         when(programRepository.findById(2)).thenReturn(Optional.of(nuevaProgram));
-        when(periodAcademicoRepository.findById(2)).thenReturn(Optional.of(nuevoPeriod));
-        when(estadoAcademicoRepository.findByCodigo("SUSPENDIDO")).thenReturn(Optional.of(suspendido));
+        when(periodAcademicRepository.findById(2)).thenReturn(Optional.of(targetPeriod));
+        when(statusAcademicRepository.findByCode("SUSPENDIDO")).thenReturn(Optional.of(suspendido));
         when(studentRepository.save(any(Student.class))).thenAnswer(inv -> inv.getArgument(0));
 
         StudentDTO dto = studentService.update(1L, req);
@@ -329,16 +329,16 @@ class StudentServiceTest {
         assertEquals("Sistemas", dto.getProgramNombre());
         assertEquals("2026-2", dto.getPeriodIngresoNombre());
         assertEquals((short) 6, dto.getSemestreActual());
-        assertEquals("SUSPENDIDO", dto.getEstadoAcademicoCodigo());
+        assertEquals("SUSPENDIDO", dto.getStatusAcademicCode());
     }
 
     // ---- listEstadosAcademicos ----
 
     @Test
-    void listEstadosAcademicosDelegaAlRepositorio() {
-        when(estadoAcademicoRepository.findAll()).thenReturn(List.of(activo));
-        List<EstadoAcademico> resultado = studentService.listEstadosAcademicos();
-        assertEquals(1, resultado.size());
-        assertEquals("ACTIVO", resultado.get(0).getCodigo());
+    void listStatusesAcademicDelegaAlRepositorio() {
+        when(statusAcademicRepository.findAll()).thenReturn(List.of(activo));
+        List<StatusAcademic> result = studentService.listStatusesAcademic();
+        assertEquals(1, result.size());
+        assertEquals("ACTIVO", result.get(0).getCode());
     }
 }

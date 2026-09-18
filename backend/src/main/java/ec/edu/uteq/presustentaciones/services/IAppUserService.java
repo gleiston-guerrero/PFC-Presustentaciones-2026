@@ -14,7 +14,7 @@ public interface IAppUserService {
      * @param q    texto libre de búsqueda por nombre/apellido/email, o {@code null}
      * @return página de appUsers que cumplen el filtro
      */
-    Page<AppUser> listPaginado(int page, int size, String q);
+    Page<AppUser> listPaged(int page, int size, String q);
 
     /**
      * Crea un appUser, encriptando su contraseña con BCrypt y resolviendo su
@@ -45,25 +45,25 @@ public interface IAppUserService {
      * @param id id del appUser
      * @return el appUser si existe
      */
-    Optional<AppUser> obtainPorId(Long id);
+    Optional<AppUser> obtainById(Long id);
 
     /**
      * @param email email del appUser
      * @return el appUser con ese email, si existe
      */
-    Optional<AppUser> obtainPorEmail(String email);
+    Optional<AppUser> obtainByEmail(String email);
 
     /** @return todos los appUsers del sistema, sin paginar */
-    List<AppUser> listTodos();
+    List<AppUser> listAll();
 
     /** @return los appUsers con {@code activo = true} */
-    List<AppUser> listActivos();
+    List<AppUser> listActive();
 
     /**
      * @param email email a verify
      * @return {@code true} si ya existe un appUser registrado con ese email
      */
-    boolean existePorEmail(String email);
+    boolean existsByEmail(String email);
 
     /** @param id id del appUser a activate
      * @throws RuntimeException si el appUser no existe */
@@ -79,9 +79,9 @@ public interface IAppUserService {
      *
      * @param id                  id del appUser
      * @param emailNotifications correo alterno para recibir notifications, o {@code null}
-     * @param telefono            teléfono de contacto, o {@code null}
+     * @param phone            teléfono de contacto, o {@code null}
      * @return el appUser actualizado
      * @throws RuntimeException si el appUser no existe
      */
-    AppUser updatePerfil(Long id, String emailNotifications, String telefono);
+    AppUser updateProfile(Long id, String emailNotifications, String phone);
 }

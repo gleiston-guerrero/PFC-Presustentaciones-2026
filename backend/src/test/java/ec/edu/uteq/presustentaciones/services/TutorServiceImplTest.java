@@ -1,9 +1,9 @@
 package ec.edu.uteq.presustentaciones.services;
 
-import ec.edu.uteq.presustentaciones.dto.MiStudentTutoradoDTO;
+import ec.edu.uteq.presustentaciones.dto.MyStudentTuteeDTO;
 import ec.edu.uteq.presustentaciones.entities.*;
 import ec.edu.uteq.presustentaciones.repositories.TeacherRepository;
-import ec.edu.uteq.presustentaciones.repositories.EstadoSubmissionRepository;
+import ec.edu.uteq.presustentaciones.repositories.StatusSubmissionRepository;
 import ec.edu.uteq.presustentaciones.repositories.SubmissionRepository;
 import ec.edu.uteq.presustentaciones.repositories.TutorRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,7 @@ class TutorServiceImplTest {
     @Mock private SubmissionRepository submissionRepository;
     @Mock private TeacherRepository teacherRepository;
     @Mock private NotificationService notificationService;
-    @Mock private EstadoSubmissionRepository estadoSubmissionRepository;
+    @Mock private StatusSubmissionRepository statusSubmissionRepository;
 
     @InjectMocks
     private TutorServiceImpl tutorService;
@@ -56,7 +56,7 @@ class TutorServiceImplTest {
     // ---- assignTutor ----
 
     @Test
-    void assignTutorLanzaSiSubmissionNoExiste() {
+    void assignTutorLanzaSiSubmissionNoExists() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class, () -> tutorService.assignTutor(10L, 1L));
         assertTrue(ex.getMessage().contains("Solicitud no encontrada"));
@@ -64,7 +64,7 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void assignTutorLanzaSiTeacherNoExiste() {
+    void assignTutorLanzaSiTeacherNoExists() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(1L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class, () -> tutorService.assignTutor(10L, 1L));
@@ -72,31 +72,31 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void assignTutorSinTutorPrevioNoEliminaNada() {
+    void assignTutorWithoutTutorPrevioNoEliminaNada() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(1L)).thenReturn(Optional.of(teacher));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.empty());
         when(tutorRepository.save(any(Tutor.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(estadoSubmissionRepository.findByCodigo("TUTORIA"))
-                .thenReturn(Optional.of(EstadoSubmission.builder().codigo("TUTORIA").nombre("Tutoria").build()));
+        when(statusSubmissionRepository.findByCode("TUTORIA"))
+                .thenReturn(Optional.of(StatusSubmission.builder().code("TUTORIA").nombre("Tutoria").build()));
 
-        Tutor resultado = tutorService.assignTutor(10L, 1L);
+        Tutor result = tutorService.assignTutor(10L, 1L);
 
-        assertEquals("ACTIVO", resultado.getEstado());
+        assertEquals("ACTIVO", result.getStatus());
         verify(tutorRepository, never()).delete(any());
         verify(submissionRepository).save(submission);
-        assertEquals("TUTORIA", submission.getEstado().getCodigo());
+        assertEquals("TUTORIA", submission.getStatus().getCode());
     }
 
     @Test
     void assignTutorReemplazaTutorPrevio() {
-        Tutor tutorPrevio = Tutor.builder().id(5L).estado("ACTIVO").build();
+        Tutor tutorPrevio = Tutor.builder().id(5L).status("ACTIVO").build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(1L)).thenReturn(Optional.of(teacher));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(tutorPrevio));
         when(tutorRepository.save(any(Tutor.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(estadoSubmissionRepository.findByCodigo("TUTORIA"))
-                .thenReturn(Optional.of(EstadoSubmission.builder().codigo("TUTORIA").build()));
+        when(statusSubmissionRepository.findByCode("TUTORIA"))
+                .thenReturn(Optional.of(StatusSubmission.builder().code("TUTORIA").build()));
 
         tutorService.assignTutor(10L, 1L);
 
@@ -104,17 +104,17 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void assignTutorCreaEstadoTutoringSiNoExisteEnCatalogo() {
+    void assignTutorCreaStatusTutoringSiNoExistsEnCatalog() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(1L)).thenReturn(Optional.of(teacher));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.empty());
         when(tutorRepository.save(any(Tutor.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(estadoSubmissionRepository.findByCodigo("TUTORIA")).thenReturn(Optional.empty());
-        when(estadoSubmissionRepository.save(any(EstadoSubmission.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(statusSubmissionRepository.findByCode("TUTORIA")).thenReturn(Optional.empty());
+        when(statusSubmissionRepository.save(any(StatusSubmission.class))).thenAnswer(inv -> inv.getArgument(0));
 
         tutorService.assignTutor(10L, 1L);
 
-        verify(estadoSubmissionRepository).save(argThat(e -> "TUTORIA".equals(e.getCodigo())));
+        verify(statusSubmissionRepository).save(argThat(e -> "TUTORIA".equals(e.getCode())));
     }
 
     @Test
@@ -123,32 +123,32 @@ class TutorServiceImplTest {
         when(teacherRepository.findById(1L)).thenReturn(Optional.of(teacher));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.empty());
         when(tutorRepository.save(any(Tutor.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(estadoSubmissionRepository.findByCodigo("TUTORIA"))
-                .thenReturn(Optional.of(EstadoSubmission.builder().codigo("TUTORIA").build()));
+        when(statusSubmissionRepository.findByCode("TUTORIA"))
+                .thenReturn(Optional.of(StatusSubmission.builder().code("TUTORIA").build()));
         doThrow(new RuntimeException("fallo notificacion")).when(notificationService)
                 .createNotification(anyLong(), anyString());
 
-        Tutor resultado = assertDoesNotThrow(() -> tutorService.assignTutor(10L, 1L));
+        Tutor result = assertDoesNotThrow(() -> tutorService.assignTutor(10L, 1L));
 
-        assertNotNull(resultado);
+        assertNotNull(result);
         verify(notificationService, times(2)).createNotification(anyLong(), anyString());
     }
 
     // ---- delegados simples ----
 
     @Test
-    void searchPorSubmissionDelega() {
+    void searchBySubmissionDelega() {
         Tutor tutor = Tutor.builder().id(1L).build();
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(tutor));
-        assertEquals(Optional.of(tutor), tutorService.searchPorSubmission(10L));
+        assertEquals(Optional.of(tutor), tutorService.searchBySubmission(10L));
     }
 
     @Test
-    void listTodosDelega() {
+    void listAllDelega() {
         Pageable pageable = mock(Pageable.class);
         Page<Tutor> pagina = new PageImpl<>(List.of());
         when(tutorRepository.findAll(pageable)).thenReturn(pagina);
-        assertSame(pagina, tutorService.listTodos(pageable));
+        assertSame(pagina, tutorService.listAll(pageable));
     }
 
     @Test
@@ -160,61 +160,61 @@ class TutorServiceImplTest {
     // ---- misStudents ----
 
     @Test
-    void misStudentsMapeaConProgramEntidadYEstadoAcademico() {
+    void myStudentsMapeaWithProgramEntidadYStatusAcademic() {
         Program program = Program.builder().id(1).nombre("Software").build();
-        EstadoAcademico ea = EstadoAcademico.builder().codigo("ACTIVO").nombre("Activo").build();
-        Student est = Student.builder().id(1L).appUser(appUserStudent).telefono("099")
-                .expedienteCodigo("EXP-1").programEntidad(program).semestreActual((short) 3)
-                .estadoAcademico(ea).build();
+        StatusAcademic ea = StatusAcademic.builder().code("ACTIVO").nombre("Activo").build();
+        Student est = Student.builder().id(1L).appUser(appUserStudent).phone("099")
+                .expedienteCode("EXP-1").programEntidad(program).semestreActual((short) 3)
+                .statusAcademic(ea).build();
         Submission sol = Submission.builder().id(10L).tituloTopic("Tema").student(est)
-                .estado(EstadoSubmission.builder().codigo("TUTORIA").nombre("Tutoria").build()).build();
-        Tutor tutor = Tutor.builder().id(7L).submission(sol).teacher(teacher).estado("ACTIVO").build();
+                .status(StatusSubmission.builder().code("TUTORIA").nombre("Tutoria").build()).build();
+        Tutor tutor = Tutor.builder().id(7L).submission(sol).teacher(teacher).status("ACTIVO").build();
         when(tutorRepository.findByTeacherAppUserId(2L)).thenReturn(List.of(tutor));
 
-        List<MiStudentTutoradoDTO> resultado = tutorService.misStudents(2L);
+        List<MyStudentTuteeDTO> result = tutorService.myStudents(2L);
 
-        assertEquals(1, resultado.size());
-        MiStudentTutoradoDTO dto = resultado.get(0);
+        assertEquals(1, result.size());
+        MyStudentTuteeDTO dto = result.get(0);
         assertEquals("Software", dto.getProgramNombre());
-        assertEquals("ACTIVO", dto.getEstadoAcademicoCodigo());
-        assertEquals("TUTORIA", dto.getEstadoSubmissionCodigo());
+        assertEquals("ACTIVO", dto.getStatusAcademicCode());
+        assertEquals("TUTORIA", dto.getStatusSubmissionCode());
     }
 
     @Test
-    void misStudentsUsaFallbacksSinProgramEntidadNiEstadoNiEstadoSubmission() {
+    void myStudentsUsaFallbacksWithoutProgramEntidadNiStatusNiStatusSubmission() {
         Student est = Student.builder().id(1L).appUser(appUserStudent).program("Carrera Legado").build();
-        Submission sol = Submission.builder().id(10L).tituloTopic("Tema").student(est).estadoCodigo("BORRADOR").build();
-        Tutor tutor = Tutor.builder().id(7L).submission(sol).teacher(teacher).estado("ACTIVO").build();
+        Submission sol = Submission.builder().id(10L).tituloTopic("Tema").student(est).statusCode("BORRADOR").build();
+        Tutor tutor = Tutor.builder().id(7L).submission(sol).teacher(teacher).status("ACTIVO").build();
         when(tutorRepository.findByTeacherAppUserId(2L)).thenReturn(List.of(tutor));
 
-        MiStudentTutoradoDTO dto = tutorService.misStudents(2L).get(0);
+        MyStudentTuteeDTO dto = tutorService.myStudents(2L).get(0);
 
         assertEquals("Carrera Legado", dto.getProgramNombre());
-        assertNull(dto.getEstadoAcademicoCodigo());
-        assertEquals("BORRADOR", dto.getEstadoSubmissionCodigo());
-        assertNull(dto.getEstadoSubmissionNombre());
+        assertNull(dto.getStatusAcademicCode());
+        assertEquals("BORRADOR", dto.getStatusSubmissionCode());
+        assertNull(dto.getStatusSubmissionNombre());
     }
 
     // ---- obtainEstadisticasTutoresSP ----
 
     @Test
-    void obtainEstadisticasTutoresSPMapeaCadaFila() {
-        Object[] fila = {1L, "Carlos Ruiz", 3, 5, 12};
-        when(tutorRepository.obtainEstadisticasTutoresSp()).thenReturn(List.<Object[]>of(fila));
+    void obtainStatsTutorsSPMapeaCadaRow() {
+        Object[] row = {1L, "Carlos Ruiz", 3, 5, 12};
+        when(tutorRepository.obtainStatsTutorsSp()).thenReturn(List.<Object[]>of(row));
 
-        List<java.util.Map<String, Object>> resultado = tutorService.obtainEstadisticasTutoresSP();
+        List<java.util.Map<String, Object>> result = tutorService.obtainStatsTutorsSP();
 
-        assertEquals(1, resultado.size());
-        assertEquals(1L, resultado.get(0).get("tutorDocenteId"));
-        assertEquals("Carlos Ruiz", resultado.get(0).get("tutorNombre"));
-        assertEquals(3, resultado.get(0).get("tutoriasActivas"));
-        assertEquals(5, resultado.get(0).get("tutoriasCompletadas"));
-        assertEquals(12, resultado.get(0).get("totalFasesAprobadas"));
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).get("tutorDocenteId"));
+        assertEquals("Carlos Ruiz", result.get(0).get("tutorNombre"));
+        assertEquals(3, result.get(0).get("tutoriasActivas"));
+        assertEquals(5, result.get(0).get("tutoriasCompletadas"));
+        assertEquals(12, result.get(0).get("totalFasesAprobadas"));
     }
 
     @Test
-    void obtainEstadisticasTutoresSPDevuelveVacioSinFilas() {
-        when(tutorRepository.obtainEstadisticasTutoresSp()).thenReturn(List.of());
-        assertTrue(tutorService.obtainEstadisticasTutoresSP().isEmpty());
+    void obtainStatsTutorsSPDevuelveEmptyWithoutFilas() {
+        when(tutorRepository.obtainStatsTutorsSp()).thenReturn(List.of());
+        assertTrue(tutorService.obtainStatsTutorsSP().isEmpty());
     }
 }

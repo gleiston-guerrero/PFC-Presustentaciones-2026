@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class SaveFacultyRequest {
     @JsonProperty("codigo")
-    private String codigo;
+    private String code;
     @JsonProperty("nombre")
     private String nombre;
 }

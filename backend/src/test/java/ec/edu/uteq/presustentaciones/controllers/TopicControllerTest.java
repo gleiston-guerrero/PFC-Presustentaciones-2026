@@ -1,7 +1,7 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
 import ec.edu.uteq.presustentaciones.dto.GenerateTopicRequest;
-import ec.edu.uteq.presustentaciones.dto.TopicPropuestoDTO;
+import ec.edu.uteq.presustentaciones.dto.TopicProposedDTO;
 import ec.edu.uteq.presustentaciones.entities.Student;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.StudentRepository;
@@ -40,11 +40,11 @@ class TopicControllerTest {
 
     @InjectMocks private TopicController topicController;
 
-    private TopicPropuestoDTO topicMock;
+    private TopicProposedDTO topicMock;
 
     @BeforeEach
     void setUp() {
-        topicMock = TopicPropuestoDTO.builder().id(1).titulo("Tema Prueba").build();
+        topicMock = TopicProposedDTO.builder().id(1).titulo("Tema Prueba").build();
 
         AppUser appUser = new AppUser();
         appUser.setId(50L);
@@ -65,49 +65,49 @@ class TopicControllerTest {
     }
 
     @Test
-    void explorarPasaElIdDelStudentAutenticado() {
-        when(topicService.explorar(eq(1), eq(2), eq(3), eq("BASICO"), eq(7L)))
+    void explorePasaElIdDelStudentAuthenticated() {
+        when(topicService.explore(eq(1), eq(2), eq(3), eq("BASICO"), eq(7L)))
                 .thenReturn(Collections.singletonList(topicMock));
 
-        ResponseEntity<List<TopicPropuestoDTO>> response =
-                topicController.explorar(1, 2, 3, "BASICO");
+        ResponseEntity<List<TopicProposedDTO>> response =
+                topicController.explore(1, 2, 3, "BASICO");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
-        verify(topicService).explorar(1, 2, 3, "BASICO", 7L);
+        verify(topicService).explore(1, 2, 3, "BASICO", 7L);
     }
 
     @Test
-    void detalleDelegaEnElServicio() {
-        when(topicService.obtainDetalle(1)).thenReturn(topicMock);
+    void detailDelegaEnElServicio() {
+        when(topicService.obtainDetail(1)).thenReturn(topicMock);
 
-        ResponseEntity<TopicPropuestoDTO> response = topicController.detalle(1);
+        ResponseEntity<TopicProposedDTO> response = topicController.detail(1);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Tema Prueba", response.getBody().getTitulo());
     }
 
     @Test
-    void generateIdeasDevuelveLaLista() {
+    void generateSuggestionsDevuelveLaLista() {
         GenerateTopicRequest request = new GenerateTopicRequest();
         request.setProgramId(1);
-        when(topicService.generateIdeas(any(GenerateTopicRequest.class)))
+        when(topicService.generateSuggestions(any(GenerateTopicRequest.class)))
                 .thenReturn(Collections.singletonList(topicMock));
 
-        ResponseEntity<List<TopicPropuestoDTO>> response = topicController.generateIdeas(request);
+        ResponseEntity<List<TopicProposedDTO>> response = topicController.generateSuggestions(request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
     }
 
     @Test
-    void misTopicsGuardadosUsaElStudentAutenticado() {
-        when(topicService.obtainTopicsGuardados(7L)).thenReturn(Collections.singletonList(topicMock));
+    void myTopicsSavedUsaElStudentAuthenticated() {
+        when(topicService.obtainTopicsSaved(7L)).thenReturn(Collections.singletonList(topicMock));
 
-        ResponseEntity<List<TopicPropuestoDTO>> response = topicController.misTopicsGuardados();
+        ResponseEntity<List<TopicProposedDTO>> response = topicController.myTopicsSaved();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(topicService).obtainTopicsGuardados(7L);
+        verify(topicService).obtainTopicsSaved(7L);
     }
 
     @Test
@@ -119,15 +119,15 @@ class TopicControllerTest {
     }
 
     @Test
-    void removeGuardadoDevuelve204() {
-        ResponseEntity<Void> response = topicController.removeGuardado(9);
+    void removeSavedDevuelve204() {
+        ResponseEntity<Void> response = topicController.removeSaved(9);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(topicService).removeTopicGuardado(7L, 9);
+        verify(topicService).removeTopicSaved(7L, 9);
     }
 
     @Test
-    void saveFallaSiElAppUserNoTienePerfilDeStudent() {
+    void saveFallaSiElAppUserNoTieneProfileDeStudent() {
         when(studentRepository.findByAppUserId(50L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> topicController.save(9));
@@ -136,11 +136,11 @@ class TopicControllerTest {
 
     @Test
     void createDelegaYDevuelve201() {
-        var req = new ec.edu.uteq.presustentaciones.dto.SaveTopicPropuestoRequest();
+        var req = new ec.edu.uteq.presustentaciones.dto.SaveTopicProposedRequest();
         req.setTitulo("Tema");
         when(topicService.create(req)).thenReturn(topicMock);
 
-        ResponseEntity<TopicPropuestoDTO> r = topicController.create(req);
+        ResponseEntity<TopicProposedDTO> r = topicController.create(req);
 
         assertEquals(HttpStatus.CREATED, r.getStatusCode());
         verify(topicService).create(req);
@@ -148,11 +148,11 @@ class TopicControllerTest {
 
     @Test
     void updateDelega() {
-        var req = new ec.edu.uteq.presustentaciones.dto.SaveTopicPropuestoRequest();
+        var req = new ec.edu.uteq.presustentaciones.dto.SaveTopicProposedRequest();
         req.setTitulo("Tema");
         when(topicService.update(3, req)).thenReturn(topicMock);
 
-        ResponseEntity<TopicPropuestoDTO> r = topicController.update(3, req);
+        ResponseEntity<TopicProposedDTO> r = topicController.update(3, req);
 
         assertEquals(HttpStatus.OK, r.getStatusCode());
         verify(topicService).update(3, req);

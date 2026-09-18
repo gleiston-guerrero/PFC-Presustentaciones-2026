@@ -18,9 +18,9 @@ public class TrackingDTO {
     @JsonProperty("tituloProyecto")
     private String tituloProyecto;
     @JsonProperty("estadoActual")
-    private String estadoActual; // Estado general de la submission
+    private String statusActual; // Estado general de la submission
     @JsonProperty("porcentajeProgreso")
     private int porcentajeProgress;
     @JsonProperty("etapas")
-    private List<EtapaTrackingDTO> etapas;
+    private List<StageTrackingDTO> etapas;
 }

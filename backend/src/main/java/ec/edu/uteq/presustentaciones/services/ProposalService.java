@@ -11,33 +11,33 @@ public interface ProposalService {
      * deja el proposal en estado pendiente de revisión.
      *
      * @param submissionId id de la submission a la que pertenece el proposal
-     * @param archivo     archivo PDF subido por el student
+     * @param file     archivo PDF subido por el student
      * @return el proposal creado o actualizado
      * @throws RuntimeException si la submission no existe o el archivo no es un PDF válido
      */
-    Proposal sendProposal(Long submissionId, MultipartFile archivo);
+    Proposal sendProposal(Long submissionId, MultipartFile file);
 
     /**
      * @param id            id del proposal a approve
-     * @param observaciones observaciones opcionales del revisor
+     * @param observations observaciones opcionales del revisor
      * @return el proposal actualizado en estado "APROBADO"
      * @throws RuntimeException si el proposal no existe
      */
-    Proposal approveProposal(Long id, String observaciones);
+    Proposal approveProposal(Long id, String observations);
 
     /**
      * @param id            id del proposal a reject
-     * @param observaciones motivo del rechazo
+     * @param observations motivo del rechazo
      * @return el proposal actualizado en estado "RECHAZADO"
      * @throws RuntimeException si el proposal no existe
      */
-    Proposal rejectProposal(Long id, String observaciones);
+    Proposal rejectProposal(Long id, String observations);
 
     /**
      * @param submissionId id de la submission
      * @return el proposal de esa submission, si ya fue enviado
      */
-    Optional<Proposal> searchPorSubmission(Long submissionId);
+    Optional<Proposal> searchBySubmission(Long submissionId);
 
     /** RF-02: Verifica que el archivo en disco coincida con el hash SHA-256 almacenado
      * @param submissionId id de la submission cuyo proposal se va a verify
@@ -47,5 +47,5 @@ public interface ProposalService {
      * @throws RuntimeException si la submission no tiene proposal o el archivo no existe
      *                          en disco
      */
-    boolean verifyIntegridad(Long submissionId);
+    boolean verifyIntegrity(Long submissionId);
 }

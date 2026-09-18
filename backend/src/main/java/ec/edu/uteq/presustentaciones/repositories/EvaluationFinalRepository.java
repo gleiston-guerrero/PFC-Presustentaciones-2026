@@ -41,13 +41,13 @@ public interface EvaluationFinalRepository extends JpaRepository<EvaluationFinal
      * @param submissionId submissionId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Object[]> calculatePromedioEvaluationSp(@Param("submissionId") Long submissionId);
+    List<Object[]> calculateAverageEvaluationSp(@Param("submissionId") Long submissionId);
 
     @Query("SELECT ef FROM EvaluationFinal ef " +
            "JOIN FETCH ef.submission s " +
            "JOIN FETCH s.student e " +
            "JOIN FETCH e.appUser u " +
-           "LEFT JOIN FETCH ef.resultado r")
+           "LEFT JOIN FETCH ef.result r")
     /**
      * Find all with relationships.
      * @return los resultados encontrados (vacío si no hay coincidencias)

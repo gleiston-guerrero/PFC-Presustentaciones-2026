@@ -53,86 +53,86 @@ class AuditServiceTest {
     }
 
     @AfterEach
-    void limpiarContexto() {
+    void cleanContexto() {
         SecurityContextHolder.clearContext();
     }
 
-    private void autenticarComo(String email) {
+    private void authenticateAs(String email) {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(email, null,
                         AuthorityUtils.createAuthorityList("ROLE_ESTUDIANTE")));
     }
 
     @Test
-    void marcarActorActualFijaCadenaVaciaSinAuthenticationEnElContexto() {
+    void markActorActualFijaCadenaVaciaWithoutAuthenticationEnElContexto() {
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
         when(query.setParameter(eq("valor"), eq(""))).thenReturn(query);
 
-        assertDoesNotThrow(() -> auditService.marcarActorActual());
+        assertDoesNotThrow(() -> auditService.markActorActual());
 
         verify(query).setParameter("valor", "");
     }
 
     @Test
-    void marcarActorActualFijaCadenaVaciaSiNoEstaAutenticado() {
+    void markActorActualFijaCadenaVaciaSiNoIsAuthenticated() {
         Authentication auth = new UsernamePasswordAuthenticationToken("x@uteq.edu.ec", "pass");
         auth.setAuthenticated(false);
         SecurityContextHolder.getContext().setAuthentication(auth);
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
         when(query.setParameter(eq("valor"), anyString())).thenReturn(query);
 
-        auditService.marcarActorActual();
+        auditService.markActorActual();
 
         verify(query).setParameter("valor", "");
     }
 
     @Test
-    void marcarActorActualFijaCadenaVaciaParaAppUserAnonimo() {
+    void markActorActualFijaCadenaVaciaForAppUserAnonimo() {
         SecurityContextHolder.getContext().setAuthentication(
                 new AnonymousAuthenticationToken("key", "anonymousUser",
                         AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
         when(query.setParameter(eq("valor"), anyString())).thenReturn(query);
 
-        auditService.marcarActorActual();
+        auditService.markActorActual();
 
         verify(query).setParameter("valor", "");
     }
 
     @Test
-    void marcarActorActualFijaCadenaVaciaSiElAutenticadoNoEstaEnLaBase() {
-        autenticarComo("fantasma@uteq.edu.ec");
+    void markActorActualFijaCadenaVaciaSiElAuthenticatedNoIsEnLaBase() {
+        authenticateAs("fantasma@uteq.edu.ec");
         when(appUserRepository.findByEmail("fantasma@uteq.edu.ec")).thenReturn(Optional.empty());
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
         when(query.setParameter(eq("valor"), anyString())).thenReturn(query);
 
-        auditService.marcarActorActual();
+        auditService.markActorActual();
 
         verify(query).setParameter("valor", "");
     }
 
     @Test
-    void marcarActorActualFijaElIdDelAppUserAutenticado() {
-        autenticarComo("docente@uteq.edu.ec");
+    void markActorActualFijaElIdDelAppUserAuthenticated() {
+        authenticateAs("docente@uteq.edu.ec");
         AppUser u = new AppUser();
         u.setId(42L);
         when(appUserRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.of(u));
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
         when(query.setParameter(eq("valor"), anyString())).thenReturn(query);
 
-        auditService.marcarActorActual();
+        auditService.markActorActual();
 
         verify(query).setParameter("valor", "42");
     }
 
     @Test
-    void marcarActorActualNoPropagaLaExcepcionSiFallaLaQueryNativa() {
-        autenticarComo("docente@uteq.edu.ec");
+    void markActorActualNoPropagaLaExcepcionSiFallaLaQueryNativa() {
+        authenticateAs("docente@uteq.edu.ec");
         AppUser u = new AppUser();
         u.setId(42L);
         when(appUserRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.of(u));
         when(entityManager.createNativeQuery(anyString())).thenThrow(new RuntimeException("conexión caída"));
 
-        assertDoesNotThrow(() -> auditService.marcarActorActual());
+        assertDoesNotThrow(() -> auditService.markActorActual());
     }
 }

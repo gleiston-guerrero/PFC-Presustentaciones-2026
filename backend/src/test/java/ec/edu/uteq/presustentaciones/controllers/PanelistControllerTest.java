@@ -45,15 +45,15 @@ class PanelistControllerTest {
     private PanelistController controller;
 
     @SuppressWarnings("unchecked")
-    private ResponseWrapper<Object> wrapperDe(ResponseEntity<?> response) {
+    private ResponseWrapper<Object> wrapperOf(ResponseEntity<?> response) {
         return (ResponseWrapper<Object>) response.getBody();
     }
 
-    private Panelist panelistConTeacher(String nombre, String apellido, String roleCodigo) {
+    private Panelist panelistWithTeacher(String nombre, String apellido, String roleCode) {
         return Panelist.builder()
                 .id(1L)
                 .confirmado(true)
-                .rolePanelist(RolePanelist.builder().codigo(roleCodigo).build())
+                .rolePanelist(RolePanelist.builder().code(roleCode).build())
                 .teacher(Teacher.builder().id(1L)
                         .appUser(AppUser.builder().id(1L).nombre(nombre).apellido(apellido).build())
                         .build())
@@ -70,9 +70,9 @@ class PanelistControllerTest {
         ResponseEntity<?> response = controller.assignPanelist(1L, 2L, "PRESIDENTE");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(wrapperDe(response).isSuccess());
-        assertSame(panelist, wrapperDe(response).getData());
-        assertEquals("Jurado asignado exitosamente", wrapperDe(response).getMessage());
+        assertTrue(wrapperOf(response).isSuccess());
+        assertSame(panelist, wrapperOf(response).getData());
+        assertEquals("Jurado asignado exitosamente", wrapperOf(response).getMessage());
     }
 
     @Test
@@ -83,51 +83,51 @@ class PanelistControllerTest {
         ResponseEntity<?> response = controller.assignPanelist(1L, 2L, "PRESIDENTE");
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertFalse(wrapperDe(response).isSuccess());
-        assertEquals("El docente ya es jurado de esta solicitud", wrapperDe(response).getMessage());
+        assertFalse(wrapperOf(response).isSuccess());
+        assertEquals("El docente ya es jurado de esta solicitud", wrapperOf(response).getMessage());
     }
 
     @Test
-    void assignAutomaticamenteDevuelveLosPanelistsResultantes() {
+    void assignAutomaticallyDevuelveLosPanelistsResultantes() {
         List<Panelist> panelists = List.of(Panelist.builder().id(1L).build(), Panelist.builder().id(2L).build());
-        when(panelistService.listPorSubmission(1L)).thenReturn(panelists);
+        when(panelistService.listBySubmission(1L)).thenReturn(panelists);
 
-        ResponseEntity<?> response = controller.assignAutomaticamente(1L);
+        ResponseEntity<?> response = controller.assignAutomatically(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(panelists, wrapperDe(response).getData());
-        verify(panelistService).assignPanelistsAutomaticamente(1L);
+        assertSame(panelists, wrapperOf(response).getData());
+        verify(panelistService).assignPanelistsAutomatically(1L);
     }
 
     @Test
-    void assignAutomaticamenteTraduceElErrorDelServicioA400() {
+    void assignAutomaticallyTraduceElErrorDelServicioA400() {
         doThrow(new RuntimeException("No hay suficientes docentes disponibles"))
-                .when(panelistService).assignPanelistsAutomaticamente(1L);
+                .when(panelistService).assignPanelistsAutomatically(1L);
 
-        ResponseEntity<?> response = controller.assignAutomaticamente(1L);
+        ResponseEntity<?> response = controller.assignAutomatically(1L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("No hay suficientes docentes disponibles", wrapperDe(response).getMessage());
-        verify(panelistService, never()).listPorSubmission(any());
+        assertEquals("No hay suficientes docentes disponibles", wrapperOf(response).getMessage());
+        verify(panelistService, never()).listBySubmission(any());
     }
 
     // ── Consultas ─────────────────────────────────────────────────────────────
 
     @Test
-    void listPorSubmissionEnvuelveLaListaDelServicio() {
+    void listBySubmissionEnvuelveLaListaDelServicio() {
         List<Panelist> panelists = List.of(Panelist.builder().id(1L).build());
-        when(panelistService.listPorSubmission(1L)).thenReturn(panelists);
+        when(panelistService.listBySubmission(1L)).thenReturn(panelists);
 
-        assertSame(panelists, wrapperDe(controller.listPorSubmission(1L)).getData());
+        assertSame(panelists, wrapperOf(controller.listBySubmission(1L)).getData());
     }
 
     @Test
-    void listTodosPropagaLaPaginacionRecibida() {
+    void listAllPropagaLaPaginacionRecibida() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Panelist> pagina = new PageImpl<>(List.of(Panelist.builder().id(1L).build()));
-        when(panelistService.listTodos(pageable)).thenReturn(pagina);
+        when(panelistService.listAll(pageable)).thenReturn(pagina);
 
-        assertSame(pagina, wrapperDe(controller.listTodos(pageable)).getData());
+        assertSame(pagina, wrapperOf(controller.listAll(pageable)).getData());
     }
 
     @Test
@@ -137,20 +137,20 @@ class PanelistControllerTest {
     }
 
     @Test
-    void sugerirTeachersUsaLaCantidadSolicitada() {
+    void suggestTeachersUsaLaCantidadSolicitada() {
         List<Teacher> teachers = List.of(Teacher.builder().id(1L).build());
-        when(panelistService.sugerirTeachers(1L, 3)).thenReturn(teachers);
+        when(panelistService.suggestTeachers(1L, 3)).thenReturn(teachers);
 
-        assertSame(teachers, wrapperDe(controller.sugerirTeachers(1L, 3)).getData());
+        assertSame(teachers, wrapperOf(controller.suggestTeachers(1L, 3)).getData());
     }
 
     @Test
-    void listPorTeacherYTutoringsPorTeacherDeleganEnElServicio() {
-        when(panelistService.listPorTeacher(4L)).thenReturn(List.of(Panelist.builder().id(1L).build()));
-        when(panelistService.listTutoringsPorTeacher(4L)).thenReturn(List.of(Tutor.builder().id(1L).build()));
+    void listByTeacherYTutoringsByTeacherDeleganEnElServicio() {
+        when(panelistService.listByTeacher(4L)).thenReturn(List.of(Panelist.builder().id(1L).build()));
+        when(panelistService.listTutoringsByTeacher(4L)).thenReturn(List.of(Tutor.builder().id(1L).build()));
 
-        assertEquals(HttpStatus.OK, controller.listPorTeacher(4L).getStatusCode());
-        assertEquals(HttpStatus.OK, controller.listTutoringsPorTeacher(4L).getStatusCode());
+        assertEquals(HttpStatus.OK, controller.listByTeacher(4L).getStatusCode());
+        assertEquals(HttpStatus.OK, controller.listTutoringsByTeacher(4L).getStatusCode());
     }
 
     // ── Tutor ─────────────────────────────────────────────────────────────────
@@ -163,7 +163,7 @@ class PanelistControllerTest {
         ResponseEntity<?> response = controller.assignTutor(1L, 2L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(tutor, wrapperDe(response).getData());
+        assertSame(tutor, wrapperOf(response).getData());
     }
 
     @Test
@@ -173,25 +173,25 @@ class PanelistControllerTest {
         ResponseEntity<?> response = controller.assignTutor(1L, 2L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("La solicitud ya tiene tutor", wrapperDe(response).getMessage());
+        assertEquals("La solicitud ya tiene tutor", wrapperOf(response).getMessage());
     }
 
     @Test
     void obtainTutorDevuelve404CuandoLaSubmissionNoTieneTutor() {
-        when(panelistService.obtainTutorDeSubmission(1L)).thenReturn(Optional.empty());
+        when(panelistService.obtainTutorOfSubmission(1L)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, controller.obtainTutor(1L).getStatusCode());
     }
 
     @Test
-    void obtainTutorDevuelveElTutorCuandoExiste() {
+    void obtainTutorDevuelveElTutorCuandoExists() {
         Tutor tutor = Tutor.builder().id(1L).build();
-        when(panelistService.obtainTutorDeSubmission(1L)).thenReturn(Optional.of(tutor));
+        when(panelistService.obtainTutorOfSubmission(1L)).thenReturn(Optional.of(tutor));
 
         ResponseEntity<?> response = controller.obtainTutor(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(tutor, wrapperDe(response).getData());
+        assertSame(tutor, wrapperOf(response).getData());
     }
 
     @Test
@@ -203,14 +203,14 @@ class PanelistControllerTest {
     // ── Info de panelist (armado manual del Map de respuesta) ───────────────────
 
     @Test
-    void obtainInfoPanelistArmaElNombreDelTeacherCuandoLaCadenaEstaCompleta() {
+    void obtainInfoPanelistArmaElNombreDelTeacherCuandoLaCadenaIsComplete() {
         when(panelistService.obtainInfoPanelist(1L, 2L))
-                .thenReturn(Optional.of(panelistConTeacher("Ana", "Pérez", "PRESIDENTE")));
+                .thenReturn(Optional.of(panelistWithTeacher("Ana", "Pérez", "PRESIDENTE")));
 
         ResponseEntity<?> response = controller.obtainInfoPanelist(1L, 2L);
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> info = (Map<String, Object>) wrapperDe(response).getData();
+        Map<String, Object> info = (Map<String, Object>) wrapperOf(response).getData();
         assertEquals(1L, info.get("id"));
         assertEquals("PRESIDENTE", info.get("rol"));
         assertEquals(true, info.get("confirmado"));
@@ -218,7 +218,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void obtainInfoPanelistSinTeacherNiRoleNoRompeYDevuelveCadenasVacias() {
+    void obtainInfoPanelistWithoutTeacherNiRoleNoRompeYDevuelveCadenasVacias() {
         // Panelist sin teacher y sin rolePanelist: getRole() devuelve null y el nombre queda vacío.
         // Map.of no admite valores nulos, así que si el controlador no hiciera el fallback
         // este endpoint reventaría con NullPointerException en produccion.
@@ -228,7 +228,7 @@ class PanelistControllerTest {
         ResponseEntity<?> response = controller.obtainInfoPanelist(1L, 2L);
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> info = (Map<String, Object>) wrapperDe(response).getData();
+        Map<String, Object> info = (Map<String, Object>) wrapperOf(response).getData();
         assertEquals(5L, info.get("id"));
         assertEquals("", info.get("rol"));
         assertEquals(false, info.get("confirmado"));
@@ -242,14 +242,14 @@ class PanelistControllerTest {
         ResponseEntity<?> response = controller.obtainInfoPanelist(1L, 2L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNull(wrapperDe(response).getData());
+        assertNull(wrapperOf(response).getData());
     }
 
     // ── sp_assign_panelist_masivo ──────────────────────────────────────────────
 
     @Test
-    void assignMasivoConvierteLosIdsJsonAArreglosLongYLlamaAlProcedimiento() {
-        ResponseEntity<?> response = controller.assignMasivo(Map.of(
+    void assignBulkConvierteLosIdsJsonAArreglosLongYLlamaAlProcedimiento() {
+        ResponseEntity<?> response = controller.assignBulk(Map.of(
                 "solicitudIds", List.of(1, 2, 3),
                 "docenteIds", List.of(4, 5, 6),
                 "rol", "PRESIDENTE"));
@@ -259,39 +259,39 @@ class PanelistControllerTest {
         // Jackson deserializa los enteros del JSON como Integer; el procedimiento espera Long[].
         ArgumentCaptor<Long[]> submissions = ArgumentCaptor.forClass(Long[].class);
         ArgumentCaptor<Long[]> teachers = ArgumentCaptor.forClass(Long[].class);
-        verify(panelistService).assignPanelistMasivoSP(submissions.capture(), teachers.capture(), eq("PRESIDENTE"));
+        verify(panelistService).assignPanelistBulkSP(submissions.capture(), teachers.capture(), eq("PRESIDENTE"));
         assertArrayEquals(new Long[]{1L, 2L, 3L}, submissions.getValue());
         assertArrayEquals(new Long[]{4L, 5L, 6L}, teachers.getValue());
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) wrapperDe(response).getData();
+        Map<String, Object> data = (Map<String, Object>) wrapperOf(response).getData();
         assertEquals(3, data.get("asignados"));
         assertEquals("PRESIDENTE", data.get("rol"));
     }
 
     @Test
-    void assignMasivoRechazaElCuerpoIncompletoSinLlamarAlProcedimiento() {
-        ResponseEntity<?> sinRole = controller.assignMasivo(Map.of(
+    void assignBulkRechazaElCuerpoIncompletoWithoutLlamarAlProcedimiento() {
+        ResponseEntity<?> sinRole = controller.assignBulk(Map.of(
                 "solicitudIds", List.of(1), "docenteIds", List.of(2)));
 
         assertEquals(HttpStatus.BAD_REQUEST, sinRole.getStatusCode());
         @SuppressWarnings("unchecked")
         Map<String, String> error = (Map<String, String>) sinRole.getBody();
         assertEquals("Se requieren 'solicitudIds', 'docenteIds' y 'rol'", error.get("error"));
-        verify(panelistService, never()).assignPanelistMasivoSP(any(), any(), any());
+        verify(panelistService, never()).assignPanelistBulkSP(any(), any(), any());
     }
 
     @Test
-    void assignMasivoTraduceElErrorDelProcedimientoA400() {
+    void assignBulkTraduceElErrorDelProcedimientoA400() {
         doThrow(new RuntimeException("rol_jurado inexistente"))
-                .when(panelistService).assignPanelistMasivoSP(any(), any(), eq("INVENTADO"));
+                .when(panelistService).assignPanelistBulkSP(any(), any(), eq("INVENTADO"));
 
-        ResponseEntity<?> response = controller.assignMasivo(Map.of(
+        ResponseEntity<?> response = controller.assignBulk(Map.of(
                 "solicitudIds", List.of(1),
                 "docenteIds", List.of(2),
                 "rol", "INVENTADO"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("rol_jurado inexistente", wrapperDe(response).getMessage());
+        assertEquals("rol_jurado inexistente", wrapperOf(response).getMessage());
     }
 }

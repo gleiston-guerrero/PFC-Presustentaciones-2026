@@ -32,8 +32,8 @@ public class StudentService {
     private final AppUserRepository appUserRepository;
     private final RoleAppUserRepository roleAppUserRepository;
     private final ProgramRepository programRepository;
-    private final PeriodAcademicoRepository periodAcademicoRepository;
-    private final EstadoAcademicoRepository estadoAcademicoRepository;
+    private final PeriodAcademicRepository periodAcademicRepository;
+    private final StatusAcademicRepository statusAcademicRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
 
@@ -44,14 +44,14 @@ public class StudentService {
      * @return página de students con su último proyecto de titulación (si tiene)
      */
     @Transactional(readOnly = true)
-    public Page<StudentDTO> listPaginado(int page, int size, String q) {
+    public Page<StudentDTO> listPaged(int page, int size, String q) {
         int paginaSegura = Math.max(page, 0);
         int tamanioSeguro = Math.min(Math.max(size, 1), 100);
-        Page<Student> pagina = studentRepository.searchPaginado(q, PageRequest.of(paginaSegura, tamanioSeguro));
+        Page<Student> pagina = studentRepository.searchPaged(q, PageRequest.of(paginaSegura, tamanioSeguro));
 
         List<Long> ids = pagina.getContent().stream().map(Student::getId).toList();
         Map<Long, Object[]> proyectos = ids.isEmpty() ? Map.of() : studentRepository
-                .findUltimoProyectoPorStudentIds(ids).stream()
+                .findLastProyectoByStudentIds(ids).stream()
                 .collect(Collectors.toMap(r -> ((Number) r[0]).longValue(), r -> r));
 
         return pagina.map(e -> toDto(e, proyectos.get(e.getId())));
@@ -63,10 +63,10 @@ public class StudentService {
      * @throws RuntimeException si el student no existe
      */
     @Transactional(readOnly = true)
-    public StudentDTO obtainPorId(Long id) {
+    public StudentDTO obtainById(Long id) {
         Student e = studentRepository.findByIdWithAppUser(id)
                 .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
-        List<Object[]> proyectos = studentRepository.findUltimoProyectoPorStudentIds(List.of(id));
+        List<Object[]> proyectos = studentRepository.findLastProyectoByStudentIds(List.of(id));
         return toDto(e, proyectos.isEmpty() ? null : proyectos.get(0));
     }
 
@@ -80,7 +80,7 @@ public class StudentService {
      *                          program/período no existen
      */
     public StudentDTO create(CreateStudentRequest req) {
-        auditService.marcarActorActual();
+        auditService.markActorActual();
 
         if (req.getNombre() == null || req.getNombre().isBlank()
                 || req.getApellido() == null || req.getApellido().isBlank()
@@ -95,13 +95,13 @@ public class StudentService {
 
         Program program = programRepository.findById(req.getProgramId())
                 .orElseThrow(() -> new RuntimeException("Carrera no encontrada"));
-        PeriodAcademico period = req.getPeriodIngresoId() != null
-                ? periodAcademicoRepository.findById(req.getPeriodIngresoId())
+        PeriodAcademic period = req.getPeriodIngresoId() != null
+                ? periodAcademicRepository.findById(req.getPeriodIngresoId())
                         .orElseThrow(() -> new RuntimeException("Período académico no encontrado"))
                 : null;
-        EstadoAcademico activo = estadoAcademicoRepository.findByCodigo("ACTIVO")
+        StatusAcademic activo = statusAcademicRepository.findByCode("ACTIVO")
                 .orElseThrow(() -> new RuntimeException("Catálogo de estados académicos no sembrado"));
-        RoleAppUser roleStudent = roleAppUserRepository.findByCodigo("ESTUDIANTE")
+        RoleAppUser roleStudent = roleAppUserRepository.findByCode("ESTUDIANTE")
                 .orElseThrow(() -> new RuntimeException("Rol ESTUDIANTE no existe en el catálogo"));
 
         AppUser appUser = AppUser.builder()
@@ -109,7 +109,7 @@ public class StudentService {
                 .apellido(req.getApellido())
                 .email(req.getEmail())
                 .password(passwordEncoder.encode(req.getPassword()))
-                .telefono(req.getTelefono())
+                .phone(req.getPhone())
                 .role("ESTUDIANTE")
                 .roleAppUser(roleStudent)
                 .activo(true)
@@ -117,7 +117,7 @@ public class StudentService {
         appUser = appUserRepository.save(appUser);
 
         short semestreActual = req.getSemestreActual() != null ? req.getSemestreActual() : (short) 1;
-        String expedienteCodigo = studentRepository.generateCodigoExpediente(null, null);
+        String expedienteCode = studentRepository.generateCodeExpediente(null, null);
 
         Student student = Student.builder()
                 .appUser(appUser)
@@ -126,9 +126,9 @@ public class StudentService {
                 .periodIngreso(period)
                 .semestreActual(semestreActual)
                 .semestre(semestreActual + "")
-                .telefono(req.getTelefono())
-                .expedienteCodigo(expedienteCodigo)
-                .estadoAcademico(activo)
+                .phone(req.getPhone())
+                .expedienteCode(expedienteCode)
+                .statusAcademic(activo)
                 .build();
         student = studentRepository.save(student);
 
@@ -147,7 +147,7 @@ public class StudentService {
      *                          académico indicados no existen
      */
     public StudentDTO update(Long id, UpdateStudentRequest req) {
-        auditService.marcarActorActual();
+        auditService.markActorActual();
         Student e = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
 
@@ -158,7 +158,7 @@ public class StudentService {
             e.setProgram(program.getNombre());
         }
         if (req.getPeriodIngresoId() != null) {
-            PeriodAcademico period = periodAcademicoRepository.findById(req.getPeriodIngresoId())
+            PeriodAcademic period = periodAcademicRepository.findById(req.getPeriodIngresoId())
                     .orElseThrow(() -> new RuntimeException("Período académico no encontrado"));
             e.setPeriodIngreso(period);
         }
@@ -166,23 +166,23 @@ public class StudentService {
             e.setSemestreActual(req.getSemestreActual());
             e.setSemestre(req.getSemestreActual() + "");
         }
-        if (req.getTelefono() != null) {
-            e.setTelefono(req.getTelefono());
+        if (req.getPhone() != null) {
+            e.setPhone(req.getPhone());
         }
-        if (req.getEstadoAcademicoCodigo() != null && !req.getEstadoAcademicoCodigo().isBlank()) {
-            EstadoAcademico estado = estadoAcademicoRepository.findByCodigo(req.getEstadoAcademicoCodigo())
-                    .orElseThrow(() -> new RuntimeException("Estado académico inválido: " + req.getEstadoAcademicoCodigo()));
-            e.setEstadoAcademico(estado);
+        if (req.getStatusAcademicCode() != null && !req.getStatusAcademicCode().isBlank()) {
+            StatusAcademic status = statusAcademicRepository.findByCode(req.getStatusAcademicCode())
+                    .orElseThrow(() -> new RuntimeException("Estado académico inválido: " + req.getStatusAcademicCode()));
+            e.setStatusAcademic(status);
         }
 
-        Student guardado = studentRepository.save(e);
-        return toDto(guardado, null);
+        Student saved = studentRepository.save(e);
+        return toDto(saved, null);
     }
 
     /** @return el catálogo completo de estados académicos disponibles */
     @Transactional(readOnly = true)
-    public List<EstadoAcademico> listEstadosAcademicos() {
-        return estadoAcademicoRepository.findAll();
+    public List<StatusAcademic> listStatusesAcademic() {
+        return statusAcademicRepository.findAll();
     }
 
     private StudentDTO toDto(Student e, Object[] proyecto) {
@@ -194,17 +194,17 @@ public class StudentService {
                 .apellido(u.getApellido())
                 .email(u.getEmail())
                 .activo(u.getActivo())
-                .telefono(e.getTelefono())
-                .expedienteCodigo(e.getExpedienteCodigo())
+                .phone(e.getPhone())
+                .expedienteCode(e.getExpedienteCode())
                 .programId(e.getProgramEntidad() != null ? e.getProgramEntidad().getId() : null)
                 .programNombre(e.getProgramEntidad() != null ? e.getProgramEntidad().getNombre() : e.getProgram())
                 .periodIngresoId(e.getPeriodIngreso() != null ? e.getPeriodIngreso().getId() : null)
                 .periodIngresoNombre(e.getPeriodIngreso() != null ? e.getPeriodIngreso().getNombre() : null)
                 .semestreActual(e.getSemestreActual())
-                .estadoAcademicoCodigo(e.getEstadoAcademico() != null ? e.getEstadoAcademico().getCodigo() : null)
-                .estadoAcademicoNombre(e.getEstadoAcademico() != null ? e.getEstadoAcademico().getNombre() : null)
+                .statusAcademicCode(e.getStatusAcademic() != null ? e.getStatusAcademic().getCode() : null)
+                .statusAcademicNombre(e.getStatusAcademic() != null ? e.getStatusAcademic().getNombre() : null)
                 .proyectoTitulo(proyecto != null ? (String) proyecto[1] : null)
-                .proyectoEstado(proyecto != null ? (String) proyecto[2] : null)
+                .proyectoStatus(proyecto != null ? (String) proyecto[2] : null)
                 .build();
     }
 }

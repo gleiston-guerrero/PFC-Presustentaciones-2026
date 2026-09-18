@@ -26,10 +26,10 @@ public interface TutorRepository extends JpaRepository<Tutor, Long> {
     /**
      * Cuenta los registros con teacher id y estado.
      * @param teacherId teacherId
-     * @param estado estado
+     * @param status status
      * @return la cantidad de registros
      */
-    long countByTeacherIdAndEstado(Long teacherId, String estado);
+    long countByTeacherIdAndStatus(Long teacherId, String status);
 
     /**
      * Busca el/los registro(s) con submission student app user id.
@@ -49,11 +49,11 @@ public interface TutorRepository extends JpaRepository<Tutor, Long> {
      * Obtain estadisticas tutores sp.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Object[]> obtainEstadisticasTutoresSp();
+    List<Object[]> obtainStatsTutorsSp();
 
     /** Reportes: cuántas tutorías tiene asignadas cada teacher (GROUP BY en la base). */
     @Query("SELECT t.teacher.id, COUNT(t) FROM Tutor t GROUP BY t.teacher.id")
-    List<Object[]> countTutoringsPorTeacher();
+    List<Object[]> countTutoringsByTeacher();
 
     /**
      * Indica si existe algún registro con submission id y teacher app user email.

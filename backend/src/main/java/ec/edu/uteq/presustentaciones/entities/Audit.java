@@ -34,7 +34,7 @@ public class Audit {
 
     @Column(name = "registro_id")
     @JsonProperty("registroId")
-    private Long registroId;
+    private Long recordId;
 
     @Column(name = "accion", nullable = false, length = 20)
     @JsonProperty("accion")
@@ -50,15 +50,15 @@ public class Audit {
 
     @Column(name = "fecha", nullable = false)
     @JsonProperty("fecha")
-    private LocalDateTime fecha;
+    private LocalDateTime date;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "datos_anteriores", columnDefinition = "jsonb")
     @JsonProperty("datosAnteriores")
-    private String datosAnteriores;
+    private String dataAnteriores;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "datos_nuevos", columnDefinition = "jsonb")
     @JsonProperty("datosNuevos")
-    private String datosNuevos;
+    private String dataNuevos;
 }

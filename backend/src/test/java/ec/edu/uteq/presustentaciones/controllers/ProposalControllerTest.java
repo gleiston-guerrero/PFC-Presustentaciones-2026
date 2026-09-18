@@ -43,61 +43,61 @@ class ProposalControllerTest {
     @Test
     void sendDelegaEnElServicio() {
         Proposal creado = Proposal.builder().id(1L).build();
-        MockMultipartFile archivo = new MockMultipartFile("archivo", "tesis.pdf", "application/pdf", "contenido".getBytes());
-        when(proposalService.sendProposal(5L, archivo)).thenReturn(creado);
+        MockMultipartFile file = new MockMultipartFile("archivo", "tesis.pdf", "application/pdf", "contenido".getBytes());
+        when(proposalService.sendProposal(5L, file)).thenReturn(creado);
 
-        ResponseEntity<Proposal> resp = controller.send(5L, archivo);
+        ResponseEntity<Proposal> resp = controller.send(5L, file);
 
         assertEquals(HttpStatus.OK, resp.getStatusCode());
         assertSame(creado, resp.getBody());
     }
 
     @Test
-    void obtainPorSubmissionDevuelve404SiNoExiste() {
-        when(proposalService.searchPorSubmission(5L)).thenReturn(Optional.empty());
+    void obtainBySubmissionDevuelve404SiNoExists() {
+        when(proposalService.searchBySubmission(5L)).thenReturn(Optional.empty());
 
-        assertEquals(HttpStatus.NOT_FOUND, controller.obtainPorSubmission(5L).getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, controller.obtainBySubmission(5L).getStatusCode());
     }
 
     @Test
-    void obtainPorSubmissionDevuelveElProposalSiExiste() {
+    void obtainBySubmissionDevuelveElProposalSiExists() {
         Proposal ap = Proposal.builder().id(1L).build();
-        when(proposalService.searchPorSubmission(5L)).thenReturn(Optional.of(ap));
+        when(proposalService.searchBySubmission(5L)).thenReturn(Optional.of(ap));
 
-        assertEquals(HttpStatus.OK, controller.obtainPorSubmission(5L).getStatusCode());
+        assertEquals(HttpStatus.OK, controller.obtainBySubmission(5L).getStatusCode());
     }
 
     @Test
-    void verPdfLanzaExcepcionSiNoHayProposal() {
-        when(proposalService.searchPorSubmission(5L)).thenReturn(Optional.empty());
+    void viewPdfLanzaExcepcionSiNoHayProposal() {
+        when(proposalService.searchBySubmission(5L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> controller.verPdf(5L));
+        assertThrows(RuntimeException.class, () -> controller.viewPdf(5L));
     }
 
     @Test
-    void verPdfDevuelve404SiElArchivoNoExisteEnDisco() {
-        Proposal ap = Proposal.builder().id(1L).archivoPdf("no-existe.pdf").build();
-        when(proposalService.searchPorSubmission(5L)).thenReturn(Optional.of(ap));
+    void viewPdfDevuelve404SiElFileNoExistsEnDisco() {
+        Proposal ap = Proposal.builder().id(1L).filePdf("no-existe.pdf").build();
+        when(proposalService.searchBySubmission(5L)).thenReturn(Optional.of(ap));
 
-        assertEquals(HttpStatus.NOT_FOUND, controller.verPdf(5L).getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, controller.viewPdf(5L).getStatusCode());
     }
 
     @Test
-    void verPdfDevuelveElPdfRealCuandoExisteEnDisco() throws IOException {
+    void viewPdfDevuelveElPdfRealCuandoExistsEnDisco() throws IOException {
         Files.writeString(tempDir.resolve("real.pdf"), "%PDF-1.4 contenido");
-        Proposal ap = Proposal.builder().id(1L).archivoPdf("real.pdf").build();
-        when(proposalService.searchPorSubmission(5L)).thenReturn(Optional.of(ap));
+        Proposal ap = Proposal.builder().id(1L).filePdf("real.pdf").build();
+        when(proposalService.searchBySubmission(5L)).thenReturn(Optional.of(ap));
 
-        ResponseEntity<?> resp = controller.verPdf(5L);
+        ResponseEntity<?> resp = controller.viewPdf(5L);
 
         assertEquals(HttpStatus.OK, resp.getStatusCode());
     }
 
     @Test
-    void verifyDevuelveIntegridadOkCuandoElHashCoincide() {
+    void verifyDevuelveIntegrityOkCuandoElHashCoincide() {
         Proposal ap = Proposal.builder().id(1L).sha256Hash("abc123").build();
-        when(proposalService.verifyIntegridad(5L)).thenReturn(true);
-        when(proposalService.searchPorSubmission(5L)).thenReturn(Optional.of(ap));
+        when(proposalService.verifyIntegrity(5L)).thenReturn(true);
+        when(proposalService.searchBySubmission(5L)).thenReturn(Optional.of(ap));
 
         ResponseEntity<?> resp = controller.verify(5L);
 
@@ -107,8 +107,8 @@ class ProposalControllerTest {
     @Test
     void verifyAvisaCuandoElHashNoCoincide() {
         Proposal ap = Proposal.builder().id(1L).sha256Hash(null).build();
-        when(proposalService.verifyIntegridad(5L)).thenReturn(false);
-        when(proposalService.searchPorSubmission(5L)).thenReturn(Optional.of(ap));
+        when(proposalService.verifyIntegrity(5L)).thenReturn(false);
+        when(proposalService.searchBySubmission(5L)).thenReturn(Optional.of(ap));
 
         ResponseEntity<?> resp = controller.verify(5L);
 
@@ -117,31 +117,31 @@ class ProposalControllerTest {
 
     @Test
     void verifyDevuelveBadRequestSiElServicioFalla() {
-        when(proposalService.verifyIntegridad(5L)).thenThrow(new RuntimeException("archivo no existe en disco"));
+        when(proposalService.verifyIntegrity(5L)).thenThrow(new RuntimeException("archivo no existe en disco"));
 
         assertEquals(HttpStatus.BAD_REQUEST, controller.verify(5L).getStatusCode());
     }
 
     @Test
-    void verifyPropagaAccessDeniedExceptionSinConvertirlaEnBadRequest() {
-        when(proposalService.verifyIntegridad(5L)).thenThrow(new AccessDeniedException("sin permiso"));
+    void verifyPropagaAccessDeniedExceptionWithoutConvertirlaEnBadRequest() {
+        when(proposalService.verifyIntegrity(5L)).thenThrow(new AccessDeniedException("sin permiso"));
 
         assertThrows(AccessDeniedException.class, () -> controller.verify(5L));
     }
 
     @Test
     void approveDelegaEnElServicio() {
-        Proposal aprobado = Proposal.builder().id(1L).estado("APROBADO").build();
+        Proposal aprobado = Proposal.builder().id(1L).status("APROBADO").build();
         when(proposalService.approveProposal(1L, "ok")).thenReturn(aprobado);
 
-        assertEquals("APROBADO", controller.approve(1L, "ok").getBody().getEstado());
+        assertEquals("APROBADO", controller.approve(1L, "ok").getBody().getStatus());
     }
 
     @Test
     void rejectDelegaEnElServicio() {
-        Proposal rechazado = Proposal.builder().id(1L).estado("RECHAZADO").build();
+        Proposal rechazado = Proposal.builder().id(1L).status("RECHAZADO").build();
         when(proposalService.rejectProposal(1L, "falta firma")).thenReturn(rechazado);
 
-        assertEquals("RECHAZADO", controller.reject(1L, "falta firma").getBody().getEstado());
+        assertEquals("RECHAZADO", controller.reject(1L, "falta firma").getBody().getStatus());
     }
 }

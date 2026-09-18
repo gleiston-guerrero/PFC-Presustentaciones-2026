@@ -13,5 +13,5 @@ public interface HistoryScheduleRepository extends JpaRepository<HistorySchedule
      * @param scheduleId scheduleId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<HistorySchedule> findByScheduleIdOrderByFechaCambioDesc(Long scheduleId);
+    List<HistorySchedule> findByScheduleIdOrderByDateCambioDesc(Long scheduleId);
 }

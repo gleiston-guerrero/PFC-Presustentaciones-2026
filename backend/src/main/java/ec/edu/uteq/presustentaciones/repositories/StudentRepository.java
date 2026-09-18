@@ -18,11 +18,11 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     /** Listado del panel de admin -- 41,000+ filas, siempre pagina. Busca por nombre,
      * apellido, email, expediente o nombre de program. */
     @Query("SELECT e FROM Student e JOIN FETCH e.appUser u JOIN FETCH e.programEntidad c " +
-           "JOIN FETCH e.estadoAcademico WHERE :q IS NULL OR :q = '' " +
+           "JOIN FETCH e.statusAcademic WHERE :q IS NULL OR :q = '' " +
            "OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :q, '%')) " +
-           "OR LOWER(e.expedienteCodigo) LIKE LOWER(CONCAT('%', :q, '%')) " +
+           "OR LOWER(e.expedienteCode) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :q, '%'))")
     /**
      * Search paginado.
@@ -30,7 +30,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      * @param pageable pageable
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    Page<Student> searchPaginado(@Param("q") String q, Pageable pageable);
+    Page<Student> searchPaged(@Param("q") String q, Pageable pageable);
 
     /** Última submission (el "proyecto" vigente) de cada student de la página actual,
      * en un solo query -- evita N+1 al pedir el proyecto por separado por cada fila. */
@@ -42,7 +42,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      * @param ids ids
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Object[]> findUltimoProyectoPorStudentIds(@Param("ids") List<Long> ids);
+    List<Object[]> findLastProyectoByStudentIds(@Param("ids") List<Long> ids);
 
     /**
      * Invoca sp_generate_codigo_expediente (FUNCTION scaler, categoría "generación de
@@ -50,14 +50,14 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      * atómico a nivel de motor -- sin condiciones de program entre altas concurrentes.
      */
     @Procedure(name = "Estudiante.generarCodigoExpediente")
-    String generateCodigoExpediente(@Param("p_anio") Integer anio, @Param("p_codigo") String codigoInicial);
+    String generateCodeExpediente(@Param("p_anio") Integer anio, @Param("p_codigo") String codeInicial);
 
     /**
      * Busca el/los registro(s) con expediente codigo.
-     * @param expedienteCodigo expedienteCodigo
+     * @param expedienteCode expedienteCode
      * @return el registro si existe, vacío si no
      */
-    Optional<Student> findByExpedienteCodigo(String expedienteCodigo);
+    Optional<Student> findByExpedienteCode(String expedienteCode);
     
     /**
      * Busca el/los registro(s) con app user id.

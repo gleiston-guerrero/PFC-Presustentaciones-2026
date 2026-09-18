@@ -17,13 +17,13 @@ public class EvaluationPanelistDTO {
     @JsonProperty("juradoId")
     private Long panelistId;
     @JsonProperty("notaJurado")
-    private Double notaPanelist;
+    private Double gradePanelist;
     @JsonProperty("observaciones")
-    private String observaciones;
+    private String observations;
     @JsonProperty("resultado")
-    private String resultado;
+    private String result;
     @JsonProperty("comentarioPreestablecido")
-    private String comentarioPreestablecido;
+    private String commentPreestablecido;
     @JsonProperty("nombreJurado")
     private String nombrePanelist;
     @JsonProperty("rolJurado")

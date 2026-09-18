@@ -49,7 +49,7 @@ class EvaluationPanelistServiceTest {
         AppUser appUserTeacher = AppUser.builder().id(50L).nombre("Ana").apellido("Torres").build();
         Teacher teacher = Teacher.builder().id(1L).appUser(appUserTeacher).build();
         panelist = Panelist.builder().id(3L).submission(submission).teacher(teacher)
-                .rolePanelist(RolePanelist.builder().codigo("VOCAL_1").build()).build();
+                .rolePanelist(RolePanelist.builder().code("VOCAL_1").build()).build();
 
         // validatePuedeRegister() exige un SecurityContextHolder autenticado (mismo patron que
         // MinutesServiceImplTest); se autentica como ADMIN por defecto para bypasear la regla de
@@ -66,14 +66,14 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationLanzaExcepcionSiLaSubmissionNoExiste() {
+    void saveEvaluationLanzaExcepcionSiLaSubmissionNoExists() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class,
                 () -> evaluationPanelistService.saveEvaluation(7L, 3L, 8.0, "bien"));
     }
 
     @Test
-    void saveEvaluationLanzaExcepcionSiElPanelistNoExiste() {
+    void saveEvaluationLanzaExcepcionSiElPanelistNoExists() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class,
@@ -93,7 +93,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationRechazaNotaFueraDeRango() {
+    void saveEvaluationRechazaGradeFueraDeRange() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
 
@@ -104,7 +104,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationConNotaMayorOIgualA7ResultaAprobado() {
+    void saveEvaluationWithGradeMayorOIgualA7ResultaAprobado() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
         when(evaluationPanelistRepo.findBySubmissionIdAndPanelistId(7L, 3L)).thenReturn(Optional.empty());
@@ -112,14 +112,14 @@ class EvaluationPanelistServiceTest {
 
         EvaluationPanelistDTO dto = evaluationPanelistService.saveEvaluation(7L, 3L, 7.0, "Buen trabajo");
 
-        assertEquals("APROBADO", dto.getResultado());
-        assertTrue(dto.getComentarioPreestablecido().contains("cumple satisfactoriamente"));
+        assertEquals("APROBADO", dto.getResult());
+        assertTrue(dto.getCommentPreestablecido().contains("cumple satisfactoriamente"));
         assertEquals("Ana Torres", dto.getNombrePanelist());
         assertEquals("VOCAL_1", dto.getRolePanelist());
     }
 
     @Test
-    void saveEvaluationConNotaMenorA7ResultaReprobado() {
+    void saveEvaluationWithGradeMenorA7ResultaReprobado() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
         when(evaluationPanelistRepo.findBySubmissionIdAndPanelistId(7L, 3L)).thenReturn(Optional.empty());
@@ -127,12 +127,12 @@ class EvaluationPanelistServiceTest {
 
         EvaluationPanelistDTO dto = evaluationPanelistService.saveEvaluation(7L, 3L, 6.0, "Falta profundidad");
 
-        assertEquals("REPROBADO", dto.getResultado());
-        assertTrue(dto.getComentarioPreestablecido().contains("aspectos que requieren mejoras"));
+        assertEquals("REPROBADO", dto.getResult());
+        assertTrue(dto.getCommentPreestablecido().contains("aspectos que requieren mejoras"));
     }
 
     @Test
-    void saveEvaluationConNotaMuyBajaUsaElComentarioMasSevero() {
+    void saveEvaluationWithGradeMuyBajaUsaElCommentMasSevero() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
         when(evaluationPanelistRepo.findBySubmissionIdAndPanelistId(7L, 3L)).thenReturn(Optional.empty());
@@ -140,29 +140,29 @@ class EvaluationPanelistServiceTest {
 
         EvaluationPanelistDTO dto = evaluationPanelistService.saveEvaluation(7L, 3L, 2.0, "Insuficiente");
 
-        assertEquals("REPROBADO", dto.getResultado());
-        assertTrue(dto.getComentarioPreestablecido().contains("falencias significativas"));
+        assertEquals("REPROBADO", dto.getResult());
+        assertTrue(dto.getCommentPreestablecido().contains("falencias significativas"));
     }
 
     @Test
-    void saveEvaluationActualizaLaEvaluationExistenteEnVezDeCreateOtra() {
-        EvaluationPanelist existente = EvaluationPanelist.builder().id(1L).submission(submission).panelist(panelist)
-                .notaPanelist(5.0).resultado("REPROBADO").build();
+    void saveEvaluationActualizaLaEvaluationExistingEnVezDeCreateOtra() {
+        EvaluationPanelist existing = EvaluationPanelist.builder().id(1L).submission(submission).panelist(panelist)
+                .gradePanelist(5.0).result("REPROBADO").build();
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
-        when(evaluationPanelistRepo.findBySubmissionIdAndPanelistId(7L, 3L)).thenReturn(Optional.of(existente));
+        when(evaluationPanelistRepo.findBySubmissionIdAndPanelistId(7L, 3L)).thenReturn(Optional.of(existing));
         when(evaluationPanelistRepo.save(any(EvaluationPanelist.class))).thenAnswer(inv -> inv.getArgument(0));
 
         EvaluationPanelistDTO dto = evaluationPanelistService.saveEvaluation(7L, 3L, 9.0, "Corregido, ahora excelente");
 
         assertEquals(1L, dto.getId());
-        assertEquals("APROBADO", dto.getResultado());
-        assertEquals("Corregido, ahora excelente", dto.getObservaciones());
-        verify(evaluationPanelistRepo).save(existente);
+        assertEquals("APROBADO", dto.getResult());
+        assertEquals("Corregido, ahora excelente", dto.getObservations());
+        verify(evaluationPanelistRepo).save(existing);
     }
 
     @Test
-    void saveEvaluationPermiteAlPropioPanelistRegisterSuNota() {
+    void saveEvaluationPermiteAlOwnPanelistRegisterSuGrade() {
         // Caso permitido: el teacher autenticado ES el panelist asignado a esta submission.
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
@@ -172,7 +172,7 @@ class EvaluationPanelistServiceTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("ana.torres@uteq.edu.ec", null,
                         org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_DOCENTE")));
-        when(permissionService.esPropioTeacher(any(), eq(1L))).thenReturn(true);
+        when(permissionService.isOwnTeacher(any(), eq(1L))).thenReturn(true);
 
         assertDoesNotThrow(() -> evaluationPanelistService.saveEvaluation(7L, 3L, 8.0, "bien"));
     }
@@ -187,15 +187,15 @@ class EvaluationPanelistServiceTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("otro.docente@uteq.edu.ec", null,
                         org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_DOCENTE")));
-        when(permissionService.esPropioTeacher(any(), eq(1L))).thenReturn(false);
-        when(permissionService.tienePermission(any(), eq("EVALUACION_CALIFICAR"))).thenReturn(false);
+        when(permissionService.isOwnTeacher(any(), eq(1L))).thenReturn(false);
+        when(permissionService.hasPermission(any(), eq("EVALUACION_CALIFICAR"))).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
                 () -> evaluationPanelistService.saveEvaluation(7L, 3L, 8.0, "bien"));
     }
 
     @Test
-    void obtainEvaluationRetornaNullSiNoExiste() {
+    void obtainEvaluationRetornaNullSiNoExists() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(evaluationPanelistRepo.findBySubmissionIdAndPanelistId(7L, 3L)).thenReturn(Optional.empty());
         assertNull(evaluationPanelistService.obtainEvaluation(7L, 3L));
@@ -207,21 +207,21 @@ class EvaluationPanelistServiceTest {
         // EvaluationPanelistService no atrapa/oculta ese rechazo (debe seguir siendo 403).
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         org.mockito.Mockito.doThrow(new AccessDeniedException("No tienes permiso para acceder a la información de esta solicitud"))
-                .when(submissionAccessService).validateAcceso(submission, "EVALUACION_CALIFICAR");
+                .when(submissionAccessService).validateAccess(submission, "EVALUACION_CALIFICAR");
 
         assertThrows(AccessDeniedException.class, () -> evaluationPanelistService.obtainEvaluation(7L, 3L));
     }
 
     @Test
-    void obtainTribunalMapeaTodasLasEvaluationsDeLaSubmission() {
+    void obtainPanelMapeaAllLasEvaluationsDeLaSubmission() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         EvaluationPanelist eval1 = EvaluationPanelist.builder().id(1L).submission(submission).panelist(panelist)
-                .notaPanelist(8.0).resultado("APROBADO").build();
+                .gradePanelist(8.0).result("APROBADO").build();
         when(evaluationPanelistRepo.findBySubmissionId(7L)).thenReturn(List.of(eval1));
 
-        List<EvaluationPanelistDTO> resultado = evaluationPanelistService.obtainTribunal(7L);
+        List<EvaluationPanelistDTO> result = evaluationPanelistService.obtainPanel(7L);
 
-        assertEquals(1, resultado.size());
-        assertEquals(8.0, resultado.get(0).getNotaPanelist());
+        assertEquals(1, result.size());
+        assertEquals(8.0, result.get(0).getGradePanelist());
     }
 }

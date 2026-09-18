@@ -1,6 +1,6 @@
 package ec.edu.uteq.presustentaciones.repositories;
 
-import ec.edu.uteq.presustentaciones.dto.PromedioEvaluationResult;
+import ec.edu.uteq.presustentaciones.dto.AverageEvaluationResult;
 import ec.edu.uteq.presustentaciones.entities.Evaluation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -41,5 +41,5 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
      * nota_final/resultado en esta misma tabla. Fase 3 / Criterio P1.
      */
     @Procedure(name = "Evaluacion.calcularPromedioEvaluacion")
-    List<PromedioEvaluationResult> calculatePromedioEvaluation(@Param("p_solicitud_id") Long submissionId);
+    List<AverageEvaluationResult> calculateAverageEvaluation(@Param("p_solicitud_id") Long submissionId);
 }

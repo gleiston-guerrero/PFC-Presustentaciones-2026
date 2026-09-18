@@ -26,7 +26,7 @@ public class Rubric {
 
     @Column(name = "descripcion", columnDefinition = "TEXT")
     @JsonProperty("descripcion")
-    private String descripcion;
+    private String description;
 
     @Column(name = "puntaje_maximo", nullable = false)
     @JsonProperty("puntajeMaximo")
@@ -37,5 +37,5 @@ public class Rubric {
     @OrderBy("orden ASC")
     @Builder.Default
     @JsonProperty("criterios")
-    private List<CriterioRubric> criterios= new ArrayList<>();
+    private List<CriterionRubric> criteria= new ArrayList<>();
 }

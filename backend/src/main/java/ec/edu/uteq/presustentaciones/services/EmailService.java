@@ -26,15 +26,15 @@ public class EmailService {
      * Envía una notificación HTML con el nombre del remitente (appUser logueado).
      *
      * @param destinatario  correo del receptor
-     * @param mensaje       cuerpo del mensaje
-     * @param remitenteNombre nombre completo del appUser que genera la notificación
-     * @param remitenteEmail  correo del appUser que genera la notificación
+     * @param message       cuerpo del mensaje
+     * @param senderNombre nombre completo del appUser que genera la notificación
+     * @param senderEmail  correo del appUser que genera la notificación
      */
     @Async
-    public void sendNotification(String destinatario, String mensaje,
-                                   String remitenteNombre, String remitenteEmail) {
+    public void sendNotification(String destinatario, String message,
+                                   String senderNombre, String senderEmail) {
         if (!enabled || mailSender == null) {
-            log.info("[EMAIL DESHABILITADO] Para: {} | Mensaje: {}", destinatario, mensaje);
+            log.info("[EMAIL DESHABILITADO] Para: {} | Mensaje: {}", destinatario, message);
             return;
         }
         try {
@@ -42,13 +42,13 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(mail, true, "UTF-8");
 
             // El correo sale desde la cuenta SMTP pero con el nombre del appUser
-            helper.setFrom(smtpUsername, remitenteNombre + " (UTEQ - Pre-Sustentaciones)");
+            helper.setFrom(smtpUsername, senderNombre + " (UTEQ - Pre-Sustentaciones)");
             helper.setTo(destinatario);
             helper.setSubject("📬 Nueva Notificación — Sistema de Pre-Sustentaciones UTEQ");
-            helper.setText(buildHtml(mensaje, remitenteNombre, remitenteEmail), true);
+            helper.setText(buildHtml(message, senderNombre, senderEmail), true);
 
             mailSender.send(mail);
-            log.info("Email enviado a: {} por: {}", destinatario, remitenteEmail);
+            log.info("Email enviado a: {} por: {}", destinatario, senderEmail);
         } catch (MessagingException | java.io.UnsupportedEncodingException e) {
             log.error("Error al enviar email a {}: {}", destinatario, e.getMessage());
         }
@@ -58,11 +58,11 @@ public class EmailService {
      * Sobrecarga de compatibilidad para llamadas sin remitente (usa valor genérico).
      *
      * @param destinatario email del destinatario
-     * @param mensaje      cuerpo de la notificación
+     * @param message      cuerpo de la notificación
      */
     @Async
-    public void sendNotification(String destinatario, String mensaje) {
-        sendNotification(destinatario, mensaje, "Sistema de Pre-Sustentaciones", smtpUsername);
+    public void sendNotification(String destinatario, String message) {
+        sendNotification(destinatario, message, "Sistema de Pre-Sustentaciones", smtpUsername);
     }
 
     /**
@@ -76,7 +76,7 @@ public class EmailService {
      *                     y en la respuesta al enlace del correo; el almacén guarda su hash)
      */
     @Async
-    public void sendRecuperacionPassword(String destinatario, String tokenPlano) {
+    public void sendRecoveryPassword(String destinatario, String tokenPlano) {
         String enlace = "http://localhost:4200/restablecer-password?token=" + tokenPlano;
         if (!enabled || mailSender == null) {
             log.info("[EMAIL DESHABILITADO] Recuperación de contraseña para: {} | enlace: {}", destinatario, enlace);
@@ -98,7 +98,7 @@ public class EmailService {
         }
     }
 
-    private String buildHtml(String mensaje, String remitenteNombre, String remitenteEmail) {
+    private String buildHtml(String message, String senderNombre, String senderEmail) {
         return """
             <!DOCTYPE html>
             <html lang="es">
@@ -192,6 +192,6 @@ public class EmailService {
               </table>
             </body>
             </html>
-            """.formatted(mensaje, remitenteNombre, remitenteEmail);
+            """.formatted(message, senderNombre, senderEmail);
     }
 }

@@ -57,11 +57,11 @@ public class Student {
 
     @Column(name = "telefono", length = 30)
     @JsonProperty("telefono")
-    private String telefono;
+    private String phone;
 
     @Column(name = "expediente_codigo", unique = true, length = 60)
     @JsonProperty("expedienteCodigo")
-    private String expedienteCodigo;
+    private String expedienteCode;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "carrera_id", nullable = false)
@@ -73,7 +73,7 @@ public class Student {
     @JoinColumn(name = "periodo_ingreso_id")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @JsonProperty("periodoIngreso")
-    private PeriodAcademico periodIngreso;
+    private PeriodAcademic periodIngreso;
 
     @Column(name = "semestre_actual", nullable = false)
     @JsonProperty("semestreActual")
@@ -82,7 +82,7 @@ public class Student {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "estado_academico_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private EstadoAcademico estadoAcademico;
+    private StatusAcademic statusAcademic;
 
     @Column(name = "creado_en", nullable = false, updatable = false)
     @JsonProperty("creadoEn")

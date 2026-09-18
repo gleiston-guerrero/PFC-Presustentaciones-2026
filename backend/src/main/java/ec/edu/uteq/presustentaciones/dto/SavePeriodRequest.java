@@ -9,13 +9,13 @@ import java.time.LocalDate;
 @Data
 public class SavePeriodRequest {
     @JsonProperty("codigo")
-    private String codigo;
+    private String code;
     @JsonProperty("nombre")
     private String nombre;
     @JsonProperty("fechaInicio")
-    private LocalDate fechaInicio;
+    private LocalDate dateStart;
     @JsonProperty("fechaFin")
-    private LocalDate fechaFin;
+    private LocalDate dateEnd;
     @JsonProperty("activo")
     private Boolean activo;
 }

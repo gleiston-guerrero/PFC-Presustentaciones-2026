@@ -11,7 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import ec.edu.uteq.presustentaciones.dto.ChangeEstadoMinutesRequest;
+import ec.edu.uteq.presustentaciones.dto.ChangeStatusMinutesRequest;
 import ec.edu.uteq.presustentaciones.dto.ResponseWrapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +41,7 @@ public class MinutesController {
      *         tiene evaluación final
      */
     @PostMapping("/generar/{submissionId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTA_GENERAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ACTA_GENERAR')")
     public ResponseEntity<?> generateMinutes(@PathVariable("submissionId") Long submissionId) {
         try {
             Minutes minutes = minutesService.generateMinutes(submissionId);
@@ -58,18 +58,18 @@ public class MinutesController {
      *
      * @param minutesId      minutes que se firma
      * @param role         role que firma: PRESIDENTE, VOCAL_1, VOCAL_2 o TUTOR
-     * @param observacion comentario opcional que el procedimiento agrega a la bitácora del minutes
+     * @param observation comentario opcional que el procedimiento agrega a la bitácora del minutes
      * @return 200 con el minutes actualizada, o 400 si el role es inválido o quien firma no es
      *         el panelist/tutor correspondiente de esa submission
      */
     @PostMapping("/firmar/{minutesId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTA_FIRMAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ACTA_FIRMAR')")
     public ResponseEntity<?> signMinutes(
             @PathVariable("minutesId") Long minutesId,
             @RequestParam(name = "rol") String role,
-            @RequestParam(name = "observacion", required = false) String observacion) {
+            @RequestParam(name = "observacion", required = false) String observation) {
         try {
-            Minutes minutes = minutesService.signMinutes(minutesId, role, observacion);
+            Minutes minutes = minutesService.signMinutes(minutesId, role, observation);
             return ResponseEntity.ok(ResponseWrapper.success(minutes, "Acta firmada exitosamente"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
@@ -105,7 +105,7 @@ public class MinutesController {
      */
     @GetMapping("/ver/{minutesId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<byte[]> verPdf(@PathVariable("minutesId") Long minutesId) {
+    public ResponseEntity<byte[]> viewPdf(@PathVariable("minutesId") Long minutesId) {
         try {
             byte[] pdfBytes = minutesService.obtainPdfBytes(minutesId);
             return ResponseEntity.ok()
@@ -123,7 +123,7 @@ public class MinutesController {
      * @return 200 con la página de minutes
      */
     @GetMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTAS_VER')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ACTAS_VER')")
     public ResponseEntity<?> list(Pageable pageable) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(minutesService.listMinutes(pageable)));
@@ -143,9 +143,9 @@ public class MinutesController {
      * @return 200 con las minutes del teacher autenticado
      */
     @GetMapping("/mis-actas")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTAS_VER_PROPIAS')")
-    public ResponseEntity<?> misMinutes(Authentication auth, Pageable pageable) {
-        return ResponseEntity.ok(ResponseWrapper.success(minutesService.listMisMinutes(auth.getName(), pageable)));
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ACTAS_VER_PROPIAS')")
+    public ResponseEntity<?> myMinutes(Authentication auth, Pageable pageable) {
+        return ResponseEntity.ok(ResponseWrapper.success(minutesService.listMyMinutes(auth.getName(), pageable)));
     }
 
     /**
@@ -153,25 +153,25 @@ public class MinutesController {
      * El coordinador consulta y cambia estado según el flujo académico; ACTAS_GESTIONAR
      * (solo ADMIN) queda reservado para operaciones administrativas adicionales.
      *
-     * @param estado   código de estado del minutes a filtrar, o {@code null} para no filtrar
+     * @param status   código de estado del minutes a filtrar, o {@code null} para no filtrar
      * @param program  program a filtrar, o {@code null} para no filtrar
-     * @param desde    fecha mínima de generación, o {@code null} para no acotar
-     * @param hasta    fecha máxima de generación, o {@code null} para no acotar
+     * @param from    fecha mínima de generación, o {@code null} para no acotar
+     * @param to    fecha máxima de generación, o {@code null} para no acotar
      * @param q        texto libre de búsqueda, o {@code null} para no filtrar
      * @param pageable página y tamaño solicitados
      * @return 200 con la página de minutes que cumplen los filtros recibidos
      */
     @GetMapping("/buscar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTAS_VER')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ACTAS_VER')")
     public ResponseEntity<?> search(
-            @RequestParam(name = "estado", required = false) String estado,
+            @RequestParam(name = "estado", required = false) String status,
             @RequestParam(name = "carrera", required = false) String program,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(name = "q", required = false) String q,
             Pageable pageable) {
         return ResponseEntity.ok(ResponseWrapper.success(
-                minutesService.searchMinutes(estado, program, desde, hasta, q, pageable)));
+                minutesService.searchMinutes(status, program, from, to, q, pageable)));
     }
 
     /**
@@ -183,9 +183,9 @@ public class MinutesController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> detalle(@PathVariable("id") Long id) {
+    public ResponseEntity<?> detail(@PathVariable("id") Long id) {
         try {
-            return ResponseEntity.ok(ResponseWrapper.success(minutesService.obtainDetalle(id)));
+            return ResponseEntity.ok(ResponseWrapper.success(minutesService.obtainDetail(id)));
         } catch (RuntimeException e) {
             return ResponseEntity.status(403).body(ResponseWrapper.error(e.getMessage()));
         }
@@ -199,7 +199,7 @@ public class MinutesController {
      * @return 200 con el history, o el error que devuelva el servicio si no hay acceso
      */
     @GetMapping("/{id}/historial")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTA_HISTORIAL_VER')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ACTA_HISTORIAL_VER')")
     public ResponseEntity<?> history(@PathVariable("id") Long id) {
         try {
             return ResponseEntity.ok(ResponseWrapper.success(minutesService.obtainHistory(id)));
@@ -218,11 +218,11 @@ public class MinutesController {
      *         motivo en los estados que lo exigen (OBSERVADA, ANULADA)
      */
     @PatchMapping("/{id}/estado")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTA_ESTADO_CAMBIAR')")
-    public ResponseEntity<?> changeEstado(@PathVariable("id") Long id,
-                                           @Valid @RequestBody ChangeEstadoMinutesRequest req) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ACTA_ESTADO_CAMBIAR')")
+    public ResponseEntity<?> changeStatus(@PathVariable("id") Long id,
+                                           @Valid @RequestBody ChangeStatusMinutesRequest req) {
         try {
-            Minutes minutes = minutesService.changeEstado(id, req.getNuevoEstado(), req.getMotivo());
+            Minutes minutes = minutesService.changeStatus(id, req.getTargetStatus(), req.getMotivo());
             return ResponseEntity.ok(ResponseWrapper.success(minutes, "Estado del acta actualizado"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ResponseWrapper.error(e.getMessage()));
@@ -236,9 +236,9 @@ public class MinutesController {
      */
     @GetMapping("/solicitud/{submissionId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> porSubmission(@PathVariable("submissionId") Long submissionId) {
+    public ResponseEntity<?> bySubmission(@PathVariable("submissionId") Long submissionId) {
         try {
-            return minutesService.searchPorSubmission(submissionId)
+            return minutesService.searchBySubmission(submissionId)
                     .map(minutes -> ResponseEntity.ok(ResponseWrapper.success(minutes)))
                     .orElse(ResponseEntity.notFound().build());
         } catch (RuntimeException e) {
@@ -259,7 +259,7 @@ public class MinutesController {
      * @return 204 sin cuerpo, o el error del servicio si el minutes no existe
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ACTAS_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ACTAS_GESTIONAR')")
     public ResponseEntity<?> delete(@PathVariable("id") Long id) {
         try {
             minutesService.deleteMinutes(id);

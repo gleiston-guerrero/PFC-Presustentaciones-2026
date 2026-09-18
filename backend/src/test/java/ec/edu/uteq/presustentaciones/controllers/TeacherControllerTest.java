@@ -6,7 +6,7 @@ import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.TeacherRepository;
 import ec.edu.uteq.presustentaciones.security.RateLimiterService;
 import ec.edu.uteq.presustentaciones.security.jwt.JwtTokenProvider;
-import ec.edu.uteq.presustentaciones.security.service.AppUserActualService;
+import ec.edu.uteq.presustentaciones.security.service.CurrentAppUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +50,7 @@ class TeacherControllerTest {
     private TeacherRepository teacherRepository;
 
     @MockBean
-    private AppUserActualService appUserActualService;
+    private CurrentAppUserService currentAppUserService;
 
     @MockBean
     private JwtTokenProvider jwtTokenProvider;
@@ -94,7 +94,7 @@ class TeacherControllerTest {
                 Teacher.builder().id(8L).appUser(new AppUser()).build()));
     }
 
-    private void autenticarComo(String email, String role) throws Exception {
+    private void authenticateAs(String email, String role) throws Exception {
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role)));
@@ -104,15 +104,15 @@ class TeacherControllerTest {
     }
 
     @Test
-    void obtainPorAppUserSinTokenDevuelve401() throws Exception {
+    void obtainByAppUserWithoutTokenDevuelve401() throws Exception {
         mockMvc.perform(get("/api/v1/docentes/usuario/50").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void obtainPorAppUserPermiteConsultarElPropioPerfil() throws Exception {
-        autenticarComo("docente@uteq.edu.ec", "DOCENTE");
-        when(appUserActualService.appUser()).thenReturn(appUserTeacher);
+    void obtainByAppUserPermiteConsultarElOwnProfile() throws Exception {
+        authenticateAs("docente@uteq.edu.ec", "DOCENTE");
+        when(currentAppUserService.appUser()).thenReturn(appUserTeacher);
 
         mockMvc.perform(get("/api/v1/docentes/usuario/50")
                         .header("Authorization", "Bearer token-docente@uteq.edu.ec")
@@ -121,11 +121,11 @@ class TeacherControllerTest {
     }
 
     @Test
-    void obtainPorAppUserRechazaConsultaDeOtroTeacher() throws Exception {
+    void obtainByAppUserRechazaConsultaDeOtroTeacher() throws Exception {
         // Caso IDOR: un teacher autenticado (id 50) intenta ver el perfil del teacher 99
         // cambiando el appUserId en la URL.
-        autenticarComo("docente@uteq.edu.ec", "DOCENTE");
-        when(appUserActualService.appUser()).thenReturn(appUserTeacher);
+        authenticateAs("docente@uteq.edu.ec", "DOCENTE");
+        when(currentAppUserService.appUser()).thenReturn(appUserTeacher);
 
         mockMvc.perform(get("/api/v1/docentes/usuario/99")
                         .header("Authorization", "Bearer token-docente@uteq.edu.ec")
@@ -134,8 +134,8 @@ class TeacherControllerTest {
     }
 
     @Test
-    void obtainPorAppUserPermiteAAdminConsultarCualquierAppUser() throws Exception {
-        autenticarComo("admin@uteq.edu.ec", "ADMIN");
+    void obtainByAppUserPermiteAAdminConsultarCualquierAppUser() throws Exception {
+        authenticateAs("admin@uteq.edu.ec", "ADMIN");
 
         mockMvc.perform(get("/api/v1/docentes/usuario/99")
                         .header("Authorization", "Bearer token-admin@uteq.edu.ec")
@@ -144,8 +144,8 @@ class TeacherControllerTest {
     }
 
     @Test
-    void obtainPorAppUserPermiteACoordinadorConsultarCualquierAppUser() throws Exception {
-        autenticarComo("coord@uteq.edu.ec", "COORDINADOR");
+    void obtainByAppUserPermiteACoordinatorConsultarCualquierAppUser() throws Exception {
+        authenticateAs("coord@uteq.edu.ec", "COORDINADOR");
 
         mockMvc.perform(get("/api/v1/docentes/usuario/99")
                         .header("Authorization", "Bearer token-coord@uteq.edu.ec")
@@ -154,10 +154,10 @@ class TeacherControllerTest {
     }
 
     @Test
-    void listSigueFuncionandoParaCualquierAutenticado() throws Exception {
+    void listSigueFuncionandoForCualquierAuthenticated() throws Exception {
         // No debe change: el directorio completo (usado para seleccionar panelist/tutor) sigue
         // abierto a cualquier autenticado, sin control de propiedad -- no es el mismo caso.
-        autenticarComo("docente@uteq.edu.ec", "DOCENTE");
+        authenticateAs("docente@uteq.edu.ec", "DOCENTE");
         when(teacherRepository.findAll()).thenReturn(List.of(teacher));
 
         mockMvc.perform(get("/api/v1/docentes")
@@ -167,8 +167,8 @@ class TeacherControllerTest {
     }
 
     @Test
-    void obtainPorIdSigueFuncionandoSinControlDePropiedad() throws Exception {
-        autenticarComo("docente@uteq.edu.ec", "DOCENTE");
+    void obtainByIdSigueFuncionandoWithoutControlDePropiedad() throws Exception {
+        authenticateAs("docente@uteq.edu.ec", "DOCENTE");
         when(teacherRepository.findById(7L)).thenReturn(Optional.of(teacher));
 
         mockMvc.perform(get("/api/v1/docentes/7")
@@ -178,9 +178,9 @@ class TeacherControllerTest {
     }
 
     @Test
-    void disponiblesListaSoloTeachersConDisponibleTrue() throws Exception {
-        autenticarComo("docente@uteq.edu.ec", "DOCENTE");
-        when(teacherRepository.findByDisponibleTrue()).thenReturn(List.of(teacher));
+    void availableListaSoloTeachersWithAvailableTrue() throws Exception {
+        authenticateAs("docente@uteq.edu.ec", "DOCENTE");
+        when(teacherRepository.findByAvailableTrue()).thenReturn(List.of(teacher));
 
         mockMvc.perform(get("/api/v1/docentes/disponibles")
                         .header("Authorization", "Bearer token-docente@uteq.edu.ec")
@@ -189,11 +189,11 @@ class TeacherControllerTest {
     }
 
     @Test
-    void listPaginadoDelegaEnElRepositorioConElFiltroDeTexto() throws Exception {
-        autenticarComo("docente@uteq.edu.ec", "DOCENTE");
+    void listPagedDelegaEnElRepositorioWithElFiltroDeTexto() throws Exception {
+        authenticateAs("docente@uteq.edu.ec", "DOCENTE");
         org.springframework.data.domain.Page<Teacher> pagina =
                 new org.springframework.data.domain.PageImpl<>(List.of(teacher));
-        when(teacherRepository.searchPaginado(org.mockito.ArgumentMatchers.any(),
+        when(teacherRepository.searchPaged(org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any())).thenReturn(pagina);
 
         // No se valida el body: Page<Teacher> no serializa limpio en este @WebMvcTest (el
@@ -207,6 +207,6 @@ class TeacherControllerTest {
                         .contentType(MediaType.APPLICATION_JSON));
 
         org.mockito.Mockito.verify(teacherRepository)
-                .searchPaginado(org.mockito.ArgumentMatchers.eq("torres"), org.mockito.ArgumentMatchers.any());
+                .searchPaged(org.mockito.ArgumentMatchers.eq("torres"), org.mockito.ArgumentMatchers.any());
     }
 }

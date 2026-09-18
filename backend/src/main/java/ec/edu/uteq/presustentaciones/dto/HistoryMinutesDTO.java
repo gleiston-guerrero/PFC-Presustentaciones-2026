@@ -1,7 +1,7 @@
 package ec.edu.uteq.presustentaciones.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import ec.edu.uteq.presustentaciones.entities.HistoryEstadoMinutes;
+import ec.edu.uteq.presustentaciones.entities.HistoryStatusMinutes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 /**
  * Una entrada del timeline de trazabilidad de un minutes. Aplana
- * {@link HistoryEstadoMinutes} a lo que el timeline del frontend necesita:
+ * {@link HistoryStatusMinutes} a lo que el timeline del frontend necesita:
  * quién (email + nombre + role), qué acción, transición de estado y motivo.
  */
 @Getter
@@ -27,9 +27,9 @@ public class HistoryMinutesDTO {
     @JsonProperty("accion")
     private String accion;
     @JsonProperty("estadoAnterior")
-    private String estadoAnterior;
+    private String statusAnterior;
     @JsonProperty("estadoNuevo")
-    private String estadoNuevo;
+    private String statusNew;
     @JsonProperty("usuarioEmail")
     private String appUserEmail;
     @JsonProperty("usuarioNombre")
@@ -37,28 +37,28 @@ public class HistoryMinutesDTO {
     @JsonProperty("rolUsuario")
     private String roleAppUser;
     @JsonProperty("comentario")
-    private String comentario;
+    private String comment;
     @JsonProperty("fecha")
-    private LocalDateTime fecha;
+    private LocalDateTime date;
 
     /**
      * De.
      * @param h h
      * @return el HistoryMinutesDTO correspondiente
      */
-    public static HistoryMinutesDTO de(HistoryEstadoMinutes h) {
+    public static HistoryMinutesDTO from(HistoryStatusMinutes h) {
         var u = h.getAppUser();
         return HistoryMinutesDTO.builder()
                 .id(h.getId())
                 .minutesId(h.getMinutes() != null ? h.getMinutes().getId() : null)
                 .accion(h.getAccion())
-                .estadoAnterior(h.getEstadoAnterior() != null ? h.getEstadoAnterior().getCodigo() : null)
-                .estadoNuevo(h.getEstadoNuevo() != null ? h.getEstadoNuevo().getCodigo() : null)
+                .statusAnterior(h.getStatusAnterior() != null ? h.getStatusAnterior().getCode() : null)
+                .statusNew(h.getStatusNew() != null ? h.getStatusNew().getCode() : null)
                 .appUserEmail(u != null ? u.getEmail() : null)
                 .appUserNombre(u != null ? (u.getNombre() + " " + u.getApellido()) : "Sistema")
                 .roleAppUser(h.getRoleAppUser())
-                .comentario(h.getComentario())
-                .fecha(h.getFechaCambio())
+                .comment(h.getComment())
+                .date(h.getDateCambio())
                 .build();
     }
 }

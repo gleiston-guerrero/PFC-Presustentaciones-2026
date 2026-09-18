@@ -26,7 +26,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor
-@PreAuthorize("@permissionService.tienePermission(authentication, 'ROLES_PERMISOS_GESTIONAR')")
+@PreAuthorize("@permissionService.hasPermission(authentication, 'ROLES_PERMISOS_GESTIONAR')")
 public class RoleController {
 
     private final RoleAppUserRepository roleAppUserRepository;
@@ -61,19 +61,19 @@ public class RoleController {
     @PostMapping
     @Transactional
     public ResponseEntity<?> create(@RequestBody Map<String, String> body) {
-        String codigo = body.getOrDefault("codigo", "").trim().toUpperCase().replaceAll("\\s+", "_");
+        String code = body.getOrDefault("codigo", "").trim().toUpperCase().replaceAll("\\s+", "_");
         String nombre = body.getOrDefault("nombre", "").trim();
-        if (codigo.isEmpty() || nombre.isEmpty()) {
+        if (code.isEmpty() || nombre.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Código y nombre son obligatorios."));
         }
-        if (roleAppUserRepository.findByCodigo(codigo).isPresent()) {
+        if (roleAppUserRepository.findByCode(code).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Ya existe un rol con ese código."));
         }
         short siguienteId = (short) (roleAppUserRepository.findAll().stream()
                 .mapToInt(RoleAppUser::getId).max().orElse(0) + 1);
-        auditService.marcarActorActual();
+        auditService.markActorActual();
         RoleAppUser role = roleAppUserRepository.save(
-                RoleAppUser.builder().id(siguienteId).codigo(codigo).nombre(nombre).build());
+                RoleAppUser.builder().id(siguienteId).code(code).nombre(nombre).build());
         return ResponseEntity.ok(toDto(role));
     }
 
@@ -88,7 +88,7 @@ public class RoleController {
     @PutMapping("/{id}")
     @Transactional
     public ResponseEntity<?> rename(@PathVariable("id") Short id, @RequestBody Map<String, String> body) {
-        auditService.marcarActorActual();
+        auditService.markActorActual();
         RoleAppUser role = roleAppUserRepository.findById(id).orElse(null);
         if (role == null) {
             return ResponseEntity.notFound().build();
@@ -119,17 +119,17 @@ public class RoleController {
         if (role == null) {
             return ResponseEntity.notFound().build();
         }
-        if (ROLES_PROTEGIDOS.contains(role.getCodigo())) {
+        if (ROLES_PROTEGIDOS.contains(role.getCode())) {
             return ResponseEntity.badRequest().body(Map.of("error",
-                    "El rol " + role.getCodigo() + " es uno de los 4 roles base del sistema y no se puede eliminar."));
+                    "El rol " + role.getCode() + " es uno de los 4 roles base del sistema y no se puede eliminar."));
         }
-        long appUsersConEsteRole = appUserRepository.findByRole(role.getCodigo()).size();
-        if (appUsersConEsteRole > 0) {
+        long appUsersWithEsteRole = appUserRepository.findByRole(role.getCode()).size();
+        if (appUsersWithEsteRole > 0) {
             return ResponseEntity.badRequest().body(Map.of("error",
-                    "No se puede eliminar: hay " + appUsersConEsteRole + " usuario(s) con este rol asignado."));
+                    "No se puede eliminar: hay " + appUsersWithEsteRole + " usuario(s) con este rol asignado."));
         }
         try {
-            auditService.marcarActorActual();
+            auditService.markActorActual();
             roleAppUserRepository.delete(role);
             return ResponseEntity.noContent().build();
         } catch (DataIntegrityViolationException e) {
@@ -147,10 +147,10 @@ public class RoleController {
     private RoleDTO toDto(RoleAppUser role) {
         return RoleDTO.builder()
                 .id(role.getId())
-                .codigo(role.getCodigo())
+                .code(role.getCode())
                 .nombre(role.getNombre())
-                .appUsersAsignados(appUserRepository.findByRole(role.getCodigo()).size())
-                .permissions(permissionRepository.findCodigosPorRole(role.getId()))
+                .appUsersAsignados(appUserRepository.findByRole(role.getCode()).size())
+                .permissions(permissionRepository.findCodigosByRole(role.getId()))
                 .build();
     }
 }

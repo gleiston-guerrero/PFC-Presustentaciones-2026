@@ -1,10 +1,10 @@
 package ec.edu.uteq.presustentaciones.services;
 
-import ec.edu.uteq.presustentaciones.dto.PromedioEvaluationResult;
+import ec.edu.uteq.presustentaciones.dto.AverageEvaluationResult;
 import ec.edu.uteq.presustentaciones.entities.*;
 import ec.edu.uteq.presustentaciones.repositories.*;
 import ec.edu.uteq.presustentaciones.security.service.SubmissionAccessService;
-import ec.edu.uteq.presustentaciones.security.service.AppUserActualService;
+import ec.edu.uteq.presustentaciones.security.service.CurrentAppUserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,10 +38,10 @@ class EvaluationServiceImplTest {
     @Mock private SubmissionRepository submissionRepository;
     @Mock private RubricRepository rubricRepository;
     @Mock private NotificationService notificationService;
-    @Mock private EstadoSubmissionRepository estadoSubmissionRepository;
-    @Mock private ResultadoEvaluationRepository resultadoEvaluationRepository;
+    @Mock private StatusSubmissionRepository statusSubmissionRepository;
+    @Mock private ResultEvaluationRepository resultEvaluationRepository;
     @Mock private EvaluationRepository evaluationSpRepository;
-    @Mock private AppUserActualService appUserActualService;
+    @Mock private CurrentAppUserService currentAppUserService;
     @Mock private SubmissionAccessService submissionAccessService;
     @Mock private PermissionService permissionService;
 
@@ -64,157 +64,157 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void calculatePromedioSpLanzaExcepcionSiLaSubmissionNoExiste() {
+    void calculateAverageSpLanzaExcepcionSiLaSubmissionNoExists() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> evaluationService.calculatePromedioSp(7L));
+        assertThrows(RuntimeException.class, () -> evaluationService.calculateAverageSp(7L));
     }
 
     @Test
-    void calculatePromedioSpCreaLaFilaBaseSiNoExisteYLuegoInvocaElProcedimiento() {
+    void calculateAverageSpCreaLaRowBaseSiNoExistsYLuegoInvocaElProcedimiento() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(evaluationSpRepository.findBySubmissionId(7L)).thenReturn(Optional.empty());
         when(evaluationRepository.findBySubmissionId(7L)).thenReturn(Optional.empty());
         when(evaluationSpRepository.save(any(Evaluation.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(evaluationSpRepository.calculatePromedioEvaluation(7L))
-                .thenReturn(List.of(new PromedioEvaluationResult(7L, 8.5, "APROBADO")));
+        when(evaluationSpRepository.calculateAverageEvaluation(7L))
+                .thenReturn(List.of(new AverageEvaluationResult(7L, 8.5, "APROBADO")));
 
-        PromedioEvaluationResult resultado = evaluationService.calculatePromedioSp(7L);
+        AverageEvaluationResult result = evaluationService.calculateAverageSp(7L);
 
-        assertEquals(7L, resultado.getSubmissionId());
-        assertEquals(8.5, resultado.getNotaFinal());
-        assertEquals("APROBADO", resultado.getEstadoResultado());
+        assertEquals(7L, result.getSubmissionId());
+        assertEquals(8.5, result.getGradeFinal());
+        assertEquals("APROBADO", result.getStatusResult());
         verify(evaluationSpRepository).save(any(Evaluation.class));
-        verify(evaluationSpRepository).calculatePromedioEvaluation(7L);
+        verify(evaluationSpRepository).calculateAverageEvaluation(7L);
     }
 
     @Test
-    void calculatePromedioSpNoCreaFilaBaseSiYaExiste() {
-        Evaluation existente = Evaluation.builder().id(1L).submission(submission).notaInstructor(8.0).build();
+    void calculateAverageSpNoCreaRowBaseSiYaExists() {
+        Evaluation existing = Evaluation.builder().id(1L).submission(submission).gradeInstructor(8.0).build();
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
-        when(evaluationSpRepository.findBySubmissionId(7L)).thenReturn(Optional.of(existente));
-        when(evaluationSpRepository.calculatePromedioEvaluation(7L))
-                .thenReturn(List.of(new PromedioEvaluationResult(7L, 6.0, "REPROBADO")));
+        when(evaluationSpRepository.findBySubmissionId(7L)).thenReturn(Optional.of(existing));
+        when(evaluationSpRepository.calculateAverageEvaluation(7L))
+                .thenReturn(List.of(new AverageEvaluationResult(7L, 6.0, "REPROBADO")));
 
-        evaluationService.calculatePromedioSp(7L);
+        evaluationService.calculateAverageSp(7L);
 
         verify(evaluationSpRepository, never()).save(any(Evaluation.class));
     }
 
     @Test
-    void calculatePromedioSpLanzaExcepcionSiElProcedimientoNoDevuelveFilas() {
+    void calculateAverageSpLanzaExcepcionSiElProcedimientoNoDevuelveFilas() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(evaluationSpRepository.findBySubmissionId(7L)).thenReturn(
                 Optional.of(Evaluation.builder().id(1L).submission(submission).build()));
-        when(evaluationSpRepository.calculatePromedioEvaluation(7L)).thenReturn(List.of());
+        when(evaluationSpRepository.calculateAverageEvaluation(7L)).thenReturn(List.of());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> evaluationService.calculatePromedioSp(7L));
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> evaluationService.calculateAverageSp(7L));
         assertTrue(ex.getMessage().contains("no devolvió resultado"));
     }
 
     @Test
-    void evaluarSubmissionRechazaPesosQueNoSumanCien() {
+    void evaluateSubmissionRechazaPesosQueNoSumanCien() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(rubricRepository.findById(1L)).thenReturn(Optional.of(Rubric.builder().id(1L).build()));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                evaluationService.evaluarSubmission(7L, 1L, 8.0, 7.0, "obs", 50.0, 40.0));
+                evaluationService.evaluateSubmission(7L, 1L, 8.0, 7.0, "obs", 50.0, 40.0));
         assertTrue(ex.getMessage().contains("deben sumar 100"));
     }
 
     @Test
-    void evaluarSubmissionRechazaNotasFueraDeRango() {
+    void evaluateSubmissionRechazaNotasFueraDeRange() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(rubricRepository.findById(1L)).thenReturn(Optional.of(Rubric.builder().id(1L).build()));
 
         assertThrows(RuntimeException.class, () ->
-                evaluationService.evaluarSubmission(7L, 1L, 11.0, 7.0, "obs", 60.0, 40.0));
+                evaluationService.evaluateSubmission(7L, 1L, 11.0, 7.0, "obs", 60.0, 40.0));
     }
 
     @Test
-    void evaluarSubmissionCalculaNotaFinalYCambiaEstadoACalificada() {
+    void evaluateSubmissionCalculaGradeFinalYCambiaStatusACalificada() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(rubricRepository.findById(1L)).thenReturn(Optional.of(Rubric.builder().id(1L).build()));
-        when(resultadoEvaluationRepository.findByCodigo("APROBADO"))
-                .thenReturn(Optional.of(ResultadoEvaluation.builder().codigo("APROBADO").nombre("Aprobado").build()));
+        when(resultEvaluationRepository.findByCode("APROBADO"))
+                .thenReturn(Optional.of(ResultEvaluation.builder().code("APROBADO").nombre("Aprobado").build()));
         when(evaluationRepository.save(any(EvaluationFinal.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(estadoSubmissionRepository.findByCodigo("CALIFICADA"))
-                .thenReturn(Optional.of(EstadoSubmission.builder().codigo("CALIFICADA").nombre("Calificada").build()));
+        when(statusSubmissionRepository.findByCode("CALIFICADA"))
+                .thenReturn(Optional.of(StatusSubmission.builder().code("CALIFICADA").nombre("Calificada").build()));
         when(submissionRepository.save(any(Submission.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        EvaluationFinal resultado = evaluationService.evaluarSubmission(7L, 1L, 8.0, 9.0, "Excelente", 60.0, 40.0);
+        EvaluationFinal result = evaluationService.evaluateSubmission(7L, 1L, 8.0, 9.0, "Excelente", 60.0, 40.0);
 
-        assertEquals("CALIFICADA", submission.getEstado().getCodigo());
-        assertEquals("APROBADO", resultado.getResultado().getCodigo());
+        assertEquals("CALIFICADA", submission.getStatus().getCode());
+        assertEquals("APROBADO", result.getResult().getCode());
         verify(notificationService).createNotification(eq(10L), any());
     }
 
     @Test
-    void listPorStudentRechazaConsultaDeOtroStudent() {
+    void listByStudentRechazaConsultaDeOtroStudent() {
         // Caso IDOR: el student autenticado (id 99) intenta ver las evaluations del
         // student 3 cambiando el id en la URL.
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("otro.estudiante@uteq.edu.ec", null,
                         org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_ESTUDIANTE")));
-        when(appUserActualService.studentIdOrNull()).thenReturn(99L);
+        when(currentAppUserService.studentIdOrNull()).thenReturn(99L);
 
-        assertThrows(AccessDeniedException.class, () -> evaluationService.listPorStudent(3L));
+        assertThrows(AccessDeniedException.class, () -> evaluationService.listByStudent(3L));
     }
 
     @Test
-    void listPorStudentPermiteConsultarLaPropiaInformacion() {
+    void listByStudentPermiteConsultarLaPropiaInformacion() {
         // Caso permitido: el student autenticado consulta sus propias evaluations.
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("estudiante@uteq.edu.ec", null,
                         org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_ESTUDIANTE")));
-        when(appUserActualService.studentIdOrNull()).thenReturn(3L);
+        when(currentAppUserService.studentIdOrNull()).thenReturn(3L);
         when(evaluationRepository.findByStudentId(3L)).thenReturn(List.of());
 
-        assertDoesNotThrow(() -> evaluationService.listPorStudent(3L));
+        assertDoesNotThrow(() -> evaluationService.listByStudent(3L));
     }
 
     @Test
-    void listPorStudentPermiteAAdminConsultarCualquierStudent() {
+    void listByStudentPermiteAAdminConsultarCualquierStudent() {
         // Caso administrativo: ADMIN/COORDINADOR conservan su acceso completo.
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin@uteq.edu.ec", null,
                         org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_ADMIN")));
         when(evaluationRepository.findByStudentId(3L)).thenReturn(List.of());
 
-        assertDoesNotThrow(() -> evaluationService.listPorStudent(3L));
-        verify(appUserActualService, never()).studentIdOrNull();
+        assertDoesNotThrow(() -> evaluationService.listByStudent(3L));
+        verify(currentAppUserService, never()).studentIdOrNull();
     }
 
     @Test
-    void listPorAppUserRechazaConsultaDeOtroAppUser() {
+    void listByAppUserRechazaConsultaDeOtroAppUser() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("otro@uteq.edu.ec", null,
                         org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_DOCENTE")));
-        when(appUserActualService.appUser()).thenReturn(AppUser.builder().id(99L).build());
+        when(currentAppUserService.appUser()).thenReturn(AppUser.builder().id(99L).build());
 
-        assertThrows(AccessDeniedException.class, () -> evaluationService.listPorAppUser(10L));
+        assertThrows(AccessDeniedException.class, () -> evaluationService.listByAppUser(10L));
     }
 
     @Test
-    void searchPorSubmissionPropagaAccessDeniedSiSubmissionAccessServiceLoRechaza() {
+    void searchBySubmissionPropagaAccessDeniedSiSubmissionAccessServiceLoRechaza() {
         // Caso IDOR de lectura: la evaluación existe pero SubmissionAccessService decide que
         // este appUser no participa en la submission.
         EvaluationFinal evaluation = EvaluationFinal.builder().id(1L).submission(submission).build();
         when(evaluationRepository.findBySubmissionId(7L)).thenReturn(Optional.of(evaluation));
         doThrow(new AccessDeniedException("No tienes permiso para acceder a la información de esta solicitud"))
-                .when(submissionAccessService).validateAcceso(submission, "EVALUACION_CALIFICAR");
+                .when(submissionAccessService).validateAccess(submission, "EVALUACION_CALIFICAR");
 
-        assertThrows(AccessDeniedException.class, () -> evaluationService.searchPorSubmission(7L));
+        assertThrows(AccessDeniedException.class, () -> evaluationService.searchBySubmission(7L));
     }
 
     @Test
-    void generateComentarioPorRangoRetornaVacioSiNotaEsNull() {
-        assertEquals("", evaluationService.generateComentarioPorRango(null));
+    void generateCommentByRangeRetornaEmptySiGradeEsNull() {
+        assertEquals("", evaluationService.generateCommentByRange(null));
     }
 
     @Test
-    void generateComentarioPorRangoDistingueLosTresNiveles() {
-        assertTrue(evaluationService.generateComentarioPorRango(2.0).contains("falencias significativas"));
-        assertTrue(evaluationService.generateComentarioPorRango(5.0).contains("aspectos que requieren mejoras"));
-        assertTrue(evaluationService.generateComentarioPorRango(9.0).contains("cumple satisfactoriamente"));
+    void generateCommentByRangeDistingueLosTresNiveles() {
+        assertTrue(evaluationService.generateCommentByRange(2.0).contains("falencias significativas"));
+        assertTrue(evaluationService.generateCommentByRange(5.0).contains("aspectos que requieren mejoras"));
+        assertTrue(evaluationService.generateCommentByRange(9.0).contains("cumple satisfactoriamente"));
     }
 }

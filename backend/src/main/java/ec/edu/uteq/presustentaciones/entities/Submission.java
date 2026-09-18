@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 @SqlResultSetMapping(
         name = "ReporteDefensaMapping",
         classes = @ConstructorResult(
-                targetClass = ec.edu.uteq.presustentaciones.dto.ReporteDefensaResult.class,
+                targetClass = ec.edu.uteq.presustentaciones.dto.ReportDefenseResult.class,
                 columns = {
                         @ColumnResult(name = "solicitud_id", type = Long.class),
                         @ColumnResult(name = "estudiante_nombre", type = String.class),
@@ -68,43 +68,43 @@ public class Submission {
     @JoinColumn(name = "convocatoria_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @JsonProperty("convocatoria")
-    private AnnouncementTitulacion announcement;
+    private AnnouncementDegree announcement;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "modalidad_titulacion_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @JsonProperty("modalidadTitulacion")
-    private ModalityTitulacion modalityTitulacion;
+    private ModalityDegree modalityDegree;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "linea_investigacion_id")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @JsonProperty("lineaInvestigacion")
-    private LineInvestigacion lineInvestigacion;
+    private ResearchLine researchLine;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "area_tematica_id")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private AreaTematica areaTematica;
+    private Subject subject;
 
     @Column(name = "fecha_registro", nullable = false, updatable = false)
     @JsonProperty("fechaRegistro")
-    private LocalDateTime fechaRegistro;
+    private LocalDateTime dateRecord;
     
     @Column(name = "observaciones", columnDefinition = "TEXT")
     @JsonProperty("observaciones")
-    private String observaciones;
+    private String observations;
     
     // Trazabilidad
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creado_por")
     @JsonIgnore
-    private AppUser creadoPor;
+    private AppUser creadoBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "actualizado_por")
     @JsonIgnore
-    private AppUser actualizadoPor;
+    private AppUser actualizadoBy;
     
     @Column(name = "actualizado_en", nullable = false)
     @JsonProperty("actualizadoEn")
@@ -113,7 +113,7 @@ public class Submission {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "estado_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private EstadoSubmission estado;
+    private StatusSubmission status;
 
     /**
      * Columna "estado" (VARCHAR) heredada del esquema real de la base de datos,
@@ -125,7 +125,7 @@ public class Submission {
      */
     @Column(name = "estado", nullable = false, length = 30)
     @JsonProperty("estadoCodigo")
-    private String estadoCodigo;
+    private String statusCode;
 
     @Column(name = "motivo_suspension", columnDefinition = "TEXT")
     @JsonProperty("motivoSuspension")
@@ -137,20 +137,20 @@ public class Submission {
 
     @PrePersist
     protected void onCreate() {
-        fechaRegistro = LocalDateTime.now();
+        dateRecord = LocalDateTime.now();
         actualizadoEn = LocalDateTime.now();
-        synchronizeEstadoCodigo();
+        synchronizeStatusCode();
     }
 
     @PreUpdate
     protected void onUpdate() {
         actualizadoEn = LocalDateTime.now();
-        synchronizeEstadoCodigo();
+        synchronizeStatusCode();
     }
 
-    private void synchronizeEstadoCodigo() {
-        if (estado != null) {
-            estadoCodigo = estado.getCodigo();
+    private void synchronizeStatusCode() {
+        if (status != null) {
+            statusCode = status.getCode();
         }
     }
 }

@@ -17,36 +17,36 @@ public class EvaluationRubricResponse {
     private String rolePanelist;
     /** Detalle por criterio */
     @JsonProperty("detalles")
-    private List<CriterioResultado> detalles;
+    private List<CriterionResult> detalles;
     /** Nota total de este panelist (suma de notaObtenida de cada criterio) */
     @JsonProperty("notaTotalJurado")
-    private Double notaTotalPanelist;
+    private Double gradeTotalPanelist;
     /** Nota promedio del tribunal completo (todos los panelists), sobre 10 */
     @JsonProperty("notaPromedioTribunal")
-    private Double notaPromedioTribunal;
+    private Double gradeAveragePanel;
     /** true si todos los panelists asignados ya evaluaron */
     @JsonProperty("tribunalCompleto")
-    private boolean tribunalCompleto;
+    private boolean panelComplete;
 
     @Data @Builder
-    public static class CriterioResultado {
+    public static class CriterionResult {
         @JsonProperty("criterioId")
-        private Long criterioId;
+        private Long criterionId;
         @JsonProperty("nombreCriterio")
-        private String nombreCriterio;
+        private String nombreCriterion;
         @JsonProperty("ponderacion")
         private Double ponderacion;
         @JsonProperty("escala")
         private Integer scale;
         @JsonProperty("rangoDescripcion")
-        private String rangoDescripcion;
+        private String rangeDescription;
         @JsonProperty("notaObtenida")
-        private Double notaObtenida;
+        private Double gradeObtenida;
         @JsonProperty("observacionAuto")
-        private String observacionAuto;
+        private String observationAuto;
         @JsonProperty("observacionManual")
-        private String observacionManual;
+        private String observationManual;
         @JsonProperty("observaciones")
-        private String observaciones;
+        private String observations;
     }
 }

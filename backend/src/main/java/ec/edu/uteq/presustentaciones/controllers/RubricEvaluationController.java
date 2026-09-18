@@ -2,9 +2,9 @@ package ec.edu.uteq.presustentaciones.controllers;
 
 import ec.edu.uteq.presustentaciones.dto.EvaluationRubricRequest;
 import ec.edu.uteq.presustentaciones.dto.EvaluationRubricResponse;
-import ec.edu.uteq.presustentaciones.dto.ObservacionesSubmissionDTO;
-import ec.edu.uteq.presustentaciones.entities.CriterioRubric;
-import ec.edu.uteq.presustentaciones.repositories.CriterioRubricRepository;
+import ec.edu.uteq.presustentaciones.dto.ObservationsSubmissionDTO;
+import ec.edu.uteq.presustentaciones.entities.CriterionRubric;
+import ec.edu.uteq.presustentaciones.repositories.CriterionRubricRepository;
 import ec.edu.uteq.presustentaciones.services.RubricEvaluationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +22,7 @@ import java.util.Map;
 public class RubricEvaluationController {
 
     private final RubricEvaluationService service;
-    private final CriterioRubricRepository criterioRepo;
+    private final CriterionRubricRepository criterionRepo;
 
     /**
      * RF-07: Un panelist registra su calificacion criterio por criterio segun la scale de la
@@ -32,7 +32,7 @@ public class RubricEvaluationController {
      * @return 200 con la evaluation registrada, o 400 con el motivo del rechazo
      */
     @PostMapping("/registrar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_RUBRICA_REGISTRAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'EVALUACION_RUBRICA_REGISTRAR')")
     public ResponseEntity<?> register(@RequestBody EvaluationRubricRequest request) {
         try {
             EvaluationRubricResponse resp = service.registerEvaluation(request);
@@ -82,13 +82,13 @@ public class RubricEvaluationController {
      *         formulario de evaluation final pueda mostrar el aviso sin tratarlo como fallo
      */
     @GetMapping("/nota-tribunal/{submissionId}")
-    public ResponseEntity<?> notaTribunal(@PathVariable("submissionId") Long submissionId) {
-        Double nota = service.calculateNotaTribunal(submissionId);
-        if (nota == null) {
+    public ResponseEntity<?> gradePanel(@PathVariable("submissionId") Long submissionId) {
+        Double grade = service.calculateGradePanel(submissionId);
+        if (grade == null) {
             return ResponseEntity.ok(Map.of("nota", (Object) null,
                     "mensaje", "No hay evaluaciones registradas aún."));
         }
-        return ResponseEntity.ok(Map.of("nota", nota));
+        return ResponseEntity.ok(Map.of("nota", grade));
     }
 
     /**
@@ -96,8 +96,8 @@ public class RubricEvaluationController {
      * @return criterios de esa rubric, para pintar el formulario de calificacion
      */
     @GetMapping("/criterios/{rubricId}")
-    public List<CriterioRubric> criteriosPorRubric(@PathVariable("rubricId") Long rubricId) {
-        return criterioRepo.findByRubricIdOrderByOrdenAsc(rubricId);
+    public List<CriterionRubric> criteriaByRubric(@PathVariable("rubricId") Long rubricId) {
+        return criterionRepo.findByRubricIdOrderByOrdenAsc(rubricId);
     }
 
     /**
@@ -108,9 +108,9 @@ public class RubricEvaluationController {
      * @return 200 con las observaciones consolidadas, o 400 si no existe la submission
      */
     @GetMapping("/observaciones/{submissionId}")
-    public ResponseEntity<?> obtainObservaciones(@PathVariable("submissionId") Long submissionId) {
+    public ResponseEntity<?> obtainObservations(@PathVariable("submissionId") Long submissionId) {
         try {
-            ObservacionesSubmissionDTO obs = service.obtainObservacionesSubmission(submissionId);
+            ObservationsSubmissionDTO obs = service.obtainObservationsSubmission(submissionId);
             return ResponseEntity.ok(obs);
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e; // deja que GlobalExceptionHandler lo traduzca a 403, no a 400

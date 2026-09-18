@@ -24,17 +24,17 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
      * @param codigos codigos
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Permission> findByCodigoIn(List<String> codigos);
+    List<Permission> findByCodeIn(List<String> codigos);
 
     @Query(value = "SELECT rp.rol_id FROM presus.rol_permisos rp " +
             "JOIN presus.permisos p ON p.id = rp.permiso_id " +
             "WHERE p.codigo = :codigo", nativeQuery = true)
     /**
      * Find role ids con permission.
-     * @param codigo codigo
+     * @param code code
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Short> findRoleIdsConPermission(@Param("codigo") String codigo);
+    List<Short> findRoleIdsWithPermission(@Param("codigo") String code);
 
     /**
      * Punto único de verificación de acceso -- reemplaza los @PreAuthorize("hasRole(...)")
@@ -52,10 +52,10 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
     /**
      * App user tiene permission.
      * @param email email
-     * @param codigo codigo
+     * @param code code
      * @return true si se cumple la condición, false si no
      */
-    boolean appUserTienePermission(@Param("email") String email, @Param("codigo") String codigo);
+    boolean appUserTienePermission(@Param("email") String email, @Param("codigo") String code);
 
     @Query(value = "SELECT p.codigo FROM presus.permisos p " +
             "JOIN presus.rol_permisos rp ON rp.permiso_id = p.id " +
@@ -65,7 +65,7 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
      * @param roleId roleId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<String> findCodigosPorRole(@Param("roleId") Short roleId);
+    List<String> findCodigosByRole(@Param("roleId") Short roleId);
 
     /**
      * Todos los códigos de permission del appUser (vía su role). Lo usa el frontend para
@@ -82,7 +82,7 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
      * @param email email
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<String> findCodigosPorEmail(@Param("email") String email);
+    List<String> findCodigosByEmail(@Param("email") String email);
 
     @Modifying
     @Transactional

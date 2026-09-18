@@ -27,21 +27,21 @@ public class BackupInfoDTO {
 
     /** FULL | DIFERENCIAL (leído del nombre del archivo; los formatos antiguos son FULL). */
     @JsonProperty("tipo")
-    private String tipo;
+    private String kind;
 
     /** MANUAL | AUTOMATICO | EVENTO (leído del nombre del archivo; los antiguos son MANUAL). */
     @JsonProperty("origen")
-    private String origen;
+    private String source;
 
     /** Tamaño en bytes. */
     @JsonProperty("tamanoBytes")
-    private long tamanoBytes;
+    private long sizeBytes;
 
     /** Tamaño ya formateado para mostrar ("12.8 MB"). */
     @JsonProperty("tamanoLegible")
-    private String tamanoLegible;
+    private String sizeLegible;
 
     /** Fecha de creación del archivo (hora del servidor). */
     @JsonProperty("fechaCreacion")
-    private LocalDateTime fechaCreacion;
+    private LocalDateTime dateCreacion;
 }

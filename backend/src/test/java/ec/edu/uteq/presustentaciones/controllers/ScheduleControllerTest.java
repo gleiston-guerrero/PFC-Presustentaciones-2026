@@ -41,108 +41,108 @@ class ScheduleControllerTest {
     private ScheduleController controller;
 
     @SuppressWarnings("unchecked")
-    private String errorDe(ResponseEntity<?> response) {
+    private String errorOf(ResponseEntity<?> response) {
         return ((Map<String, String>) response.getBody()).get("error");
     }
 
     @Test
     void createDevuelveElScheduleProgramado() {
-        LocalDate fecha = LocalDate.of(2026, 9, 10);
+        LocalDate date = LocalDate.of(2026, 9, 10);
         LocalTime hora = LocalTime.of(9, 0);
         Schedule schedule = Schedule.builder().id(1L).build();
-        when(scheduleService.createSchedule(1L, 2L, fecha, hora)).thenReturn(schedule);
+        when(scheduleService.createSchedule(1L, 2L, date, hora)).thenReturn(schedule);
 
-        ResponseEntity<?> response = controller.create(1L, 2L, fecha, hora);
+        ResponseEntity<?> response = controller.create(1L, 2L, date, hora);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertSame(schedule, response.getBody());
     }
 
     @Test
-    void createConPanelistEnConflictoDevuelve400ConElMensajeDelProcedimiento() {
-        LocalDate fecha = LocalDate.of(2026, 9, 10);
+    void createWithPanelistEnConflictoDevuelve400WithElMessageDelProcedimiento() {
+        LocalDate date = LocalDate.of(2026, 9, 10);
         LocalTime hora = LocalTime.of(9, 0);
-        when(scheduleService.createSchedule(1L, 2L, fecha, hora))
+        when(scheduleService.createSchedule(1L, 2L, date, hora))
                 .thenThrow(new RuntimeException("El docente Ana Pérez ya tiene una defensa en ese horario"));
 
-        ResponseEntity<?> response = controller.create(1L, 2L, fecha, hora);
+        ResponseEntity<?> response = controller.create(1L, 2L, date, hora);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("El docente Ana Pérez ya tiene una defensa en ese horario", errorDe(response));
+        assertEquals("El docente Ana Pérez ya tiene una defensa en ese horario", errorOf(response));
     }
 
     @Test
-    void assignAutomaticoDevuelveElScheduleYTraduceErroresA400() {
+    void assignAutomaticDevuelveElScheduleYTraduceErroresA400() {
         Schedule schedule = Schedule.builder().id(1L).build();
-        when(scheduleService.assignAutomatico(1L)).thenReturn(schedule);
-        assertSame(schedule, controller.assignAutomatico(1L).getBody());
+        when(scheduleService.assignAutomatic(1L)).thenReturn(schedule);
+        assertSame(schedule, controller.assignAutomatic(1L).getBody());
 
-        when(scheduleService.assignAutomatico(2L))
+        when(scheduleService.assignAutomatic(2L))
                 .thenThrow(new RuntimeException("No hay franjas disponibles esta semana"));
-        ResponseEntity<?> error = controller.assignAutomatico(2L);
+        ResponseEntity<?> error = controller.assignAutomatic(2L);
         assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
-        assertEquals("No hay franjas disponibles esta semana", errorDe(error));
+        assertEquals("No hay franjas disponibles esta semana", errorOf(error));
     }
 
     @Test
-    void availabilityDevuelveLasFranjasConLaFechaYDuracionConsultadas() {
-        LocalDate fecha = LocalDate.of(2026, 9, 10);
-        List<LocalDateTime> franjas = List.of(fecha.atTime(9, 0), fecha.atTime(10, 0));
-        when(scheduleService.franjasDisponibles(fecha, 45)).thenReturn(franjas);
+    void availabilityDevuelveLasSlotsWithLaDateYDuracionConsultadas() {
+        LocalDate date = LocalDate.of(2026, 9, 10);
+        List<LocalDateTime> slots = List.of(date.atTime(9, 0), date.atTime(10, 0));
+        when(scheduleService.slotsAvailable(date, 45)).thenReturn(slots);
 
-        Map<String, Object> body = controller.availability(fecha, 45).getBody();
+        Map<String, Object> body = controller.availability(date, 45).getBody();
 
         assertNotNull(body);
-        assertEquals(fecha, body.get("fecha"));
+        assertEquals(date, body.get("fecha"));
         assertEquals(45, body.get("duracionMin"));
-        assertSame(franjas, body.get("franjas"));
+        assertSame(slots, body.get("franjas"));
     }
 
     @Test
-    void verifyAvailabilityDevuelveMensajeDistintoSegunElResultado() {
-        LocalDateTime inicio = LocalDateTime.of(2026, 9, 10, 9, 0);
-        when(scheduleService.estaDisponible(1L, inicio, 45)).thenReturn(true);
-        when(scheduleService.estaDisponible(2L, inicio, 45)).thenReturn(false);
+    void verifyAvailabilityDevuelveMessageDistintoSegunElResult() {
+        LocalDateTime start = LocalDateTime.of(2026, 9, 10, 9, 0);
+        when(scheduleService.isAvailable(1L, start, 45)).thenReturn(true);
+        when(scheduleService.isAvailable(2L, start, 45)).thenReturn(false);
 
-        Map<String, Object> libre = controller.verifyAvailability(1L, inicio, 45).getBody();
-        Map<String, Object> ocupada = controller.verifyAvailability(2L, inicio, 45).getBody();
+        Map<String, Object> free = controller.verifyAvailability(1L, start, 45).getBody();
+        Map<String, Object> ocupada = controller.verifyAvailability(2L, start, 45).getBody();
 
-        assertNotNull(libre);
+        assertNotNull(free);
         assertNotNull(ocupada);
-        assertEquals(true, libre.get("disponible"));
-        assertTrue(((String) libre.get("mensaje")).contains("disponible"));
+        assertEquals(true, free.get("disponible"));
+        assertTrue(((String) free.get("mensaje")).contains("disponible"));
         assertEquals(false, ocupada.get("disponible"));
         assertTrue(((String) ocupada.get("mensaje")).contains("ocupada"));
     }
 
     @Test
-    void listPorStudentYPorAppUserDeleganEnElServicio() {
+    void listByStudentYByAppUserDeleganEnElServicio() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Schedule> pagina = new PageImpl<>(List.of(Schedule.builder().id(1L).build()));
-        List<Schedule> porStudent = List.of(Schedule.builder().id(2L).build());
-        List<Schedule> porAppUser = List.of(Schedule.builder().id(3L).build());
+        List<Schedule> byStudent = List.of(Schedule.builder().id(2L).build());
+        List<Schedule> byAppUser = List.of(Schedule.builder().id(3L).build());
         when(scheduleService.listSchedules(pageable)).thenReturn(pagina);
-        when(scheduleService.listPorStudent(7L)).thenReturn(porStudent);
-        when(scheduleService.listPorAppUser(50L)).thenReturn(porAppUser);
+        when(scheduleService.listByStudent(7L)).thenReturn(byStudent);
+        when(scheduleService.listByAppUser(50L)).thenReturn(byAppUser);
 
         assertSame(pagina, controller.list(pageable).getBody());
-        assertSame(porStudent, controller.porStudent(7L));
-        assertSame(porAppUser, controller.porAppUser(50L));
+        assertSame(byStudent, controller.byStudent(7L));
+        assertSame(byAppUser, controller.byAppUser(50L));
     }
 
     @Test
-    void porSubmissionDevuelve404CuandoNoHayScheduleProgramado() {
-        when(scheduleService.searchPorSubmission(1L)).thenReturn(Optional.empty());
+    void bySubmissionDevuelve404CuandoNoHayScheduleProgramado() {
+        when(scheduleService.searchBySubmission(1L)).thenReturn(Optional.empty());
 
-        assertEquals(HttpStatus.NOT_FOUND, controller.porSubmission(1L).getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, controller.bySubmission(1L).getStatusCode());
     }
 
     @Test
-    void porSubmissionDevuelveElScheduleCuandoExiste() {
+    void bySubmissionDevuelveElScheduleCuandoExists() {
         Schedule schedule = Schedule.builder().id(1L).build();
-        when(scheduleService.searchPorSubmission(1L)).thenReturn(Optional.of(schedule));
+        when(scheduleService.searchBySubmission(1L)).thenReturn(Optional.of(schedule));
 
-        assertSame(schedule, controller.porSubmission(1L).getBody());
+        assertSame(schedule, controller.bySubmission(1L).getBody());
     }
 
     @Test

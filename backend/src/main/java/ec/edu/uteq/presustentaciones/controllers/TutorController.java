@@ -1,6 +1,6 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
-import ec.edu.uteq.presustentaciones.dto.MiStudentTutoradoDTO;
+import ec.edu.uteq.presustentaciones.dto.MyStudentTuteeDTO;
 import ec.edu.uteq.presustentaciones.entities.Tutor;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
@@ -44,11 +44,11 @@ public class TutorController {
      * @throws RuntimeException si el token es válido pero su appUser ya no existe en la base
      */
     @GetMapping("/mis-estudiantes")
-    public ResponseEntity<List<MiStudentTutoradoDTO>> misStudents() {
+    public ResponseEntity<List<MyStudentTuteeDTO>> myStudents() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         AppUser appUser = appUserRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
-        return ResponseEntity.ok(tutorService.misStudents(appUser.getId()));
+        return ResponseEntity.ok(tutorService.myStudents(appUser.getId()));
     }
 
     /**
@@ -60,7 +60,7 @@ public class TutorController {
      *         (por ejemplo, si la submission ya tiene tutor)
      */
     @PostMapping("/asignar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
     public ResponseEntity<Tutor> assign(@RequestParam(name = "solicitudId") Long submissionId,
                                          @RequestParam(name = "docenteId") Long teacherId) {
         try {
@@ -75,8 +75,8 @@ public class TutorController {
      * @return 200 con el tutor asignado, o 404 si la submission aún no tiene tutor
      */
     @GetMapping("/solicitud/{submissionId}")
-    public ResponseEntity<Tutor> porSubmission(@PathVariable("submissionId") Long submissionId) {
-        return tutorService.searchPorSubmission(submissionId)
+    public ResponseEntity<Tutor> bySubmission(@PathVariable("submissionId") Long submissionId) {
+        return tutorService.searchBySubmission(submissionId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -87,7 +87,7 @@ public class TutorController {
      */
     @GetMapping
     public ResponseEntity<Page<Tutor>> list(Pageable pageable) {
-        return ResponseEntity.ok(tutorService.listTodos(pageable));
+        return ResponseEntity.ok(tutorService.listAll(pageable));
     }
 
     /**
@@ -97,7 +97,7 @@ public class TutorController {
      * @return 204 sin cuerpo
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         tutorService.deleteTutor(id);
         return ResponseEntity.noContent().build();
@@ -112,10 +112,10 @@ public class TutorController {
      *         fases aprobadas), o 400 con el error si el procedimiento falla en la base
      */
     @GetMapping("/estadisticas")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'EVALUACION_RUBRICA_REGISTRAR')")
-    public ResponseEntity<?> estadisticas() {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'EVALUACION_RUBRICA_REGISTRAR')")
+    public ResponseEntity<?> stats() {
         try {
-            List<Map<String, Object>> stats = tutorService.obtainEstadisticasTutoresSP();
+            List<Map<String, Object>> stats = tutorService.obtainStatsTutorsSP();
             return ResponseEntity.ok(stats);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

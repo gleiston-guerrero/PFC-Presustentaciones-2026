@@ -36,13 +36,13 @@ public class Tutor {
 
     @Column(name = "fecha_asignacion", nullable = false, updatable = false)
     @JsonProperty("fechaAsignacion")
-    private LocalDateTime fechaAsignacion;
+    private LocalDateTime dateAsignacion;
 
     /** Estado de la tutoría: ACTIVO, COMPLETADA, FINALIZADO, REEMPLAZADO */
     @Column(name = "estado", nullable = false, length = 20)
     @Builder.Default
     @JsonProperty("estado")
-    private String estado= "ACTIVO";
+    private String status= "ACTIVO";
 
     /**
      * Columna "estado_id" (FK NOT NULL a estados_process) heredada del esquema real,
@@ -52,25 +52,25 @@ public class Tutor {
      */
     @Column(name = "estado_id", nullable = false)
     @JsonProperty("estadoProcessId")
-    private Short estadoProcessId;
+    private Short statusProcessId;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
     @JsonProperty("observaciones")
-    private String observaciones;
+    private String observations;
 
     @PrePersist
     protected void onCreate() {
-        fechaAsignacion = LocalDateTime.now();
-        synchronizeEstadoProcess();
+        dateAsignacion = LocalDateTime.now();
+        synchronizeStatusProcess();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        synchronizeEstadoProcess();
+        synchronizeStatusProcess();
     }
 
-    private void synchronizeEstadoProcess() {
-        estadoProcessId = switch (estado) {
+    private void synchronizeStatusProcess() {
+        statusProcessId = switch (status) {
             case "ACTIVO" -> (short) 2;                         // EN_PROCESO
             case "COMPLETADA", "FINALIZADO" -> (short) 3;       // APROBADO
             case "REEMPLAZADO" -> (short) 5;                    // RECHAZADO

@@ -14,7 +14,7 @@ public class CreateStudentRequest {
     @JsonProperty("password")
     private String password;
     @JsonProperty("telefono")
-    private String telefono;
+    private String phone;
     @JsonProperty("carreraId")
     private Integer programId;
     @JsonProperty("periodoIngresoId")

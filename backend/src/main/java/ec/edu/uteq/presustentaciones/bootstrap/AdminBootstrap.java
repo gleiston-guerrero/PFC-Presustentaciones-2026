@@ -67,7 +67,7 @@ public class AdminBootstrap implements CommandLineRunner {
         // solo por venir del entorno -- se valida igual que cualquier otra.
         passwordPolicyValidator.validate(bootstrapPassword);
 
-        RoleAppUser adminRole = roleAppUserRepository.findByCodigo("ADMIN").orElse(null);
+        RoleAppUser adminRole = roleAppUserRepository.findByCode("ADMIN").orElse(null);
         AppUser admin = AppUser.builder()
                 .nombre("Administrador")
                 .apellido("Inicial")

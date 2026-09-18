@@ -43,7 +43,7 @@ public class Teacher {
     
     @Column(name = "disponible", nullable = false)
     @JsonProperty("disponible")
-    private Boolean disponible= true;
+    private Boolean available= true;
     
     @Column(name = "creado_en", nullable = false, updatable = false)
     @JsonProperty("creadoEn")

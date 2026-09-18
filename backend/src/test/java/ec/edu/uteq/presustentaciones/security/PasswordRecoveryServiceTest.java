@@ -48,7 +48,7 @@ class PasswordRecoveryServiceTest {
         valores.clear();
         ttlsSegundos.clear();
 
-        ValueOperations<String, String> valueOps = mock(ValueOperations.class, this::responderValueOps);
+        ValueOperations<String, String> valueOps = mock(ValueOperations.class, this::respondValueOps);
         StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(redisTemplate.delete(anyString())).thenAnswer(inv -> valores.remove((String) inv.getArgument(0)) != null);
@@ -63,7 +63,7 @@ class PasswordRecoveryServiceTest {
                 passwordPolicyValidator, emailService, jwtTokenProvider, redisTemplate);
     }
 
-    private Object responderValueOps(InvocationOnMock inv) {
+    private Object respondValueOps(InvocationOnMock inv) {
         switch (inv.getMethod().getName()) {
             case "set": {
                 String key = inv.getArgument(0);
@@ -83,41 +83,41 @@ class PasswordRecoveryServiceTest {
         }
     }
 
-    private String capturarTokenEnviado() {
+    private String captureTokenEnviado() {
         org.mockito.ArgumentCaptor<String> captor = org.mockito.ArgumentCaptor.forClass(String.class);
-        verify(emailService).sendRecuperacionPassword(eq(EMAIL), captor.capture());
+        verify(emailService).sendRecoveryPassword(eq(EMAIL), captor.capture());
         return captor.getValue();
     }
 
     @Test
-    void solicitarConCuentaExistenteGuardaUnTokenConTtlDe30MinutosYEnviaElCorreo() {
+    void solicitarWithCuentaExistingGuardaUnTokenWithTtlDe30MinutosYEnviaElCorreo() {
         AppUser appUser = new AppUser();
         appUser.setId(7L);
         appUser.setEmail(EMAIL);
         when(appUserRepository.findByEmail(EMAIL)).thenReturn(Optional.of(appUser));
 
-        service.solicitarRecuperacion(EMAIL);
+        service.solicitarRecovery(EMAIL);
 
-        verify(emailService).sendRecuperacionPassword(eq(EMAIL), anyString());
+        verify(emailService).sendRecoveryPassword(eq(EMAIL), anyString());
         // Un solo valor guardado con TTL de 30 min (1800 s) -- el propio token, hasheado.
         assertEquals(1, ttlsSegundos.size());
         assertEquals(1800L, ttlsSegundos.values().iterator().next());
     }
 
     @Test
-    void solicitarConCuentaInexistenteNoEnviaCorreoPeroHaceUnTrabajoEquivalenteEnRedis() {
+    void solicitarWithCuentaInexistenteNoEnviaCorreoPeroHaceUnTrabajoEquivalenteEnRedis() {
         when(appUserRepository.findByEmail("nadie@uteq.edu.ec")).thenReturn(Optional.empty());
 
-        service.solicitarRecuperacion("nadie@uteq.edu.ec");
+        service.solicitarRecovery("nadie@uteq.edu.ec");
 
-        verify(emailService, never()).sendRecuperacionPassword(any(), any());
+        verify(emailService, never()).sendRecoveryPassword(any(), any());
         // Sigue escribiendo en Redis (mismo tipo de operacion que la rama que si existe), para
         // no distinguirse por completo en el trabajo realizado.
         assertEquals(1, valores.size());
     }
 
     @Test
-    void resetConTokenValidoAplicaLaNuevaContrasenaYRevocaTodasLasSesionesSinExcepcion() {
+    void resetWithTokenValidAplicaLaNuevaContrasenaYRevocaAllLasSesionesWithoutExcepcion() {
         AppUser appUser = new AppUser();
         appUser.setId(7L);
         appUser.setEmail(EMAIL);
@@ -125,8 +125,8 @@ class PasswordRecoveryServiceTest {
         when(appUserRepository.findByEmail(EMAIL)).thenReturn(Optional.of(appUser));
         when(passwordEncoder.encode("NuevaClave#2026")).thenReturn("hashNuevo");
 
-        service.solicitarRecuperacion(EMAIL);
-        String token = capturarTokenEnviado();
+        service.solicitarRecovery(EMAIL);
+        String token = captureTokenEnviado();
 
         service.reset(token, "NuevaClave#2026");
 
@@ -140,15 +140,15 @@ class PasswordRecoveryServiceTest {
     }
 
     @Test
-    void elTokenNoPuedeUsarseDosVeces() {
+    void elTokenNoCanUsarseDosVeces() {
         AppUser appUser = new AppUser();
         appUser.setId(7L);
         appUser.setEmail(EMAIL);
         appUser.setPassword("hashViejo");
         when(appUserRepository.findByEmail(EMAIL)).thenReturn(Optional.of(appUser));
 
-        service.solicitarRecuperacion(EMAIL);
-        String token = capturarTokenEnviado();
+        service.solicitarRecovery(EMAIL);
+        String token = captureTokenEnviado();
 
         service.reset(token, "NuevaClave#2026");
 
@@ -166,7 +166,7 @@ class PasswordRecoveryServiceTest {
     }
 
     @Test
-    void resetConNuevaContrasenaQueIncumpleLaPoliticaNoGuardaNadaYPropagaElMensajeDelValidador() {
+    void resetWithNuevaContrasenaQueIncumpleLaPoliticaNoGuardaNadaYPropagaElMessageDelValidador() {
         AppUser appUser = new AppUser();
         appUser.setId(7L);
         appUser.setEmail(EMAIL);
@@ -175,8 +175,8 @@ class PasswordRecoveryServiceTest {
         doThrow(new IllegalArgumentException("Esa contraseña es demasiado común. Elige una diferente."))
                 .when(passwordPolicyValidator).validate("comun123");
 
-        service.solicitarRecuperacion(EMAIL);
-        String token = capturarTokenEnviado();
+        service.solicitarRecovery(EMAIL);
+        String token = captureTokenEnviado();
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> service.reset(token, "comun123"));

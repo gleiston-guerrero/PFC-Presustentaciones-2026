@@ -19,23 +19,23 @@ public class EvaluationPanelist {
 
     @Column(name = "nota_jurado", nullable = false)
     @JsonProperty("notaPanelist")
-    private Double notaPanelist;
+    private Double gradePanelist;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
     @JsonProperty("observaciones")
-    private String observaciones;
+    private String observations;
 
     @Column(name = "resultado", length = 20)
     @JsonProperty("resultado")
-    private String resultado;
+    private String result;
 
     @Column(name = "comentario_preestablecido", columnDefinition = "TEXT")
     @JsonProperty("comentarioPreestablecido")
-    private String comentarioPreestablecido;
+    private String commentPreestablecido;
 
     @Column(name = "fecha_registro", nullable = false, updatable = false)
     @JsonProperty("fechaRegistro")
-    private LocalDateTime fechaRegistro;
+    private LocalDateTime dateRecord;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "solicitud_id", nullable = false)
@@ -52,13 +52,13 @@ public class EvaluationPanelist {
 
     @PrePersist
     protected void onCreate() {
-        fechaRegistro = LocalDateTime.now();
+        dateRecord = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        if (this.notaPanelist != null) {
-            this.resultado = this.notaPanelist >= 7 ? "APROBADO" : "REPROBADO";
+        if (this.gradePanelist != null) {
+            this.result = this.gradePanelist >= 7 ? "APROBADO" : "REPROBADO";
         }
     }
 }

@@ -23,9 +23,9 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * que el lote completo se confirme o revierta como una unidad.
      */
     @Procedure(procedureName = "sp_asignar_jurado_masivo")
-    void spAssignPanelistMasivo(@Param("p_solicitud_id") Long submissionId,
+    void spAssignPanelistBulk(@Param("p_solicitud_id") Long submissionId,
                                 @Param("p_docente_id") Long teacherId,
-                                @Param("p_rol_codigo") String roleCodigo);
+                                @Param("p_rol_codigo") String roleCode);
 
     @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE s.id = :submissionId")
     /**
@@ -43,9 +43,9 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
     @Procedure(name = "Jurado.validarConflictoJurado")
     Boolean validateConflictoPanelist(@Param("p_solicitud_id") Long submissionId,
                                     @Param("p_docente_id") Long teacherId,
-                                    @Param("p_fecha_inicio") LocalDateTime fechaInicio,
+                                    @Param("p_fecha_inicio") LocalDateTime dateStart,
                                     @Param("p_duracion_min") Integer duracionMin,
-                                    @Param("p_disponible") Boolean disponibleInicial);
+                                    @Param("p_disponible") Boolean availableInicial);
 
     @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE d.id = :teacherId")
     /**
@@ -55,13 +55,13 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      */
     List<Panelist> findByTeacherId(@Param("teacherId") Long teacherId);
 
-    @Query("SELECT COUNT(j) FROM Panelist j WHERE j.teacher.id = :teacherId AND j.submission.estado.codigo != 'RECHAZADA'")
+    @Query("SELECT COUNT(j) FROM Panelist j WHERE j.teacher.id = :teacherId AND j.submission.status.code != 'RECHAZADA'")
     /**
      * Count asignaciones activas by teacher.
      * @param teacherId teacherId
      * @return la cantidad de registros
      */
-    long countAsignacionesActivasByTeacher(Long teacherId);
+    long countAsignacionesActiveByTeacher(Long teacherId);
 
     @Query("SELECT j FROM Panelist j JOIN j.teacher d JOIN d.appUser u " +
            "WHERE j.submission.id = :submissionId AND u.id = :appUserId")
@@ -81,7 +81,7 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * @param teacherIds teacherIds
      * @param role role
      */
-    void spAssignPanelistMasivo(
+    void spAssignPanelistBulk(
             @Param("p_solicitud_ids") Long[] submissionIds,
             @Param("p_docente_ids") Long[] teacherIds,
             @Param("p_rol") String role
@@ -95,7 +95,7 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * Count asignaciones por teacher.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Object[]> countAsignacionesPorTeacher();
+    List<Object[]> countAsignacionesByTeacher();
 
     /** Minutes totalmente firmadas de pre-sustentaciones donde el teacher fue panelist. */
     @Query("SELECT j.teacher.id, COUNT(DISTINCT a.id) " +
@@ -105,7 +105,7 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * Count minutes firmadas por teacher.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Object[]> countMinutesFirmadasPorTeacher();
+    List<Object[]> countMinutesFirmadasByTeacher();
 
     /**
      * Indica si existe algún registro con submission id y teacher app user email.

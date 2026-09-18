@@ -73,7 +73,7 @@ class ExternalApiControllerTest {
     }
 
     @Test
-    void devuelveLasUniversidadesDesdeElServicio() throws Exception {
+    void devuelveLasUniversidadesFromElServicio() throws Exception {
         String email = "docente@uteq.edu.ec";
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",

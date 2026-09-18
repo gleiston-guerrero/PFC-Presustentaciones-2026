@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>Nota honesta sobre el envío real de correo:</b> con {@code app.mail.enabled=false}
  * (valor por omisión), este servicio genera y guarda el token igual, y lo "envía" solo al log
- * ({@link EmailService#sendRecuperacionPassword}) -- la entrega real del correo nunca se
+ * ({@link EmailService#sendRecoveryPassword}) -- la entrega real del correo nunca se
  * verificó contra un servidor SMTP de verdad. El flujo completo (generación, caducidad, un solo
  * uso, revocación de sesiones, límite de tasa) sí es real y probado; ver el estado declarado de
  * RF-05 en el SRS.
@@ -54,14 +54,14 @@ public class PasswordRecoveryService {
      *
      * @param email email de la cuenta para la que se solicita recuperación
      */
-    public void solicitarRecuperacion(String email) {
+    public void solicitarRecovery(String email) {
         Optional<AppUser> appUser = appUserRepository.findByEmail(email);
         if (appUser.isPresent()) {
             String tokenPlano = UUID.randomUUID().toString() + UUID.randomUUID();
             String hash = sha256(tokenPlano);
             redisTemplate.opsForValue().set(PREFIJO_TOKEN + hash, appUser.get().getEmail(),
                     TTL_MINUTOS, TimeUnit.MINUTES);
-            emailService.sendRecuperacionPassword(appUser.get().getEmail(), tokenPlano);
+            emailService.sendRecoveryPassword(appUser.get().getEmail(), tokenPlano);
         } else {
             // Trabajo equivalente (una escritura en Redis) para no filtrar la existencia de la
             // cuenta por el tiempo de respuesta; se descarta casi de inmediato.

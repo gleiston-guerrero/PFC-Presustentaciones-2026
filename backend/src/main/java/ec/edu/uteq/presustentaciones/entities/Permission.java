@@ -20,7 +20,7 @@ public class Permission {
 
     @Column(name = "codigo", nullable = false, unique = true, length = 60)
     @JsonProperty("codigo")
-    private String codigo;
+    private String code;
 
     @Column(name = "nombre", nullable = false, length = 150)
     @JsonProperty("nombre")
@@ -32,5 +32,5 @@ public class Permission {
 
     @Column(name = "descripcion")
     @JsonProperty("descripcion")
-    private String descripcion;
+    private String description;
 }

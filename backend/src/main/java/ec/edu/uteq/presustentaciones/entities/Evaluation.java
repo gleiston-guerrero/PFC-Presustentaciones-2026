@@ -26,7 +26,7 @@ import lombok.*;
 @SqlResultSetMapping(
         name = "PromedioEvaluacionMapping",
         classes = @ConstructorResult(
-                targetClass = ec.edu.uteq.presustentaciones.dto.PromedioEvaluationResult.class,
+                targetClass = ec.edu.uteq.presustentaciones.dto.AverageEvaluationResult.class,
                 columns = {
                         @ColumnResult(name = "solicitud_id", type = Long.class),
                         @ColumnResult(name = "nota_final", type = Double.class),
@@ -53,12 +53,12 @@ public class Evaluation {
     /** Nota asignada por el instructor del curso (ponderación default 60%) */
     @Column(name = "nota_instructor")
     @JsonProperty("notaInstructor")
-    private Double notaInstructor;
+    private Double gradeInstructor;
 
     /** Nota asignada por el tribunal/panelist (ponderación default 40%) */
     @Column(name = "nota_jurado")
     @JsonProperty("notaPanelist")
-    private Double notaPanelist;
+    private Double gradePanelist;
 
     /** Ponderación del instructor en %, default 60 */
     @Column(name = "peso_instructor", nullable = false)
@@ -75,20 +75,20 @@ public class Evaluation {
     /** Nota final calculada = (notaInstructor * pesoInstructor/100) + (notaPanelist * pesoPanelist/100) */
     @Column(name = "nota_final")
     @JsonProperty("notaFinal")
-    private Double notaFinal;
+    private Double gradeFinal;
 
     /** Valores posibles: APROBADO, REPROBADO */
     @Column(name = "resultado", length = 20)
     @JsonProperty("resultado")
-    private String resultado;
+    private String result;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
     @JsonProperty("observaciones")
-    private String observaciones;
+    private String observations;
 
     @Column(name = "comentario_preestablecido", columnDefinition = "TEXT")
     @JsonProperty("comentarioPreestablecido")
-    private String comentarioPreestablecido;
+    private String commentPreestablecido;
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "solicitud_id")
@@ -106,13 +106,13 @@ public class Evaluation {
     /**
      * Calculate nota final.
      */
-    public void calculateNotaFinal() {
-        if (notaInstructor != null && notaPanelist != null) {
-            this.notaFinal = (notaInstructor * pesoInstructor / 100.0)
-                           + (notaPanelist * pesoPanelist / 100.0);
+    public void calculateGradeFinal() {
+        if (gradeInstructor != null && gradePanelist != null) {
+            this.gradeFinal = (gradeInstructor * pesoInstructor / 100.0)
+                           + (gradePanelist * pesoPanelist / 100.0);
             // Scale sobre 10
-            this.notaFinal = Math.round(this.notaFinal * 100.0) / 100.0;
-            this.resultado = this.notaFinal >= 7.0 ? "APROBADO" : "REPROBADO";
+            this.gradeFinal = Math.round(this.gradeFinal * 100.0) / 100.0;
+            this.result = this.gradeFinal >= 7.0 ? "APROBADO" : "REPROBADO";
         }
     }
 }

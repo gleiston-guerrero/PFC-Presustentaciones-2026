@@ -17,14 +17,14 @@ import java.util.Map;
 /**
  * Catálogo de permissions del sistema y asignación de permissions a roles
  * ("Gestionar Permisos" en el panel de administrador). Reemplaza los
- * hasRole/hasAnyRole fijos en código -- ver PermissionService.tienePermission,
+ * hasRole/hasAnyRole fijos en código -- ver PermissionService.hasPermission,
  * invocado desde @PreAuthorize en cada controlador protegido.
  */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/permisos")
 @RequiredArgsConstructor
-@PreAuthorize("@permissionService.tienePermission(authentication, 'ROLES_PERMISOS_GESTIONAR')")
+@PreAuthorize("@permissionService.hasPermission(authentication, 'ROLES_PERMISOS_GESTIONAR')")
 public class PermissionController {
 
     private final PermissionRepository permissionRepository;
@@ -58,33 +58,33 @@ public class PermissionController {
      */
     @PutMapping("/rol/{roleId}")
     @Transactional
-    public ResponseEntity<?> updatePermissionsDeRole(@PathVariable("roleId") Short roleId, @RequestBody List<String> codigosPermissions) {
+    public ResponseEntity<?> updatePermissionsOfRole(@PathVariable("roleId") Short roleId, @RequestBody List<String> codigosPermissions) {
         RoleAppUser role = roleAppUserRepository.findById(roleId).orElse(null);
         if (role == null) {
             return ResponseEntity.notFound().build();
         }
 
-        List<Permission> permissions = permissionRepository.findByCodigoIn(codigosPermissions);
+        List<Permission> permissions = permissionRepository.findByCodeIn(codigosPermissions);
         if (permissions.size() != codigosPermissions.stream().distinct().count()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Uno o más códigos de permiso no existen."));
         }
 
-        boolean incluyeGestionPermissions = codigosPermissions.contains("ROLES_PERMISOS_GESTIONAR");
-        if (!incluyeGestionPermissions) {
-            List<Short> otrosRolesConEsePermission = permissionRepository.findRoleIdsConPermission("ROLES_PERMISOS_GESTIONAR")
+        boolean incluyeManagementPermissions = codigosPermissions.contains("ROLES_PERMISOS_GESTIONAR");
+        if (!incluyeManagementPermissions) {
+            List<Short> otrosRolesWithEsePermission = permissionRepository.findRoleIdsWithPermission("ROLES_PERMISOS_GESTIONAR")
                     .stream().filter(id -> !id.equals(roleId)).toList();
-            if (otrosRolesConEsePermission.isEmpty()) {
+            if (otrosRolesWithEsePermission.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error",
                         "No se puede quitar 'Gestionar roles y permisos' de este rol: ningún otro rol lo tendría, " +
                         "y nadie podría volver a asignarlo desde la interfaz."));
             }
         }
 
-        auditService.marcarActorActual();
+        auditService.markActorActual();
         permissionRepository.deletePermissionsDeRole(roleId);
         for (Permission p : permissions) {
             permissionRepository.assignPermission(roleId, p.getId());
         }
-        return ResponseEntity.ok(permissionRepository.findCodigosPorRole(roleId));
+        return ResponseEntity.ok(permissionRepository.findCodigosByRole(roleId));
     }
 }

@@ -22,7 +22,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final AppUserRepository appUserRepository;
     private final EmailService emailService;
 
-    private void validateAcceso(Long targetAppUserId) {
+    private void validateAccess(Long targetAppUserId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             throw new RuntimeException("Usuario no autenticado");
@@ -46,34 +46,34 @@ public class NotificationServiceImpl implements NotificationService {
      * hay ninguno.
      *
      * @param appUserId id del appUser receptor de la notificación
-     * @param mensaje   texto de la notificación
+     * @param message   texto de la notificación
      * @return la notificación creada
      * @throws RuntimeException si el appUser receptor no existe
      */
     @Override
-    public Notification createNotification(Long appUserId, String mensaje) {
-        AppUser receptor = appUserRepository.findById(appUserId)
+    public Notification createNotification(Long appUserId, String message) {
+        AppUser receiver = appUserRepository.findById(appUserId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         Notification notification = notificationRepository.save(
                 Notification.builder()
-                        .appUser(receptor)
-                        .mensaje(mensaje)
-                        .fecha(LocalDateTime.now())
-                        .leida(false)
+                        .appUser(receiver)
+                        .message(message)
+                        .date(LocalDateTime.now())
+                        .read(false)
                         .build());
 
         // Obtain remitente desde el contexto de seguridad (appUser logueado)
-        String[] remitente = resolveRemitente();
+        String[] sender = resolveSender();
 
         // Send email al correo de notifications del receptor (si está configurado)
-        String destino = (receptor.getEmailNotifications() != null
-                && !receptor.getEmailNotifications().isBlank())
-                ? receptor.getEmailNotifications()
+        String destino = (receiver.getEmailNotifications() != null
+                && !receiver.getEmailNotifications().isBlank())
+                ? receiver.getEmailNotifications()
                 : null;
 
         if (destino != null) {
-            emailService.sendNotification(destino, mensaje, remitente[0], remitente[1]);
+            emailService.sendNotification(destino, message, sender[0], sender[1]);
         }
 
         return notification;
@@ -83,7 +83,7 @@ public class NotificationServiceImpl implements NotificationService {
      * Resuelve el nombre y email del appUser logueado para usarlo como remitente.
      * Retorna [nombre, email].
      */
-    private String[] resolveRemitente() {
+    private String[] resolveSender() {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.isAuthenticated()
@@ -118,9 +118,9 @@ public class NotificationServiceImpl implements NotificationService {
      * @return página de notifications de ese appUser, más recientes primero
      */
     @Override
-    public Page<Notification> listPorAppUser(Long appUserId, Pageable pageable) {
-        validateAcceso(appUserId);
-        return notificationRepository.findByAppUserIdOrderByFechaDesc(appUserId, pageable);
+    public Page<Notification> listByAppUser(Long appUserId, Pageable pageable) {
+        validateAccess(appUserId);
+        return notificationRepository.findByAppUserIdOrderByDateDesc(appUserId, pageable);
     }
 
     /**
@@ -128,9 +128,9 @@ public class NotificationServiceImpl implements NotificationService {
      * @return cantidad de notifications no leídas de ese appUser
      */
     @Override
-    public long countNoLeidas(Long appUserId) {
-        validateAcceso(appUserId);
-        return notificationRepository.countByAppUserIdAndLeidaFalse(appUserId);
+    public long countUnread(Long appUserId) {
+        validateAccess(appUserId);
+        return notificationRepository.countByAppUserIdAndReadFalse(appUserId);
     }
 
     /**
@@ -139,20 +139,20 @@ public class NotificationServiceImpl implements NotificationService {
      * @throws RuntimeException si la notificación no existe
      */
     @Override
-    public Notification marcarComoLeida(Long id) {
+    public Notification markAsRead(Long id) {
         Notification n = notificationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Notificación no encontrada"));
-        validateAcceso(n.getAppUser().getId());
-        n.setLeida(true);
+        validateAccess(n.getAppUser().getId());
+        n.setRead(true);
         return notificationRepository.save(n);
     }
 
     /** @param appUserId id del appUser cuyas notifications se marcan todas como leídas */
     @Override
     @org.springframework.transaction.annotation.Transactional
-    public void marcarTodasLeidas(Long appUserId) {
-        validateAcceso(appUserId);
-        notificationRepository.marcarTodasLeidasPorAppUser(appUserId);
+    public void markAllRead(Long appUserId) {
+        validateAccess(appUserId);
+        notificationRepository.markAllReadByAppUser(appUserId);
     }
 
     /**
@@ -165,7 +165,7 @@ public class NotificationServiceImpl implements NotificationService {
     public void deleteNotification(Long id) {
         Notification n = notificationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Notificación no encontrada"));
-        validateAcceso(n.getAppUser().getId());
+        validateAccess(n.getAppUser().getId());
         notificationRepository.delete(n);
     }
 }

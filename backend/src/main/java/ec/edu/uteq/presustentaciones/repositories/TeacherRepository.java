@@ -18,7 +18,7 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
      * Busca el/los registro(s) con disponible true.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Teacher> findByDisponibleTrue();
+    List<Teacher> findByAvailableTrue();
 
     /**
      * Busca el/los registro(s) con app user id.
@@ -50,21 +50,21 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
      * @param pageable pageable
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    Page<Teacher> searchPaginado(@Param("q") String q, Pageable pageable);
+    Page<Teacher> searchPaged(@Param("q") String q, Pageable pageable);
 
-    @Query("SELECT d FROM Teacher d WHERE d.disponible = true ORDER BY d.cargaHorariaSemanal ASC")
+    @Query("SELECT d FROM Teacher d WHERE d.available = true ORDER BY d.cargaHorariaSemanal ASC")
     /**
      * Find disponibles ordenados por carga.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Teacher> findDisponiblesOrdenadosPorCarga();
+    List<Teacher> findAvailableOrdenadosByCarga();
 
     @Query("SELECT d FROM Teacher d ORDER BY d.cargaHorariaSemanal ASC")
     /**
      * Find todos ordenados por carga.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
-    List<Teacher> findTodosOrdenadosPorCarga();
+    List<Teacher> findAllOrdenadosByCarga();
 
     /** Reportes: nombre de un conjunto acotado de teachers (los que participan en el process). */
     @Query("SELECT d.id, u.nombre, u.apellido FROM Teacher d JOIN d.appUser u WHERE d.id IN :ids")

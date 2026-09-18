@@ -23,16 +23,16 @@ public class Notification {
 
     @Column(name = "mensaje", columnDefinition = "TEXT")
     @JsonProperty("mensaje")
-    private String mensaje;
+    private String message;
 
     @Column(name = "fecha")
     @JsonProperty("fecha")
-    private LocalDateTime fecha;
+    private LocalDateTime date;
 
     @Column(name = "leida", nullable = false)
     @Builder.Default
     @JsonProperty("leida")
-    private boolean leida= false;
+    private boolean read= false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")

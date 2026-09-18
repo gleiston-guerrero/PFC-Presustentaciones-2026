@@ -1,6 +1,6 @@
 package ec.edu.uteq.presustentaciones.services;
 
-import ec.edu.uteq.presustentaciones.dto.MiStudentTutoradoDTO;
+import ec.edu.uteq.presustentaciones.dto.MyStudentTuteeDTO;
 import ec.edu.uteq.presustentaciones.entities.Teacher;
 import ec.edu.uteq.presustentaciones.entities.Student;
 import ec.edu.uteq.presustentaciones.entities.Submission;
@@ -29,7 +29,7 @@ public class TutorServiceImpl implements TutorService {
     private final SubmissionRepository submissionRepository;
     private final TeacherRepository teacherRepository;
     private final NotificationService notificationService;
-    private final ec.edu.uteq.presustentaciones.repositories.EstadoSubmissionRepository estadoSubmissionRepository;
+    private final ec.edu.uteq.presustentaciones.repositories.StatusSubmissionRepository statusSubmissionRepository;
 
     /**
      * @param submissionId id de la submission
@@ -49,15 +49,15 @@ public class TutorServiceImpl implements TutorService {
         Tutor tutor = Tutor.builder()
                 .submission(submission)
                 .teacher(teacher)
-                .estado("ACTIVO")
+                .status("ACTIVO")
                 .build();
-        Tutor guardado = tutorRepository.save(tutor);
+        Tutor saved = tutorRepository.save(tutor);
 
-        ec.edu.uteq.presustentaciones.entities.EstadoSubmission estadoTutoring = estadoSubmissionRepository.findByCodigo("TUTORIA")
-                .orElseGet(() -> estadoSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.EstadoSubmission.builder()
-                        .codigo("TUTORIA").nombre("Tutoria").build()));
+        ec.edu.uteq.presustentaciones.entities.StatusSubmission statusTutoring = statusSubmissionRepository.findByCode("TUTORIA")
+                .orElseGet(() -> statusSubmissionRepository.save(ec.edu.uteq.presustentaciones.entities.StatusSubmission.builder()
+                        .code("TUTORIA").nombre("Tutoria").build()));
 
-        submission.setEstado(estadoTutoring);
+        submission.setStatus(statusTutoring);
         submissionRepository.save(submission);
 
         // Notify al teacher asignado
@@ -83,7 +83,7 @@ public class TutorServiceImpl implements TutorService {
             log.warn("No se pudo notificar al estudiante sobre tutor: {}", e.getMessage());
         }
 
-        return guardado;
+        return saved;
     }
 
     /**
@@ -91,7 +91,7 @@ public class TutorServiceImpl implements TutorService {
      * @return el tutor asignado, si existe
      */
     @Override
-    public Optional<Tutor> searchPorSubmission(Long submissionId) {
+    public Optional<Tutor> searchBySubmission(Long submissionId) {
         return tutorRepository.findBySubmissionId(submissionId);
     }
 
@@ -100,7 +100,7 @@ public class TutorServiceImpl implements TutorService {
      * @return página de todos los registros de tutoría del sistema
      */
     @Override
-    public Page<Tutor> listTodos(Pageable pageable) {
+    public Page<Tutor> listAll(Pageable pageable) {
         return tutorRepository.findAll(pageable);
     }
 
@@ -115,29 +115,29 @@ public class TutorServiceImpl implements TutorService {
      * @return los students tutorados actualmente por ese teacher
      */
     @Override
-    public List<MiStudentTutoradoDTO> misStudents(Long appUserIdTeacher) {
+    public List<MyStudentTuteeDTO> myStudents(Long appUserIdTeacher) {
         return tutorRepository.findByTeacherAppUserId(appUserIdTeacher).stream()
                 .map(tutor -> {
                     Submission submission = tutor.getSubmission();
                     Student student = submission.getStudent();
-                    return MiStudentTutoradoDTO.builder()
+                    return MyStudentTuteeDTO.builder()
                             .tutorId(tutor.getId())
                             .submissionId(submission.getId())
                             .studentAppUserId(student.getAppUser().getId())
                             .nombre(student.getAppUser().getNombre())
                             .apellido(student.getAppUser().getApellido())
                             .email(student.getAppUser().getEmail())
-                            .telefono(student.getTelefono())
-                            .expedienteCodigo(student.getExpedienteCodigo())
+                            .phone(student.getPhone())
+                            .expedienteCode(student.getExpedienteCode())
                             .programNombre(student.getProgramEntidad() != null ? student.getProgramEntidad().getNombre() : student.getProgram())
                             .semestreActual(student.getSemestreActual())
-                            .estadoAcademicoCodigo(student.getEstadoAcademico() != null ? student.getEstadoAcademico().getCodigo() : null)
-                            .estadoAcademicoNombre(student.getEstadoAcademico() != null ? student.getEstadoAcademico().getNombre() : null)
+                            .statusAcademicCode(student.getStatusAcademic() != null ? student.getStatusAcademic().getCode() : null)
+                            .statusAcademicNombre(student.getStatusAcademic() != null ? student.getStatusAcademic().getNombre() : null)
                             .tituloTopic(submission.getTituloTopic())
-                            .estadoSubmissionCodigo(submission.getEstado() != null ? submission.getEstado().getCodigo() : submission.getEstadoCodigo())
-                            .estadoSubmissionNombre(submission.getEstado() != null ? submission.getEstado().getNombre() : null)
-                            .estadoTutoring(tutor.getEstado())
-                            .fechaAsignacion(tutor.getFechaAsignacion())
+                            .statusSubmissionCode(submission.getStatus() != null ? submission.getStatus().getCode() : submission.getStatusCode())
+                            .statusSubmissionNombre(submission.getStatus() != null ? submission.getStatus().getNombre() : null)
+                            .statusTutoring(tutor.getStatus())
+                            .dateAsignacion(tutor.getDateAsignacion())
                             .build();
                 })
                 .toList();
@@ -149,8 +149,8 @@ public class TutorServiceImpl implements TutorService {
      * @return una fila por teacher con su carga actual de tutorías
      */
     @Override
-    public List<Map<String, Object>> obtainEstadisticasTutoresSP() {
-        List<Object[]> res = tutorRepository.obtainEstadisticasTutoresSp();
+    public List<Map<String, Object>> obtainStatsTutorsSP() {
+        List<Object[]> res = tutorRepository.obtainStatsTutorsSp();
         List<Map<String, Object>> list = new java.util.ArrayList<>();
         for (Object[] row : res) {
             Map<String, Object> map = new HashMap<>();

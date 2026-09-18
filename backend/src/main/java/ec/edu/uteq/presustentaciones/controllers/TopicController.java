@@ -1,8 +1,8 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
 import ec.edu.uteq.presustentaciones.dto.GenerateTopicRequest;
-import ec.edu.uteq.presustentaciones.dto.SaveTopicPropuestoRequest;
-import ec.edu.uteq.presustentaciones.dto.TopicPropuestoDTO;
+import ec.edu.uteq.presustentaciones.dto.SaveTopicProposedRequest;
+import ec.edu.uteq.presustentaciones.dto.TopicProposedDTO;
 import ec.edu.uteq.presustentaciones.entities.Student;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.StudentRepository;
@@ -45,7 +45,7 @@ public class TopicController {
      * student, el resultado marca ademas cuales tiene ya guardados.
      *
      * @param programId            filtra por program, opcional
-     * @param lineInvestigacionId filtra por line de investigacion, opcional
+     * @param researchLineId filtra por line de investigacion, opcional
      * @param areaId               filtra por area tematica, opcional
      * @param nivelDificultad      filtra por nivel (BASICO, INTERMEDIO, AVANZADO), opcional
      * @return 200 con los topics que cumplen los filtros
@@ -54,24 +54,24 @@ public class TopicController {
     // Propuestos" necesita list para poder editar, así que ORIENTACION_CATALOGO_GESTIONAR
     // también autoriza la lectura — de lo contrario ese permission por sí solo es inútil.
     @GetMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_TEMAS_VER') " +
-            "or @permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ORIENTACION_TEMAS_VER') " +
+            "or @permissionService.hasPermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
     /**
      * Explorar.
      * @param programId programId
-     * @param lineInvestigacionId lineInvestigacionId
+     * @param researchLineId researchLineId
      * @param areaId areaId
      * @param nivelDificultad nivelDificultad
      * @return el ResponseEntity<List<TopicPropuestoDTO>> correspondiente
      */
-    public ResponseEntity<List<TopicPropuestoDTO>> explorar(
+    public ResponseEntity<List<TopicProposedDTO>> explore(
             @RequestParam(name = "carreraId", required = false) Integer programId,
-            @RequestParam(name = "lineaInvestigacionId", required = false) Integer lineInvestigacionId,
+            @RequestParam(name = "lineaInvestigacionId", required = false) Integer researchLineId,
             @RequestParam(name = "areaId", required = false) Integer areaId,
             @RequestParam(name = "nivelDificultad", required = false) String nivelDificultad) {
-        Long studentId = studentActualIdOrNull();
-        return ResponseEntity.ok(topicService.explorar(
-                programId, lineInvestigacionId, areaId, nivelDificultad, studentId));
+        Long studentId = currentStudentIdOrNull();
+        return ResponseEntity.ok(topicService.explore(
+                programId, researchLineId, areaId, nivelDificultad, studentId));
     }
 
     /**
@@ -79,15 +79,15 @@ public class TopicController {
      * @return 200 con el detalle del topic
      */
     @GetMapping("/{topicId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_TEMAS_VER') " +
-            "or @permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ORIENTACION_TEMAS_VER') " +
+            "or @permissionService.hasPermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
     /**
      * Detalle.
      * @param topicId topicId
      * @return el ResponseEntity<TopicPropuestoDTO> correspondiente
      */
-    public ResponseEntity<TopicPropuestoDTO> detalle(@PathVariable("topicId") Integer topicId) {
-        return ResponseEntity.ok(topicService.obtainDetalle(topicId));
+    public ResponseEntity<TopicProposedDTO> detail(@PathVariable("topicId") Integer topicId) {
+        return ResponseEntity.ok(topicService.obtainDetail(topicId));
     }
 
     /**
@@ -97,9 +97,9 @@ public class TopicController {
      * @return 200 con las ideas propuestas
      */
     @PostMapping("/generar")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_TEMAS_VER')")
-    public ResponseEntity<List<TopicPropuestoDTO>> generateIdeas(@RequestBody @Valid GenerateTopicRequest request) {
-        return ResponseEntity.ok(topicService.generateIdeas(request));
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ORIENTACION_TEMAS_VER')")
+    public ResponseEntity<List<TopicProposedDTO>> generateSuggestions(@RequestBody @Valid GenerateTopicRequest request) {
+        return ResponseEntity.ok(topicService.generateSuggestions(request));
     }
 
     // ── Lista personal del student (solo ESTUDIANTE, siempre sobre sí mismo) ─
@@ -112,8 +112,8 @@ public class TopicController {
      */
     @GetMapping("/guardados")
     @PreAuthorize("hasRole('ESTUDIANTE')")
-    public ResponseEntity<List<TopicPropuestoDTO>> misTopicsGuardados() {
-        return ResponseEntity.ok(topicService.obtainTopicsGuardados(studentActual().getId()));
+    public ResponseEntity<List<TopicProposedDTO>> myTopicsSaved() {
+        return ResponseEntity.ok(topicService.obtainTopicsSaved(currentStudent().getId()));
     }
 
     /**
@@ -125,7 +125,7 @@ public class TopicController {
     @PostMapping("/{topicId}/guardar")
     @PreAuthorize("hasRole('ESTUDIANTE')")
     public ResponseEntity<Void> save(@PathVariable("topicId") Integer topicId) {
-        topicService.saveTopicStudent(studentActual().getId(), topicId);
+        topicService.saveTopicStudent(currentStudent().getId(), topicId);
         return ResponseEntity.status(201).build();
     }
 
@@ -137,8 +137,8 @@ public class TopicController {
      */
     @DeleteMapping("/{topicId}/guardar")
     @PreAuthorize("hasRole('ESTUDIANTE')")
-    public ResponseEntity<Void> removeGuardado(@PathVariable("topicId") Integer topicId) {
-        topicService.removeTopicGuardado(studentActual().getId(), topicId);
+    public ResponseEntity<Void> removeSaved(@PathVariable("topicId") Integer topicId) {
+        topicService.removeTopicSaved(currentStudent().getId(), topicId);
         return ResponseEntity.noContent().build();
     }
 
@@ -151,8 +151,8 @@ public class TopicController {
      * @return 200 con el topic creado
      */
     @PostMapping
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
-    public ResponseEntity<TopicPropuestoDTO> create(@RequestBody @Valid SaveTopicPropuestoRequest request) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
+    public ResponseEntity<TopicProposedDTO> create(@RequestBody @Valid SaveTopicProposedRequest request) {
         return ResponseEntity.status(201).body(topicService.create(request));
     }
 
@@ -164,9 +164,9 @@ public class TopicController {
      * @return 200 con el topic actualizado
      */
     @PutMapping("/{topicId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
-    public ResponseEntity<TopicPropuestoDTO> update(@PathVariable("topicId") Integer topicId,
-                                                       @RequestBody @Valid SaveTopicPropuestoRequest request) {
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
+    public ResponseEntity<TopicProposedDTO> update(@PathVariable("topicId") Integer topicId,
+                                                       @RequestBody @Valid SaveTopicProposedRequest request) {
         return ResponseEntity.ok(topicService.update(topicId, request));
     }
 
@@ -177,7 +177,7 @@ public class TopicController {
      * @return 204 sin cuerpo
      */
     @DeleteMapping("/{topicId}")
-    @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
     public ResponseEntity<Void> delete(@PathVariable("topicId") Integer topicId) {
         topicService.delete(topicId);
         return ResponseEntity.noContent().build();
@@ -192,7 +192,7 @@ public class TopicController {
      * @throws IllegalStateException si no hay sesion, es anonima, o el appUser del token ya
      *                               no existe en la base
      */
-    private AppUser appUserActual() {
+    private AppUser currentAppUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
             throw new IllegalStateException("Usuario no autenticado");
@@ -207,21 +207,21 @@ public class TopicController {
      * @return el student autenticado
      * @throws IllegalArgumentException si el appUser autenticado no tiene perfil de student
      */
-    private Student studentActual() {
-        return studentRepository.findByAppUserId(appUserActual().getId())
+    private Student currentStudent() {
+        return studentRepository.findByAppUserId(currentAppUser().getId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "El usuario autenticado no tiene un perfil de estudiante asociado"));
     }
 
     /**
-     * Variante tolerante de {@link #studentActual()} para el catalogo publico: permite que
+     * Variante tolerante de {@link #currentStudent()} para el catalogo publico: permite que
      * un teacher o coordinador explore los topics sin perfil de student asociado.
      *
      * @return id del student autenticado, o null si quien consulta no es student
      */
-    private Long studentActualIdOrNull() {
+    private Long currentStudentIdOrNull() {
         try {
-            return studentRepository.findByAppUserId(appUserActual().getId())
+            return studentRepository.findByAppUserId(currentAppUser().getId())
                     .map(Student::getId)
                     .orElse(null);
         } catch (RuntimeException e) {

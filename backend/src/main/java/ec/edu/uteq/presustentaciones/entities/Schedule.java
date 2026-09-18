@@ -32,7 +32,7 @@ public class Schedule {
     @JoinColumn(name = "convocatoria_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @JsonProperty("convocatoria")
-    private AnnouncementTitulacion announcement;
+    private AnnouncementDegree announcement;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sala_id", nullable = false)
@@ -44,7 +44,7 @@ public class Schedule {
     @JoinColumn(name = "bloque_id")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @JsonProperty("bloque")
-    private BlockHorario block;
+    private TimeBlock block;
 
     @Column(name = "numero_intento", nullable = false)
     @Builder.Default
@@ -53,7 +53,7 @@ public class Schedule {
     
     @Column(name = "fecha_inicio", nullable = false)
     @JsonProperty("fechaInicio")
-    private LocalDateTime fechaInicio;
+    private LocalDateTime dateStart;
     
     @Column(name = "duracion_min", nullable = false)
     @JsonProperty("duracionMin")
@@ -62,7 +62,7 @@ public class Schedule {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "estado_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private EstadoSchedule estado;
+    private StatusSchedule status;
 
     /**
      * Columna "estado" (VARCHAR NOT NULL) heredada del esquema real, en paralelo a
@@ -72,7 +72,7 @@ public class Schedule {
      */
     @Column(name = "estado", nullable = false, length = 30)
     @JsonProperty("estadoCodigo")
-    private String estadoCodigo;
+    private String statusCode;
 
     @Column(name = "creado_en", nullable = false, updatable = false)
     @JsonProperty("creadoEn")
@@ -81,17 +81,17 @@ public class Schedule {
     @PrePersist
     protected void onCreate() {
         creadoEn = LocalDateTime.now();
-        synchronizeEstadoCodigo();
+        synchronizeStatusCode();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        synchronizeEstadoCodigo();
+        synchronizeStatusCode();
     }
 
-    private void synchronizeEstadoCodigo() {
-        if (estado != null) {
-            estadoCodigo = estado.getCodigo();
+    private void synchronizeStatusCode() {
+        if (status != null) {
+            statusCode = status.getCode();
         }
     }
     
@@ -99,7 +99,7 @@ public class Schedule {
      * Get fecha fin.
      * @return el LocalDateTime correspondiente
      */
-    public LocalDateTime getFechaFin() {
-        return fechaInicio.plusMinutes(duracionMin);
+    public LocalDateTime getDateEnd() {
+        return dateStart.plusMinutes(duracionMin);
     }
 }

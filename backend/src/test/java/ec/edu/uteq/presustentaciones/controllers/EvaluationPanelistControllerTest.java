@@ -33,10 +33,10 @@ class EvaluationPanelistControllerTest {
     private EvaluationPanelistController controller;
 
     @Test
-    void saveDelegaConLosCamposDelMapaYDevuelveElDto() {
+    void saveDelegaWithLosCamposDelMapaYDevuelveElDto() {
         Map<String, Object> body = Map.of(
                 "solicitudId", 7, "juradoId", 3, "notaJurado", 8.5, "observaciones", "Buen trabajo");
-        EvaluationPanelistDTO dto = EvaluationPanelistDTO.builder().id(1L).notaPanelist(8.5).build();
+        EvaluationPanelistDTO dto = EvaluationPanelistDTO.builder().id(1L).gradePanelist(8.5).build();
         when(service.saveEvaluation(7L, 3L, 8.5, "Buen trabajo")).thenReturn(dto);
 
         ResponseEntity<?> response = controller.save(body);
@@ -46,7 +46,7 @@ class EvaluationPanelistControllerTest {
     }
 
     @Test
-    void savePropagaAccessDeniedSinConvertirloEn400() {
+    void savePropagaAccessDeniedWithoutConvertirloEn400() {
         Map<String, Object> body = Map.of("solicitudId", 7, "juradoId", 3, "notaJurado", 8.5);
         when(service.saveEvaluation(7L, 3L, 8.5, "")).thenThrow(new AccessDeniedException("sin permiso"));
 
@@ -65,7 +65,7 @@ class EvaluationPanelistControllerTest {
 
     @Test
     void obtainDevuelveElDtoDelServicio() {
-        EvaluationPanelistDTO dto = EvaluationPanelistDTO.builder().id(1L).notaPanelist(9.0).build();
+        EvaluationPanelistDTO dto = EvaluationPanelistDTO.builder().id(1L).gradePanelist(9.0).build();
         when(service.obtainEvaluation(7L, 3L)).thenReturn(dto);
 
         ResponseEntity<?> response = controller.obtain(7L, 3L);
@@ -75,7 +75,7 @@ class EvaluationPanelistControllerTest {
     }
 
     @Test
-    void obtainDevuelve200ConCuerpoNuloSiAunNoHayEvaluation() {
+    void obtainDevuelve200WithCuerpoNuloSiAunNoHayEvaluation() {
         when(service.obtainEvaluation(7L, 3L)).thenReturn(null);
 
         ResponseEntity<?> response = controller.obtain(7L, 3L);
@@ -85,11 +85,11 @@ class EvaluationPanelistControllerTest {
     }
 
     @Test
-    void obtainTribunalDelegaEnElServicio() {
+    void obtainPanelDelegaEnElServicio() {
         EvaluationPanelistDTO dto = EvaluationPanelistDTO.builder().id(1L).build();
-        when(service.obtainTribunal(7L)).thenReturn(List.of(dto));
+        when(service.obtainPanel(7L)).thenReturn(List.of(dto));
 
-        ResponseEntity<List<EvaluationPanelistDTO>> response = controller.obtainTribunal(7L);
+        ResponseEntity<List<EvaluationPanelistDTO>> response = controller.obtainPanel(7L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
