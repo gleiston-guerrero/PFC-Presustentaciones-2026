@@ -1,0 +1,596 @@
+==========================================================================
+P4 -- Identificadores con palabra en espanol (metodo declarado)
+==========================================================================
+Universo: 339 tipos y 693 metodos en backend/src/{main,test}/java
+Lexico: 155 terminos de dominio, 18 funcionales, 6 ambiguos
+
+DEFINICION NUCLEO (solo dominio, sin funcionales ni ambiguos)
+  main + test:
+    tipos     121/339   ( 35.7%)
+    metodos   271/693   ( 39.1%)
+  solo src/main:
+    tipos     108/272   ( 39.7%)
+    metodos   232/625   ( 37.1%)
+
+DEFINICION AMPLIA (+ funcionales + ambiguos resueltos por contexto)
+  main + test:
+    tipos     127/339   ( 37.5%)
+    metodos   369/693   ( 53.2%)
+  solo src/main:
+    tipos     112/272   ( 41.2%)
+    metodos   315/625   ( 50.4%)
+
+CONTRASTE con la evaluacion del 2026-09-17 (AST del ingeniero)
+    el ing reporto: tipos 121/339 (35.7%), metodos 1325/1836 (72.2%)
+    este script:    tipos 127/339 (37.5%), metodos 369/693 (53.2%)
+    El universo de tipos coincide exacto (339). La diferencia en el
+    total de metodos (693 aqui vs 1836) es porque este conteo es por
+    texto fuente y no ve los metodos que Lombok genera; ver
+    p4-rename-scan-javap.py para el conteo sobre bytecode.
+
+CONTEO SOBRE BYTECODE (javap, incluye metodos generados por Lombok)
+  solo main: 362 clases
+    todas las ocurrencias   1050/2658  ( 39.5%)
+    nombres distintos        542/1073  ( 50.5%)
+  main + test: 430 clases
+    todas las ocurrencias   1821/3581  ( 50.9%)
+    nombres distintos       1284/1924  ( 66.7%)
+
+TOKENS NO CLASIFICADOS COMO ESPANOL (289):
+  256              4                a                access           activate         actor           
+  add              admin            admins           advice           all              allowed         
+  announcement     announcements    api              app              application      approve         
+  archiver         argument         as               ask              assert           assign          
+  audit            auth             authentication   availability     backup           backups         
+  batch            bearer           before           bg               blacklist        blacklisted     
+  block            blue             body             bootstrap        build            by              
+  bytes            cache            calculate        cell             chain            change          
+  chat             chatbot          claims           cleanup          clear            client          
+  code             config           configuration    controller       cors             count           
+  create           cron             csv              custom           dark             data            
+  deactivate       default          delete           demo             denied           details         
+  dir              do               doc              download         dto              ecuador         
+  email            encabezado       encoder          entry            enviado          equals          
+  erase            espacio          evaluation       evaluations      evaluator        evict           
+  except           exception        execute          external         faculties        faculty         
+  features         filename         filter           fmt              for              from            
+  general          generate         get              global           gold             gray            
+  green            handle           handler          hash             header           history         
+  html             i                id               illegal          impl             info            
+  int              integration      internal         ip               is               json            
+  jwt              key              ldt              light            limiter          limiting        
+  line             lines            list             load             log              login           
+  logout           long             main             manager          map              mapping         
+  mappings         member           message          method           mime             minutes         
+  modalities       modality         mtime            mvc              not              notification    
+  notifications    notify           null             nvl              obtain           of              
+  on               open             ops              or               panelist         panelists       
+  parse            password         pdf              period           periods          permission      
+  permissions      phase            pitr             point            policy           pre             
+  process          program          programs         progress         proposal         provider        
+  purge            put              rate             rec              recovery         red             
+  redis            refresh          register         registrations    reject           remove          
+  rename           repository       req              request          reset            resolve         
+  resource         response         restore          result           revoke           role            
+  room             rotate           rotation         row              rubric           run             
+  runtime          save             scale            schedule         scheduler        schedules       
+  scheduling       search           section          security         seeder           send            
+  service          set              sha              shift            should           sign            
+  signing          size             solicitar        source           sp               stat            
+  state            str              stub             student          students         submission      
+  submissions      success          summarize        supports         switch           synchronize     
+  teacher          teachers         test             tests            text             tick            
+  title            to               token            tokens           topic            topics          
+  tracking         trim             tutor            tutoring         tutorings        unavailable     
+  universities     university       update           upload           used             user            
+  username         users            validate         validation       validator        value           
+  verify           wal              web              white            wrapper          wrapping        
+  write           
+
+TIPOS con token en espanol (definicion amplia):
+  AnnouncementTitulacion                        <- titulacion
+  AnnouncementTitulacionRepository              <- titulacion
+  AppUserActualService                          <- actual
+  AppUserActualServiceTest                      <- actual
+  AreaTematica                                  <- area,tematica
+  AreaTematicaRepository                        <- area,tematica
+  BackupPruebaRestauracion                      <- prueba,restauracion
+  BackupPruebaRestauracionRepository            <- prueba,restauracion
+  BaseFisicaDTO                                 <- base,fisica
+  BlockHorario                                  <- horario
+  BlockHorarioRepository                        <- horario
+  CatalogoAdminService                          <- catalogo
+  CatalogoController                            <- catalogo
+  CatalogoControllerTest                        <- catalogo
+  ChangeEstadoMinutesRequest                    <- estado
+  CleanupBitacoraLog                            <- bitacora
+  CleanupBitacoraLogRepository                  <- bitacora
+  CleanupBitacoraScheduler                      <- bitacora
+  CleanupBitacoraSchedulerTest                  <- bitacora
+  Conexion                                      <- conexion
+  Conexion                                      <- conexion
+  CriterioObservacionDTO                        <- criterio,observacion
+  CriterioResultado                             <- criterio,resultado
+  CriterioRubric                                <- criterio
+  CriterioRubricRepository                      <- criterio
+  EstadoAcademico                               <- estado,academico
+  EstadoAcademicoRepository                     <- estado,academico
+  EstadoBackupsDTO                              <- estado
+  EstadoCount                                   <- estado
+  EstadoMinutes                                 <- estado
+  EstadoMinutesRepository                       <- estado
+  EstadoProcess                                 <- estado
+  EstadoProcessRepository                       <- estado
+  EstadoSchedule                                <- estado
+  EstadoScheduleRepository                      <- estado
+  EstadoSubmission                              <- estado
+  EstadoSubmission                              <- estado
+  EstadoSubmissionRepository                    <- estado
+  EstadoTiempoRealController                    <- estado,tiempo,real
+  EstadoTiempoRealControllerTest                <- estado,tiempo,real
+  EstadoWalDTO                                  <- estado
+  EtapaTrackingDTO                              <- etapa
+  EvaluationCriterio                            <- criterio
+  EvaluationCriterioRepository                  <- criterio
+  EvaluationFinal                               <- final
+  EvaluationFinalRepository                     <- final
+  HistoryEstadoMinutes                          <- estado
+  HistoryEstadoMinutesRepository                <- estado
+  HistoryEstadosSubmission                      <- estados
+  HistoryEstadosSubmissionRepository            <- estados
+  LineInvestigacion                             <- investigacion
+  LineInvestigacionRepository                   <- investigacion
+  MeController                                  <- me
+  MeControllerTest                              <- me
+  MemberTribunalDTO                             <- tribunal
+  MiStudentTutoradoDTO                          <- mi,tutorado
+  MinutesDetalleDTO                             <- detalle
+  MinutesResumenDTO                             <- resumen
+  ModalityTitulacion                            <- titulacion
+  ModalityTitulacionRepository                  <- titulacion
+  NuevoMensajeRequest                           <- nuevo,mensaje
+  ObservacionesController                       <- observaciones
+  ObservacionesCoordinadorDTO                   <- observaciones,coordinador
+  ObservacionesPanelistDTO                      <- observaciones
+  ObservacionesSubmissionDTO                    <- observaciones
+  ObservacionesTutorDTO                         <- observaciones
+  OrigenBackup                                  <- origen
+  PasoDTO                                       <- paso
+  PerfilRequest                                 <- perfil
+  PeriodAcademico                               <- academico
+  PeriodAcademicoRepository                     <- academico
+  PreSustentacionesApplication                  <- sustentaciones
+  PreSustentacionesApplicationTests             <- sustentaciones
+  ProgressTitulacionController                  <- titulacion
+  ProgressTitulacionControllerTest              <- titulacion
+  ProgressTitulacionDTO                         <- titulacion
+  ProgressTitulacionService                     <- titulacion
+  ProgressTitulacionServiceImpl                 <- titulacion
+  ProgressTitulacionServiceImplTest             <- titulacion
+  PromedioEvaluationResult                      <- promedio
+  RecuperarPasswordRequest                      <- recuperar
+  RedisDegradacionTest                          <- degradacion
+  RegisterPruebaRestauracionRequest             <- prueba,restauracion
+  ReporteActividadTeacherDTO                    <- reporte,actividad
+  ReporteController                             <- reporte
+  ReporteControllerTest                         <- reporte
+  ReporteCountDTO                               <- reporte
+  ReporteDefensaResult                          <- reporte,defensa
+  ReporteResumenDTO                             <- reporte,resumen
+  ReporteService                                <- reporte
+  ReporteServiceImpl                            <- reporte
+  ReporteServiceImplTest                        <- reporte
+  ResolveSupresionRequest                       <- supresion
+  ResourceTitulacion                            <- titulacion
+  ResourceTitulacionController                  <- titulacion
+  ResourceTitulacionControllerTest              <- titulacion
+  ResourceTitulacionDTO                         <- titulacion
+  ResourceTitulacionRepository                  <- titulacion
+  ResourceTitulacionService                     <- titulacion
+  ResourceTitulacionServiceImpl                 <- titulacion
+  ResourceTitulacionServiceImplTest             <- titulacion
+  ResultadoEvaluation                           <- resultado
+  ResultadoEvaluationRepository                 <- resultado
+  SaveTopicPropuestoRequest                     <- propuesto
+  ScaleCriterioDTO                              <- criterio
+  SubmissionSupresion                           <- supresion
+  SubmissionSupresionRepository                 <- supresion
+  SupresionDatosService                         <- supresion,datos
+  SupresionDatosServiceTest                     <- supresion,datos
+  TipoBackup                                    <- tipo
+  TipoEvaluator                                 <- tipo
+  TipoEvaluatorRepository                       <- tipo
+  TipoMensaje                                   <- tipo,mensaje
+  TipoMensajeRepository                         <- tipo,mensaje
+  TopicGuardadoStudent                          <- guardado
+  TopicGuardadoStudentRepository                <- guardado
+  TopicPropuesto                                <- propuesto
+  TopicPropuestoDTO                             <- propuesto
+  TopicPropuestoRepository                      <- propuesto
+  TopicPropuestoRepositoryIntegrationTest       <- propuesto
+  TutoringFase                                  <- fase
+  TutoringFaseDTO                               <- fase
+  TutoringFaseRepository                        <- fase
+  TutoringMensaje                               <- mensaje
+  TutoringMensajeDTO                            <- mensaje
+  TutoringMensajeRepository                     <- mensaje
+  TutoringResumenDTO                            <- resumen
+
+METODOS con token en espanol (definicion amplia):
+  aBaseDTO                                      <- base
+  actividadPorTeacher                           <- actividad,por
+  actividadTeacher                              <- actividad
+  addCriterio                                   <- criterio
+  announcementActiva                            <- activa
+  aplicar                                       <- aplicar
+  aplicarRetencion                              <- aplicar,retencion
+  aplicarRetencion                              <- aplicar,retencion
+  appUserActual                                 <- actual
+  appUserActual                                 <- actual
+  approveFase                                   <- fase
+  approveFase                                   <- fase
+  assertEsPdfDescargable                        <- es,descargable
+  assignAutomaticamente                         <- automaticamente
+  assignAutomatico                              <- automatico
+  assignAutomatico                              <- automatico
+  assignMasivo                                  <- masivo
+  assignPanelistMasivo                          <- masivo
+  assignPanelistMasivoSP                        <- masivo
+  assignPanelistsAutomaticamente                <- automaticamente
+  autenticar                                    <- autenticar
+  autenticar                                    <- autenticar
+  autenticar                                    <- autenticar
+  autenticarComo                                <- autenticar,como
+  autenticarComo                                <- autenticar,como
+  autenticarComo                                <- autenticar,como
+  autenticarComo                                <- autenticar,como
+  autenticarComo                                <- autenticar,como
+  autenticarComo                                <- autenticar,como
+  autenticarComo                                <- autenticar,como
+  autenticarComo                                <- autenticar,como
+  autenticarComoAdmin                           <- autenticar,como
+  autenticarComoAdmin                           <- autenticar,como
+  autenticarComoAdminConGestionAppUsers         <- autenticar,como,con,gestion
+  autenticarComoTitular                         <- autenticar,como,titular
+  barridoRetencion                              <- barrido,retencion
+  basesDir                                      <- bases
+  buildResumenParaTutor                         <- resumen,para
+  calculateNotaFinal                            <- nota,final
+  calculateNotaFinal                            <- nota,final
+  calculateNotaTribunal                         <- nota,tribunal
+  calculatePromedio                             <- promedio
+  calculatePromedioSP                           <- promedio
+  calculatePromedioSp                           <- promedio
+  calculateSha256YSave                          <- y
+  calculateSha256YSave                          <- y
+  capturarTokenEnviado                          <- capturar
+  celda                                         <- celda
+  celdaStat                                     <- celda
+  changeEstado                                  <- estado
+  changeEstado                                  <- estado
+  conRedis                                      <- con
+  conexion                                      <- conexion
+  configBase                                    <- base
+  configPorDefecto                              <- por,defecto
+  correr                                        <- correr
+  correr                                        <- correr
+  countNoLeidas                                 <- no,leidas
+  countNoLeidas                                 <- no,leidas
+  countPorEstado                                <- por,estado
+  countPorEstado                                <- por,estado
+  createArchivo                                 <- archivo
+  createBaseFisica                              <- base,fisica
+  createDirectorio                              <- directorio
+  createFaseConObservacion                      <- fase,con,observacion
+  createFaseConObservacion                      <- fase,con,observacion
+  createPanelistSinNotify                       <- sin
+  createPerfilStudent                           <- perfil
+  createPorAppUser                              <- por
+  createSubmissionPorAppUser                    <- por
+  createVacio                                   <- vacio
+  criterios                                     <- criterios
+  criteriosPorRubric                            <- criterios,por
+  cronValido                                    <- valido
+  cumple                                        <- cumple
+  datosDe                                       <- datos,de
+  de                                            <- de
+  de                                            <- de
+  de                                            <- de
+  deleteBase                                    <- base
+  deleteBase                                    <- base
+  describirCron                                 <- describir
+  desdeDe                                       <- desde,de
+  detalle                                       <- detalle
+  detalle                                       <- detalle
+  disponibles                                   <- disponibles
+  eraseDirRecursivo                             <- recursivo
+  error                                         <- error
+  error                                         <- error
+  errorDe                                       <- error,de
+  errorDe                                       <- error,de
+  errorDe                                       <- error,de
+  errorDe                                       <- error,de
+  errorDe                                       <- error,de
+  errorHandler                                  <- error
+  esAdminActual                                 <- es,actual
+  esAdminOCoordinador                           <- es,o,coordinador
+  esAppUserActual                               <- es,actual
+  esAppUserActualOAdmin                         <- es,actual,o
+  esPropioTeacher                               <- es,propio
+  esSuspendible                                 <- es,suspendible
+  esSuspendible                                 <- es,suspendible
+  escribirEstado                                <- escribir,estado
+  espacioLibre                                  <- libre
+  estaDisponible                                <- esta,disponible
+  estadisticas                                  <- estadisticas
+  estadisticasJson                              <- estadisticas
+  estadisticasPorProgram                        <- estadisticas,por
+  estado                                        <- estado
+  estado                                        <- estado
+  estado                                        <- estado
+  estado                                        <- estado
+  estadoBatch                                   <- estado
+  estadoMinutes                                 <- estado
+  estadoSubmission                              <- estado
+  estadoWal                                     <- estado
+  estadosAcademicos                             <- estados,academicos
+  evaluar                                       <- evaluar
+  evaluarPonderado                              <- evaluar,ponderado
+  evaluarSubmission                             <- evaluar
+  evaluarSubmission                             <- evaluar
+  executeTolerante                              <- tolerante
+  existePorEmail                                <- existe,por
+  explorar                                      <- explorar
+  explorar                                      <- explorar
+  fechaUltimoAutomatico                         <- fecha,ultimo,automatico
+  fechaUltimoDiferencialAutomatico              <- fecha,ultimo,diferencial,automatico
+  fila                                          <- fila
+  filaArchiver                                  <- fila
+  finDe                                         <- fin,de
+  formato                                       <- formato
+  formatoTamano                                 <- formato,tamano
+  forzarSwitchWal                               <- forzar
+  franjasDisponibles                            <- franjas,disponibles
+  fromCodigo                                    <- codigo
+  fromCodigo                                    <- codigo
+  fromCodigo                                    <- codigo
+  fromCodigo                                    <- codigo
+  fromCodigo                                    <- codigo
+  generateBaseFisica                            <- base,fisica
+  generateBaseFisica                            <- base,fisica
+  generateComentarioPorRango                    <- comentario,por,rango
+  generateComentarioPorRango                    <- comentario,por,rango
+  generateDiferencial                           <- diferencial
+  generateDiferencial                           <- diferencial
+  generateIdeas                                 <- ideas
+  generateIdeas                                 <- ideas
+  generateReporteDefensasSP                     <- reporte,defensas
+  getFechaFin                                   <- fecha,fin
+  getFirmantesPendientes                        <- firmantes,pendientes
+  getObservacionPorRango                        <- observacion,por,rango
+  getRangoDescripcion                           <- rango,descripcion
+  handleCacheClearError                         <- error
+  handleCacheEvictError                         <- error
+  handleCacheGetError                           <- error
+  handleCachePutError                           <- error
+  handleNoResource                              <- no
+  hastaDe                                       <- hasta,de
+  humanizar                                     <- humanizar
+  humanizarIntervaloCron                        <- humanizar,intervalo
+  inicializarCriteriosInstitucionales           <- inicializar,criterios,institucionales
+  inicioDe                                      <- inicio,de
+  leer                                          <- leer
+  leerEstado                                    <- leer,estado
+  limpiar                                       <- limpiar
+  limpiar                                       <- limpiar
+  limpiarWal                                    <- limpiar
+  limpiarWal                                    <- limpiar
+  listActivos                                   <- activos
+  listActivos                                   <- activos
+  listAnnouncementsActivas                      <- activas
+  listAreasTematicas                            <- areas,tematicas
+  listBases                                     <- bases
+  listEstadosAcademicos                         <- estados,academicos
+  listLinesInvestigacion                        <- investigacion
+  listMisMinutes                                <- mis
+  listMisSubmissions                            <- mis
+  listPaginado                                  <- paginado
+  listPaginado                                  <- paginado
+  listPaginado                                  <- paginado
+  listPaginado                                  <- paginado
+  listPaginado                                  <- paginado
+  listPaginado                                  <- paginado
+  listPaginado                                  <- paginado
+  listPaginado                                  <- paginado
+  listPeriodsAcademicos                         <- academicos
+  listPorAppUser                                <- por
+  listPorAppUser                                <- por
+  listPorAppUser                                <- por
+  listPorAppUser                                <- por
+  listPorAppUser                                <- por
+  listPorAppUser                                <- por
+  listPorAppUser                                <- por
+  listPorStudent                                <- por
+  listPorStudent                                <- por
+  listPorStudent                                <- por
+  listPorStudent                                <- por
+  listPorStudent                                <- por
+  listPorSubmission                             <- por
+  listPorSubmission                             <- por
+  listPorTeacher                                <- por
+  listPorTeacher                                <- por
+  listPruebas                                   <- pruebas
+  listSubmissionsPaginado                       <- paginado
+  listSubmissionsSupresion                      <- supresion
+  listTodos                                     <- todos
+  listTodos                                     <- todos
+  listTodos                                     <- todos
+  listTodos                                     <- todos
+  listTodos                                     <- todos
+  listTutoringsPorTeacher                       <- por
+  listTutoringsPorTeacher                       <- por
+  loadComunes                                   <- comunes
+  mapFaseConMensajes                            <- fase,con,mensajes
+  mapMensaje                                    <- mensaje
+  marcarActorActual                             <- marcar,actual
+  marcarComoLeida                               <- marcar,como,leida
+  marcarLeida                                   <- marcar,leida
+  marcarMensajesLeidos                          <- marcar,mensajes,leidos
+  marcarMensajesLeidos                          <- marcar,mensajes,leidos
+  marcarTodasLeidas                             <- marcar,todas,leidas
+  marcarTodasLeidas                             <- marcar,todas,leidas
+  miProgress                                    <- mi
+  mimeReal                                      <- real
+  minutesConEstado                              <- con,estado
+  minutesConFirmas                              <- con,firmas
+  misMinutes                                    <- mis
+  misPermissions                                <- mis
+  misStudents                                   <- mis
+  misStudents                                   <- mis
+  misTopicsGuardados                            <- mis,guardados
+  modificarTelefonoDeUnAppUserDemo              <- modificar,telefono,de,un
+  notaTribunal                                  <- nota,tribunal
+  notifyAdminsNuevoProposal                     <- nuevo
+  notifyNotaFinal                               <- nota,final
+  notifyProgramacion                            <- programacion
+  notifyStudentTribunalCompleto                 <- tribunal,completo
+  obtainAppUserAutenticado                      <- autenticado
+  obtainDetalle                                 <- detalle
+  obtainDetalle                                 <- detalle
+  obtainEstadisticasTutoresSP                   <- estadisticas,tutores
+  obtainFases                                   <- fases
+  obtainFases                                   <- fases
+  obtainObservaciones                           <- observaciones
+  obtainObservaciones                           <- observaciones
+  obtainObservacionesSubmission                 <- observaciones
+  obtainPdfFase                                 <- fase
+  obtainPdfFase                                 <- fase
+  obtainPorAppUser                              <- por
+  obtainPorEmail                                <- por
+  obtainPorId                                   <- por
+  obtainPorId                                   <- por
+  obtainPorId                                   <- por
+  obtainPorId                                   <- por
+  obtainPorId                                   <- por
+  obtainPorSubmission                           <- por
+  obtainResumen                                 <- resumen
+  obtainResumen                                 <- resumen
+  obtainTopicsGuardados                         <- guardados
+  obtainTribunal                                <- tribunal
+  obtainTribunal                                <- tribunal
+  obtainTutorDeSubmission                       <- de
+  panelistConTeacher                            <- con
+  panelistDeSubmission                          <- de
+  parsearConexion                               <- parsear,conexion
+  paso                                          <- paso
+  permissionsDe                                 <- de
+  peticionConRefresh                            <- peticion,con
+  porAppUser                                    <- por
+  porProgram                                    <- por
+  porStudent                                    <- por
+  porSubmission                                 <- por
+  porSubmission                                 <- por
+  porSubmission                                 <- por
+  porSubmission                                 <- por
+  promedioTribunal                              <- promedio,tribunal
+  pruebas                                       <- pruebas
+  receptorCon                                   <- receptor,con
+  recuperar                                     <- recuperar
+  redisCaido                                    <- caido
+  registerAvanceSP                              <- avance
+  registerAvanceSP                              <- avance
+  registerPrueba                                <- prueba
+  registerPrueba                                <- prueba
+  rejectConObservacion                          <- con,observacion
+  rejectConObservacion                          <- con,observacion
+  removeGuardado                                <- guardado
+  removeTopicGuardado                           <- guardado
+  reporteDefensas                               <- reporte,defensas
+  reporteDefensas                               <- reporte,defensas
+  reporteEstadisticas                           <- reporte,estadisticas
+  reporteSchedule                               <- reporte
+  requestBase                                   <- base
+  requestValido                                 <- valido
+  resolveAppUserIdActual                        <- actual
+  resolveExistente                              <- existente
+  resolveRemitente                              <- remitente
+  resolveSupresion                              <- supresion
+  responderSetOps                               <- responder
+  responderValueOps                             <- responder
+  responderValueOps                             <- responder
+  resumen                                       <- resumen
+  resumen                                       <- resumen
+  resumenMinutes                                <- resumen
+  resumenMinutes                                <- resumen
+  searchPorEmail                                <- por
+  searchPorRegistroId                           <- por,registro
+  searchPorSubmission                           <- por
+  searchPorSubmission                           <- por
+  searchPorSubmission                           <- por
+  searchPorSubmission                           <- por
+  searchPorSubmission                           <- por
+  sendErrorResponse                             <- error
+  sendMensaje                                   <- mensaje
+  sendMensaje                                   <- mensaje
+  sendRecuperacionPassword                      <- recuperacion
+  seudonimizar                                  <- seudonimizar
+  solicitarRecuperacion                         <- recuperacion
+  solicitarSupresion                            <- supresion
+  studentActual                                 <- actual
+  studentActualIdOrNull                         <- actual
+  submissionCompleta                            <- completa
+  submissionDe                                  <- de
+  submissionsPorEstado                          <- por,estado
+  submissionsPorEstado                          <- por,estado
+  sugerirTeachers                               <- sugerir
+  sugerirTeachers                               <- sugerir
+  summarizeError                                <- error
+  suspender                                     <- suspender
+  suspenderSubmission                           <- suspender
+  sustentacionesPorPeriod                       <- sustentaciones,por
+  sustentacionesPorPeriod                       <- sustentaciones,por
+  synchronizeEstadoCodigo                       <- estado,codigo
+  synchronizeEstadoCodigo                       <- estado,codigo
+  synchronizeEstadoProcess                      <- estado
+  synchronizeEstadoProcess                      <- estado
+  synchronizeEstadoProcess                      <- estado
+  tablasAuditadas                               <- tablas,auditadas
+  tamano                                        <- tamano
+  tamanoDir                                     <- tamano
+  tickDiferencial                               <- diferencial
+  tienePermission                               <- tiene
+  todoVacio                                     <- todo,vacio
+  tokenValido                                   <- valido
+  ultimaLine                                    <- ultima
+  updateEstadoFirma                             <- estado,firma
+  updatePerfil                                  <- perfil
+  updatePerfil                                  <- perfil
+  updatePermissionsDeRole                       <- de
+  uploadPdfCorregido                            <- corregido
+  uploadPdfCorregido                            <- corregido
+  validateAcceso                                <- acceso
+  validateAcceso                                <- acceso
+  validateAcceso                                <- acceso
+  validateAccesoATutoring                       <- acceso
+  validateAccesoPropioOAdmin                    <- acceso,propio,o
+  validateAccesoPropioOAdministrativo           <- acceso,propio,o,administrativo
+  validateAccesoStudentPropioOAdmin             <- acceso,propio,o
+  validateAccesoSubmission                      <- acceso
+  validatePrerequisitosParaSchedule             <- prerequisitos,para
+  validatePuedeRegister                         <- puede
+  validatePuedeRegister                         <- puede
+  validatePuedeUpload                           <- puede
+  verPdf                                        <- ver
+  verPdf                                        <- ver
+  verifyIntegridad                              <- integridad
+  wrapperDe                                     <- de
+  wrapperDe                                     <- de
+  wrapperDe                                     <- de
+
+AMBIGUOS y su resolucion:
+  actual     usuario actual (AppUserActualService, obtainActual)
+  base       cognado exacto ingles/espanol
+  error      cognado exacto ingles/espanol
+  final      evaluacion final (EvaluationFinal, orden espanol)
+  me         ambiguo: MeController (ingles) vs uso pronominal
+  real       tiempo real (EstadoTiempoRealController)

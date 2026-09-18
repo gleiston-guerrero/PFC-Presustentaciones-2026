@@ -78,6 +78,20 @@ BRANCH: 1483/2018 (73.49%)
 LINE: 4017/4897 (82.03%)
 ```
 
+**Reproducción independiente (2026-09-18, otra sesión, tras otros commits):**
+```
+Tests run: 804, Failures: 0, Errors: 0, Skipped: 0
+jacoco:check (jacoco-check) --- All coverage checks have been met.
+BUILD SUCCESS -- Total time: 01:02 min -- 2026-09-18T11:12:42-05:00
+sessioninfo en el XML: 1
+BRANCH: 1483/2018 (73.49%)
+LINE: 4017/4897 (82.03%)
+```
+Versionada en [`docs/mediciones/jacoco/2026-09-18-corrida-limpia-reproduccion/`](docs/mediciones/jacoco/2026-09-18-corrida-limpia-reproduccion/).
+**Cifra por cifra idéntica** a la del 17-sep: la cobertura reportada no depende de qué corrida se haya
+versionado. El valor de ramas coincide además, al dígito, con el que el propio ingeniero calculó sumando
+los contadores del XML (1483/2018 = 73,49 %).
+
 **Veredicto: ✅ Cumple**, con los 3 defectos que señaló el ing verificados y 2 de los 3 corregidos de
 verdad esta vez (no solo documentados): (1) **corregido** — el `jacoco.xml` de 71 sesiones se conserva
 como snapshot anterior, pero la cifra que aplica ahora sale de una corrida limpia única
@@ -158,22 +172,31 @@ cd .. && python scripts/p4-rename-scan-fuente.py
 python scripts/p4-rename-scan-javap.py --include-test
 ```
 
-**Salida real (2026-09-17):**
-```
-=== fuente (main+test) ===
-Tipos totales detectados (texto fuente, main+test): 339
-Tipos con palabra en espanol (heuristica): 6 (1.8%)
-Metodos totales detectados (texto fuente, main+test): 693
-Metodos con palabra en espanol (heuristica): 1 (0.1%)
-
-=== javap main+test (incluye getters/setters generados por Lombok) ===
-Clases .class analizadas: 430 (main+test)
-Metodos totales (incl. Lombok, excl. constructores/sinteticos): 3581
-Metodos con palabra en espanol: 23 (0.6%)
+**Comando que resuelve la disputa (nuevo, 2026-09-18):**
+```bash
+python scripts/p4-nombres-espanol.py --bytecode
 ```
 
-**Veredicto: 🔴 disputa numérica sin resolver + 🟢 regresiones funcionales confirmadas y corregidas de
-verdad, con prueba directa contra la base real.**
+**Salida real (2026-09-18):**
+```
+DEFINICION NUCLEO (solo dominio, sin funcionales ni ambiguos)
+  main + test:     tipos   121/339   ( 35.7%)   metodos  271/693   ( 39.1%)
+  solo src/main:   tipos   108/272   ( 39.7%)   metodos  232/625   ( 37.1%)
+DEFINICION AMPLIA (+ funcionales + ambiguos resueltos por contexto)
+  main + test:     tipos   127/339   ( 37.5%)   metodos  369/693   ( 53.2%)
+  solo src/main:   tipos   112/272   ( 41.2%)   metodos  315/625   ( 50.4%)
+CONTEO SOBRE BYTECODE (javap, incluye metodos generados por Lombok)
+  main + test: 430 clases
+    todas las ocurrencias   1821/3581  ( 50.9%)
+    nombres distintos       1284/1924  ( 66.7%)
+```
+
+**Veredicto: 🔴 el criterio NO se cumple, y la cifra que el equipo reportó antes era incorrecta.**
+
+**La disputa numérica está resuelta, y a favor del ingeniero.** Se retracta la medición anterior
+(1,8 % de tipos y 0,1 % de métodos): era un artefacto de un diccionario demasiado estrecho, no una
+medición del código. Detalle completo en
+[`docs/observaciones/P4-RESOLUCION-DISPUTA.md`](docs/observaciones/P4-RESOLUCION-DISPUTA.md).
 
 **Regresiones — ya no son "inferencia fuerte de fallo", son fallos confirmados y corregidos:**
 
@@ -216,16 +239,52 @@ verdad, con prueba directa contra la base real.**
 Verificado que compila, `mvn javadoc:javadoc` sigue limpio, y la suite completa sigue en verde
 (804/804 tests, 0 fallos) después de todos estos cambios.
 
-**Disputa numérica de fondo, sigue sin resolver:** nuestra medición (0.6% de métodos en español,
-contando lo que Lombok genera) está muy por debajo del 5%; el ing reportó 72.2%. Un dato nuevo: para
-**tipos**, ambos contamos el mismo denominador exacto (339) — descarta que sea un desacuerdo sobre qué
-archivos incluir. Se probó una hipótesis concreta: contar cuántos nombres de clase contienen alguna
-palabra corta española (`de`, `la`, `el`, `en`, `con`, `por`, `que`...) **como subcadena, sin respetar
-límites de palabra** — con esa regla, **88.8% de los 269 tipos de `src/main`** "contienen español"
-(`LoginResponse`, `OpenApiConfig`, `NotificationRepository`, `BackupController` todos caen, por
-contener `es`, `en`, `no`, `con`). Esto no prueba qué hace la herramienta del ing, pero muestra que una
-metodología de subcadena ingenua sobre texto en inglés produce cifras en el mismo orden de magnitud
-que reportó — queda como hipótesis razonada, no como hecho confirmado, sin acceso a su herramienta real.
+**Disputa numérica de fondo: RESUELTA el 2026-09-18, el equipo estaba equivocado.**
+
+La hipótesis anterior (que el ing usara coincidencia de subcadena ingenua, que daba 88,8 %) queda
+descartada: era una explicación construida para defender nuestra cifra, y no era la correcta.
+
+Al tokenizar los identificadores por camelCase y clasificar contra un léxico español completo, el
+conteo de **tipos reproduce las cifras del ingeniero al dígito**:
+
+| | ing (2026-09-17) | `p4-nombres-espanol.py` (2026-09-18) |
+|---|---|---|
+| Tipos, main+test | **121/339 (35,7 %)** | **121/339 (35,7 %)** ✅ idéntico |
+| Tipos, solo `src/main` | **39,7 %** | **39,7 %** ✅ idéntico |
+| Métodos, solo `src/main` | 52,0 % | 50,4 % (definición amplia) |
+| Métodos, main+test | 72,2 % (1325/1836) | 66,7 % (1284/1924, bytecode, nombres distintos) |
+
+Coincidir en numerador **y** denominador en dos cortes distintos no es casualidad: es la misma
+medición. La diferencia en métodos se explica porque su universo (1836) es el de nombres distintos a
+nivel de bytecode — es decir, **incluye los accesores que genera Lombok**, que heredan el nombre del
+campo (`getEstado`, `setTitulacion`, `getObservaciones`) y por eso *suben* el porcentaje en vez de
+bajarlo. Nuestro conteo por texto fuente no los veía.
+
+**Por qué nuestra cifra anterior estaba mal.** No fue un problema de parseo — el universo de tipos
+siempre coincidió (339 = 339). El diccionario de `p4-rename-scan-fuente.py` omitía justo los tokens
+en español más frecuentes del código:
+
+| token | apariciones | ¿estaba en el diccionario viejo? |
+|---|---|---|
+| `por` | 56 | no |
+| `estado` / `estados` | 46 | no |
+| `de` | 22 | no |
+| `titulacion` | 18 | no |
+| `autenticar` | 15 | no |
+| `reporte` | 14 | no |
+| `como` | 13 | no |
+
+`por` solo ya aparece en 56 identificadores (`obtainPorId`, `listPorEstado`, `searchPorSubmission`),
+casi todos métodos. Un diccionario que no lo incluye no puede ver el patrón de nombres dominante del
+repositorio, y por eso daba 0,1 %.
+
+**Consecuencia honesta:** P4 **no está cumplido**. El criterio pide 5 % o menos y la medición real es
+35,7 % en tipos y ~50–72 % en métodos según el corte. El renombrado masivo de `49adaee` fue
+incompleto: cambió los tokens evidentes y dejó intactos los estructurales (`Estado`, `Titulacion`,
+`Criterio`, `Reporte`, `Observaciones`, `Supresion`, `Tipo`, `Fase`, y el `Por` de los finders).
+Corregir esto de verdad es un renombrado de la misma escala que el que ya rompió los contratos de
+la sección anterior, y no se va a hacer a 12 horas del cierre para maquillar un número: queda
+declarado como incumplido y medido con método público.
 
 ---
 

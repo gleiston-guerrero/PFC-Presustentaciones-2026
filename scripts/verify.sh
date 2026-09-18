@@ -61,7 +61,9 @@ fi
 ok "P4: 5 llamadas a procedimientos almacenados con parametro roto corregidas, probado con CALL directo contra Postgres real"
 ok "P4: 18 @RequestParam con nombre de wire roto corregidos en 10 controladores (verificado contra cada llamada Angular real)"
 ok "P4: 7 campos de DTO/entidad sin @JsonProperty corregidos (no exhaustivo -- 20 DTOs sin ninguno, se revisaron los de mayor riesgo)"
-fail "P4: DISPUTA NUMERICA ABIERTA -- nuestro conteo (~0.6% metodos) contradice fuertemente el AST del ing (72.2%); no resuelto"
+python scripts/p4-nombres-espanol.py || fail "P4: p4-nombres-espanol.py fallo"
+ok "P4: disputa numerica RESUELTA (2026-09-18) -- reproducimos 121/339 (35.7%) tipos y 39.7% en src/main, identico al ing"
+fail "P4: CRITERIO NO CUMPLIDO -- 35.7% de tipos en espanol contra un maximo de 5%; el renombrado de 49adaee fue incompleto (ver docs/observaciones/P4-RESOLUCION-DISPUTA.md)"
 echo
 
 echo "=== P8 -- Autorizacion de endpoints de escritura ==="
