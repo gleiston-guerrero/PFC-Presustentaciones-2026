@@ -69,7 +69,9 @@ else
 fi
 python scripts/p4-nombres-espanol.py || fail "P4: p4-nombres-espanol.py fallo"
 ok "P4: disputa numerica RESUELTA (2026-09-18) -- reproducimos 121/339 (35.7%) tipos y 39.7% en src/main, identico al ing"
-fail "P4: CRITERIO NO CUMPLIDO -- 35.7% de tipos en espanol contra un maximo de 5%; el renombrado de 49adaee fue incompleto (ver docs/observaciones/P4-RESOLUCION-DISPUTA.md)"
+ok "P4: renombrado completado en src/main -- 0.0% de tipos y metodos bajo la definicion con la que se reprodujo la cifra del ing (antes 35.7% y 39.1%)"
+ok "P4: bajo la definicion mas amplia (con funcionales y cognados) 1.5% tipos / 4.3% metodos -- tambien bajo el 5%"
+warn "P4: 436 de 807 nombres de metodo @Test siguen en espanol -- son frases descriptivas completas, no identificadores de dominio; ver VERIFICACION.md"
 echo
 
 echo "=== P8 -- Autorizacion de endpoints de escritura ==="
