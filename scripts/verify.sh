@@ -79,7 +79,13 @@ grep -q 'v1.1.0' Informe-Final/secciones/00-portada.tex && ok "portada declara v
 echo
 
 echo "=== P10 -- Caratula solo con identificacion + URL ==="
-warn "P10: el recuadro de identificadores de la portada quedo con notas de proceso (motivo del tag, 3 DOI) -- no es solo identificacion+URL, senalado por el ing, no corregido"
+PORT=Informe-Final/secciones/00-portada.tex
+PORT_DOI=$(grep -c "zenodo\|doi.org" "$PORT" || true)
+PORT_NOTAS=$(grep -cE "motivo del tag|notas del proceso|nota real sobre el DOI" "$PORT" || true)
+echo "  Portada: $(wc -l < "$PORT") lineas, $PORT_DOI referencias DOI, $PORT_NOTAS notas de proceso"
+[ "$PORT_NOTAS" = "0" ] && ok "portada sin recuadro de notas de proceso (corregido en 9c16cd2)" || fail "P10: la portada todavia lleva notas de proceso"
+[ "$PORT_DOI" = "0" ] && ok "portada sin listado de DOI (solo identificacion + URL del repositorio)" || fail "P10: la portada lista $PORT_DOI DOI; el criterio pide solo identificacion + URL"
+grep -q "REPOSITORIO" "$PORT" && ok "portada declara la URL del repositorio" || fail "P10: la portada no declara la URL del repositorio"
 echo
 
 echo "=== P11 -- Cifras unicas (controladores/rutinas) + clases renombradas ==="
