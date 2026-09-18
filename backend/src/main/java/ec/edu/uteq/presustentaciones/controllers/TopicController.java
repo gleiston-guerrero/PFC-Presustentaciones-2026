@@ -54,8 +54,8 @@ public class TopicController {
     // Propuestos" necesita list para poder editar, así que ORIENTACION_CATALOGO_GESTIONAR
     // también autoriza la lectura — de lo contrario ese permission por sí solo es inútil.
     @GetMapping
-    @PreAuthorize("@permisoService.tienePermiso(authentication, 'ORIENTACION_TEMAS_VER') " +
-            "or @permisoService.tienePermiso(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
+    @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_TEMAS_VER') " +
+            "or @permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
     /**
      * Explorar.
      * @param programId programId
@@ -79,8 +79,8 @@ public class TopicController {
      * @return 200 con el detalle del topic
      */
     @GetMapping("/{topicId}")
-    @PreAuthorize("@permisoService.tienePermiso(authentication, 'ORIENTACION_TEMAS_VER') " +
-            "or @permisoService.tienePermiso(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
+    @PreAuthorize("@permissionService.tienePermission(authentication, 'ORIENTACION_TEMAS_VER') " +
+            "or @permissionService.tienePermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
     /**
      * Detalle.
      * @param topicId topicId

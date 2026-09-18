@@ -38,7 +38,7 @@ import java.util.Map;
 @PreAuthorize("isAuthenticated()")
 public class CatalogoController {
 
-    private static final String PERMISO_GESTIONAR = "@permisoService.tienePermiso(authentication, 'CARRERAS_GESTIONAR')";
+    private static final String PERMISO_GESTIONAR = "@permissionService.tienePermission(authentication, 'CARRERAS_GESTIONAR')";
 
     private final ModalityTitulacionRepository modalityRepo;
     private final AnnouncementTitulacionRepository announcementRepo;

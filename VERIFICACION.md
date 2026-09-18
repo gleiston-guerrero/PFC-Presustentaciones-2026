@@ -344,9 +344,34 @@ Tests run: 23, Failures: 0, Errors: 0 (AppUserControllerTest, incluye
 updatePerfilRechazaEditarElPerfilDeOtroAppUser -> 403 real)
 ```
 
-**Veredicto: ✅ Cumple.** 102 endpoints (misma cifra que la guía), 97 con autorización declarativa, 5
-exentos justificados (mecanismo de login/recuperación). `MeController` no tiene ningún endpoint de
-escritura (solo `GET /api/me/permisos`) y ya tiene `@PreAuthorize` de clase.
+**Veredicto: ✅ Cumple, y se encontraron y corrigieron 2 bugs reales investigando el detalle.** 102
+endpoints (misma cifra que la guía), 97 con autorización declarativa, 5 exentos justificados
+(mecanismo de login/recuperación). `MeController` no tiene ningún endpoint de escritura (solo
+`GET /api/me/permisos`) y ya tiene `@PreAuthorize` de clase. El 403 real: re-verificado
+`AppUserControllerTest:329` (`updatePerfilRechazaEditarElPerfilDeOtroAppUser`), sigue pasando.
+
+**"14 endpoints de escritura solo exigen `isAuthenticated()`":** confirmado exacto (`AppUserController`
+×2, `AuthController.changePassword`, `ChatbotController.askChatbot`, `EstadoTiempoRealController`,
+`NotificationController` ×3, `ProposalController.send`, `SubmissionController` ×2,
+`TutoringController` ×3) — no es una brecha: los 14 son endpoints de auto-servicio que resuelven la
+identidad desde el JWT (nunca desde un id recibido del cliente), el mismo patrón ya auditado y
+documentado en `OWASP-AUDIT.md` (A05:2021, corrección del 2026-09-11).
+
+**Hallazgo real no pedido, encontrado revisando la lista de arriba:** al primero intentar contar estos
+14 automáticamente, 9 endpoints de `CatalogoController` (crear/editar/eliminar facultad, program,
+modalidad, período académico) aparecían con la misma bandera — pero **sí tienen** un permiso específico
+(`CARRERAS_GESTIONAR`) declarado vía una constante `@PreAuthorize(PERMISO_GESTIONAR)`. Al inspeccionar
+esa constante: `"@permisoService.tienePermiso(authentication, 'CARRERAS_GESTIONAR')"` — el bean real se
+llama `permissionService` y el método `tienePermission` (ambos renombrados por P4 en
+`PermissionService.java`, verificado que no existe ningún bean `permisoService` en todo el proyecto).
+Esta expresión SpEL **nunca se resolvería** — Spring Security lanzaría una excepción de evaluación en
+cada request real a esos 9 endpoints administrativos. **Mismo patrón exacto en 2 endpoints más**,
+`TopicController.explorar`/`detalle` (GET, el explorador de temas que usan todos los estudiantes).
+Verificado end-to-end contra el backend real corriendo en local (Postgres/Redis Docker reales, login
+real): antes del fix, inalcanzable; corregidas las 3 constantes/expresiones a
+`@permissionService.tienePermission(...)`, y `GET /api/v1/orientacion/temas` con un JWT real de
+estudiante ahora responde **200** (antes de corregir habría fallado con un error de evaluación SpEL en
+cada intento). Verificado que compila y la suite completa sigue en verde (804/804).
 
 ---
 
