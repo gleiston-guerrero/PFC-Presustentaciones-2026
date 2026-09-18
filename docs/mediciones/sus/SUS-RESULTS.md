@@ -1,10 +1,14 @@
 # 📊 CUESTIONARIO DE USABILIDAD SUS (System Usability Scale)
 
 **Proyecto:** Sistema de Gestión de Pre-Sustentaciones UTEQ
-**Estado:** 🟡 15 hojas recolectadas y transcritas, pero solo **4 tienen fecha verificable**
-(2026-09-17 o antes). Las otras 11 tienen una fecha escrita a mano que, al día de esta nota, todavía no
-ha ocurrido — ver la sección siguiente. Se reporta el resultado del grupo con **n=4**, honestamente, en
-vez de con las 15.
+**Estado:** 🟢 **Ronda nueva del 2026-09-18 con n=15 y fecha sellada por un tercero** (ver
+[«Ronda del 18-sep»](#ronda-del-18-sep-2026-n15-con-fecha-sellada-por-un-tercero)). La ronda anterior
+en papel sigue versionada tal cual, con sus 11 hojas de fecha no verificable declaradas — no se
+reemplaza ni se corrige.
+
+**Resultado que se reporta:** **SUS = 52,83** (DE 12,06; IC 95 % [46,16 – 59,51]; n=15), **por debajo
+del promedio de la industria** de 68 puntos (Bangor et al.). Es un resultado desfavorable y se reporta
+como tal.
 **Metodología:** Escala SUS estándar de Brooke (1996) de 10 preguntas con escala Likert (1: Totalmente en desacuerdo, 5: Totalmente de acuerdo).
 
 ---
@@ -69,6 +73,68 @@ fila que llegue sin ella.
 [`respuestas-crudas/`](respuestas-crudas/). Es una medición nueva, con su propia fecha verificable, que
 se reportará junto a ellas. Sustituir la evidencia original por una versión posterior es justo lo que
 este punto ya rechazó una vez.
+
+---
+
+## Ronda del 18-sep-2026: n=15 con fecha sellada por un tercero
+
+Aplicada el **2026-09-18**, en una ventana de 5 h 20 min (**11:36:04 → 16:56:21**). Cada respuesta
+lleva la marca de tiempo del servidor de Google, no del equipo. Evidencia versionada sin editar en
+[`re-aplicacion/respuestas-formulario-2026-09-18.csv`](re-aplicacion/respuestas-formulario-2026-09-18.csv);
+derivado reproducible con `python scripts/sus-ingesta.py <ese csv>`.
+
+**SUS = 52,83** · DE 12,06 · IC 95 % [46,16 – 59,51] · n=15
+
+| | valor |
+|---|---|
+| Participantes | 15 (7 estudiantes, 5 docentes, 2 coordinadores, 1 administrador) |
+| Consentimiento individual | 15 de 15 lo aceptaron explícitamente |
+| Fecha verificable | 15 de 15 |
+| Interpretación (Bangor et al.) | **por debajo** del promedio de la industria (68) |
+
+### Lo que esta ronda SÍ resuelve
+
+Los dos defectos de forma que señaló la evaluación quedan cerrados: la fecha ya no depende de lo que
+alguien escriba a mano — la pone un servidor que el equipo no controla — y el **consentimiento pasó a
+ser individual y explícito**, en vez de la nota impresa de «consentimiento implícito» que se objetó.
+
+### Lo que esta ronda NO resuelve, y hay que decirlo
+
+**No es una re-aplicación a las 11 personas de las hojas en disputa.** De los 15 participantes,
+**ninguno declara haber respondido antes en papel** (14 «No», 1 «No recuerdo»). Es una **muestra nueva
+e independiente**, no las mismas personas. El origen de las 11 hojas con fecha posterior al escaneo
+sigue exactamente igual de abierto que antes, y esta ronda no debe presentarse como si lo cerrara.
+
+### El hallazgo que sí aporta algo sobre las hojas originales
+
+Las tres mediciones son **estadísticamente indistinguibles** entre sí:
+
+| Medición | n | Media | DE | IC 95 % |
+|---|---|---|---|---|
+| Papel, las 15 hojas | 15 | 55,17 | 12,55 | [48,22 – 62,12] |
+| Papel, solo las 4 de fecha verificable | 4 | 48,75 | 1,44 | [46,45 – 51,05] |
+| **Formulario 18-sep** | **15** | **52,83** | **12,06** | **[46,16 – 59,51]** |
+
+Welch: papel(15) vs formulario, **t = 0,519, p = 0,608**; papel(4) vs formulario, **t = −1,278,
+p = 0,220**. Ninguna diferencia significativa.
+
+Una muestra nueva, independiente y con fecha verificable **reproduce el mismo resultado** que la ronda
+en papel. Eso no arregla la fecha de las 11 hojas — no puede — pero sí dice algo sobre una lectura
+posible del hallazgo: **los puntajes de las hojas no son números inventados para quedar bien.** Si lo
+fueran, no habría por qué esperar que una muestra distinta cayera en el mismo rango. Sigue siendo
+evidencia indirecta, y se presenta como tal: apoya la autenticidad de las respuestas, no la de la fecha.
+
+### Figuras
+
+Generadas desde los CSV versionados con `python scripts/gen-figuras-sus.py`
+(en [`figuras/`](figuras/)):
+
+| Figura | Qué muestra |
+|---|---|
+| `fig-sus-comparacion-rondas.png` | Las tres mediciones con su IC 95 % y la línea del 68 |
+| `fig-sus-por-item.png` | Promedio de cada uno de los 10 ítems, marcando cuáles son de polaridad invertida |
+| `fig-sus-distribucion.png` | Reparto de los 15 puntajes individuales |
+| `fig-sus-por-rol.png` | Puntaje por rol — descriptivo; con 1 a 7 respuestas por grupo no se sostiene una comparación |
 
 ## Por qué esto tardó en tener datos reales
 

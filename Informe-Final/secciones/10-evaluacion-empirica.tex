@@ -222,17 +222,50 @@ el resultado de cierre sobre las 15 respuestas: se reporta únicamente sobre las
 verificable (2026-09-17 o anterior), y las otras 11 quedan declaradas pendientes de confirmar, no
 fabricadas ni descartadas. Detalle completo en \texttt{docs/mediciones/sus/SUS-RESULTS.md}.
 
-Instrumento SUS de diez ítems, aplicado a \textbf{15 participantes} del sistema, de forma anónima y con
-una nota de consentimiento informado impresa en el propio formulario (sin firma individual --- brecha
-declarada). Las 15 respuestas crudas están versionadas en \texttt{docs/mediciones/sus/sus-respuestas.csv}
-(con una columna \texttt{fecha\_verificable}), con las 15 hojas escaneadas originales, sin modificar, en
-\texttt{docs/mediciones/sus/respuestas-crudas/}. Puntaje calculado con la fórmula estándar de Brooke y
-verificado con \texttt{Python} (\texttt{statistics}/\texttt{scipy}) directamente sobre el CSV, filtrando
-por fecha verificable antes de calcular:
-\textbf{media 48.75/100, desviación estándar 1.44, intervalo de confianza 95\,\% [46.45, 51.05]}
-($n=4$: participantes G, H, K, Ñ, fechados 14 y 16 de septiembre de 2026). Según la escala de
-interpretación de Bangor et al. (2009), un promedio de 48.75 cae por debajo de la banda ``OK''/marginal
---- un resultado bajo, aunque con una muestra demasiado pequeña para generalizar con confianza. Una
+\textbf{Ronda del 2026-09-18 con fecha sellada por un tercero.} Para cerrar el defecto de forma sin
+tocar la evidencia original, el instrumento se volvió a aplicar en un formulario alojado por un
+tercero, que sella cada respuesta con la hora de su propio servidor: una marca de tiempo que el equipo
+no controla, que es exactamente lo que faltaba. El formulario no registra ninguna hora del lado del
+cliente, por diseño. Se recogieron \textbf{15 respuestas} el 2026-09-18 entre las 11:36 y las 16:56, las
+15 con fecha verificable y las 15 con \textbf{consentimiento individual explícito} --- lo que cierra
+también la segunda objeción, la de que el consentimiento era solo una nota impresa. Resultado:
+\textbf{media 52.83/100, desviación estándar 12.06, intervalo de confianza 95\,\% [46.16, 59.51]}
+($n=15$). Según la escala de Bangor et al. (2009) sigue \textbf{por debajo} del promedio de la industria
+(68 puntos): es un resultado desfavorable y se reporta como tal. Evidencia sin editar en
+\texttt{docs/mediciones/sus/re-aplicacion/}, reproducible con \texttt{scripts/sus-ingesta.py}.
+
+\textbf{Qué no resuelve esta ronda.} No es una re-aplicación a las 11 personas de las hojas en disputa:
+de los 15 participantes, \emph{ninguno} declara haber respondido antes en papel (14 ``No'', 1 ``No
+recuerdo''). Es una muestra nueva e independiente, y el origen de aquellas 11 hojas sigue igual de
+abierto.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{figuras/fig-sus-comparacion-rondas.png}
+  \caption[Las tres mediciones del SUS]{Las tres mediciones del SUS con su intervalo de confianza del
+  95\,\%. Los puntos claros son las respuestas individuales. La línea discontinua marca el promedio de
+  la industria (68 puntos, Bangor et al.), por encima del cual no queda ninguna de las tres. Generada
+  con \texttt{scripts/gen-figuras-sus.py} desde los CSV versionados.}
+  \label{fig:sus-comparacion}
+\end{figure}
+
+
+\textbf{Lo que sí aporta sobre las hojas originales.} Las tres mediciones son estadísticamente
+indistinguibles entre sí: papel con las 15 hojas (55.17), papel con solo las 4 de fecha verificable
+(48.75) y el formulario del 18-sep (52.83), con prueba de Welch $t=0.519$, $p=0.608$ para la primera
+comparación y $t=-1.278$, $p=0.220$ para la segunda
+(Figura~\ref{fig:sus-comparacion}). Que una muestra distinta, independiente y con
+fecha verificable caiga en el mismo rango es evidencia \emph{indirecta} de que los puntajes de las hojas
+no son cifras inventadas para quedar bien; no dice nada sobre su fecha, y se presenta con ese límite.
+
+Instrumento SUS de diez ítems. Las respuestas crudas de la ronda en papel están versionadas en
+\texttt{docs/mediciones/sus/sus-respuestas.csv} (con una columna \texttt{fecha\_verificable}), con las 15
+hojas escaneadas originales, sin modificar, en \texttt{docs/mediciones/sus/respuestas-crudas/}. Antes de
+la ronda del 18-sep, el resultado de cierre se reportaba solo sobre las 4 respuestas con fecha
+verificable (\textbf{media 48.75, DE 1.44, IC 95\,\% [46.45, 51.05]}, $n=4$: participantes G, H, K, Ñ).
+Todos los puntajes se calculan con la fórmula estándar de Brooke y se verifican con \texttt{Python}
+(\texttt{statistics}/\texttt{scipy}) directamente sobre los CSV; la implementación reproduce al dígito
+los 15 puntajes de la ronda en papel. Una
 versión anterior de este proyecto afirmaba un puntaje con evaluadores inexistentes --- esos datos eran
 fabricados y fueron retirados explícitamente; este mismo instrumento tuvo después un segundo problema de
 integridad de datos (las 11 fechas no verificables de arriba), tratado de la misma forma: declarando la
