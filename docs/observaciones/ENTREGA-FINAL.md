@@ -33,9 +33,36 @@
    - `13056e7` docs: eliminar metricas SUS falsas
    - `f7b2440` fix(sec): habilitar HSTS y documentar resultado
    - `a8347b8` docs: actualizar metricas reales de cobertura
-   - `4b5aa34` docs: completar ADR-007
+   - ~~`4b5aa34` docs: completar ADR-007~~ — ⚠️ **retirado como evidencia (2026-09-18).** Este commit
+     **no cambió ningún archivo**: su mensaje anuncia un trabajo que el commit no contiene. Señalado en
+     la evaluación integral del 17-sep («`4b5aa34` es un commit vacío citado como evidencia») y
+     confirmado aquí:
+
+     ```
+     $ git show --stat --format="" 4b5aa34
+     (sin salida: 0 archivos cambiados)
+     ```
+
+     ADR-007 **sí existe** (`docs/adr/ADR-007-despliegue-docker.md`), pero lo produjeron otros commits,
+     estos sí con contenido: `f19a35b` (2026-08-29, crea el ADR, 55 líneas) y `14d6ecb` (2026-08-31,
+     lo renombra a su nombre actual). Esos dos son la evidencia real; `4b5aa34` no lo es y se retira
+     de esta lista.
    - `0bee263` docs: unificar integrantes del proyecto
-18. **Hashes reales:** Los 5 hashes de arriba fueron verificados con `git cat-file -e` contra el historial real de este repositorio (corrección 2026-09-11; la lista anterior citaba hashes que no existían en ningún commit).
+18. **Hashes reales:** Los 5 hashes de arriba fueron verificados con `git cat-file -e` contra el
+    historial real de este repositorio (corrección 2026-09-11). **Corrección de método
+    (2026-09-18):** `git cat-file -e` solo comprueba que el commit *exista*, no que haya cambiado
+    algo — y por eso pasó por bueno un commit vacío. La comprobación correcta añade el `--stat`:
+
+    ```bash
+    for h in 13056e7 f7b2440 a8347b8 4b5aa34 0bee263; do
+      git cat-file -e "$h^{commit}" || echo "$h NO EXISTE"
+      git show --stat --format="" "$h" | tail -1 | grep -q "file" || echo "$h VACIO"
+    done
+    ```
+
+    Resultado: los 5 existen; **4 cambian archivos y `4b5aa34` no** (ver arriba). Esta corrección se
+    aplica también a `make verify`, que ya cuenta commits vacíos con `--stat` en vez de con
+    `cat-file`. (corrección original 2026-09-11; la lista anterior citaba hashes que no existían en ningún commit).
 19. **Push realizado:** Pendiente ejecución (a cargo del agente principal o administrador, para evitar un push destructivo desde el IDE).
 20. **Pendientes reales:** 
    - Ejecución de un estudio SUS genuino con usuarios reales.
