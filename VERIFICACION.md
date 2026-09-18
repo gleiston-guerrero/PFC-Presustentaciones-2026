@@ -658,6 +658,29 @@ en `main` desde hace casi un día, pero fuera de la etiqueta que se evalúa.
 git show HEAD:Informe-Final/secciones/00-portada.tex
 ```
 
+**Salida real (2026-09-18), 32 líneas — se reproducen las 8 primeras y las 5 últimas:**
+```latex
+\begin{titlepage}
+\centering
+\vspace*{0.4cm}
+{\LARGE \textbf{UNIVERSIDAD TÉCNICA ESTATAL DE QUEVEDO}}\\[0.3cm]
+{\large Facultad de Ciencias de la Computación}\\[0.2cm]
+{\large Carrera de Ingeniería de Software (Rediseño)}\\[0.5cm]
+
+{\large \textbf{ASIGNATURA: Aplicaciones Web}}\\[0.3cm]
+   [...]
+{\large \textbf{FECHA:} Septiembre de 2026}\\[0.4cm]
+
+{\large \textbf{REPOSITORIO:} \url{https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026}}
+\vspace*{0.3cm}
+\end{titlepage}
+```
+
+El archivo completo son 32 líneas: universidad, facultad, carrera, asignatura, título, tag, autores con
+ORCID, docente-director, fecha y URL del repositorio. **Ningún recuadro de notas de proceso, ningún
+DOI, ningún juicio sobre compañeros** — comprobable con `wc -l` y con el propio comando de arriba.
+`make verify` lo chequea de forma automática (bloque P10: 0 referencias DOI, 0 notas de proceso).
+
 **Veredicto (ronda anterior): 🟡 Parcial.** El juicio sobre la situación académica de compañeros ya se
 retiró (verificado, no queda ningún comentario de ese tipo). **Pero el propio arreglo de P9 volvió a
 violar el criterio**: el recuadro de "Identificadores de esta versión" ahora incluía el motivo del tag,
@@ -763,9 +786,18 @@ git log --pretty=format:"%H" | while read h; do
 done
 ```
 
-**Salida real (2026-09-17):** 4 commits vacíos en todo el historial (347 commits): `de0eeef`,
-`1139344`, `4b5aa34` (2026-09-02), `3e7069c` (2026-09-09). Ninguno nuevo desde el commit que revisó la
-guía (`f3d1ff4`).
+**Salida real (2026-09-18):**
+```
+VACIO: 3e7069c5ea40c596908dc7ef0661fea55c627ed9
+VACIO: 4b5aa34b493fff3e6356a8128ff7438897301acf
+VACIO: 1139344d3a3eb0db76c384147b54e55a79f2fa5a
+VACIO: de0eeef0d177d4344ad8dc74a9055d9c470c621e
+total commits: 403
+```
+
+4 commits vacíos en 403, todos anteriores al commit que revisó la guía (`f3d1ff4`): tres del 2026-09-02
+y uno del 2026-09-09. **Ninguno nuevo** — `make verify` lo comprueba en cada corrida contando los
+vacíos en el rango `f3d1ff4..HEAD`.
 
 **Veredicto (ronda anterior): 🟡 Parcial, honestamente sin cerrar.** La nota escrita existe
 (`docs/observaciones/BITACORA-COMMITS-*.md`, `OBSERVACIONES.md` OBS-26), pero el ing señaló, con razón,

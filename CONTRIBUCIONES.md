@@ -17,12 +17,12 @@ son de **Álava Alvarado, Jean Pierre** (`Jean30042 <jeanalavaalavarado@gmail.co
 git log --format="%H|%an|%ae|%ad|%s" --date=short f3d1ff4..HEAD | cut -d'|' -f2,3 | sort -u
 ```
 
-Salida real (2026-09-17):
+Salida real (2026-09-18):
 ```
 Jean30042|jeanalavaalavarado@gmail.com
 ```
 
-Un único autor, sin excepción, en los 30+ commits de esta ronda.
+Un único autor, sin excepción, en los **81 commits** de esta ronda (`git rev-list --count f3d1ff4..HEAD`, 2026-09-18).
 
 **Por qué (aclaración P12, evaluación integral 2026-09-17):** este examen suspenso lo está cursando y
 sustentando Álava Alvarado en solitario. Los otros tres integrantes originales del equipo (Moncayo
@@ -33,17 +33,17 @@ seguía siendo colectivo, es que la recuperación, tal como está planteada, ya 
 
 | Punto | Peso | Commit(s) de cierre real | Autor (`git log`) |
 |---|---|---|---|
-| P1 (SUS) | 1,7 | `f51db75`, `70035fa`, `8488d06` | Álava Alvarado |
+| P1 (SUS) | 1,7 | `f51db75`, `70035fa`, `8488d06`; re-aplicación con fecha de un tercero: `5d6102b`, `79b682a`, `d284a22`; retractación de las 11 hojas: `d42da11` | Álava Alvarado |
 | P2 (Cobertura) | 1,4 | `9067cad` | Álava Alvarado |
 | P3 (Javadoc) | 1,4 | `41c5bc9` | Álava Alvarado |
-| P4 (Nombres en español) | 1,2 | `49adaee` | Álava Alvarado |
+| P4 (Nombres en español) | 1,2 | `49adaee` (incompleto); disputa resuelta: `536a33b`; contratos JSON: `556f02a`; congelado y renombrado real: `7263fbc`, `3593511` | Álava Alvarado |
 | P5 (Lighthouse) | 0,8 | `73ec6c7`, `2161280` | Álava Alvarado |
 | P6 (Comparaciones múltiples) | 0,6 | `bd2cc84` (ronda anterior), `201c2fa` (re-verificación) | Álava Alvarado |
 | P7 (Pruebas del chatbot) | 0,8 | `bd2cc84` (ronda anterior), `b99bb72` (re-verificación) | Álava Alvarado |
 | P8 (Autorización) | 0,6 | `bd2cc84` (ronda anterior), `40426b3` (fix real) | Álava Alvarado |
 | P9 (Etiqueta) | 0,4 | `8b1c1d2` | Álava Alvarado |
 | P10 (Carátula) | 0,3 | `bd2cc84` (retiro del recuadro), `85c13cf` | Álava Alvarado |
-| P11 (Cifras únicas) | 0,4 | `bd2cc84` (ronda anterior), `6282d50` (limpieza real) | Álava Alvarado |
+| P11 (Cifras únicas) | 0,4 | `bd2cc84` (ronda anterior), `6282d50`, `dd3e192` (23 citas muertas + chequeo real) | Álava Alvarado |
 | P12 (Historial) | 0,4 | `28276f9` (re-verificación; sigue 🟡 parcial) | Álava Alvarado |
 
 **No se declara ningún punto como trabajo colectivo de esta ronda porque el historial no lo respalda.**
@@ -51,7 +51,7 @@ Esto no es una afirmación sobre quién entendió o decidió qué —los cuatro 
 fases anteriores del proyecto, ver la sección siguiente— es literalmente quién ejecutó los commits que
 cierran cada punto de esta revisión puntual, que es lo único que un `git log` puede verificar.
 
-## Contribución histórica al proyecto completo (los 347 commits)
+## Contribución histórica al proyecto completo (los 403 commits)
 
 Desglose real por identidad de Git, `git shortlog -sne --all`, con las identidades múltiples de la misma
 persona agrupadas (ver [`CONTRIBUTORS.md`](CONTRIBUTORS.md) para la tabla de correspondencia
@@ -64,7 +64,7 @@ identidad↔persona, ya documentada ahí):
 | Barreto Rosado, Heider Dominick | `dominick1245 <dominickelyolo@gmail.com>`, `dominick1245 <144386724+dominick1245@users.noreply.github.com>` | 45 |
 | Moncayo Loor, Xavier Alejandro | `XAML25 <xavierloor52@gmail.com>` | 13 |
 
-Total: 369 commits en las cuatro identidades agrupadas (347 commits únicos en `HEAD`; la diferencia
+Total: 403 commits únicos en `HEAD` al 2026-09-18 (la diferencia
 sale de que `git shortlog --all` cuenta también commits que solo existen en ramas/reflog no fusionadas
 a `main`, no de contarlos dos veces en el mismo historial).
 
