@@ -16,13 +16,16 @@ import java.util.Map;
 @AllArgsConstructor
 public class EstadoBackupsDTO {
 
+    @JsonProperty("ultimoRespaldo")
     private BackupInfoDTO ultimoBackup;          // null si no hay ninguno
+    @JsonProperty("ultimoRespaldoHace")
     private String        ultimoBackupHace;      // "hace 3 horas" / "—"
 
     private boolean       programacionActiva;
     private LocalDateTime proximoAutomatico;       // null si está desactivada o el cron es inválido
     private String        proximoAutomaticoTexto;  // "domingo 23:00" / "programación pausada"
 
+    @JsonProperty("totalRespaldos")
     private int              totalBackups;
     @JsonProperty("conteoPorTipo")
     private Map<String,Long>  countPorTipo;        // {FULL: 4, DIFERENCIAL: 0}

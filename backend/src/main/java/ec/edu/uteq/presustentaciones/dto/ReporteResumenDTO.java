@@ -18,6 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ReporteResumenDTO {
 
+    @JsonProperty("totalSolicitudes")
     private long totalSubmissions;
     @JsonProperty("solicitudesCompletadas")
     private long submissionsCompletadas;
@@ -26,6 +27,7 @@ public class ReporteResumenDTO {
     @JsonProperty("solicitudesRechazadas")
     private long submissionsRechazadas;
 
+    @JsonProperty("totalActas")
     private long totalMinutes;
     @JsonProperty("actasGeneradas")
     private long minutesGeneradas;
@@ -42,5 +44,6 @@ public class ReporteResumenDTO {
 
     @JsonProperty("solicitudesPorEstado")
     private List<ReporteCountDTO> submissionsPorEstado;
+    @JsonProperty("sustentacionesPorPeriodo")
     private List<ReporteCountDTO> sustentacionesPorPeriod;
 }

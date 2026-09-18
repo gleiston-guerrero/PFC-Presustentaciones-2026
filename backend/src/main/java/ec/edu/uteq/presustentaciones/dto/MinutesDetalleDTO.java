@@ -30,10 +30,12 @@ public class MinutesDetalleDTO {
     private String studentNombre;
     @JsonProperty("carrera")
     private String program;
+    @JsonProperty("tituloTema")
     private String tituloTopic;
     private String estado;
     private String estadoNombre;
     private LocalDate fechaGeneracion;
+    @JsonProperty("observacionesActa")
     private String observacionesMinutes;
     private String archivoPdf;
 

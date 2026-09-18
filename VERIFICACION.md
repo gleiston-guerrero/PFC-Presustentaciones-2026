@@ -259,7 +259,54 @@ medición del código. Detalle completo en
    nombre real que Angular ya envía, sin tocar el frontend — mismo principio que ya usaba
    `@JsonProperty` para el cuerpo JSON, aplicado aquí a query params.
 
-3. **Campos de DTO/entidad sin `@JsonProperty` (7 encontrados, no necesariamente todos):**
+3bis. **Auditoría sistemática del contrato JSON (2026-09-18) — 23 campos rotos más.**
+
+La revisión manual del 17-sep encontró 7 campos y declaró explícitamente que no era exhaustiva. Lo
+era aún menos de lo que parecía. Se escribió [`scripts/p4-contrato-json.py`](scripts/p4-contrato-json.py),
+que calcula el nombre JSON que **realmente** emite cada campo (`@JsonProperty` si existe, si no el
+nombre Java) y lo cruza contra cada `interface` de TypeScript del frontend, resolviendo `extends`.
+Encontró **23 contratos rotos en 10 DTOs**:
+
+| DTO | Campo Java | JSON que emitía | Angular lee |
+|---|---|---|---|
+| `EvaluationPanelistDTO` | `notaPanelist` | `notaPanelist` | `notaJurado` |
+| `EvaluationPanelistDTO` | `nombrePanelist` | `nombrePanelist` | `nombreJurado` |
+| `EvaluationPanelistDTO` | `rolePanelist` | `rolPanelist` ← *anotado, pero al nombre equivocado* | `rolJurado` |
+| `EvaluationRubricResponse` | `nombrePanelist`, `notaTotalPanelist`, `rolePanelist` | 3 nombres en inglés | `nombreJurado`, `notaTotalJurado`, `rolJurado` |
+| `MinutesDetalleDTO` | `tituloTopic`, `observacionesMinutes` | idem | `tituloTema`, `observacionesActa` |
+| `MiStudentTutoradoDTO` | `tituloTopic`, `estadoTutoring`, `estadoSubmissionCodigo`, `estadoSubmissionNombre` | idem | `tituloTema`, `estadoTutoria`, `estadoSolicitudCodigo`, `estadoSolicitudNombre` |
+| `ObservacionesSubmissionDTO` | `tituloTopic`, `nombreStudent`, `nombrePanelist`, `notaPanelist` | idem | `tituloTema`, `nombreEstudiante`, `nombreJurado`, `notaJurado` |
+| `ReporteResumenDTO` | `totalSubmissions`, `totalMinutes`, `sustentacionesPorPeriod` | idem | `totalSolicitudes`, `totalActas`, `sustentacionesPorPeriodo` |
+| `EstadoBackupsDTO` | `ultimoBackup`, `ultimoBackupHace`, `totalBackups` | idem | `ultimoRespaldo`, `ultimoRespaldoHace`, `totalRespaldos` |
+| `ReporteActividadTeacherDTO` | `comoPanelist` | `comoPanelist` | `comoJurado` |
+
+**El más grave es el primero, y es exactamente el flujo que el ing pidió demostrar en vivo**
+(solicitud #3: *"demostrar el flujo de evaluación ponderada y la asignación de jurado desde el
+frontend"*). `GET /api/v1/evaluacion-jurado/tribunal/{id}` devuelve `EvaluationPanelistDTO`, y
+`evaluar-solicitud.component.ts:89` hace:
+
+```ts
+const sum = evals.reduce((acc, e) => acc + e.notaJurado, 0);
+```
+
+Con el contrato roto, `e.notaJurado` es `undefined`, la suma da **`NaN`**, y el promedio del tribunal
+y la nota final ponderada quedan en `NaN`. Peor: `evaluar-solicitud.component.html:45` hace
+`{{ evalJurado.notaJurado.toFixed(2) }}`, que sobre `undefined` lanza un **`TypeError` y rompe el
+renderizado de la plantilla**. Y `getEvaluacionJuradoPorRol()` compara `e.rolJurado === rol`, que
+nunca coincide, así que ningún miembro del tribunal se encuentra.
+
+El patrón de fondo es siempre el mismo: **`@JsonProperty` aplicado de forma inconsistente dentro de
+la misma clase.** En `EvaluationPanelistDTO`, `submissionId` y `panelistId` sí estaban anotados y sus
+tres vecinos no. No fue un descuido puntual, fue sistemático.
+
+**Limitación declarada:** el script solo cubre lo que está tipado. El frontend tiene ~45 métodos de
+servicio que devuelven `Observable<any>`, sin interfaz contra la cual comparar. Esos quedan fuera y no
+se declara esta auditoría como exhaustiva.
+
+Verificado tras los 23 cambios: **804/804 pruebas en verde**, `jacoco:check` pasa, y el script vuelve
+a salir con código 0.
+
+3. **Campos de DTO/entidad sin `@JsonProperty` (7 encontrados en la ronda del 17-sep):**
    `PerfilRequest`/`AppUser.emailNotifications` (Angular lee/escribe `emailNotificaciones` — el
    formulario de "editar mi perfil" no guardaba ni mostraba el correo de notificaciones),
    `TutoringFaseDTO.archivoPdfStudent` (Angular espera `archivoPdfEstudiante`),

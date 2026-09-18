@@ -11,12 +11,14 @@ public class EvaluationRubricResponse {
     private Long submissionId;
     @JsonProperty("juradoId")
     private Long panelistId;
+    @JsonProperty("nombreJurado")
     private String nombrePanelist;
-    @JsonProperty("rolPanelist")
+    @JsonProperty("rolJurado")
     private String rolePanelist;
     /** Detalle por criterio */
     private List<CriterioResultado> detalles;
     /** Nota total de este panelist (suma de notaObtenida de cada criterio) */
+    @JsonProperty("notaTotalJurado")
     private Double notaTotalPanelist;
     /** Nota promedio del tribunal completo (todos los panelists), sobre 10 */
     private Double notaPromedioTribunal;

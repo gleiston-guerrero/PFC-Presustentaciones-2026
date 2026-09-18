@@ -27,9 +27,13 @@ public class MiStudentTutoradoDTO {
     private Short semestreActual;
     private String estadoAcademicoCodigo;
     private String estadoAcademicoNombre;
+    @JsonProperty("tituloTema")
     private String tituloTopic;
+    @JsonProperty("estadoSolicitudCodigo")
     private String estadoSubmissionCodigo;
+    @JsonProperty("estadoSolicitudNombre")
     private String estadoSubmissionNombre;
+    @JsonProperty("estadoTutoria")
     private String estadoTutoring;
     private LocalDateTime fechaAsignacion;
 }

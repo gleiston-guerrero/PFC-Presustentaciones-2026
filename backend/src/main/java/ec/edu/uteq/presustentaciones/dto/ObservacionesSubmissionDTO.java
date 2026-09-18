@@ -14,7 +14,9 @@ import java.util.List;
 public class ObservacionesSubmissionDTO {
     @JsonProperty("solicitudId")
     private Long submissionId;
+    @JsonProperty("tituloTema")
     private String tituloTopic;
+    @JsonProperty("nombreEstudiante")
     private String nombreStudent;
     private ObservacionesTutorDTO tutor;
     @JsonProperty("jurados")
@@ -37,10 +39,12 @@ public class ObservacionesSubmissionDTO {
     public static class ObservacionesPanelistDTO {
         @JsonProperty("juradoId")
         private Long panelistId;
+        @JsonProperty("nombreJurado")
         private String nombrePanelist;
         @JsonProperty("rol")
         private String role;
         private List<CriterioObservacionDTO> criterios;
+        @JsonProperty("notaJurado")
         private Double notaPanelist;
         private String observaciones;
         private String resultado;
