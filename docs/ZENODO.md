@@ -33,19 +33,37 @@ git diff --stat 35d8199..v1.1.0
 archivado y el tag aparece cualquier cambio que no sea registro del DOI, **falla**. Sin eso, la frase
 de arriba sería una promesa; con eso, es una comprobación.
 
-### Pendiente en el propio registro de Zenodo (metadatos, no archivos)
+### Estado de los metadatos del registro, verificado el 2026-09-19
 
-Dos campos quedaron mal al publicar. **Se corrigen con el botón «Editar»**: Zenodo permite cambiar
-metadatos después de publicar y solo prohíbe cambiar los archivos.
+Al publicar quedaron mal dos campos, y se corrigieron desde «Editar» — Zenodo permite cambiar
+metadatos después de publicar y solo prohíbe cambiar los archivos. Comprobado leyendo la página
+pública del registro, no dando por buena la edición:
 
-| Campo | Cómo quedó | Cómo debe quedar |
+| Campo | Estado |
+|---|---|
+| `Version` | ✅ `v1.1.0`. Al publicar quedó como `v3`, el correlativo que Zenodo pone cuando el campo se deja vacío, que no corresponde a ninguna versión de este proyecto |
+| `Description` | ✅ Describe los cambios de v1.1.0 y su estado medido. Al publicar se arrastró la de v1.0.1 |
+| `Version` en la cadena | ✅ `v1.0.0 → v1.0.1 → v1.1.0` bajo el mismo DOI de concepto |
+
+**Lo que queda, declarado en vez de corregido en silencio:**
+
+| Campo | Cómo está | Por qué no es un enlace roto |
 |---|---|---|
-| `Version` | `v3` | `v1.1.0` |
-| `Description` | La de v1.0.1 (menciona «Informe final v1.0.1») | El bloque de [`ZENODO-METADATOS-v1.1.0.md`](ZENODO-METADATOS-v1.1.0.md) |
+| *Related works* → **Is supplement to** | `github.com/carla22072004/…/tree/v1.0.0` | Apunta al **tag v1.0.0** en un registro que archiva v1.1.0. Es la incoherencia real que queda |
+| **Repository URL** | `github.com/carla22072004/PFC-Presustentaciones-2026` | Cuenta anterior a la transferencia |
+| *External resources* → **Available in** | `carla22072004/…`, *Release: v1.0.0* | Residuo de la integración GitHub↔Zenodo que creó la v1.0.0; no es editable desde el formulario |
 
-`v3` es el correlativo que Zenodo pone por omisión cuando el campo `Version` se deja vacío. No
-corresponde a ninguna versión de este proyecto y contradice a `CITATION.cff`, al tag de Git y a la
-portada del informe, que dicen `v1.1.0`.  
+Los tres nombran la cuenta `carla22072004`, anterior a la transferencia del repositorio. **No están
+rotos:** GitHub conserva la redirección, comprobado con `curl`:
+
+```
+$ curl -sI https://github.com/carla22072004/PFC-Presustentaciones-2026
+HTTP 301 -> https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026
+```
+
+De modo que resuelven al repositorio correcto. La única incoherencia de contenido es que el
+*supplement to* cita `tree/v1.0.0` en vez de `tree/v1.1.0`; se deja anotada aquí porque declararla
+cuesta menos que descubrirla después.  
 **Licencia:** MIT Open Source License  
 **Alcance de este documento:** el DOI del **software** (el código de este repositorio). El
 conjunto de datos de mediciones (k6, ZAP, Lighthouse, JaCoCo) se deposita por separado, con su
@@ -77,12 +95,13 @@ DOI siga siendo verificable sin depender de que nadie recuerde el hash de memori
 
 | Versión | Tag Git | DOI de la versión | Publicado | Notas |
 |---|---|---|---|---|
+| **v1.1.0** (cierre del examen suspenso) | `v1.1.0` | [10.5281/zenodo.22839517](https://doi.org/10.5281/zenodo.22839517) | 19 sep 2026 | Snapshot del commit `35d8199`. Cierra EV-2, EV-4, P1, P3, P4, P7, P8, P9, P10, P11 y las credenciales en claro de las evaluaciones del 17 y 18 de septiembre. |
 | **v1.0.1** (informe/portada) | `v1.0.1` | [10.5281/zenodo.22445216](https://doi.org/10.5281/zenodo.22445216) | 6 sep 2026 | Cierre real de la Entrega Final: correcciones de las Entregas 1A/1B/3 aplicadas (cobertura 63,17 %, CSP endurecida, catálogo de SP completo, evidencia OWASP real) — ver `docs/observaciones/OBSERVACIONES.md`. |
 | **v1.0.0** (movido, examen final) | `v1.0.0` | — (no vuelve a archivarse; ver `v1.0.0-zenodo-archive`) | movido 11 sep 2026 | Apunta hoy al commit de cierre real que se defiende en el examen final, no al release de agosto. |
 | v1.0.0 (original) | `v1.0.0-zenodo-archive` | [10.5281/zenodo.21988564](https://doi.org/10.5281/zenodo.21988564) | 18 ago 2026 | El commit exacto que el DOI de agosto archivó, preservado bajo este nombre tras mover `v1.0.0`. |
 
 - **Enlace permanente a la última versión:** [`https://doi.org/10.5281/zenodo.21988563`](https://doi.org/10.5281/zenodo.21988563) (DOI de concepto — usar este enlace cuando se quiera citar "el software" en general, no una corrida específica).
-- **Registro de la versión actual:** `https://zenodo.org/records/22445216`
+- **Registro de la versión actual:** `https://zenodo.org/records/22839517`
 - **Badge oficial (cita siempre la última versión):**
   [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21988563.svg)](https://doi.org/10.5281/zenodo.21988563)
 

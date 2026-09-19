@@ -808,10 +808,13 @@ convierta en una discrepancia silenciosa, `scripts/p9-snapshot-zenodo.py` —eng
 exige que **lo único** que separe el commit archivado del commit etiquetado sea el registro del propio
 DOI. Si aparece código, una prueba o una medición, falla.
 
-**Pendiente en el registro de Zenodo, no en el repositorio:** al publicar, el campo `Version` quedó
-como `v3` (el correlativo que Zenodo pone cuando se deja vacío) y la descripción quedó la de v1.0.1.
-Los metadatos sí se pueden editar después de publicar —solo los archivos no—, así que se corrigen
-desde «Editar». Detalle en [`docs/ZENODO.md`](docs/ZENODO.md).
+**Metadatos del registro, verificados el 2026-09-19 leyendo la página pública.** Al publicar, el campo
+`Version` quedó como `v3` (el correlativo que Zenodo pone cuando se deja vacío) y la descripción quedó
+la de v1.0.1; ambos **corregidos** desde «Editar», porque los metadatos sí se pueden cambiar tras
+publicar aunque los archivos no. Queda declarado, no corregido, que tres campos nombran la cuenta de
+GitHub anterior a la transferencia (`carla22072004`) y que uno de ellos cita `tree/v1.0.0` en vez de
+`tree/v1.1.0`. **No son enlaces rotos:** GitHub conserva la redirección (`HTTP 301` hacia
+`gleiston-guerrero`, comprobado). Detalle en [`docs/ZENODO.md`](docs/ZENODO.md).
 
 Salvedad que se mantiene: siguen existiendo `v1.0.0`, `v1.0.1` y `v1.0.0-zenodo-archive` en el
 historial de tags. Son versiones anteriores reales, no una segunda etiqueta compitiendo por el mismo
