@@ -29,15 +29,27 @@ version: "1.1.0"
 date-released: "2026-09-17"
 url: "https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026"
 repository-code: "https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026"
-doi: "10.5281/zenodo.22445216"
-# NOTA REAL (P9, examen suspenso 2026-09-17): el DOI de arriba archiva el snapshot de v1.0.1
-# (6 sep 2026) -- v1.1.0 (este cierre, tag Git v1.1.0) todavia no tiene su propio snapshot en
-# Zenodo. Archivar una version nueva requiere una accion manual del equipo en zenodo.org (no se
-# detecto integracion automatica GitHub->Zenodo en este repositorio, p. ej. un .zenodo.json), asi
-# que no se fabrica aqui un DOI nuevo que nadie verifico. El DOI citado sigue siendo real y
-# verificable, solo que corresponde a v1.0.1, no a v1.1.0.
-# DOI de concepto (resuelve siempre a la ultima version): 10.5281/zenodo.21988563
-# Version anterior v1.0.0 (2026-08-17): DOI 10.5281/zenodo.21988564 -- ver docs/ZENODO.md
+# DOI DE CONCEPTO, no de version. Zenodo asigna dos clases de DOI: uno por cada version
+# publicada, y uno "de concepto" que apunta siempre a la mas reciente. Aqui se cita el de
+# concepto a proposito, porque es el unico que no envejece: hasta el 2026-09-18 este campo
+# llevaba 10.5281/zenodo.22445216, que archiva v1.0.1, mientras el campo `version` de arriba
+# ya decia 1.1.0 -- una contradiccion que la evaluacion integral del 17-sep senalo con razon
+# ("el DOI declarado archiva la v1.0.1"). Citar el concepto evita que vuelva a ocurrir.
+doi: "10.5281/zenodo.21988563"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21988563"
+    description: "DOI de concepto: resuelve siempre a la version mas reciente publicada"
+  - type: doi
+    value: "10.5281/zenodo.22445216"
+    description: "Snapshot de la version v1.0.1 (2026-09-06)"
+  - type: doi
+    value: "10.5281/zenodo.21988564"
+    description: "Snapshot de la version v1.0.0 (2026-08-17)"
+# ESTADO DE v1.1.0 (declarado, no maquillado): v1.1.0 todavia NO tiene snapshot propio en
+# Zenodo. Archivarlo es una accion manual en zenodo.org y no se fabrica aqui un DOI que nadie
+# pueda verificar. El procedimiento exacto, y por que la transferencia del repositorio a otra
+# cuenta de GitHub no lo impide, estan en docs/ZENODO.md.
 keywords:
   - "pre-sustentacion"
   - "titulacion"

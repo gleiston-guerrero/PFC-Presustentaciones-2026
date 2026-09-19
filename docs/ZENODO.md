@@ -1,9 +1,14 @@
 # 🌐 REGISTRO DE IDENTIFICADOR PERSISTENTE DOI EN ZENODO — DEPÓSITO DEL SOFTWARE
 
 **Proyecto:** Sistema de Gestión de Pre-Sustentaciones UTEQ  
-**Estado:** ✅ **Archivado y Verificado** — DOI de la versión actual: [10.5281/zenodo.22445216](https://doi.org/10.5281/zenodo.22445216)  
-**Versión archivada actual:** `v1.0.1` (cierre real de la Entrega Final, tag Git `v1.0.1`)  
-**DOI de concepto (resuelve siempre a la última versión):** [10.5281/zenodo.21988563](https://doi.org/10.5281/zenodo.21988563)  
+**DOI que se cita (de concepto, resuelve siempre a la versión más reciente):**
+[10.5281/zenodo.21988563](https://doi.org/10.5281/zenodo.21988563)  
+**Última versión archivada:** `v1.0.1` → [10.5281/zenodo.22445216](https://doi.org/10.5281/zenodo.22445216)
+(2026-09-06)  
+**Estado de `v1.1.0`:** 🟡 **sin snapshot propio todavía.** Es una acción manual en zenodo.org y no se
+declara un DOI que nadie pueda verificar. La evaluación integral del 17-sep lo señaló
+(«el DOI declarado archiva la v1.0.1») y sigue abierto — procedimiento completo en
+[«Cómo archivar una versión nueva»](#-cómo-archivar-una-versión-nueva-procedimiento-vigente).  
 **Licencia:** MIT Open Source License  
 **Alcance de este documento:** el DOI del **software** (el código de este repositorio). El
 conjunto de datos de mediciones (k6, ZAP, Lighthouse, JaCoCo) se deposita por separado, con su
@@ -43,6 +48,75 @@ DOI siga siendo verificable sin depender de que nadie recuerde el hash de memori
 - **Registro de la versión actual:** `https://zenodo.org/records/22445216`
 - **Badge oficial (cita siempre la última versión):**
   [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21988563.svg)](https://doi.org/10.5281/zenodo.21988563)
+
+---
+
+## 📦 Cómo archivar una versión nueva (procedimiento vigente)
+
+### La integración con GitHub está rota, y no hace falta arreglarla
+
+La integración automática GitHub → Zenodo de este proyecto quedó registrada sobre
+`carla22072004/PFC-Presustentaciones-2026`, una ruta que **ya no existe bajo esa cuenta**: el
+repositorio se transfirió a `gleiston-guerrero`. En el panel de Zenodo (Settings → GitHub) el
+repositorio sigue apareciendo con el interruptor en ON y con tres intentos fallidos de `v0.9.0-rc`,
+porque el webhook apunta a un lugar que la cuenta ya no controla.
+
+Reactivarla exigiría que el **nuevo propietario** vincule su cuenta de GitHub con Zenodo y active el
+repositorio allí. Eso no depende del equipo.
+
+**No es necesario.** Zenodo publica igual con una subida manual, y el DOI que produce es exactamente
+del mismo tipo que el que produciría la integración: mismo DOI de concepto, misma familia de
+versiones, misma resolución. Lo único que cambia es quién sube el archivo. El registro publicado de
+`v1.0.0` (DOI `10.5281/zenodo.21988564`) sigue intacto y es la raíz de la familia.
+
+### El orden importa: primero la etiqueta, después Zenodo
+
+Zenodo archiva el contenido que se le sube, y el paquete se genera **desde el tag de Git**. Si el tag
+todavía apunta a un commit anterior al cierre, el snapshot archivaría ese estado viejo — que es
+precisamente el problema que este punto vino a resolver.
+
+> **Secuencia correcta:** mover la etiqueta al commit de cierre → generar el paquete → subir a Zenodo
+> → actualizar el número de versión en este documento. Nunca al revés.
+
+### Pasos
+
+**1. Generar el paquete desde la etiqueta ya colocada**
+
+```bash
+sh scripts/zenodo-paquete.sh v1.1.0
+```
+
+Sale de `git archive` sobre el tag, no del directorio de trabajo: archiva exactamente el commit
+etiquetado, sin archivos sin commitear, sin `target/` ni `node_modules/`. El script imprime el commit,
+la fecha y los metadatos a copiar.
+
+**2. Crear la versión nueva en Zenodo**
+
+Entrar al registro existente con la cuenta que lo publicó y usar **«New version»**, *no* «New upload»:
+
+<https://doi.org/10.5281/zenodo.21988563>
+
+Ese botón conserva el **DOI de concepto** (`10.5281/zenodo.21988563`) y encadena la versión nueva a
+las anteriores. Un «New upload» crearía una familia separada y rompería la cadena de citación — es el
+error más fácil de cometer aquí.
+
+**3. Subir y completar**
+
+- Borrar el archivo de la versión anterior que Zenodo arrastra al formulario y subir el `.tar.gz` nuevo.
+- Rellenar los metadatos con lo que imprime el script (título, versión, fecha, tipo `Software`,
+  licencia MIT).
+- Autores con sus ORCID, tal como están en [`CITATION.cff`](../CITATION.cff).
+- **Publish.**
+
+**4. Actualizar este repositorio**
+
+Zenodo devuelve un DOI de versión nuevo. Añadirlo a la lista de `identifiers` de `CITATION.cff` y al
+cuadro de versiones de este documento.
+
+**No hay que cambiar el campo `doi:` de `CITATION.cff` ni el badge del README:** ambos citan el DOI de
+concepto, que pasa a resolver solo a la versión nueva. Esa es justamente la razón de citar el concepto
+y no una versión — hasta el 2026-09-18 el campo apuntaba a `22445216` (v1.0.1) mientras `version`
+declaraba 1.1.0, la contradicción que señaló la evaluación integral.
 
 ---
 
