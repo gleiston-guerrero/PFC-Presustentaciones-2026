@@ -5,8 +5,8 @@
 [10.5281/zenodo.21988563](https://doi.org/10.5281/zenodo.21988563)  
 **Última versión archivada:** `v1.0.1` → [10.5281/zenodo.22445216](https://doi.org/10.5281/zenodo.22445216)
 (2026-09-06)  
-**Estado de `v1.1.0`:** 🟡 **etiqueta ya colocada sobre el commit de cierre (`f065b3c`, 2026-09-18);
-falta el snapshot en Zenodo.** Es una acción manual en zenodo.org y no se
+**Estado de `v1.1.0`:** 🟡 **etiqueta ya colocada sobre el commit de cierre (2026-09-18); falta el
+snapshot en Zenodo.** Es una acción manual en zenodo.org y no se
 declara un DOI que nadie pueda verificar. La evaluación integral del 17-sep lo señaló
 («el DOI declarado archiva la v1.0.1») y sigue abierto — procedimiento completo en
 [«Cómo archivar una versión nueva»](#-cómo-archivar-una-versión-nueva-procedimiento-vigente).  
