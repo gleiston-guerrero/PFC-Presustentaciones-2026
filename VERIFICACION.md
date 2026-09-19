@@ -99,8 +99,29 @@ haya 15 respuestas. Si el informe y el expediente se separan, la verificación f
   mecanismo se ve en la tercera fila: sin invertir los ítems pares α cae a 0,267, así que los
   participantes sí percibieron la polaridad alternada, pero no de forma lo bastante consistente. Con
   α = 0,599 y n = 15, el 52,83 es un **indicador débil**, no una medición consolidada.
+- ✅ **Reclutamiento documentado (lo pidió la revisión del 18-sep).** El enlace se publicó en un
+  servidor de Discord donde ya estaban los estudiantes del curso; respuesta voluntaria y asíncrona, sin
+  sesiones convocadas — de ahí las quince horas distintas entre 11:36 y 16:56. Composición recontada
+  desde el CSV: 7 estudiantes, 5 docentes, 2 coordinadores, 1 administrador. Es autoselección, y se
+  declara como tal.
+- ✅ **Cronología sellada por Google, no por el equipo.** Apps Script guardado **11:16**, formulario
+  creado **11:22**, primera respuesta **11:36:04**. El commit de las 16:37 es la hora en que se subió el
+  archivo al repositorio, no en que se escribió; no haberlo comiteado en su momento fue un descuido
+  real, y es lo que hizo posible la lectura del evaluador. Capturas en
+  `docs/mediciones/sus/re-aplicacion/evidencia/`.
+- 🟡 **Quién entregó la segunda versión de las hojas: declarado, no verificado.** El equipo declara que
+  fue Barreto Rosado, que no participa en esta ronda ni ha confirmado nada. No explica las fechas y no
+  traslada la responsabilidad de haberlas incorporado al expediente sin comprobarlas.
 - ❌ **El origen de las 11 hojas retractadas sigue abierto.** La ronda del 18-sep es una muestra
   nueva: ninguno de los 15 declara haber respondido antes en papel. No cierra el Piso 3.
+
+> **Corrección de una afirmación anterior (2026-09-19).** Este archivo y `SUS-RESULTS.md` sostuvieron
+> que *«el script documenta el formulario que ya existía, no lo generó»* y que el registro de
+> ejecuciones de Apps Script estaría vacío. **Las dos cosas eran incorrectas.** El historial del
+> proyecto, fechado por Google, dice 11:16 — seis minutos antes de que se creara el formulario. El
+> script sí lo creó. La cronología real refuta la objeción de forma más directa, sin depender del
+> argumento indirecto de la «fuente común», y la corrección se deja escrita en vez de reemplazar el
+> texto en silencio.
 
 Detalle completo en `docs/mediciones/sus/SUS-RESULTS.md`.
 

@@ -106,48 +106,129 @@ La cronología de los commits es correcta y se verificó: a las 16:32 (`5d6102b`
 «He leído **lo anterior** y acepto participar»; a las 16:37 (`79b682a`) apareció «He leído **el
 consentimiento informado** y acepto participar en estas condiciones», que es la que trae el CSV.
 
-**El paso que no se sostiene es la inferencia, no los hechos.** Tres comprobaciones:
+**El paso que no se sostiene es la inferencia, no los hechos.** Y la razón es más simple de lo que
+este documento sostuvo en un primer momento: **16:37 es la hora del *commit*, no la hora en que se
+escribió el script.**
 
-**1. La redacción no nació en el script: viene de la hoja en papel.** El instrumento original
+> ### Corrección de una afirmación anterior de este mismo documento (2026-09-19)
+>
+> Hasta hoy, aquí se afirmaba que *«el script documenta el formulario que ya existía, no lo generó»* y
+> se anticipaba que el registro de ejecuciones de Apps Script estaría vacío. **Las dos cosas eran
+> incorrectas y se retiran.** El historial del proyecto de Apps Script, fechado por Google, dice
+> **18-sep 11:16**: seis minutos *antes* de que se creara el formulario. El script sí creó el
+> formulario. Se corrige aquí, y no se borra lo que se dijo antes, porque un expediente que se limpia
+> a sí mismo no vale como expediente.
+>
+> La cronología real refuta la objeción de forma **más directa**, sin necesidad del argumento indirecto
+> de la «fuente común»: la redacción del consentimiento existía en los servidores de Google veinte
+> minutos antes de la primera respuesta.
+
+### Cronología completa, con quién sella cada hora
+
+| Hora (18-sep) | Hito | Quién pone la marca |
+|---|---|---|
+| **11:16** | Versión guardada del proyecto de Apps Script, autor JEAN PIERRE ALAVA ALVARADO | **Google** (historial del proyecto) |
+| **11:22** | Formulario creado y compartido con el grupo de la UTEQ | **Google** (actividad de Drive) |
+| **11:36:04** | Primera respuesta | **Google** (marca temporal del formulario) |
+| 16:32:13 | Respuesta nº 12 | Google |
+| **16:37:49** | `crear-formulario.gs` **se comitea** al repositorio | el equipo (`git`) |
+| 16:56:21 | Última respuesta (nº 15) | Google |
+
+Las tres primeras filas son marcas que el equipo no controla ni puede editar. La fila del commit es la
+única que pone el equipo, y es la que la objeción tomó por la hora de creación del script.
+
+**Qué pasó en realidad, dicho sin adorno:** el script se escribió y se guardó en Apps Script a las
+11:16, se ejecutó, y creó el formulario a las 11:22. **Lo que se hizo mal fue no comitearlo en ese
+momento**: quedó en Google durante toda la jornada y solo se subió al repositorio a las 16:37, junto
+con el resto de los cambios del día. Ese descuido es real y es lo que hizo posible la lectura del
+evaluador — desde el repositorio, y solo desde el repositorio, parece que el script nació a las 16:37.
+
+**Por qué la inferencia falla:** la objeción razona que la redacción del consentimiento no existía
+antes de las 16:37 porque el repositorio no la tenía. Pero el repositorio no es el único registro, ni
+el más difícil de manipular: **Google tiene esa misma redacción fechada a las 11:16**, en un artefacto
+que el equipo no puede retrodatar.
+
+**Y una comprobación adicional que no depende de ninguna captura:** el instrumento en papel
 [`Cuestionario-Usabilidad-SUS.docx`](Cuestionario-Usabilidad-SUS.docx), versionado el **2026-09-16 a
 las 22:48** en `f51db75` —dos días antes de todo esto— ya contiene las dos piezas de la frase:
 
 > «**Consentimiento informado**: tu participación es voluntaria y anónima. […] confirmas que aceptas
 > **participar en estas condiciones**.»
 
-Quien transcribió el formulario a Google Forms y quien escribió después el script partieron del mismo
-documento, así que llegar a la misma frase no requiere que uno copie del otro. La fuente común es
-anterior a ambos y está versionada.
+De modo que la redacción no nació ni en el script ni en el formulario: venía de la hoja, y está
+versionada en el repositorio desde antes.
 
-**2. El formulario se creó antes de la primera respuesta.** Registro de actividad de Google Drive
-([captura](evidencia/drive-creacion-formulario-2026-09-18.webp)): *«Has creado y compartido un elemento
-en 11:22, 18 sep»*.
+### Evidencia versionada
 
-| Hito | Hora |
+Todas están en [`re-aplicacion/evidencia/`](re-aplicacion/evidencia/) y todas son capturas de
+interfaces de Google, no de archivos del equipo:
+
+| Archivo | Qué muestra |
 |---|---|
-| Formulario creado y compartido (Drive) | **11:22** |
-| Primera respuesta (marca de Google) | 11:36:04 — 14 min después |
-| Última respuesta | 16:56:21 |
-| `crear-formulario.gs` subido al repositorio | 16:37:49 — **5 h 15 min después de crear el formulario** |
+| [`apps-script-historial-11-16.png`](re-aplicacion/evidencia/apps-script-historial-11-16.png) | Historial del proyecto de Apps Script: **18 de septiembre, 11:16**, autor JEAN PIERRE ALAVA ALVARADO |
+| [`drive-actividad-creacion-11-22.png`](re-aplicacion/evidencia/drive-actividad-creacion-11-22.png) | Actividad de Drive: *«Has creado y compartido un elemento en 11:22, 18 sep»*, compartido con el grupo de la Universidad Técnica Estatal |
+| [`hoja-respuestas-marcas-servidor.png`](re-aplicacion/evidencia/hoja-respuestas-marcas-servidor.png) | Hoja de respuestas vinculada, con las 15 marcas temporales de 11:36:04 a 16:56:21 |
+| [`formulario-respuestas-consentimiento.png`](re-aplicacion/evidencia/formulario-respuestas-consentimiento.png) | Pestaña Respuestas: **15 respuestas**, consentimiento **100 % «Sí, acepto participar»** |
+| [`formulario-respuestas-items-1.png`](re-aplicacion/evidencia/formulario-respuestas-items-1.png), [`-2`](re-aplicacion/evidencia/formulario-respuestas-items-2.png), [`-3`](re-aplicacion/evidencia/formulario-respuestas-items-3.png) | Distribución por ítem tal como la muestra Google, contrastable contra el CSV versionado |
 
-El formulario existía cinco horas antes que el script. No pudo generarse con él.
+**Lo que sigue requiriendo acceso, no captura:** el evaluador pidió acceso de propietario, y eso es
+razonable — una captura la aporta el equipo. Las tres pestañas (Detalles en Drive, Respuestas, y el
+historial/ejecuciones de Apps Script) se abren en un minuto durante la defensa, sobre datos que el
+equipo no controla.
 
-**3. El script nunca llegó a usarse para este formulario; se pidió para versionarlo.** El formulario se
-transcribió a mano desde la hoja en papel —la misma cuyas fechas manuscritas quedaron en disputa, que
-es justamente lo que motivó rehacer la medición— y se repartió a las 11:22. El script se escribió a las
-16:37, con la ronda ya casi completa (12 de 15 respuestas), cuando se pidió dejar en el repositorio una
-forma reproducible de crear el instrumento. Es decir: **el script documenta el formulario que ya
-existía, no lo generó.** Que la redacción coincida es la consecuencia esperable de que ambos se
-derivaran de la misma hoja, no la causa de la coincidencia.
+## Cómo se reclutó a los 15 participantes
 
-El **registro de ejecuciones** del proyecto de Apps Script lo confirma de forma independiente: si el
-script nunca se ejecutó, no pudo crear nada. Es una comprobación de un minuto y se puede mostrar en la
-defensa.
+El evaluador pidió *«cómo se reclutó a 15 personas y en qué sesiones»*. No estaba documentado; se
+documenta aquí.
 
-**Qué queda por mostrar en la defensa**, porque una captura la aporta el equipo y lo que el evaluador
-pidió es acceso directo: la pestaña **Detalles** del formulario en Drive con su fecha de creación, la
-pestaña **Respuestas**, y el **registro de ejecuciones** del proyecto de Apps Script. Las tres son
-comprobaciones de un minuto sobre datos que el equipo no controla.
+**Canal:** un servidor de **Discord** en el que ya estaban los estudiantes del curso. Se publicó el
+enlace del formulario y se respondió de forma voluntaria y asíncrona a lo largo del día, no en sesiones
+convocadas. Eso explica la dispersión de las marcas temporales: 11:36, 12:20, 13:06, 13:46, 14:02,
+14:48, 15:01, 15:39, 15:50, 16:01, 16:21, 16:32, 16:42, 16:52, 16:56 — quince horas distintas
+repartidas en cinco horas y veinte minutos, sin agrupamientos.
+
+**Composición real**, recontada desde el CSV versionado (`rol` es una pregunta del propio formulario):
+
+| Rol declarado | n |
+|---|---:|
+| Estudiante | 7 |
+| Docente | 5 |
+| Coordinador | 2 |
+| Administrador | 1 |
+
+**Limitaciones que esto impone, y que se declaran en vez de omitirse:**
+
+- Es **autoselección**: respondió quien quiso, entre quienes vieron el enlace. No hay muestreo ni
+  control de perfil, y no se puede descartar que respondiera quien tenía mejor disposición hacia el
+  sistema.
+- **No hubo sesión guiada ni tarea previa.** Los participantes no ejecutaron un flujo del sistema
+  inmediatamente antes de responder, así que el puntaje refleje percepción declarada y no uso
+  observado. Es la misma limitación que ya consta en Amenazas a la Validez.
+- **No es una re-aplicación a las 11 personas de las hojas en disputa.** De los 15, 14 declaran «No»
+  y 1 «No recuerdo» a *«¿Habías respondido antes este cuestionario?»*. Es una muestra nueva e
+  independiente, y por eso **no cierra el Piso 3**.
+
+## Quién entregó la segunda versión de las hojas con el mes cambiado
+
+El evaluador preguntó *«quién entregó la segunda versión de las hojas en papel con el mes cambiado»*.
+
+**Declaración de Álava Alvarado, 2026-09-19:** de esa parte se encargó **Barreto Rosado, Heider
+Dominick**, integrante del equipo original. Él entregó las hojas escaneadas, incluida la segunda
+versión con el mes corregido de 09 a 08 que se recibió después del hallazgo del 17-sep.
+
+**Cómo hay que leer esta atribución, dicho por quien la hace:**
+
+- Es una **declaración de una sola parte**. Barreto Rosado no participa en esta ronda de recuperación
+  (ver [`CONTRIBUCIONES.md`](../../../CONTRIBUCIONES.md)), no ha visto este documento y no ha
+  confirmado ni desmentido nada. Se registra porque el evaluador preguntó por un nombre, no como
+  hallazgo verificado.
+- **No explica las fechas ni cambia nada.** Saber quién entregó las hojas no dice por qué llevaban
+  fechas posteriores al escaneo, ni por qué eran cinco fechas distintas. **Las 11 hojas siguen
+  retractadas** y ninguna cifra publicada se apoya en ellas.
+- **La responsabilidad de lo entregado no se traslada.** El material se incorporó al expediente del
+  proyecto sin comprobar sus fechas, y esa comprobación era del equipo. Señalar quién lo entregó no
+  reparte la culpa de no haberlo revisado.
+- Si el docente necesita la versión de Barreto Rosado, hay que pedírsela a él directamente.
 
 ### Lo que esta ronda SÍ resuelve
 

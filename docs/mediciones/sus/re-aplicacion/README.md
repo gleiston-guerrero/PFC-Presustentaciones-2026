@@ -12,6 +12,25 @@ se escribió esa evaluación. Su petición es concreta:
 
 Esta carpeta implementa la primera opción.
 
+> ### Nota sobre las horas de los commits de esta carpeta (2026-09-19)
+>
+> La revisión individual del 18-sep observó que **a las 16:32 este protocolo todavía daba el formulario
+> por crear**, y que `crear-formulario.gs` no apareció hasta las 16:37 — cuando ya había 12 respuestas
+> selladas. De ahí infirió que el formulario no podía existir antes.
+>
+> Los hechos sobre los commits son correctos. **Lo que no se sigue es la conclusión, porque 16:37 es la
+> hora en que el archivo se subió al repositorio, no la hora en que se escribió.** El historial del
+> proyecto de Apps Script, fechado por Google, lo sitúa en **11:16**, y el formulario se creó a las
+> **11:22**: seis minutos después del script y catorce antes de la primera respuesta.
+>
+> **El descuido es real y es del equipo:** el script se escribió y se ejecutó por la mañana, pero no se
+> comiteó en ese momento — quedó en Google toda la jornada y se subió a las 16:37 junto con el resto de
+> los cambios del día. Visto solo desde el repositorio, parece que nació a esa hora. Por eso esta nota
+> existe: el protocolo de abajo describe lo que efectivamente se hizo el 18-sep por la mañana, no un
+> plan escrito después.
+>
+> Cronología y capturas en [`../SUS-RESULTS.md`](../SUS-RESULTS.md) y en [`evidencia/`](evidencia/).
+
 ## La regla que manda sobre todo lo demás
 
 **La marca de tiempo no la puede poner el equipo.** Ni el navegador del participante, ni el backend del
