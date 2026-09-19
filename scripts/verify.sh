@@ -296,6 +296,16 @@ echo
 
 echo "=== P8 -- Autorizacion de endpoints de escritura ==="
 python docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py || fail "P8: audit-endpoints-autorizacion.py fallo"
+# Lo anterior comprueba que la anotacion ESTE. Esto comprueba que lo que hay
+# dentro signifique algo: la revision del 18-sep cerro P8 diciendo que "el
+# verificador no detecta un SpEL roto", y tenia razon. Una anotacion presente
+# pero rota no protege el endpoint, ademas lo rompe -- y es justo el modo de
+# fallo que introdujo el renombrado de P4.
+if python scripts/p8-spel-vivo.py; then
+  ok "P8: toda expresion SpEL apunta a un bean, metodo y rol que existen"
+else
+  fail "P8: hay expresiones @PreAuthorize que apuntan a algo inexistente -- ver arriba"
+fi
 echo
 
 echo "=== P9 -- Etiqueta v1.1.0 ==="

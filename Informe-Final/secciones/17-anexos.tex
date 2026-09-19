@@ -45,11 +45,12 @@ Likert de 1 (totalmente en desacuerdo) a 5 (totalmente de acuerdo).
 
 \textbf{Cálculo de la puntuación:} para los ítems impares (1,3,5,7,9) se resta 1 a la respuesta; para los
 pares (2,4,6,8,10) se resta la respuesta de 5. La suma de las diez contribuciones se multiplica por 2.5,
-dando un puntaje individual entre 0 y 100 (no es un porcentaje). El script
-\texttt{scripts/sus-analysis.ipynb} implementa exactamente esta fórmula, trae tres casos de autotest que
-pasan, y calcula el resultado del grupo directamente desde
-\texttt{docs/mediciones/sus/sus-respuestas.csv} (ejecutado de punta a punta con \texttt{nbconvert}, sin
-errores).
+dando un puntaje individual entre 0 y 100 (no es un porcentaje). Dos artefactos la implementan, y
+conviene no confundirlos: \texttt{scripts/sus-analysis.ipynb} calcula la \emph{ronda en papel} desde
+\texttt{docs/mediciones/sus/sus-respuestas.csv} (con tres casos de autotest, ejecutado de punta a punta
+con \texttt{nbconvert} sin errores), y \texttt{scripts/sus-estadistica.py} calcula la \textbf{cifra de
+cierre} desde el CSV sellado por el tercero, además de la corrección de Holm y el $\alpha$ de Cronbach.
+La verificación automatizada (\texttt{make verify}) comprueba esta última, que es la que se reporta.
 
 \textbf{Estado real (Sección~\ref{sec:evaluacion}):} el resultado que se reporta es el de la ronda del
 2026-09-18, aplicada en un formulario alojado por un tercero que sella cada respuesta con la hora de su

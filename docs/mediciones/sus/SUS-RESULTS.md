@@ -313,9 +313,29 @@ evidencia indirecta, y se presenta como tal: apoya la autenticidad de las respue
 ### 1. Las 11 hojas quedan retiradas como evidencia
 
 **Las 11 hojas con fecha no verificable se retiran como evidencia válida.** No cuentan para ningún
-resultado reportado en este proyecto, ni en este documento ni en el informe final. El resultado de
-usabilidad que se defiende es el de la ronda del 18-sep (n=15, fecha sellada por un tercero); el de las
+resultado de usabilidad reportado en este proyecto, ni en este documento ni en el informe final. El
+resultado que se defiende es el de la ronda del 18-sep (n=15, fecha sellada por un tercero); el de las
 4 hojas de fecha verificable se conserva únicamente como registro histórico.
+
+> #### Precisión exigida por la revisión del 18-sep (corregida el 2026-09-19)
+>
+> El evaluador observó que esta retractación decía *«no cuentan para ninguna cifra»* mientras el
+> capítulo 10 y una figura seguían usando las 15 hojas para el valor 55,17. **La observación es
+> correcta: la frase absoluta y el uso que se hacía de ellas no eran compatibles.** Se corrige la
+> frase, no el dato, porque el dato tiene un uso legítimo y acotado:
+>
+> - **Las 11 hojas no contribuyen a ninguna cifra de usabilidad.** El resultado reportado es 52,83, y
+>   se calcula solo con las 15 respuestas del formulario del 18-sep.
+> - **Aparecen en un solo sitio: la comprobación de si los puntajes del papel fueron inventados.** Esa
+>   es una afirmación *sobre* las hojas, no un uso de ellas como evidencia de usabilidad. Excluirlas de
+>   una comprobación que trata precisamente sobre ellas haría imposible responder a la pregunta.
+> - **Y la conclusión no depende de ellas.** Si se descartan por completo, queda el contraste
+>   papel(4, no retractadas) contra formulario: *p* = 0,220 crudo, **0,441 tras Holm**, tampoco
+>   significativo. **La misma conclusión se sostiene usando únicamente datos no retractados**, así que
+>   quien rechace incluso ese uso llega al mismo sitio.
+>
+> En el informe y en la figura, la fila de las 15 hojas va rotulada como retractada y en gris, nunca
+> como resultado.
 
 No se borran del repositorio. Siguen en [`respuestas-crudas/`](respuestas-crudas/) y en
 [`sus-respuestas.csv`](sus-respuestas.csv) con su columna `fecha_verificable=no`, exactamente como

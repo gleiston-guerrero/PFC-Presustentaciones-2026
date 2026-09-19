@@ -995,8 +995,12 @@ con el detalle exacto de la imprecisión, y esta vez sí se corrigió lo que sí
 - **Aclaración importante (misma fecha, tras confirmar con el autor de este examen):** el correo es de
   un solo integrante porque este examen suspenso lo está cursando y sustentando Alava Alvarado **en
   solitario**. Los otros tres integrantes originales del equipo (Moncayo Loor, Zamora Arias, Barreto
-  Rosado) reprobaron la materia en el período regular y no están trabajando en las observaciones de
-  esta ronda de recuperación. Esto cambia cómo debe leerse "sin presencia del resto del equipo": no es
+  Rosado) no cursan esta ronda de recuperación y no tienen commits en el tramo `f3d1ff4..HEAD`, lo que
+  es verificable con `git log`. *(Redacción corregida el 2026-09-19: aquí se explicaba la ausencia con
+  la situación académica de cada uno. La revisión del 18-sep observó en P10 que el juicio sobre los
+  compañeros retirado de la carátula había reaparecido en otros archivos, y tenía razón: lo que este
+  expediente necesita declarar es quién ejecutó los commits, no el expediente académico de un tercero.)*
+  Esto cambia cómo debe leerse "sin presencia del resto del equipo": no es
   una ausencia irregular ni una decisión unilateral que excluyó a los demás de una conversación que
   debían tener — la recuperación, tal como está planteada, ya no es un trabajo de equipo activo, así
   que una "conversación con el equipo completo" no es estructuralmente posible en este momento. Anotado
@@ -1107,7 +1111,9 @@ tag no se había movido todavía.
    ing las marca como preexistentes ("ya presentes en `f3d1ff4`"), no una regresión de esta ronda — no
    se fuerza una cita artificial. La tabla de Holm ya se cita (P6, `OBS-41`). `sus-analysis.ipynb`
    confirmado sin ejecutar (`execution_count: None`) — **ejecutado hoy**, confirma n=4, media=48.75,
-   coincidiendo exacto con lo citado en el informe.
+   coincidiendo exacto con lo que el informe citaba entonces. *(Nota del 2026-09-19: ese cuaderno
+   calcula la ronda en papel, que desde la ronda del 18-sep ya no es la cifra de cierre. El cierre lo
+   calcula `scripts/sus-estadistica.py` y `make verify` lo asegura.)*
 7. **Autoría y aporte individual:** ya lo documenta `CONTRIBUCIONES.md`. La mención de que "un asistente
    automatizado se negó a marcar P12 como cerrado" es real y está en `OBSERVACIONES.md` (OBS-26) — no es
    un defecto, es la misma disciplina de no inflar el estado que rige el resto de este archivo.

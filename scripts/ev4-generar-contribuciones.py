@@ -163,9 +163,17 @@ historial no respaldaría:
 ## Por qué un solo autor
 
 Este examen suspenso lo está cursando y sustentando **Álava Alvarado** en solitario. Los otros tres
-integrantes originales (Moncayo Loor, Zamora Arias, Barreto Rosado) reprobaron la materia en el período
-regular y no están trabajando en esta ronda de recuperación — no es que se hayan desentendido de un
-trabajo que seguía siendo colectivo: la recuperación, tal como está planteada, ya no lo es.
+integrantes originales (Moncayo Loor, Zamora Arias, Barreto Rosado) **no participan en esta ronda de
+recuperación**, y el historial lo confirma: ninguno tiene commits en el tramo `f3d1ff4..HEAD`. No es
+que se hayan desentendido de un trabajo que seguía siendo colectivo — la recuperación, tal como está
+planteada, ya no lo es.
+
+> **Por qué no se dice más que eso.** Una versión anterior de este archivo explicaba la ausencia con la
+> situación académica de cada uno. La revisión del 18-sep ya había observado, en P10, que el juicio
+> sobre los compañeros retirado de la carátula había reaparecido en otros archivos. Es correcto: el
+> hecho que este documento necesita declarar es **quién ejecutó los commits**, que es verificable con
+> `git log`; el expediente académico de un tercero no es del equipo publicarlo, y menos en un
+> repositorio público y en un documento que esas personas no han firmado.
 
 **No se declara ningún punto como trabajo colectivo de esta ronda porque el historial no lo respalda.**
 Eso no dice quién entendió o decidió qué —los cuatro participaron en fases anteriores— sino literalmente
@@ -199,9 +207,9 @@ copia impresa que se entrega en la defensa; aquí queda la declaración y la ide
 | Integrante | Correo institucional | Participación en esta ronda | Firma |
 |---|---|---|---|
 | Álava Alvarado, Jean Pierre | `jalavaa@uteq.edu.ec` | Autor de los {total} commits del tramo | ____________________ |
-| Moncayo Loor, Xavier Alejandro | — | Ninguna (reprobó el período regular) | ____________________ |
-| Zamora Arias, Carla Esthefanía | `czamoraa5@uteq.edu.ec` | Ninguna (reprobó el período regular) | ____________________ |
-| Barreto Rosado, Heider Dominick | — | Ninguna (reprobó el período regular) | ____________________ |
+| Moncayo Loor, Xavier Alejandro | — | Sin commits en el tramo | ____________________ |
+| Zamora Arias, Carla Esthefanía | `czamoraa5@uteq.edu.ec` | Sin commits en el tramo | ____________________ |
+| Barreto Rosado, Heider Dominick | — | Sin commits en el tramo | ____________________ |
 
 **Declaración:** lo afirmado en este archivo sale de `git log` sobre el repositorio público y es
 reproducible con los comandos citados arriba. No se atribuye a ninguna persona trabajo que el historial
