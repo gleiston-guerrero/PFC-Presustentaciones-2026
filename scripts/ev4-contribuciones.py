@@ -181,7 +181,18 @@ def check():
         if not re.search(rf"\|\s*{re.escape(p)}\b", txt):
             fallos.append(f"git atribuye {len(filas)} commit(s) a {p} y la tabla no lo lista")
 
-    # 5) Los archivos citados en la tabla tienen que existir hoy.
+    # 5) Y ningun COMMIT con punto puede faltar: sin esto el archivo envejece en
+    # silencio, que es como llego a decir 81 cuando ya eran 89. Se exceptua el
+    # commit que trae esta version del archivo: su hash no existia al generarla.
+    ultimo = git("log", "-1", "--format=%h", "--", ARCHIVO).strip()
+    faltan = [(sha, asunto) for sha, asunto, _, _ in cs
+              if RE_PUNTO.search(asunto) and sha not in citados and sha != ultimo]
+    if faltan:
+        fallos.append(f"{len(faltan)} commit(s) con punto declarado no estan en la tabla "
+                      f"(regenera el archivo): " +
+                      ", ".join(f"{s} {a[:40]}" for s, a in faltan[:5]))
+
+    # 6) Los archivos citados en la tabla tienen que existir hoy.
     for f in set(re.findall(r"`((?:backend|frontend|Frontend|docs|scripts|k6|Informe-Final)/[^`\s]+)`", txt)):
         r = subprocess.run(["git", "ls-files", "--error-unmatch", "--cached", f],
                            capture_output=True)
