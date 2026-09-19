@@ -66,8 +66,8 @@ En este orden, con su afiliación y ORCID. Los cuatro son de `Universidad Técni
 | 3 | Zamora Arias | Carla Esthefanía | `0009-0000-7556-0457` |
 | 4 | Barreto Rosado | Heider Dominick | `0009-0004-5561-1391` |
 
-Moncayo Loor no tiene ORCID registrado porque se retiró de la carrera. El campo se deja vacío en vez
-de inventar un identificador; así está también en `CITATION.cff`.
+Moncayo Loor no tiene ORCID registrado. El campo se deja vacío en vez de inventar un identificador;
+así está también en `CITATION.cff`.
 
 ---
 
@@ -81,7 +81,12 @@ v1.1.0
 
 ## 7. Fecha de publicación
 
-La fecha del commit al que apunta el tag. La imprime `scripts/zenodo-paquete.sh` al correr.
+```
+2026-09-19
+```
+
+Es la fecha del commit al que apunta el tag (`1e32fa1`). La imprime `scripts/zenodo-paquete.sh` al
+correr, para no teclearla de memoria.
 
 ---
 
@@ -109,14 +114,29 @@ desplegada con Docker Compose y nginx.</p>
 <ul>
   <li>Identificadores del código fuente traducidos al inglés, preservando de forma explícita cada
       nombre que viaja por HTTP (campos JSON, parámetros de consulta y variables de ruta) para no
-      alterar el contrato con el frontend.</li>
+      alterar el contrato con el frontend, y corrigiendo las regresiones que ese renombrado había
+      introducido en los filtros de fecha de varios endpoints.</li>
   <li>Auditoría sistemática del contrato JSON entre backend y frontend, con comprobación automatizada
       incorporada a la verificación del proyecto.</li>
   <li>Segunda aplicación del instrumento SUS con marca de tiempo verificable por un tercero y
-      consentimiento individual explícito (n=15).</li>
-  <li>Verificación reproducible punto por punto, con el comando y su salida literal, en
-      <code>VERIFICACION.md</code>.</li>
+      consentimiento individual explícito (n=15), con corrección de Holm-Bonferroni sobre la familia
+      de contrastes y el coeficiente alfa de Cronbach calculado y declarado.</li>
+  <li>Verificación ejecutable: <code>make verify</code> corre la suite de pruebas real, el cuaderno de
+      análisis, <code>javadoc</code> y el recálculo de las mediciones de rendimiento, y falla si algún
+      resultado no coincide con lo publicado. Incluye comprobaciones de que ninguna expresión de
+      autorización apunte a código inexistente, de que ningún nombre expuesto por HTTP dependa de un
+      identificador interno, y de que no queden credenciales escritas en el repositorio.</li>
+  <li>Documentación del código: los avisos de <code>javadoc</code> pasan de 682 a 170, y los 170
+      restantes corresponden a una única causa declarada (constructores generados por Lombok que la
+      herramienta no observa al analizar el código fuente).</li>
+  <li>Trazabilidad de las cifras publicadas: todas proceden de una corrida versionada, y una
+      comprobación automatizada rechaza cualquier cifra que el expediente no respalde.</li>
 </ul>
+
+<p><strong>Estado verificado de esta versión:</strong> 806 pruebas automatizadas (0 fallos, 0
+errores); cobertura de 82,01 % de líneas (4022/4904) y 73,49 % de ramas (1483/2018) medida con JaCoCo
+sobre PostgreSQL y Redis reales; informe final de 70 páginas compilado sin errores ni referencias sin
+resolver; integración continua en verde en sus tres trabajos.</p>
 
 <p><strong>Documentación incluida:</strong> informe final, especificación de requisitos bajo
 ISO/IEC/IEEE 29148:2018, pruebas automatizadas con cobertura JaCoCo, pruebas de carga con k6 y
