@@ -236,7 +236,11 @@ compatible con las 6 hojas que comparten el 26/09/2026, pero \textbf{no cubre la
 cuatro fechas distintas (18/09, 24/09 dos veces, 25/09 y 29/09): una sola fecha a la vista produce una
 sola fecha, no cinco. El equipo no tiene explicación para esas cinco, y por eso la declaración se
 registra como contexto y no como reparación --- aunque se acepte por completo, las 11 hojas siguen
-retiradas. Sobre quién entregó materialmente esas hojas, incluida la segunda versión con el mes
+retiradas. El equipo añade, preguntado expresamente por el origen, que la aplicación fue
+\emph{presencial} y en las mismas condiciones que las 4 hojas de fecha verificable, y que lo que salió
+mal fue únicamente la fecha escrita a mano. Esa ampliación cambia lo que se afirma que ocurrió, pero no
+el tratamiento: sigue sin ser verificable, sigue sin explicar cinco fechas distintas, y las 11 hojas
+siguen retiradas. Sobre quién entregó materialmente esas hojas, incluida la segunda versión con el mes
 corregido, el equipo declara que fue el integrante Barreto Rosado, que no participa en esta ronda de
 recuperación. Se registra porque el evaluador preguntó por un nombre, pero es una declaración de una
 sola parte, no explica por qué las fechas eran cinco y posteriores al escaneo, y no traslada la
@@ -274,6 +278,16 @@ y la primera respuesta llegó a las \textbf{11:36:04}. El archivo \texttt{crear-
 que se escribió, y no comitearlo en su momento fue un descuido real del equipo. Las capturas de las
 tres interfaces están versionadas en
 \texttt{docs/mediciones/sus/re-aplicacion/evidencia/}.
+
+\textbf{Acceso concedido al evaluador.} Como una captura la aporta el propio equipo, se intentó además
+transferir la \emph{propiedad} del formulario al evaluador. Google la rechaza mientras la cuenta de
+destino tenga el almacenamiento lleno (\emph{``no se pueden compartir porque se ha superado el límite
+de almacenamiento de Drive''}), de modo que esa parte no depende del equipo. Sí se concedió
+\textbf{acceso de editor}, que según el propio diálogo de Google permite ``ver y eliminar las
+respuestas del formulario'': con él, el evaluador puede comprobar por su cuenta y sin intermediación la
+pestaña de respuestas, la hoja de cálculo vinculada y la fecha de creación en Drive. El proyecto de
+Apps Script es un artefacto aparte y se comparte por separado si se solicita. Ambas capturas están
+versionadas.
 
 \textbf{Qué no resuelve esta ronda.} No es una re-aplicación a las 11 personas de las hojas en disputa:
 de los 15 participantes, \emph{ninguno} declara haber respondido antes en papel (14 ``No'', 1 ``No
@@ -341,7 +355,7 @@ completo (las diez preguntas y la fórmula de cálculo) se documenta en el Anexo
 
 \textbf{Cifra de cierre definitiva (2026-09-19, la que aplica para el umbral del 70\,\%), corrida limpia
 de una sola sesión:} \textbf{82.01\,\% de líneas (4,022/4,904) y 73.49\,\% de ramas (1,483/2,018)} a
-nivel global, sobre 804 pruebas automatizadas reales (\texttt{mvn clean test} sobre Postgres/Redis reales
+nivel global, sobre 806 pruebas automatizadas reales (\texttt{mvn clean test} sobre Postgres/Redis reales
 en Docker, 0 fallos, 0 errores, una sola corrida desde cero, sin sesiones acumuladas), recalculado
 directamente desde
 \texttt{docs/mediciones/jacoco/2026-09-19-cierre-definitivo/jacoco.xml} (versionado en el
@@ -429,7 +443,7 @@ fail-closed de RNF-04 cuando Redis no responde). Esa primera pasada dejó 71.90\
 encima del umbral pero al filo para el gusto del equipo, así que se hizo una segunda pasada sobre lo
 que quedaba: \texttt{StatusLiveController} y \texttt{ProposalController} (0\,\% cada uno,
 sin ningún test), y \texttt{EmailService}/\texttt{AuditService} (0\,\% cada uno). Resultado:
-\textbf{82.01\,\% de líneas (4,022/4,904) y 73.49\,\% de ramas (1,483/2,018)} a nivel global (804
+\textbf{82.01\,\% de líneas (4,022/4,904) y 73.49\,\% de ramas (1,483/2,018)} a nivel global (806
 pruebas, 0 fallos).
 
 Una precisión metodológica sobre el alcance de la medición: el \texttt{jacoco-maven-plugin} excluye

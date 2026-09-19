@@ -171,10 +171,30 @@ interfaces de Google, no de archivos del equipo:
 | [`formulario-respuestas-consentimiento.png`](re-aplicacion/evidencia/formulario-respuestas-consentimiento.png) | Pestaña Respuestas: **15 respuestas**, consentimiento **100 % «Sí, acepto participar»** |
 | [`formulario-respuestas-items-1.png`](re-aplicacion/evidencia/formulario-respuestas-items-1.png), [`-2`](re-aplicacion/evidencia/formulario-respuestas-items-2.png), [`-3`](re-aplicacion/evidencia/formulario-respuestas-items-3.png) | Distribución por ítem tal como la muestra Google, contrastable contra el CSV versionado |
 
-**Lo que sigue requiriendo acceso, no captura:** el evaluador pidió acceso de propietario, y eso es
-razonable — una captura la aporta el equipo. Las tres pestañas (Detalles en Drive, Respuestas, y el
-historial/ejecuciones de Apps Script) se abren en un minuto durante la defensa, sobre datos que el
-equipo no controla.
+### El acceso pedido ya está concedido (2026-09-19)
+
+El evaluador pidió **acceso de propietario**, y el planteamiento es correcto: una captura la aporta el
+equipo, y por tanto no vale lo mismo que mirarlo uno mismo. Se intentó dárselo. Resultado:
+
+| Qué se intentó | Resultado |
+|---|---|
+| **Transferir la propiedad** a `gguerrero@uteq.edu.ec` | ❌ **Bloqueado por Google**, no por el equipo: *«Estos elementos no se pueden compartir porque se ha superado el límite de almacenamiento de Drive»* ([captura](re-aplicacion/evidencia/acceso-transferencia-bloqueada-por-almacenamiento.png)) |
+| **Conceder acceso de editor** a `gguerrero@uteq.edu.ec` | ✅ **Concedido** ([captura](re-aplicacion/evidencia/acceso-editor-concedido-gguerrero.png)) |
+
+**Por qué el acceso de editor basta para lo que se pidió.** El propio diálogo de Google lo dice:
+*«Los editores podrán ver y eliminar las respuestas del formulario»*. Con ese permiso, el evaluador
+puede comprobar por su cuenta, sin intermediación del equipo y sin esperar a la defensa:
+
+- la **pestaña Respuestas** completa, con las 15 marcas temporales del servidor de Google;
+- la **hoja de cálculo vinculada**, con los mismos datos que el CSV versionado;
+- los **Detalles** del formulario en Drive, con su fecha de creación.
+
+**Lo que el acceso de editor no incluye** es el proyecto de Apps Script, que es un artefacto aparte:
+esa parte se muestra en la defensa, o se comparte por separado si lo pide.
+
+**La transferencia de propiedad queda pendiente de algo que el equipo no puede resolver:** Google la
+rechaza mientras la cuenta de destino tenga el almacenamiento lleno. Se reintentará si el evaluador
+libera espacio; mientras tanto, el acceso de editor cubre la verificación.
 
 ## Cómo se reclutó a los 15 participantes
 
@@ -354,6 +374,29 @@ El equipo declara que, durante la aplicación en papel, **había una fecha a la 
 sobre un formato de ejemplo — y que varios participantes la copiaron en la casilla «Fecha:» en lugar de
 escribir la del día en que respondían. Bajo esa declaración, la fecha de esas hojas no es la fecha real
 de aplicación, sino una fecha copiada.
+
+**Ampliación de la declaración (2026-09-19).** Preguntado expresamente por el origen de las 11 hojas,
+el equipo añade que **la aplicación fue presencial**, en las mismas condiciones que las 4 hojas de
+fecha verificable: las mismas personas, el mismo instrumento en papel y la misma sesión. Lo que salió
+mal, según esta declaración, fue **únicamente la fecha escrita a mano**; las respuestas se recogieron
+de forma real y presencial.
+
+**Qué cambia esto y qué no.** Cambia la naturaleza de lo que se afirma que ocurrió: no se declara una
+recolección remota, ni diferida, ni posterior, sino un error de transcripción de la fecha en una
+aplicación presencial. **No cambia nada del tratamiento**, y conviene que quede dicho en la misma
+frase:
+
+- **Sigue sin ser verificable.** Es la palabra del equipo. No hay lista de asistencia, ni fotografía de
+  la sesión, ni firma fechada por un tercero que permita comprobarlo.
+- **Sigue sin explicar las cinco fechas distintas** (ver la tabla de abajo). Una aplicación presencial
+  en una sola sesión con una fecha a la vista produce, como mucho, una fecha equivocada — no cinco.
+- **Las 11 hojas siguen retractadas.** Esta ampliación no las reincorpora ni cambia ninguna cifra
+  publicada. Se registra porque el evaluador preguntó por el origen y es la respuesta del equipo, no
+  porque resuelva el problema.
+
+Lo único que cerraría esto de verdad es lo que ya se intentó y no dependía del equipo: volver a
+aplicar el instrumento **a esas 11 personas** con fecha sellada por un tercero. La ronda del 18-sep no
+lo logró — ninguno de sus 15 participantes declara haber respondido antes en papel.
 
 ### 3. Hasta dónde llega esa explicación, y dónde deja de llegar
 

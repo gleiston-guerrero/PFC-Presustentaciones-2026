@@ -23,14 +23,21 @@ que además aplica la regla `jacoco:check` (≥70 % en líneas y en ramas).
 | **Ramas (BRANCH)** | 1483 | 2018 | **73.49 %** |
 
 ```
-Tests run: 804, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 806, Failures: 0, Errors: 0, Skipped: 0
 jacoco:check (jacoco-check) --- All coverage checks have been met.
 BUILD SUCCESS
 ```
 
-- **Pruebas:** 804
+- **Pruebas:** 806
 - **Fallos:** 0
 - **Errores:** 0
+
+## Regenerada de nuevo tras cerrar P7 (2026-09-19)
+
+La prueba de integración del chatbot dejó de simular el servicio que decía probar y se le añadieron dos
+casos: **804 → 806 pruebas**. La cobertura no se movió (`ChatbotService` ya estaba ejercitado por otra
+clase), así que las cifras de líneas y ramas son idénticas; lo que cambia es el conteo de pruebas, y
+por eso se republica.
 
 ## Regenerada el mismo día tras el cierre de avisos de Javadoc
 

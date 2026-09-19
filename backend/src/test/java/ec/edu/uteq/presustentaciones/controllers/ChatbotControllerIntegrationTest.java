@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -37,9 +38,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * cadena de filtros de seguridad. Mismo patrón {@code @WebMvcTest + SecurityConfig} real que
  * {@code MeControllerTest}, para probar la ruta HTTP completa (serialización JSON, filtro JWT,
  * {@code @PreAuthorize("isAuthenticated()")}) end-to-end.
+ *
+ * <p><b>Corregido el 2026-09-19.</b> La revisión del 18-sep observó que «en la prueba MockMvc el
+ * servicio sigue simulado»: esta clase declaraba {@code @MockBean ChatbotService} y luego afirmaba
+ * probar el chatbot. Lo que probaba era el transporte --ruta, filtro JWT, serialización-- con la
+ * lógica del asistente sustituida por un {@code when(...).thenReturn(...)}, de modo que la prueba
+ * habría pasado igual con el servicio roto.</p>
+ *
+ * <p>Simularlo además no hacía falta: {@link ChatbotService} no tiene dependencias externas --sin
+ * base de datos, sin HTTP, sin estado--, solo lee {@code SecurityContextHolder} y hace coincidencia
+ * de palabras. Ahora se importa el servicio <b>real</b> y las aserciones son sobre su salida
+ * verdadera, no sobre un valor preparado por la propia prueba.</p>
  */
 @WebMvcTest(controllers = ChatbotController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, ChatbotService.class})
 class ChatbotControllerIntegrationTest {
 
     @Autowired
@@ -47,9 +59,6 @@ class ChatbotControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @MockBean
-    private ChatbotService chatbotService;
 
     @MockBean
     private JwtTokenProvider jwtTokenProvider;
@@ -96,23 +105,79 @@ class ChatbotControllerIntegrationTest {
         when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(email);
         when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
 
-        ChatResponse respuestaServicio = ChatResponse.builder()
-                .response("Ve a 'Cargar Anteproyecto' desde tu panel de estudiante.")
-                .options(List.of("Ver mis trámites", "Ver mi horario"))
-                .route("/estudiante/anteproyecto")
-                .build();
-        when(chatbotService.processMessage(any(ChatRequest.class))).thenReturn(respuestaServicio);
-
         ChatRequest request = new ChatRequest();
         request.setMessage("¿Cómo subo mi anteproyecto?");
+
+        // La respuesta la produce el ChatbotService REAL: no hay when(...).thenReturn(...)
+        // que la prepare. Si su lógica de coincidencia se rompe, esta prueba falla.
+        mockMvc.perform(post("/api/v1/chatbot/ask")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.response",
+                        org.hamcrest.Matchers.containsString("anteproyecto es parte del proceso")))
+                .andExpect(jsonPath("$.data.options",
+                        org.hamcrest.Matchers.hasItem("Sustentación")))
+                .andExpect(jsonPath("$.message").value("Consulta procesada correctamente"));
+    }
+
+    @Test
+    void mensajeSinPalabraConocidaDevuelveLaRespuestaPorDefectoReal() throws Exception {
+        String email = "estudiante@uteq.edu.ec";
+        String token = "token-" + email;
+        UserDetails userDetails = new User(email, "x",
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_ESTUDIANTE")));
+        when(jwtTokenProvider.validateToken(token)).thenReturn(true);
+        when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(email);
+        when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
+
+        ChatRequest request = new ChatRequest();
+        request.setMessage("cuanto cuesta un pasaje a Guayaquil");
 
         mockMvc.perform(post("/api/v1/chatbot/ask")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Cargar Anteproyecto")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Consulta procesada correctamente")));
+                .andExpect(jsonPath("$.data.response",
+                        org.hamcrest.Matchers.containsString("No estoy seguro de cómo responder")));
+    }
+
+    @Test
+    void cadaPalabraClaveDelServicioRealDevuelveSuPropiaRespuesta() throws Exception {
+        String email = "estudiante@uteq.edu.ec";
+        String token = "token-" + email;
+        UserDetails userDetails = new User(email, "x",
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_ESTUDIANTE")));
+        when(jwtTokenProvider.validateToken(token)).thenReturn(true);
+        when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn(email);
+        when(userDetailsService.loadUserByUsername(email)).thenReturn(userDetails);
+
+        // Cada par es (lo que escribe el usuario, un fragmento que SOLO aparece en
+        // la rama correspondiente del servicio real). Si dos ramas se cruzan por un
+        // cambio en el orden de los `if`, esto lo detecta.
+        String[][] casos = {
+                {"quiero ver mi solicitud", "módulo de Solicitudes"},
+                {"no me llegan las notificaciones", "centro de notificaciones"},
+                {"como edito mi perfil", "Mi Perfil desde el menú de usuario"},
+                {"cuando es mi sustentacion", "información disponible de tu sustentación"},
+                {"olvide mi contraseña", "opciones de seguridad"},
+                {"ayuda", "Puedo ayudarte con Solicitudes"},
+        };
+
+        for (String[] caso : casos) {
+            ChatRequest request = new ChatRequest();
+            request.setMessage(caso[0]);
+
+            mockMvc.perform(post("/api/v1/chatbot/ask")
+                            .header("Authorization", "Bearer " + token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.response",
+                            org.hamcrest.Matchers.containsString(caso[1])));
+        }
     }
 
     @Test

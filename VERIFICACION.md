@@ -27,12 +27,12 @@ commits, para comprobar que ninguna afirmación de este archivo quedó desactual
 | # | Estado | Qué se corrió hoy y qué dio |
 |---|---|---|
 | P1 | 🟡 Parcial | **Cifra de cierre (ronda del 18-sep):** `n=15 media=52.83 DE=12.06 IC95=[46.16,59.51]` — reproduce exacto desde el CSV sellado por un tercero. La ronda en papel (`n=4 media=48.75`) queda como registro histórico. Abierto: α = 0,599 y el origen de las 11 hojas retractadas |
-| P2 | ✅ Cumple | `./mvnw clean test`: **804 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,01 %** (4019/4901), BRANCH **73,49 %** (1483/2018) — corrida de cierre del 2026-09-19 |
+| P2 | ✅ Cumple | `./mvnw clean test`: **806 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,01 %** (4019/4901), BRANCH **73,49 %** (1483/2018) — corrida de cierre del 2026-09-19 |
 | P3 | ✅ Cumple | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, 0 errores**, `doclint` activo. Escáner propio: 734/768 (**95,6 %**). Avisos con el tope levantado: **682 → 170**, y los 170 restantes son un artefacto de que javadoc no ve los constructores que genera Lombok (162 de 163 clases lo confirman) — ver la sección P3 |
 | P4 | ✅ Cumple en `src/main` | Renombrado completado: **0,0 %** de tipos y métodos (antes 35,7 % y 39,1 %); 1,5 %/4,3 % bajo la definición más amplia. Brecha declarada: 436 de 807 nombres de `@Test` siguen en español |
 | P5 | ✅ Cumple | 6 corridas Lighthouse versionadas en `prod-runs/`; URL pública en la primera pantalla del README |
 | P6 | ✅ Cumple | `\label{tab:holm-bonferroni}` presente y citado con `\ref` en `10-evaluacion-empirica.tex:85` |
-| P7 | ✅ Cumple | Surefire de hoy: 11 + 2 + 3 = **16 pruebas del chatbot, 0 fallos** |
+| P7 | ✅ Cumple | **18 pruebas del chatbot, 0 fallos**, y la de integración usa el servicio **real**: se retiró el `@MockBean ChatbotService` que la revisión del 18-sep señaló. Verificado por mutación (romper el servicio hace fallar la prueba) |
 | P8 | ✅ Cumple | 102 endpoints de escritura; los 5 sin anotación son los exentos de pre-login (`login`, `refresh`, `logout`, `recuperar`, `reset`) |
 | P9 | ⚠️ Ver nota | El tag `v1.1.0` existe y `CITATION.cff` + portada lo declaran, **pero va commits por detrás de `HEAD`** (`make verify` reporta el desfase exacto en cada corrida). Falta archivar v1.1.0 en Zenodo |
 | P10 | ✅ Cumple | Portada: 32 líneas, 0 referencias DOI, 0 notas de proceso, URL del repositorio presente |
@@ -148,7 +148,7 @@ for c in root.findall('counter'):
 
 **Salida real (2026-09-17, corrida limpia desde cero):**
 ```
-804 tests, 0 failures, 0 errors
+806 tests, 0 failures, 0 errors
 BUILD SUCCESS (jacoco:check paso -- ver pom.xml)
 BRANCH: 1483/2018 (73.49%)
 LINE: 4017/4897 (82.03%)
@@ -156,7 +156,7 @@ LINE: 4017/4897 (82.03%)
 
 **Reproducción independiente (2026-09-18, otra sesión, tras otros commits):**
 ```
-Tests run: 804, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 806, Failures: 0, Errors: 0, Skipped: 0
 jacoco:check (jacoco-check) --- All coverage checks have been met.
 BUILD SUCCESS -- Total time: 01:02 min -- 2026-09-18T11:12:42-05:00
 sessioninfo en el XML: 1
@@ -170,7 +170,7 @@ los contadores del XML (1483/2018 = 73,49 %).
 
 **Corrida de cierre definitiva (2026-09-19, la que se publica):**
 ```
-Tests run: 804, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 806, Failures: 0, Errors: 0, Skipped: 0
 jacoco:check (jacoco-check) --- All coverage checks have been met.
 BUILD SUCCESS
 sessioninfo en el XML: 1
@@ -255,7 +255,7 @@ $ cd backend && ./mvnw -q javadoc:javadoc
    `backend/src/main/java`: **200 bloques nuevos en 89 archivos**. Resultado bajo la metodología amplia
    del ing (métodos + constructores + interfaces): **95.2% (731/768)**, arriba del 90%
    (constructores 100%, interfaces 87.2%, métodos concretos 100%). Verificado que compila,
-   `mvn javadoc:javadoc` sigue en 0 errores con doclint activo, y los 804 tests siguen en verde.
+   `mvn javadoc:javadoc` sigue en 0 errores con doclint activo, y los 806 tests siguen en verde.
    El sub-hallazgo "164 comentarios son solo etiquetas" no se pudo reproducir con estas herramientas —
    no descartado, no verificado.
 
@@ -461,7 +461,7 @@ corregirlo el endpoint paginado de auditoría devolvía 400.
 ```bash
 python scripts/p4-nombres-espanol.py --bytecode   # la medicion
 python scripts/p4-contrato-json.py                # que el contrato sigue intacto
-cd backend && ./mvnw clean test                   # 804/804
+cd backend && ./mvnw clean test                   # 806/806
 cd backend && ./mvnw javadoc:javadoc              # 0 errores, doclint activo
 ```
 
@@ -537,7 +537,7 @@ tres vecinos no. No fue un descuido puntual, fue sistemático.
 servicio que devuelven `Observable<any>`, sin interfaz contra la cual comparar. Esos quedan fuera y no
 se declara esta auditoría como exhaustiva.
 
-Verificado tras los 23 cambios: **804/804 pruebas en verde**, `jacoco:check` pasa, y el script vuelve
+Verificado tras los 23 cambios (2026-09-18): **804/804 pruebas en verde**, `jacoco:check` pasa, y el script vuelve
 a salir con código 0.
 
 3. **Campos de DTO/entidad sin `@JsonProperty` (7 encontrados en la ronda del 17-sep):**
@@ -551,7 +551,7 @@ a salir con código 0.
    Angular reales, no los 48 uno por uno — quedan candidatos sin revisar.
 
 Verificado que compila, `mvn javadoc:javadoc` sigue limpio, y la suite completa sigue en verde
-(804/804 tests, 0 fallos) después de todos estos cambios.
+(804/804 tests el 2026-09-18, 0 fallos) después de todos estos cambios.
 
 **Disputa numérica de fondo: RESUELTA el 2026-09-18, el equipo estaba equivocado.**
 
@@ -683,15 +683,30 @@ Test set: ec.edu.uteq.presustentaciones.controllers.ChatbotControllerIntegration
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
 ```
 
-**Veredicto: ✅ Cumple, defecto ya declarado explícitamente en el informe, nada que corregir.** Re-corrido
-hoy: 16/16 pruebas, incluyendo `ChatbotControllerIntegrationTest` que ejercita el endpoint HTTP real
-(`POST /api/v1/chatbot/ask`) vía `MockMvc` con la cadena de seguridad real. Re-verificado CI vía la API
-de GitHub (`GET /commits/8b1c1d2/check-runs`): job `Backend` → `completed`/`success`. El "defecto"
-señalado (el servicio del chatbot está simulado, no es una prueba end-to-end contra un modelo real) ya
-está declarado explícitamente en el propio informe
-(`Informe-Final/secciones/09-implementacion.tex:122`: *"No es un modelo de lenguaje:
-`ChatbotService` implementa un enrutador de intenciones por palabras clave"*) — no es una omisión que
-corregir, es una limitación real y ya transparente del diseño.
+> **Corregido el 2026-09-19.** La revisión del 18-sep observó que *«en la prueba MockMvc el servicio
+> sigue simulado»*. **Tenía razón, y la respuesta que daba antes esta sección no valía.** Aquí se
+> argumentaba que el "defecto" era la ausencia de un modelo de lenguaje real, algo ya declarado en el
+> informe. Pero él no hablaba de eso: hablaba de que la prueba declaraba
+> `@MockBean ChatbotService` y acto seguido afirmaba probar el chatbot. Lo que probaba era el
+> transporte —ruta, filtro JWT, serialización— con la lógica del asistente sustituida por un
+> `when(...).thenReturn(...)`: **la prueba habría pasado igual con el servicio roto.**
+
+**Corrección aplicada.** `ChatbotService` no tiene dependencias externas —sin base de datos, sin HTTP,
+sin estado: solo lee `SecurityContextHolder` y hace coincidencia de palabras— así que simularlo nunca
+fue necesario. Ahora se importa el servicio **real**
+(`@Import({SecurityConfig.class, ChatbotService.class})`) y las aserciones son sobre su salida
+verdadera. Se añadieron dos pruebas: la respuesta por defecto ante un mensaje sin palabra conocida, y
+un recorrido por las 6 ramas de intención comprobando que cada una devuelve lo suyo (si dos ramas se
+cruzan al reordenar los `if`, se detecta).
+
+**Verificado por mutación, no por afirmación:** al cambiar `msg.contains("anteproyecto")` por una
+cadena inexistente en el servicio real, la clase **falla** (exit 1). Con el `@MockBean` anterior habría
+seguido pasando. Esa es la diferencia entre probar el chatbot y probar el transporte.
+
+**Veredicto: ✅ Cumple.** 18/18 pruebas del chatbot, 0 fallos, con el servicio real en la prueba de
+integración. La limitación de diseño que sí es real —que no hay un modelo de lenguaje detrás, sino un
+enrutador de intenciones por palabras clave— sigue declarada en el informe
+(`Informe-Final/secciones/09-implementacion.tex:122`), y es una cosa distinta de la que se señaló.
 
 ---
 
@@ -744,7 +759,7 @@ Verificado end-to-end contra el backend real corriendo en local (Postgres/Redis 
 real): antes del fix, inalcanzable; corregidas las 3 constantes/expresiones a
 `@permissionService.tienePermission(...)`, y `GET /api/v1/orientacion/temas` con un JWT real de
 estudiante ahora responde **200** (antes de corregir habría fallado con un error de evaluación SpEL en
-cada intento). Verificado que compila y la suite completa sigue en verde (804/804).
+cada intento). Verificado que compila y la suite completa sigue en verde (806/806).
 
 ---
 
