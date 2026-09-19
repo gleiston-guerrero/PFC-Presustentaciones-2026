@@ -8,7 +8,7 @@ punto de esta ronda).
 > cuatro defectos concretos: «sin firmas, sin correo institucional, sin columna de archivos, y con
 > recuentos que no cuadran (dice 81 commits; son 89)». Los cuatro se responden abajo. El último es el
 > que de verdad importaba, porque es el que se repite solo: cuando se corrigió 81 → 89, dos días
-> después ya eran 92. **Por eso la tabla dejó de escribirse y pasó a generarse.**
+> después ya eran 94. **Por eso la tabla dejó de escribirse y pasó a generarse.**
 
 ## Metodología: la tabla la produce `git`, no el equipo
 
@@ -32,21 +32,32 @@ vez de prometida.
 ## Autoría de esta ronda
 
 **Tramo:** `f3d1ff4..HEAD` — desde el commit que revisó la guía original hasta hoy.
-**Total: 92 commits.**
-**Autor único, sin excepción:** Jean30042 <jeanalavaalavarado@gmail.com>
+**Total: 94 commits.**
+**Una sola persona, sin excepción:** Álava Alvarado, Jean Pierre.
+Identidades de Git que usó en el tramo: Jean30042 <jalavaa@uteq.edu.ec>, Jean30042 <jeanalavaalavarado@gmail.com>
 
 ### Sobre el correo (defecto señalado: «sin correo institucional»)
 
-Correcto y confirmado: los 92 commits de esta ronda se firmaron con el correo personal
-`jeanalavaalavarado@gmail.com`. **Corregido a partir del 2026-09-19:** el repositorio quedó fijado a la
-identidad institucional, de forma local y no solo global, para que no dependa de la máquina:
+Correcto y confirmado. Reparto real del tramo, con `git log --format=%ae f3d1ff4..HEAD | sort | uniq -c`:
+
+| Correo | Commits |
+|---|---:|
+| `jeanalavaalavarado@gmail.com` (personal) | 92 |
+| `jalavaa@uteq.edu.ec` (institucional) | 2 |
+
+**Corregido a partir del 2026-09-19:** el repositorio quedó fijado a la identidad institucional, de
+forma local y no solo global, para que no dependa de la máquina en la que se trabaje:
 
 ```bash
 git config --local user.name  "Jean30042"
 git config --local user.email "jalavaa@uteq.edu.ec"
 ```
 
-**Lo que esto no hace, dicho antes de que lo pregunten:** no reescribe los 92 commits anteriores.
+De ahí en adelante todo commit de este repositorio lleva el correo institucional. La cifra de la tabla
+crece con cada commit nuevo, así que este archivo se regenera y el chequeo la vuelve a comprobar.
+
+**Lo que esto no hace, dicho antes de que lo pregunten:** no reescribe los 92 commits
+anteriores.
 Reescribirlos cambiaría todos los hashes del tramo, incluidos los que esta misma tabla, `VERIFICACION.md`,
 `OBSERVACIONES.md` y la etiqueta `v1.1.0` citan como evidencia — es decir, destruiría la trazabilidad
 para maquillar un campo de metadatos. El correo personal en el historial pasado queda declarado como
@@ -73,8 +84,8 @@ Salida literal de `python scripts/ev4-contribuciones.py`:
 | P11 | `bd2cc84`, `73771be`, `6282d50`, `53de5be`, `7b7016c`, `7210c75`, `dd3e192`, `95923ea` | `Informe-Final/secciones/10-evaluacion-empirica.tex`<br>`docs/requisitos/SRS-v1.0.1.tex`<br>`Informe-Final/secciones/08-diseno-arquitectura.tex`<br>`Informe-Final/secciones/13-trabajo-futuro.tex` | 40 |
 | P12 | `bd2cc84`, `25f0896`, `28276f9`, `9bfa665`, `7a22271`, `efa4134`, `2275fa6`, `19c028a` | `VERIFICACION.md`<br>`CONTRIBUCIONES.md`<br>`docs/observaciones/BITACORA-COMMITS-2026-09-02.md`<br>`CONTRIBUTORS.md` | 17 |
 | EV-1 | `9fd9d0c`, `feb9d64`, `f63e903`, `2275fa6` | `VERIFICACION.md`<br>`CONTRIBUCIONES.md`<br>`Makefile`<br>`scripts/verify.sh` | 5 |
-| EV-2 | `9fd9d0c`, `feb9d64`, `20b378a` | `CONTRIBUCIONES.md`<br>`scripts/verify.sh`<br>`.gitignore`<br>`Makefile` | 13 |
-| EV-4 | `9fd9d0c`, `feb9d64`, `2275fa6` | `CONTRIBUCIONES.md`<br>`VERIFICACION.md`<br>`Makefile`<br>`scripts/verify.sh` | 5 |
+| EV-2 | `9fd9d0c`, `feb9d64`, `20b378a`, `512608e` | `CONTRIBUCIONES.md`<br>`scripts/verify.sh`<br>`.gitignore`<br>`Makefile` | 51 |
+| EV-4 | `9fd9d0c`, `feb9d64`, `2275fa6`, `512608e` | `CONTRIBUCIONES.md`<br>`Makefile`<br>`VERIFICACION.md`<br>`scripts/verify.sh` | 44 |
 
 La columna **Archivos de evidencia** lista los archivos que más commits del punto tocaron, excluyendo
 tres que toca casi todo y por eso no distinguen nada (`informe-final.pdf`, `SRS-v1.0.1.pdf` y
@@ -88,7 +99,7 @@ git show --pretty= --name-only <sha>
 **EV-3 no aparece** porque ningún commit lo nombra en el asunto: se cerró declarando la URL pública ya
 existente en `README.md`, sin cambio de código. La revisión del 18-sep lo da por cumplido.
 
-### Commits sin punto declarado (8 de 92)
+### Commits sin punto declarado (8 de 94)
 
 Se listan en vez de repartirlos a ojo entre los puntos, que es exactamente el tipo de atribución que el
 historial no respaldaría:
@@ -142,7 +153,7 @@ copia impresa que se entrega en la defensa; aquí queda la declaración y la ide
 
 | Integrante | Correo institucional | Participación en esta ronda | Firma |
 |---|---|---|---|
-| Álava Alvarado, Jean Pierre | `jalavaa@uteq.edu.ec` | Autor de los 92 commits del tramo | ____________________ |
+| Álava Alvarado, Jean Pierre | `jalavaa@uteq.edu.ec` | Autor de los 94 commits del tramo | ____________________ |
 | Moncayo Loor, Xavier Alejandro | — | Ninguna (reprobó el período regular) | ____________________ |
 | Zamora Arias, Carla Esthefanía | `czamoraa5@uteq.edu.ec` | Ninguna (reprobó el período regular) | ____________________ |
 | Barreto Rosado, Heider Dominick | — | Ninguna (reprobó el período regular) | ____________________ |

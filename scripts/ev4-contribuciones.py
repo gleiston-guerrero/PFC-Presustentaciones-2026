@@ -95,6 +95,10 @@ def generar():
 
     print(f"Tramo: {BASE}..HEAD")
     print(f"Commits: {len(cs)}")
+    # La cifra que se escribe en el archivo incluye el commit que va a traerlo:
+    # de lo contrario nace desfasada por uno, que es la forma en que "81" se
+    # quedo escrito mientras el historial llegaba a 89.
+    print(f"Commits al comitear: {len(cs) + 1}")
     print(f"Autores: {', '.join(autores)}")
     print(f"Sin punto en el asunto: {len(sueltos)}\n")
     print("| Punto | Commits | Archivos de evidencia (los mas tocados) | Total archivos |")
@@ -128,11 +132,31 @@ def check():
     fallos = []
 
     # 1) El total de commits que declara el archivo.
+    #
+    # Ojo con la trampa: este archivo se invalida a si mismo. Si se exige que el
+    # numero sea el de HEAD, el propio commit que lo actualiza lo deja mal al
+    # instante siguiente -- que es como "81" se quedo escrito mientras el
+    # historial llegaba a 89. La cifra correcta es la del commit que CONTIENE
+    # este archivo: el que lo toco por ultima vez. Asi es exacta, reproducible,
+    # y no depende de cuantos commits vengan despues.
     m = re.search(r"\*\*Total:\s*(\d+)\s+commits", txt)
+    esperado = len(cs)
+    sucio = subprocess.run(["git", "diff", "--quiet", "--", ARCHIVO],
+                           capture_output=True).returncode != 0
+    if not sucio:
+        # Ya comiteado: la cifra es la del tramo hasta el commit que lo toco.
+        ultimo = git("log", "-1", "--format=%h", "--", ARCHIVO).strip()
+        if ultimo:
+            esperado = int(git("rev-list", "--count", f"{BASE}..{ultimo}").strip())
+    # Si esta modificado sin comitear, se regenero para el commit que viene.
+    else:
+        esperado = len(cs) + 1
     if not m:
         fallos.append("el archivo no declara un total de commits en negrita")
-    elif int(m.group(1)) != len(cs):
-        fallos.append(f"declara {m.group(1)} commits; git dice {len(cs)}")
+    elif int(m.group(1)) != esperado:
+        estado = "pendiente de comitear" if sucio else "ya comiteado"
+        fallos.append(f"declara {m.group(1)} commits; corresponden {esperado} "
+                      f"({estado}); HEAD va por {len(cs)}")
 
     # 2) Los autores del tramo.
     for a in autores:
