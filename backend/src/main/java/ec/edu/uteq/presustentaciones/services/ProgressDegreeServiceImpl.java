@@ -15,6 +15,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Implementacion del servicio de progress degree.
+ */
 @Service
 @RequiredArgsConstructor
 public class ProgressDegreeServiceImpl implements ProgressDegreeService {

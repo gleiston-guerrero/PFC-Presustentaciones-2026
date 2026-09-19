@@ -54,6 +54,9 @@ import java.util.Set;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+/**
+ * Implementacion del servicio de minutes.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

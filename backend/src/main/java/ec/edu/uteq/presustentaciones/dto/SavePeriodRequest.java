@@ -6,6 +6,9 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
+/**
+ * Save period request.
+ */
 @Data
 public class SavePeriodRequest {
     @JsonProperty("codigo")

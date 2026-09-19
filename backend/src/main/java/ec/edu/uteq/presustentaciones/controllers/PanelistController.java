@@ -17,6 +17,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+/**
+ * Controlador REST de panelist.
+ */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/jurados")
@@ -78,6 +81,7 @@ public class PanelistController {
     }
 
     /**
+     * List by submission.
      * @param submissionId submission consultada
      * @return 200 con los panelists asignados a esa submission
      */
@@ -87,6 +91,7 @@ public class PanelistController {
     }
 
     /**
+     * List all.
      * @param pageable página y tamaño solicitados
      * @return 200 con la página de todas las asignaciones de tribunal
      */
@@ -147,6 +152,7 @@ public class PanelistController {
     }
 
     /**
+     * Obtain tutor.
      * @param submissionId submission consultada
      * @return 200 con el tutor activo, o 404 si la submission no tiene tutor asignado
      */
@@ -173,6 +179,7 @@ public class PanelistController {
     // ── Vistas del teacher como panelist ────────────────────────────────────────
 
     /**
+     * List by teacher.
      * @param teacherId teacher consultado
      * @return 200 con todas las submissions en las que ese teacher es panelist
      */
@@ -183,6 +190,7 @@ public class PanelistController {
     }
 
     /**
+     * List tutorings by teacher.
      * @param teacherId teacher consultado
      * @return 200 con todas las tutorías a cargo de ese teacher
      */

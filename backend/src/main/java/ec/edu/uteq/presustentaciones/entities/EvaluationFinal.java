@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Evaluation final.
+ */
 @Entity
 @Table(name = "evaluaciones_finales", schema = "presus")
 @Getter
@@ -74,6 +77,9 @@ public class EvaluationFinal {
     @JsonProperty("fechaCalculo")
     private LocalDateTime dateCalculo= LocalDateTime.now();
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         if (dateCalculo == null) {

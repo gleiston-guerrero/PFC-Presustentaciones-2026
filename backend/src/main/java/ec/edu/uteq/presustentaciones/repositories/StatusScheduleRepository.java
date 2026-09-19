@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de status schedule.
+ */
 @Repository
 public interface StatusScheduleRepository extends JpaRepository<StatusSchedule, Short> {
     /**

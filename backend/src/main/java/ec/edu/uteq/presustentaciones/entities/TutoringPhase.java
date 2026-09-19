@@ -8,6 +8,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Tutoring phase.
+ */
 @Entity
 @Table(name = "tutoria_fases", schema = "presus")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -64,12 +67,18 @@ public class TutoringPhase {
     @JsonProperty("tamanoPdfBytes")
     private Long sizePdfBytes;
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         dateStart = LocalDateTime.now();
         synchronizeStatusProcess();
     }
 
+    /**
+     * On update.
+     */
     @PreUpdate
     protected void onUpdate() {
         synchronizeStatusProcess();

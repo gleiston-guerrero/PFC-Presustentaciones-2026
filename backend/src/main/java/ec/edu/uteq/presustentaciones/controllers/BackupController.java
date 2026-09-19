@@ -41,7 +41,10 @@ public class BackupController {
 
     // ── Copias ──────────────────────────────────────────────────────────────
 
-    /** @return 200 con la lista de backups, del más reciente al más antiguo */
+    /**
+     * List.
+     * @return 200 con la lista de backups, del más reciente al más antiguo
+     */
     @GetMapping
     public ResponseEntity<?> list() {
         return ResponseEntity.ok(ResponseWrapper.success(backupService.list()));
@@ -128,7 +131,10 @@ public class BackupController {
 
     // ── Schedule (programación + retención) ────────────────────────────────
 
-    /** @return 200 con la configuración vigente del schedule de backups */
+    /**
+     * Obtain config.
+     * @return 200 con la configuración vigente del schedule de backups
+     */
     @GetMapping("/config")
     public ResponseEntity<?> obtainConfig() {
         return ResponseEntity.ok(ResponseWrapper.success(backupService.configDTO()));
@@ -146,7 +152,10 @@ public class BackupController {
                 backupService.updateConfig(dto), "Cronograma actualizado"));
     }
 
-    /** Aplica la retención GFS ahora mismo. @return 200 con los nombres eliminados */
+    /**
+     * Aplica la retención GFS ahora mismo.
+     * @return 200 con los nombres de las copias eliminadas
+     */
     @PostMapping("/retencion")
     public ResponseEntity<?> applyRetention() {
         List<String> eliminados = backupService.applyRetention();
@@ -158,13 +167,17 @@ public class BackupController {
 
     // ── Bitácora de pruebas de restauración ─────────────────────────────────
 
-    /** @return 200 con las últimas 50 pruebas de restauración registradas */
+    /**
+     * List drills.
+     * @return 200 con las últimas 50 pruebas de restauración registradas
+     */
     @GetMapping("/pruebas")
     public ResponseEntity<?> listDrills() {
         return ResponseEntity.ok(ResponseWrapper.success(backupService.drills()));
     }
 
     /**
+     * Register drill.
      * @param req datos de la prueba de restauración a register
      * @return 200 con la prueba registrada
      */
@@ -224,6 +237,7 @@ public class BackupController {
     }
 
     /**
+     * Elimina los registros con base.
      * @param nombre nombre de la base física a delete
      * @return 200 confirmando el borrado
      */

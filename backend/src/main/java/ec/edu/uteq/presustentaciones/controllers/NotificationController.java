@@ -10,6 +10,9 @@ import ec.edu.uteq.presustentaciones.dto.ResponseWrapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+/**
+ * Controlador REST de notification.
+ */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/v1/notificaciones")
@@ -43,6 +46,7 @@ public class NotificationController {
     }
 
     /**
+     * List.
      * @param pageable pagina y tamano solicitados
      * @return 200 con la pagina de notifications del sistema
      */
@@ -57,6 +61,7 @@ public class NotificationController {
     }
 
     /**
+     * List by app user.
      * @param appUserId destinatario cuyas notifications se consultan
      * @param pageable  pagina y tamano solicitados
      * @return 200 con la pagina de notifications de ese appUser
@@ -88,6 +93,7 @@ public class NotificationController {
     }
 
     /**
+     * Mark read.
      * @param id notification a marcar como leida
      * @return 200 con la notification actualizada
      */
@@ -102,6 +108,7 @@ public class NotificationController {
     }
 
     /**
+     * Mark all read.
      * @param appUserId appUser cuyas notifications se marcan todas como leidas
      * @return 200 al confirmar la operacion
      */
@@ -117,6 +124,7 @@ public class NotificationController {
     }
 
     /**
+     * Elimina los registros.
      * @param id notification a delete
      * @return 200 al confirmar el borrado
      */

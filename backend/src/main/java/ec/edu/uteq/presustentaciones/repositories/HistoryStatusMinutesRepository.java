@@ -8,6 +8,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de history status minutes.
+ */
 @Repository
 public interface HistoryStatusMinutesRepository extends JpaRepository<HistoryStatusMinutes, Long> {
 

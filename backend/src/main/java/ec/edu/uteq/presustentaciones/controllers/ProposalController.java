@@ -17,6 +17,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+/**
+ * Controlador REST de proposal.
+ */
 @RestController
 @RequestMapping("/api/anteproyectos")
 public class ProposalController {
@@ -50,6 +53,7 @@ public class ProposalController {
     }
 
     /**
+     * Obtain by submission.
      * @param submissionId submission consultada
      * @return 200 con el proposal de esa submission, o el error si aun no se subio
      */

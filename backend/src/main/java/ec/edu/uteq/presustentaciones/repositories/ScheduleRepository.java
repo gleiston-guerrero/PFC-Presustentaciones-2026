@@ -9,6 +9,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de schedule.
+ */
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
@@ -35,7 +38,13 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
      */
     Optional<Schedule> findBySubmissionId(Long submissionId);
 
-    /** RF-04: Conflictos en room: cualquier schedule que se solape con la franja propuesta */
+    /**
+     * RF-04: Conflictos en room: cualquier schedule que se solape con la franja propuesta
+     * @param roomId room id
+     * @param start start
+     * @param end end
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("""
         SELECT c FROM Schedule c
         WHERE c.room.id = :roomId
@@ -48,6 +57,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
            * @param c.duracionMin c.duracionMin
            * @param end end
            * @return el AND correspondiente
+           * @param start start
            */
           AND FUNCTION('TIMESTAMPADD', MINUTE, c.duracionMin, c.dateStart) > :inicio
     """)
@@ -55,7 +65,11 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                                     @Param("inicio") LocalDateTime start,
                                     @Param("fin") LocalDateTime end);
 
-    /** Todos los schedules activos de una fecha */
+    /**
+     * Todos los schedules activos de una fecha
+     * @param date date
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("SELECT c FROM Schedule c WHERE c.status.code = 'PROGRAMADO' AND CAST(c.dateStart AS date) = CAST(:fecha AS date)")
     List<Schedule> findActiveByDate(@Param("fecha") LocalDateTime date);
 

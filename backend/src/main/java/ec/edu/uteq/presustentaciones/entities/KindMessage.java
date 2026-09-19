@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Kind message.
+ */
 @Entity
 @Table(name = "tipos_mensaje", schema = "presus")
 @Getter

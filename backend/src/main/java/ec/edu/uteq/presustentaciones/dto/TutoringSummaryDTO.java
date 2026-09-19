@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * Objeto de transferencia de tutoring summary.
+ */
 @Data @Builder
 public class TutoringSummaryDTO {
 

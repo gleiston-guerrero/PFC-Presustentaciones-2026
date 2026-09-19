@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+/**
+ * Period academic.
+ */
 @Entity
 @Table(name = "periodos_academicos", schema = "presus")
 @Getter

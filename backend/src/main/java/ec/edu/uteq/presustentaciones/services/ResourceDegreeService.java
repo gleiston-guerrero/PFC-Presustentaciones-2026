@@ -5,9 +5,16 @@ import ec.edu.uteq.presustentaciones.dto.ResourceDegreeDTO;
 
 import java.util.List;
 
+/**
+ * Contrato. Servicio de resource degree.
+ */
 public interface ResourceDegreeService {
 
-    /** Resources visibles para una program (los generales + los de esa program). null = todos. */
+    /**
+     * Resources visibles para una program (los generales + los de esa program). null = todos.
+     * @param programId program id
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<ResourceDegreeDTO> list(Integer programId);
 
     /**

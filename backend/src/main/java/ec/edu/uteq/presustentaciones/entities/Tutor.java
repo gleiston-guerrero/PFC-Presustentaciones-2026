@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Tutor.
+ */
 @Entity
 @Table(name = "tutores", schema = "presus")
 @Getter
@@ -58,12 +61,18 @@ public class Tutor {
     @JsonProperty("observaciones")
     private String observations;
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         dateAsignacion = LocalDateTime.now();
         synchronizeStatusProcess();
     }
 
+    /**
+     * On update.
+     */
     @PreUpdate
     protected void onUpdate() {
         synchronizeStatusProcess();

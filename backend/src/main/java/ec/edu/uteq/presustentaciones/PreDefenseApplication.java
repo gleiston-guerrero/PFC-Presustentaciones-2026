@@ -21,6 +21,15 @@ import lombok.extern.slf4j.Slf4j;
 public class PreDefenseApplication {
 
     /**
+     * Constructor sin argumentos: Spring instancia la clase de arranque de Spring Boot.
+     * Se declara explicitamente porque javadoc avisa del constructor
+     * por defecto, que no puede llevar comentario.
+     */
+    public PreDefenseApplication() {
+        // sin estado que inicializar
+    }
+
+    /**
      * Main.
      * @param args args
      */

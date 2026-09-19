@@ -10,6 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de notification.
+ */
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
@@ -49,6 +52,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     /**
      * UPDATE en block en vez de traer + iterar + volver a save cada fila -- marcarTodasLeidas
      * antes cargaba TODAS las notifications del appUser (leídas incluidas) solo para reescribirlas.
+     * @param appUserId app user id
+     * @return el valor numérico calculado
      */
     @Modifying
     @Query("UPDATE Notification n SET n.read = true WHERE n.appUser.id = :appUserId AND n.read = false")

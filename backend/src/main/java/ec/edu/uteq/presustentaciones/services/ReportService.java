@@ -15,21 +15,49 @@ import java.util.Map;
  */
 public interface ReportService {
 
-    /** Resumen general del process de pre-sustentaciones (dashboard). */
+    /**
+     * Resumen general del process de pre-sustentaciones (dashboard).
+     * @param from from
+     * @param to to
+     * @param program program
+     * @return el valor de tipo {@code ReportSummaryDTO} correspondiente
+     */
     ReportSummaryDTO summary(LocalDate from, LocalDate to, String program);
 
-    /** Cantidad de submissions/pre-sustentaciones por estado. */
+    /**
+     * Cantidad de submissions/pre-sustentaciones por estado.
+     * @param from from
+     * @param to to
+     * @param program program
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<ReportCountDTO> submissionsByStatus(LocalDate from, LocalDate to, String program);
 
-    /** Cantidad de pre-sustentaciones por período académico. */
+    /**
+     * Cantidad de pre-sustentaciones por período académico.
+     * @param from from
+     * @param to to
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<ReportCountDTO> defensesByPeriod(LocalDate from, LocalDate to);
 
-    /** Estado de las minutes: generadas, revisadas, observadas, finalizadas, anuladas, pendientes de firma. */
+    /**
+     * Estado de las minutes: generadas, revisadas, observadas, finalizadas, anuladas, pendientes de firma.
+     * @param from from
+     * @param to to
+     * @return el valor de tipo {@code Long>} correspondiente
+     */
     Map<String, Long> summaryMinutes(LocalDate from, LocalDate to);
 
-    /** Actividad por teacher: como panelist, como tutor y minutes firmadas. */
+    /**
+     * Actividad por teacher: como panelist, como tutor y minutes firmadas.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     List<ReportActivityTeacherDTO> activityByTeacher();
 
-    /** Estadísticas por program/programa: total, completadas y rechazadas. */
+    /**
+     * Estadísticas por program/programa: total, completadas y rechazadas.
+     * @return el valor de tipo {@code Object>>} correspondiente
+     */
     List<Map<String, Object>> statsByProgram();
 }

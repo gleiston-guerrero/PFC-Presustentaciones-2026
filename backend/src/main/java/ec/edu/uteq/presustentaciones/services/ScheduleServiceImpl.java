@@ -25,6 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Implementacion del servicio de schedule.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

@@ -7,6 +7,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Catalogo persistido de estados de solicitud (tabla {@code presus.estados_solicitud}).
+ *
+ * <p>No confundir con el enum del mismo nombre en {@code ..presustentaciones.enums}:
+ * aquel fija los estados que el codigo conoce, y esta entidad es la fila del catalogo
+ * en la base, con su identificador y su etiqueta visible.</p>
+ */
 @Entity
 @Table(name = "estados_solicitud", schema = "presus")
 @Getter

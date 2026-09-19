@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de period academic.
+ */
 @Repository
 public interface PeriodAcademicRepository extends JpaRepository<PeriodAcademic, Integer> {
     /**

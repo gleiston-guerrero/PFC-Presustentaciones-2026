@@ -10,6 +10,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+/**
+ * Controlador REST de room.
+ */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/salas")
@@ -18,6 +21,7 @@ public class RoomController {
     private final RoomRepository roomRepository;
 
     /**
+     * List.
      * @return todas las rooms registradas
      */
     @GetMapping

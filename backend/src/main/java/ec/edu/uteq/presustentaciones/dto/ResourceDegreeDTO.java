@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Objeto de transferencia de resource degree.
+ */
 @Data
 @Builder
 @NoArgsConstructor

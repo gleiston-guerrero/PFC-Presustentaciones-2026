@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Program.
+ */
 @Entity
 @Table(name = "carreras", schema = "presus")
 @Getter

@@ -3,6 +3,9 @@ package ec.edu.uteq.presustentaciones.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+/**
+ * Save program request.
+ */
 @Data
 public class SaveProgramRequest {
     @JsonProperty("codigo")

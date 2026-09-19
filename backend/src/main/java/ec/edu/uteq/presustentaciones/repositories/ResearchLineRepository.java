@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de research line.
+ */
 @Repository
 public interface ResearchLineRepository extends JpaRepository<ResearchLine, Integer> {
     /**

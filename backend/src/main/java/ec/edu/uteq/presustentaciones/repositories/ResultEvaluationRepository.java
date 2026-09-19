@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de result evaluation.
+ */
 @Repository
 public interface ResultEvaluationRepository extends JpaRepository<ResultEvaluation, Short> {
     /**

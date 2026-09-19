@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Role app user.
+ */
 @Entity
 @Table(name = "roles_usuario", schema = "presus")
 @Getter

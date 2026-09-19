@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * History statuses submission.
+ */
 @Entity
 @Table(name = "historial_estados_solicitud", schema = "presus")
 @Getter
@@ -53,6 +56,9 @@ public class HistoryStatusesSubmission {
     @JsonProperty("fechaCambio")
     private LocalDateTime dateCambio= LocalDateTime.now();
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         if (dateCambio == null) {

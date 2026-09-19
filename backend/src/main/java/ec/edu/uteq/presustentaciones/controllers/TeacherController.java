@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controlador REST de teacher.
+ */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/docentes")
@@ -34,6 +37,7 @@ public class TeacherController {
     }
 
     /**
+     * List.
      * @return todos los teachers registrados; para el panel de administración conviene usar
      *         la versión paginada
      */
@@ -57,6 +61,7 @@ public class TeacherController {
     }
 
     /**
+     * Available.
      * @return teachers disponibles para asignación de tribunal o tutoría
      */
     @GetMapping("/disponibles")

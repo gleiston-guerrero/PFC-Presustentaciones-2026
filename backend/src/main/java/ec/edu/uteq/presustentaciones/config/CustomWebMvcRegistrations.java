@@ -12,8 +12,20 @@ import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Custom web mvc registrations.
+ */
 @Configuration
 public class CustomWebMvcRegistrations implements WebMvcRegistrations {
+
+    /**
+     * Constructor sin argumentos: Spring instancia los registros personalizados de Spring MVC.
+     * Se declara explicitamente porque javadoc avisa del constructor
+     * por defecto, que no puede llevar comentario.
+     */
+    public CustomWebMvcRegistrations() {
+        // sin estado que inicializar
+    }
 
     /**
      * Get request mapping handler mapping.

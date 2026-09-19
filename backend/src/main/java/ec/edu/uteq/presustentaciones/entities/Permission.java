@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Permission.
+ */
 @Entity
 @Table(name = "permisos", schema = "presus")
 @Getter

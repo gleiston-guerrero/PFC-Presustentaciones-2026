@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de kind evaluator.
+ */
 @Repository
 public interface KindEvaluatorRepository extends JpaRepository<KindEvaluator, Short> {
     /**

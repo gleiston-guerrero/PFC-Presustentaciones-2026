@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Objeto de transferencia de tracking.
+ */
 @Data
 @Builder
 @NoArgsConstructor

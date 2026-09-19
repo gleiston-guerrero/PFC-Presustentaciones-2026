@@ -20,6 +20,7 @@ public class PermissionService {
     private final TeacherRepository teacherRepository;
 
     /**
+     * Has permission.
      * @param authentication autenticación del appUser a evaluar
      * @param codePermission  código del permission requerido
      * @return {@code true} si el appUser autenticado tiene ese permission vía su role
@@ -54,6 +55,7 @@ public class PermissionService {
     }
 
     /**
+     * Is own teacher.
      * @param authentication autenticación del appUser a evaluar
      * @param teacherId      id del teacher a comparar
      * @return {@code true} si el appUser autenticado es el teacher vinculado a ese id

@@ -31,6 +31,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controlador REST de catalog.
+ */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/catalogos")
@@ -51,6 +54,7 @@ public class CatalogController {
     private final CatalogAdminService catalogAdminService;
 
     /**
+     * List modalities.
      * @return 200 con todas las modalities de titulación disponibles para elegir al create
      *         una submission
      */
@@ -60,6 +64,7 @@ public class CatalogController {
     }
 
     /**
+     * List lines research.
      * @return 200 con las líneas de investigación institucionales
      */
     @GetMapping("/lineas-investigacion")
@@ -84,6 +89,7 @@ public class CatalogController {
     }
 
     /**
+     * List announcements active.
      * @return 200 con las announcements de titulación marcadas como activas
      */
     @GetMapping("/convocatorias")
@@ -106,6 +112,7 @@ public class CatalogController {
     }
 
     /**
+     * List programs.
      * @return 200 con todas las programs; lo usa Gestión de Students para elegir la
      *         program al register o editar un student
      */
@@ -115,6 +122,7 @@ public class CatalogController {
     }
 
     /**
+     * List periods academic.
      * @return 200 con todos los períodos académicos; lo usa Gestión de Students para
      *         assign el período de ingreso
      */
@@ -131,6 +139,7 @@ public class CatalogController {
     // -- no combina con -- el de clase.
 
     /**
+     * List faculties.
      * @return 200 con todas las faculties
      */
     @GetMapping("/facultades")

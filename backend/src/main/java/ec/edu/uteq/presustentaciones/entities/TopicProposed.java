@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Topic proposed.
+ */
 @Entity
 @Table(name = "temas_propuestos", schema = "presus")
 @Getter

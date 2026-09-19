@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Evaluation panelist.
+ */
 @Entity
 @Table(name = "evaluaciones_jurado", schema = "presus")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -50,11 +53,17 @@ public class EvaluationPanelist {
     @JsonProperty("jurado")
     private Panelist panelist;
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         dateRecord = LocalDateTime.now();
     }
 
+    /**
+     * On update.
+     */
     @PreUpdate
     protected void onUpdate() {
         if (this.gradePanelist != null) {

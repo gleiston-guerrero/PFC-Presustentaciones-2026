@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Result evaluation.
+ */
 @Entity
 @Table(name = "resultados_evaluacion", schema = "presus")
 @Getter

@@ -7,6 +7,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Objeto de transferencia de tutoring phase.
+ */
 @Data @Builder
 public class TutoringPhaseDTO {
 

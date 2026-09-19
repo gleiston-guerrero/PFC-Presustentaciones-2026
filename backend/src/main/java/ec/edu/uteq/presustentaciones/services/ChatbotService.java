@@ -9,8 +9,20 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Servicio de chatbot.
+ */
 @Service
 public class ChatbotService {
+
+    /**
+     * Constructor sin argumentos: Spring instancia el servicio del asistente conversacional.
+     * Se declara explicitamente porque javadoc avisa del constructor
+     * por defecto, que no puede llevar comentario.
+     */
+    public ChatbotService() {
+        // sin estado que inicializar
+    }
 
     /**
      * Process message.

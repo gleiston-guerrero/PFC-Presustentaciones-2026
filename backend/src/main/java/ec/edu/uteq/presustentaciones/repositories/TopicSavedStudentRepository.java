@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de topic saved student.
+ */
 @Repository
 public interface TopicSavedStudentRepository extends JpaRepository<TopicSavedStudent, Integer> {
 

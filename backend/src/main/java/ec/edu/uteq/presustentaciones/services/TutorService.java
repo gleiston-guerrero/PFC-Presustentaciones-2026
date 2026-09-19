@@ -8,9 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Contrato. Servicio de tutor.
+ */
 public interface TutorService {
 
     /**
+     * Assign tutor.
      * @param submissionId id de la submission
      * @param teacherId   id del teacher que actuará como tutor
      * @return el registro de tutoría creado
@@ -18,18 +22,23 @@ public interface TutorService {
     Tutor assignTutor(Long submissionId, Long teacherId);
 
     /**
+     * Search by submission.
      * @param submissionId id de la submission
      * @return el tutor asignado, si existe
      */
     Optional<Tutor> searchBySubmission(Long submissionId);
 
     /**
+     * List all.
      * @param pageable configuración de paginación
      * @return página de todos los registros de tutoría del sistema
      */
     Page<Tutor> listAll(Pageable pageable);
 
-    /** @param tutorId id del registro de tutoría a delete */
+    /**
+     * Elimina los registros con tutor.
+     * @param tutorId id del registro de tutoría a delete
+     */
     void deleteTutor(Long tutorId);
 
     /**
@@ -40,6 +49,7 @@ public interface TutorService {
     List<Map<String, Object>> obtainStatsTutorsSP();
 
     /**
+     * My students.
      * @param appUserIdTeacher id del appUser teacher
      * @return los students tutorados actualmente por ese teacher
      */

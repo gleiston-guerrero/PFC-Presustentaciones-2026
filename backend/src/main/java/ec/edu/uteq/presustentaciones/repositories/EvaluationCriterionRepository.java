@@ -7,6 +7,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de evaluation criterion.
+ */
 public interface EvaluationCriterionRepository extends JpaRepository<EvaluationCriterion, Long> {
 
     /**

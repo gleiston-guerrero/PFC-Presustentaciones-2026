@@ -14,8 +14,20 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Manejador de global exception.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * Constructor sin argumentos: Spring instancia el manejador global de excepciones.
+     * Se declara explicitamente porque javadoc avisa del constructor
+     * por defecto, que no puede llevar comentario.
+     */
+    public GlobalExceptionHandler() {
+        // sin estado que inicializar
+    }
 
     /**
      * MethodArgumentNotValidException (fallo de @Valid en el body, p. ej. email vacío o
@@ -82,6 +94,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle illegal argument exception.
      * @param ex argumento invalido recibido por un servicio
      * @return 400 con el mensaje del servicio
      */

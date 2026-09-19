@@ -21,6 +21,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controlador REST de tutoring.
+ */
 @RestController
 @RequestMapping("/api/tutorias")
 @CrossOrigin(origins = "http://localhost:4200")

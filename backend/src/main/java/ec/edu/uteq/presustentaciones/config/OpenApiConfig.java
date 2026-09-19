@@ -10,8 +10,20 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuracion de open api.
+ */
 @Configuration
 public class OpenApiConfig {
+
+    /**
+     * Constructor sin argumentos: Spring instancia la configuracion de OpenAPI/Swagger.
+     * Se declara explicitamente porque javadoc avisa del constructor
+     * por defecto, que no puede llevar comentario.
+     */
+    public OpenApiConfig() {
+        // sin estado que inicializar
+    }
 
     /**
      * Custom open a p i.

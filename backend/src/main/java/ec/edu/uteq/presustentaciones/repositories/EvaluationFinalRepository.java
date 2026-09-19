@@ -10,6 +10,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de evaluation final.
+ */
 @Repository
 public interface EvaluationFinalRepository extends JpaRepository<EvaluationFinal, Long> {
     /**

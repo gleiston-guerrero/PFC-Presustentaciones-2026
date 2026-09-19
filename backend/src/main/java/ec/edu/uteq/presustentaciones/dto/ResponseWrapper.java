@@ -9,6 +9,10 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
+/**
+ * Response wrapper.
+ * @param <T> tipo generico que parametriza la clase
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -17,18 +21,34 @@ public class ResponseWrapper<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Success.
+     */
     @JsonProperty("success")
     private boolean success;
+    /**
+     * Data.
+     */
     @JsonProperty("data")
     private T data;
+    /**
+     * Message.
+     */
     @JsonProperty("message")
     private String message;
+    /**
+     * Errors.
+     */
     @JsonProperty("errors")
     private Object errors;
+    /**
+     * Meta.
+     */
     @JsonProperty("meta")
     private Object meta;
 
     /**
+     * Success.
      * @param data  contenido de la respuesta exitosa
      * @param <T>   tipo del contenido
      * @return un wrapper con {@code success = true} y un mensaje genérico
@@ -42,6 +62,7 @@ public class ResponseWrapper<T> implements Serializable {
     }
 
     /**
+     * Success.
      * @param data    contenido de la respuesta exitosa
      * @param message mensaje descriptivo de la operación
      * @param <T>     tipo del contenido
@@ -56,6 +77,7 @@ public class ResponseWrapper<T> implements Serializable {
     }
 
     /**
+     * Error.
      * @param message mensaje de error
      * @param <T>     tipo del contenido (no llevará datos)
      * @return un wrapper con {@code success = false} y sin detalle de errores
@@ -68,6 +90,7 @@ public class ResponseWrapper<T> implements Serializable {
     }
 
     /**
+     * Error.
      * @param message mensaje de error
      * @param errors  detalle estructurado de los errores (p. ej. errores de validación)
      * @param <T>     tipo del contenido (no llevará datos)

@@ -84,6 +84,9 @@ public class EvaluationCriterion {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "rubrica"})
     private CriterionRubric criterion;
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         registradoEn = LocalDateTime.now();

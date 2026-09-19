@@ -31,6 +31,7 @@ public class CatalogAdminService {
     private final AuditService auditService;
 
     /**
+     * Elimina los registros con faculty.
      * @param id id de la faculty a delete
      * @throws org.springframework.dao.DataIntegrityViolationException si hay programs
      *         asociadas a la faculty
@@ -43,6 +44,7 @@ public class CatalogAdminService {
     }
 
     /**
+     * Elimina los registros con program.
      * @param id id de la program a delete
      * @throws org.springframework.dao.DataIntegrityViolationException si hay registros
      *         dependientes de la program
@@ -55,6 +57,7 @@ public class CatalogAdminService {
     }
 
     /**
+     * Elimina los registros con modality.
      * @param id id de la modality de titulación a delete
      * @throws org.springframework.dao.DataIntegrityViolationException si hay registros
      *         dependientes de la modality
@@ -67,6 +70,7 @@ public class CatalogAdminService {
     }
 
     /**
+     * Elimina los registros con period.
      * @param id id del period académico a delete
      * @throws org.springframework.dao.DataIntegrityViolationException si hay registros
      *         dependientes del period

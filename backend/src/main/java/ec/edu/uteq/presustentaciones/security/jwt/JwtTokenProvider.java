@@ -17,6 +17,9 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Proveedor de jwt token.
+ */
 @Component
 @Slf4j
 public class JwtTokenProvider {
@@ -39,6 +42,7 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Generate token.
      * @param authentication autenticación del appUser ya validada por Spring Security
      * @return un JWT de acceso firmado para el username del principal autenticado
      */
@@ -48,6 +52,7 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Generate token from username.
      * @param username sujeto (username) del token a emitir
      * @return un JWT de acceso firmado, con expiración {@code jwt.expiration}
      */
@@ -69,6 +74,7 @@ public class JwtTokenProvider {
 
     // Generate y almacenar Refresh Token en Redis (Multi-device support)
     /**
+     * Generate refresh token.
      * @param username titular del refresh token a emitir
      * @return un refresh token opaco (UUID) registrado en Redis, o el UUID sin persistir si
      *         Redis no está disponible ({@code redisTemplate} es {@code null})
@@ -91,6 +97,7 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Get username from refresh token.
      * @param token refresh token opaco a resolve
      * @return el username dueño del token, o {@code null} si no existe, expiró, o Redis no
      *         está disponible
@@ -101,6 +108,7 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Get username from used refresh token.
      * @param token refresh token ya rotado (movido a "usados" por {@link #rotateRefreshToken})
      * @return el username dueño del token usado, o {@code null} si no está registrado como
      *         usado o Redis no está disponible
@@ -111,6 +119,7 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Validate refresh token.
      * @param token refresh token a validate
      * @return {@code true} si el token existe entre los activos en Redis; {@code false} si no
      *         existe, expiró, o Redis no está disponible
@@ -260,6 +269,7 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Get claims from token.
      * @param token JWT firmado a parsear
      * @return los claims del token
      * @throws io.jsonwebtoken.JwtException si la firma no es válida o el token está mal formado
@@ -273,6 +283,7 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Get username from token.
      * @param token JWT firmado a parsear
      * @return el subject (username) codificado en el token
      */
@@ -281,6 +292,7 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Validate token.
      * @param token JWT de acceso a validate
      * @return {@code true} si el token tiene firma válida y no está en la blacklist
      * @throws io.jsonwebtoken.JwtException si el token está en la blacklist, mal formado, o su

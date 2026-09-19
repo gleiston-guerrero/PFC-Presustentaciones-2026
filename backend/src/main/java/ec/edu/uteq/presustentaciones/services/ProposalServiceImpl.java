@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Implementacion del servicio de proposal.
+ */
 @Service
 @Slf4j
 public class ProposalServiceImpl implements ProposalService {

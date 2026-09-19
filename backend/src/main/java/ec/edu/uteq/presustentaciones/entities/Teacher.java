@@ -6,6 +6,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Teacher.
+ */
 @Entity
 @Table(name = "docente", schema = "presus")
 @Getter
@@ -49,6 +52,9 @@ public class Teacher {
     @JsonProperty("creadoEn")
     private LocalDateTime creadoEn;
     
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         creadoEn = LocalDateTime.now();

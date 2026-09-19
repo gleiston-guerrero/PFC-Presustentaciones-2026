@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Criterion rubric.
+ */
 @Entity
 @Table(name = "criterios_rubrica", schema = "presus")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

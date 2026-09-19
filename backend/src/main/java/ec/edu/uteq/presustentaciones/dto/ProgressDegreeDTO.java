@@ -29,6 +29,9 @@ public class ProgressDegreeDTO {
     @JsonProperty("pasos")
     private List<StepDTO> pasos;
 
+    /**
+     * Objeto de transferencia de step.
+     */
     @Data
     @Builder
     @NoArgsConstructor

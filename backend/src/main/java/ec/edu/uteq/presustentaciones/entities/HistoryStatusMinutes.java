@@ -71,6 +71,9 @@ public class HistoryStatusMinutes {
     @JsonProperty("fechaCambio")
     private LocalDateTime dateCambio= LocalDateTime.now();
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         if (dateCambio == null) {

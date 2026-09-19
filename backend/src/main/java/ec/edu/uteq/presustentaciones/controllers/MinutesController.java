@@ -18,6 +18,9 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 
+/**
+ * Controlador REST de minutes.
+ */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/v1/actas")
@@ -119,6 +122,7 @@ public class MinutesController {
     }
 
     /**
+     * List.
      * @param pageable página y tamaño solicitados
      * @return 200 con la página de minutes
      */
@@ -230,6 +234,7 @@ public class MinutesController {
     }
 
     /**
+     * By submission.
      * @param submissionId submission consultada
      * @return 200 con el minutes de esa submission, o el error del servicio si no existe o no
      *         hay acceso

@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Controlador REST de external api.
+ */
 @RestController
 @RequestMapping("/api/universidades")
 @RequiredArgsConstructor

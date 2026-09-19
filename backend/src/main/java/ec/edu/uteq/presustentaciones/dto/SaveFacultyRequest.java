@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 
+/**
+ * Save faculty request.
+ */
 @Data
 public class SaveFacultyRequest {
     @JsonProperty("codigo")

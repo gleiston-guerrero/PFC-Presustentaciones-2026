@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
+/**
+ * Topic saved student.
+ */
 @Entity
 @Table(name = "temas_guardados", schema = "presus")
 @Getter
@@ -37,6 +40,9 @@ public class TopicSavedStudent {
     @JsonProperty("fechaGuardado")
     private LocalDateTime dateSaved;
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         if (this.dateSaved == null) {

@@ -85,6 +85,14 @@ RE_PROCEDENCIA = re.compile(
     r"|\bv\d+\.\d+\.\d+\b",
     re.I)
 
+# Frases con las que un texto declara que esa cifra es la que rige AHORA. Una
+# cifra asi no puede ampararse en llevar fecha: si dice que es la de cierre,
+# tiene que ser la de cierre.
+RE_VIGENTE = re.compile(
+    r"cifra de cierre|de cierre definitiv|corrida de cierre|cifra vigente"
+    r"|la que aplica|cifra de cierre vigente|badge|shields\.io",
+    re.I)
+
 RE_TITULO_MD = re.compile(r"^#{1,6}\s")
 RE_TITULO_TEX = re.compile(r"^\\(?:sub)*section\*?\{")
 
@@ -141,6 +149,65 @@ def bloques(texto, es_tex):
         yield ini, "".join(buf), titulo
 
 
+RE_FRACCION = re.compile(r"(?<![\d.,/])(\d[\d.,]{2,6})\s*/\s*(\d[\d.,]{2,6})(?![\d.,/])")
+
+
+def _num(s):
+    return int(s.replace(",", "").replace(".", ""))
+
+
+def corridas_archivadas():
+    """(cubierto, total) de LINE y BRANCH de TODA corrida versionada.
+
+    Una fraccion publicada tiene que corresponder a alguna corrida real. Sin
+    esto, la regla de la procedencia deja pasar una cifra de cierre vencida:
+    basta con que su parrafo lleve una fecha. Asi es como 4019/4901 seguia
+    publicado cuando la corrida de cierre ya daba 4022/4904 -- un par que
+    ninguna corrida del expediente respalda.
+    """
+    pares = set()
+    for x in glob.glob("docs/mediciones/jacoco/*/jacoco.xml"):
+        try:
+            root = ET.parse(x).getroot()
+        except ET.ParseError:
+            continue
+        for c in root.findall("counter"):
+            if c.get("type") in ("LINE", "BRANCH"):
+                co, mi = int(c.get("covered")), int(c.get("missed"))
+                pares.add((co, co + mi))
+    return pares
+
+
+def revisar_fracciones(archivos, pares):
+    totales = {tot for _, tot in pares}
+    malas = []
+    for f in archivos:
+        try:
+            txt = io.open(f, encoding="utf-8", errors="replace").read()
+        except OSError:
+            continue
+        for m in RE_FRACCION.finditer(txt):
+            try:
+                co, tot = _num(m.group(1)), _num(m.group(2))
+            except ValueError:
+                continue
+            if co > tot:
+                continue
+            # Solo se revisan los totales que alguna corrida archivada registra
+            # como globales. Sin este filtro se marcaban los desgloses por
+            # paquete (2245/3197) y numeros sin relacion (205871/205871), y una
+            # salida llena de ruido no la lee nadie.
+            if tot not in totales:
+                continue
+            ventana = txt[max(0, m.start() - 160): m.end() + 160]
+            if not CTX_COBERTURA.search(ventana):
+                continue
+            if (co, tot) not in pares:
+                malas.append((f.replace("\\", "/"), f"{co}/{tot}",
+                              " ".join(ventana.split())[:130]))
+    return malas
+
+
 def revisar(archivos, cob, pruebas):
     linea_pct = f"{cob['LINE'][2]:.2f}"
     rama_pct = f"{cob['BRANCH'][2]:.2f}"
@@ -163,7 +230,10 @@ def revisar(archivos, cob, pruebas):
                     continue
                 if not CTX_COBERTURA.search(ctx):
                     continue
-                if val in validos or tiene_fecha:
+                if val in validos:
+                    continue
+                # Si el texto dice que es la cifra vigente, la fecha no la salva.
+                if tiene_fecha and not RE_VIGENTE.search(ctx):
                     continue
                 malas.append((rel, val + " %", " ".join(ctx.split())[:140]))
             if pruebas:
@@ -193,10 +263,12 @@ def main():
     archivos = sorted({f for pat in ("**/*.md", "**/*.tex")
                        for f in glob.glob(pat, recursive=True) if vigente(f)})
     malas, conteos = revisar(archivos, cob, pruebas)
+    fracciones = revisar_fracciones(archivos, corridas_archivadas())
     print(f"Documentos vigentes revisados: {len(archivos)}\n")
 
     detalle = "--lista" in sys.argv
-    for titulo, hallazgos in (("cobertura", malas), ("conteo de pruebas", conteos)):
+    for titulo, hallazgos in (("cobertura", malas), ("conteo de pruebas", conteos),
+                              ("fraccion cubierto/total", fracciones)):
         if hallazgos:
             print(f"*** {len(hallazgos)} cifra(s) de {titulo} sin respaldo ni procedencia ***")
             for f, v, ctx in hallazgos:
@@ -207,7 +279,11 @@ def main():
         else:
             print(f"[OK] {titulo}: toda cifra publicada es la de cierre o declara su corrida.")
 
-    if malas or conteos:
+    if fracciones:
+        print("Una fraccion cubierto/total tiene que corresponder a una corrida")
+        print("versionada en docs/mediciones/jacoco/. Si no cuadra con ninguna,")
+        print("la cifra no la respalda el expediente aunque lleve fecha.")
+    if malas or conteos or fracciones:
         print("\nArreglalo de una de dos formas:")
         print("  - pon la cifra de cierre, o")
         print("  - di de que corrida es (una fecha en el mismo parrafo basta).")

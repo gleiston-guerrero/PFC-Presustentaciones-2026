@@ -15,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Implementacion del servicio de app user.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional

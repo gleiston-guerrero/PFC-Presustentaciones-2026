@@ -42,6 +42,7 @@ public class StudentController {
     }
 
     /**
+     * Obtain by id.
      * @param id perfil de student consultado
      * @return 200 con la ficha del student, o el error correspondiente si no existe
      */
@@ -87,6 +88,7 @@ public class StudentController {
     }
 
     /**
+     * Statuses academic.
      * @return catálogo de estados académicos posibles, para poblar el selector del formulario
      */
     @GetMapping("/estados-academicos")

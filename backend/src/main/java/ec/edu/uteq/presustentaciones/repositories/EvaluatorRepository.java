@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de evaluator.
+ */
 @Repository
 public interface EvaluatorRepository extends JpaRepository<Evaluator, Long> {
     /**

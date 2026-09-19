@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de announcement degree.
+ */
 @Repository
 public interface AnnouncementDegreeRepository extends JpaRepository<AnnouncementDegree, Integer> {
     /**
@@ -21,7 +24,10 @@ public interface AnnouncementDegreeRepository extends JpaRepository<Announcement
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<AnnouncementDegree> findByPeriodAcademicId(Integer periodId);
-    /** Devuelve la announcement activa (activa = true) */
+    /**
+     * Devuelve la announcement activa (activa = true)
+     * @return el registro si existe, vacío si no
+     */
     Optional<AnnouncementDegree> findFirstByActiveTrue();
     /**
      * Busca el/los registro(s) con activa true.

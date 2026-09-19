@@ -11,6 +11,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de panelist.
+ */
 @Repository
 public interface PanelistRepository extends JpaRepository<Panelist, Long> {
 
@@ -21,6 +24,9 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * a partir del código de role. Se llama una vez por par submission/teacher
      * dentro de una transacción Spring (@Transactional en el servicio) para
      * que el lote completo se confirme o revierta como una unidad.
+     * @param submissionId submission id
+     * @param teacherId teacher id
+     * @param roleCode role code
      */
     @Procedure(procedureName = "sp_asignar_jurado_masivo")
     void spAssignPanelistBulk(@Param("p_solicitud_id") Long submissionId,
@@ -39,6 +45,12 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * Invoca sp_validate_conflicto_panelist (FUNCTION scaler, categoría "validaciones
      * cruzadas" del Block A.2): true si el teacher NO tiene otra defensa asignada que se
      * solape con el horario dado.
+     * @param submissionId submission id
+     * @param teacherId teacher id
+     * @param dateStart date start
+     * @param duracionMin duracion min
+     * @param availableInicial available inicial
+     * @return el valor de tipo {@code los} correspondiente
      */
     @Procedure(name = "Jurado.validarConflictoJurado")
     Boolean validateConflictoPanelist(@Param("p_solicitud_id") Long submissionId,

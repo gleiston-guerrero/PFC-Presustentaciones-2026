@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controlador REST de rubric evaluation.
+ */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/rubrica-evaluacion")
@@ -65,6 +68,7 @@ public class RubricEvaluationController {
     }
 
     /**
+     * Obtain submission.
      * @param submissionId submission consultada
      * @return evaluations de todos los panelists del tribunal para esa submission
      */
@@ -92,6 +96,7 @@ public class RubricEvaluationController {
     }
 
     /**
+     * Criteria by rubric.
      * @param rubricId rubric consultada
      * @return criterios de esa rubric, para pintar el formulario de calificacion
      */

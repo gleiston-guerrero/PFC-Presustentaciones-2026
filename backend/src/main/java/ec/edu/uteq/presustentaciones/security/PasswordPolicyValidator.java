@@ -30,6 +30,9 @@ import java.util.Set;
 @Slf4j
 public class PasswordPolicyValidator {
 
+    /**
+     * L o n g i t u d  m i n i m a.
+     */
     public static final int LONGITUD_MINIMA = 8;
     private static final String RUTA_LISTA = "classpath:security/common-passwords.txt";
 
@@ -61,6 +64,7 @@ public class PasswordPolicyValidator {
     }
 
     /**
+     * Meets.
      * @param password contraseña en texto plano a evaluar
      * @return true si la contraseña cumple la política, sin lanzar excepción.
      */

@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de history schedule.
+ */
 @Repository
 public interface HistoryScheduleRepository extends JpaRepository<HistorySchedule, Long> {
     /**

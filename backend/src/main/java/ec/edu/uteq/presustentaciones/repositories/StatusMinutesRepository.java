@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de status minutes.
+ */
 @Repository
 public interface StatusMinutesRepository extends JpaRepository<StatusMinutes, Short> {
     /**

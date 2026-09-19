@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de tutor.
+ */
 @Repository
 public interface TutorRepository extends JpaRepository<Tutor, Long> {
     /**
@@ -51,7 +54,10 @@ public interface TutorRepository extends JpaRepository<Tutor, Long> {
     @Query(value = "SELECT * FROM presus.sp_obtener_estadisticas_tutores()", nativeQuery = true)
     List<Object[]> obtainStatsTutorsSp();
 
-    /** Reportes: cuántas tutorías tiene asignadas cada teacher (GROUP BY en la base). */
+    /**
+     * Reportes: cuántas tutorías tiene asignadas cada teacher (GROUP BY en la base).
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("SELECT t.teacher.id, COUNT(t) FROM Tutor t GROUP BY t.teacher.id")
     List<Object[]> countTutoringsByTeacher();
 

@@ -13,6 +13,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de minutes.
+ */
 @Repository
 public interface MinutesRepository extends JpaRepository<Minutes, Long> {
     /**
@@ -32,7 +35,11 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
            countQuery = "SELECT COUNT(a) FROM Minutes a")
     Page<Minutes> findAll(Pageable pageable);
 
-    /** Detalle de un minutes con submission + student + appUser + estado en un solo query. */
+    /**
+     * Detalle de un minutes con submission + student + appUser + estado en un solo query.
+     * @param id id
+     * @return el registro si existe, vacío si no
+     */
     @Query("SELECT a FROM Minutes a JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u JOIN FETCH a.status est WHERE a.id = :id")
     Optional<Minutes> findDetailById(@Param("id") Long id);
 
@@ -76,6 +83,16 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
      * data type of parameter") — mismo motivo por el que SubmissionRepository.searchConFiltros
      * usa sentinelas en vez de comprobar null.
      */
+    /**
+     * Search con filtros.
+     * @param status status
+     * @param program program
+     * @param from from
+     * @param to to
+     * @param q q
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query(value = "SELECT a FROM Minutes a " +
             "JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u JOIN FETCH a.status est " +
             "WHERE (:estado IS NULL OR :estado = '' OR est.code = :estado) " +
@@ -91,16 +108,6 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
             "AND (:q IS NULL OR :q = '' OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
             "     OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', :q, '%')) " +
             "     OR LOWER(s.tituloTopic) LIKE LOWER(CONCAT('%', :q, '%')))")
-    /**
-     * Search con filtros.
-     * @param status status
-     * @param program program
-     * @param from from
-     * @param to to
-     * @param q q
-     * @param pageable pageable
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     Page<Minutes> searchWithFiltros(@Param("estado") String status,
                                 @Param("program") String program,
                                 @Param("desde") LocalDate from,
@@ -133,7 +140,12 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
            "GROUP BY a.status.code")
     List<Object[]> countByStatus(@Param("desde") LocalDate from, @Param("hasta") LocalDate to);
 
-    /** Invoca sp_sign_minutes_digital (PROCEDURE). Fase 3 / Criterio P1. */
+    /**
+     * Invoca sp_sign_minutes_digital (PROCEDURE). Fase 3 / Criterio P1.
+     * @param minutesId minutes id
+     * @param role role
+     * @param observation observation
+     */
     @Procedure(procedureName = "presus.sp_firmar_acta_digital")
     void signMinutesDigital(@Param("p_acta_id") Long minutesId,
                             @Param("p_rol") String role,

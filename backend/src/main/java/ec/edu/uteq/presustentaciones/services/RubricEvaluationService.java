@@ -6,6 +6,9 @@ import ec.edu.uteq.presustentaciones.dto.ObservationsSubmissionDTO;
 
 import java.util.List;
 
+/**
+ * Contrato. Servicio de rubric evaluation.
+ */
 public interface RubricEvaluationService {
     /** El panelist registra sus scales por criterio
      * @param request calificación por criterio de rúbrica emitida por un panelist

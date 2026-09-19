@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de backup drill restore.
+ */
 @Repository
 public interface BackupDrillRestoreRepository extends JpaRepository<BackupDrillRestore, Long> {
 

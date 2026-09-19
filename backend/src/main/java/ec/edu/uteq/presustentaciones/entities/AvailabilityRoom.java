@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+/**
+ * Availability room.
+ */
 @Entity
 @Table(name = "disponibilidad_sala", schema = "presus")
 @Getter

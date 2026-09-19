@@ -33,7 +33,7 @@ Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controlle
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,StatusLiveController,5,258,2,10,0,40,2,14,0,10
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,EvaluationPanelistController,11,77,0,4,4,17,0,6,0,4
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,ProposalController,4,138,1,7,2,29,1,11,0,8
-Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,GlobalExceptionHandler,26,64,0,2,10,21,3,7,3,6
+Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,GlobalExceptionHandler,26,64,0,2,10,22,3,7,3,6
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,AuthController,30,566,16,34,3,126,17,20,2,10
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,PermissionController,0,112,0,12,0,20,0,10,0,4
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,EvaluationController,0,79,0,0,0,18,0,8,0,8
@@ -46,7 +46,7 @@ Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controlle
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,CatalogController,21,703,18,84,0,136,18,54,0,21
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,MeController,0,13,0,0,0,2,0,2,0,2
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,TopicController,13,137,3,3,3,23,4,14,1,14
-Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones,PreDefenseApplication,5,7,0,0,2,2,1,2,1,2
+Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones,PreDefenseApplication,5,7,0,0,2,3,1,2,1,2
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.security,PasswordRecoveryService,12,180,0,6,2,30,1,8,1,5
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.security,PasswordPolicyValidator,7,94,3,9,2,25,3,8,0,5
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.security,RateLimiterService,8,57,1,3,2,14,1,5,0,4
@@ -65,7 +65,7 @@ Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.services,
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.services,WalPitrService,396,593,43,47,62,134,33,41,3,26
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.services,ErasureDataService,19,134,1,7,2,35,4,8,3,5
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.services,StudentService,5,542,13,43,0,102,13,34,0,19
-Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.services,ChatbotService,0,167,2,40,0,26,2,22,0,3
+Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.services,ChatbotService,0,167,2,40,0,27,2,22,0,3
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.services,EmailService,14,139,1,7,4,33,1,9,0,6
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.services,BackupScheduler,16,190,8,22,6,47,8,12,0,5
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.services,CleanupLogScheduler,0,46,0,2,0,13,0,4,0,3

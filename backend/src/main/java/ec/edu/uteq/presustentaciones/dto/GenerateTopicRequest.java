@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+/**
+ * Generate topic request.
+ */
 @Data
 public class GenerateTopicRequest {
     @NotNull(message = "El ID de la carrera es obligatorio")

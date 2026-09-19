@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de role app user.
+ */
 @Repository
 public interface RoleAppUserRepository extends JpaRepository<RoleAppUser, Short> {
     /**

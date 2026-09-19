@@ -135,6 +135,9 @@ public class Submission {
     @JsonProperty("suspendidoEn")
     private LocalDateTime suspendidoEn;
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         dateRecord = LocalDateTime.now();
@@ -142,6 +145,9 @@ public class Submission {
         synchronizeStatusCode();
     }
 
+    /**
+     * On update.
+     */
     @PreUpdate
     protected void onUpdate() {
         actualizadoEn = LocalDateTime.now();

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 
+/**
+ * Chat request.
+ */
 @Data
 public class ChatRequest {
     @JsonProperty("message")

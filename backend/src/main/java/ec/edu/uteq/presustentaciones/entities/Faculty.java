@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Faculty.
+ */
 @Entity
 @Table(name = "facultades", schema = "presus")
 @Getter

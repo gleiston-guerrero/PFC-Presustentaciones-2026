@@ -8,6 +8,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Tutoring message.
+ */
 @Entity
 @Table(name = "tutoria_mensajes", schema = "presus")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -56,6 +59,9 @@ public class TutoringMessage {
     @JsonProperty("tipoMensajeId")
     private Short kindMessageId;
 
+    /**
+     * On create.
+     */
     @PrePersist
     @PreUpdate
     protected void onCreate() {

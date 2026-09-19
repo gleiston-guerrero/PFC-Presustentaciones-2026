@@ -10,6 +10,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de evaluation.
+ */
 @Repository
 public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
     /**
@@ -39,6 +42,8 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
      * Invoca sp_calculate_promedio_evaluation (JPA 2.1 @NamedStoredProcedureQuery declarada
      * en Evaluation.java) -- agrega las notas de evaluations_criterio y persiste
      * nota_final/resultado en esta misma tabla. Fase 3 / Criterio P1.
+     * @param submissionId submission id
+     * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Procedure(name = "Evaluacion.calcularPromedioEvaluacion")
     List<AverageEvaluationResult> calculateAverageEvaluation(@Param("p_solicitud_id") Long submissionId);

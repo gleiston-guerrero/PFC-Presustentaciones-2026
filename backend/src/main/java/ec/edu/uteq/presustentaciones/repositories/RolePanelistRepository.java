@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de role panelist.
+ */
 @Repository
 public interface RolePanelistRepository extends JpaRepository<RolePanelist, Short> {
     /**

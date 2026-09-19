@@ -5,6 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de proposal.
+ */
 @Repository
 public interface ProposalRepository extends JpaRepository<Proposal, Long> {
     /**

@@ -7,6 +7,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Objeto de transferencia de tutoring message.
+ */
 @Data @Builder
 public class TutoringMessageDTO {
 

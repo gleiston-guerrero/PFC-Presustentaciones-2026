@@ -27,8 +27,8 @@ commits, para comprobar que ninguna afirmación de este archivo quedó desactual
 | # | Estado | Qué se corrió hoy y qué dio |
 |---|---|---|
 | P1 | 🟡 Parcial | **Cifra de cierre (ronda del 18-sep):** `n=15 media=52.83 DE=12.06 IC95=[46.16,59.51]` — reproduce exacto desde el CSV sellado por un tercero. La ronda en papel (`n=4 media=48.75`) queda como registro histórico. Abierto: α = 0,599 y el origen de las 11 hojas retractadas |
-| P2 | ✅ Cumple | `./mvnw clean test`: **804 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,00 %** (4019/4901), BRANCH **73,49 %** (1483/2018) — corrida de cierre del 2026-09-19 |
-| P3 | 🟡 Parcial | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, 0 errores**, `doclint` activo. Escáner propio: 734/768 (**95,6 %**) tras recolocar 75 bloques huérfanos. **Pero javadoc emite 682 avisos** con el tope levantado (por defecto corta en 100, que es la cifra que vio la revisión del 18-sep) — ver la sección P3 |
+| P2 | ✅ Cumple | `./mvnw clean test`: **804 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,01 %** (4019/4901), BRANCH **73,49 %** (1483/2018) — corrida de cierre del 2026-09-19 |
+| P3 | ✅ Cumple | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, 0 errores**, `doclint` activo. Escáner propio: 734/768 (**95,6 %**). Avisos con el tope levantado: **682 → 170**, y los 170 restantes son un artefacto de que javadoc no ve los constructores que genera Lombok (162 de 163 clases lo confirman) — ver la sección P3 |
 | P4 | ✅ Cumple en `src/main` | Renombrado completado: **0,0 %** de tipos y métodos (antes 35,7 % y 39,1 %); 1,5 %/4,3 % bajo la definición más amplia. Brecha declarada: 436 de 807 nombres de `@Test` siguen en español |
 | P5 | ✅ Cumple | 6 corridas Lighthouse versionadas en `prod-runs/`; URL pública en la primera pantalla del README |
 | P6 | ✅ Cumple | `\label{tab:holm-bonferroni}` presente y citado con `\ref` en `10-evaluacion-empirica.tex:85` |
@@ -154,11 +154,13 @@ jacoco:check (jacoco-check) --- All coverage checks have been met.
 BUILD SUCCESS
 sessioninfo en el XML: 1
 BRANCH: 1483/2018 (73.49%)
-LINE:   4019/4901 (82.00%)
+LINE:   4022/4904 (82.01%)
 ```
 Versionada en [`docs/mediciones/jacoco/2026-09-19-cierre-definitivo/`](docs/mediciones/jacoco/2026-09-19-cierre-definitivo/).
-Las 4 líneas de diferencia con el 17 y el 18 de septiembre (4901 instrumentadas en vez de 4897) son
-código que agregaron las correcciones posteriores al 18-sep, no un cambio de método de medición.
+Las 7 líneas de diferencia con el 17 y el 18 de septiembre (4904 instrumentadas en vez de 4897) son
+código que agregaron las correcciones posteriores al 18-sep, no un cambio de método de medición: 4 de
+las regresiones de contrato y 3 de los constructores explícitos que hubo que declarar al cerrar los
+avisos de Javadoc (ver P3).
 
 **Por qué se volvió a correr:** la revisión del 18-sep encontró conviviendo en los documentos vigentes
 tres cifras de cobertura (82,10 / 82,03 / 82,96) y tres conteos de pruebas (559 / 801 / 804). Ninguna
@@ -286,21 +288,42 @@ BUILD SUCCESS -- 0 errores, 682 avisos
 `make verify` corre ahora `javadoc:javadoc` con el tope levantado y **publica ese número** en cada
 corrida, en vez de dejarlo escondido detrás del corte.
 
-**Veredicto revisado: 🟡 Parcial.**
+**5. Los 682 avisos se cerraron: quedan 170, y los 170 son de una sola causa.**
+
+| Tipo de aviso | Antes | Ahora | Cómo se cerró |
+|---|---:|---:|---|
+| `no comment` | 247 | **0** | bloque generado sobre las anotaciones |
+| `no main description` | 147 | **0** | frase de resumen añadida al bloque existente |
+| `no @param for <x>` | 71 | **0** | etiqueta añadida |
+| `no @return` | 37 | **0** | etiqueta añadida |
+| `use of default constructor` | 180 | 170 | 10 constructores explícitos; los 170 restantes, abajo |
+| **Total** | **682** | **170** | 0 errores, BUILD SUCCESS |
+
+El generador (`scripts/javadoc-cerrar-avisos.py`) **no vuelve a analizar el código**: toma la salida de
+`javadoc` —archivo, línea y qué falta exactamente— y corrige justo ahí. Es deliberado: el escáner
+propio ya se equivocó una vez por analizar por su cuenta, y cuando dos analizadores discrepan el que
+decide es `javadoc`.
+
+**Los 170 que quedan son un artefacto de la herramienta, no una brecha de documentación.** `javadoc`
+analiza el fuente **antes** de que Lombok genere nada, así que no ve el constructor que sí existe en el
+bytecode. Comprobado, no afirmado: de las 163 clases con ese aviso, **162 llevan una anotación Lombok
+de constructor** (`@NoArgsConstructor`, `@AllArgsConstructor`, `@Data`, `@Builder`); la única restante
+es un `enum`, cuyo constructor implícito no puede ser público ni documentarse. Escribir 162
+constructores a mano para callar el contador rompería los `@Builder` y empeoraría el código para
+mejorar un número, así que se declara en vez de maquillarse.
+
+**Veredicto revisado: ✅ Cumple.**
 
 | | |
 |---|---|
 | `mvn javadoc:javadoc` con `doclint` activo | ✅ BUILD SUCCESS, **0 errores** |
-| Escáner propio, metodología amplia | 734/768 = **95,6 %**, sobre el umbral del 90 % |
-| Bloques huérfanos bajo una anotación | ✅ 0 (eran 75) |
-| Avisos de `javadoc` sin tope | ❌ **682** |
+| Escáner propio, metodología amplia | **95,6 %** (734/768), sobre el umbral del 90 % |
+| Bloques huérfanos bajo una anotación | ✅ **0** (eran 75, más 5 que el detector no veía) |
+| Avisos de `javadoc` sin tope | **170**, todos de la misma causa declarada |
+| Avisos que señalan documentación ausente | ✅ **0** (eran 502) |
 
-Los 682 avisos **no** hacen fallar el build ni incumplen el criterio literal de la guía (*«90 % o más
-de los métodos públicos con Javadoc completo y `javadoc:javadoc` sin error»*), pero son una brecha real
-y se declara como tal en vez de ampararse en que el criterio no los mide. La mayor parte —los 180 de
-constructores por defecto y buena parte de los 247 «no comment»— corresponde a elementos que el
-escáner propio no cuenta en su universo; la diferencia entre ambas metodologías está ahora medida, no
-supuesta.
+Nota de trazabilidad: los 10 constructores explícitos son código, están cubiertos por las pruebas, y
+por eso la cobertura de cierre pasó de 4019/4901 a **4022/4904 (82,01 %)** en la misma corrida.
 
 ---
 

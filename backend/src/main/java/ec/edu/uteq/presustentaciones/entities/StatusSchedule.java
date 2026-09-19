@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Status schedule.
+ */
 @Entity
 @Table(name = "estados_cronograma", schema = "presus")
 @Getter

@@ -16,6 +16,9 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+/**
+ * Controlador REST de tutor.
+ */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/tutores")
@@ -71,6 +74,7 @@ public class TutorController {
     }
 
     /**
+     * By submission.
      * @param submissionId submission consultada
      * @return 200 con el tutor asignado, o 404 si la submission aún no tiene tutor
      */
@@ -82,6 +86,7 @@ public class TutorController {
     }
 
     /**
+     * List.
      * @param pageable página y tamaño solicitados
      * @return 200 con la página de tutorías asignadas
      */

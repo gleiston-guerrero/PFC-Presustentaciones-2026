@@ -19,8 +19,20 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Configuracion de redis.
+ */
 @Configuration
 public class RedisConfig {
+
+    /**
+     * Constructor sin argumentos: Spring instancia la configuracion de Redis.
+     * Se declara explicitamente porque javadoc avisa del constructor
+     * por defecto, que no puede llevar comentario.
+     */
+    public RedisConfig() {
+        // sin estado que inicializar
+    }
 
     /**
      * Cache manager.

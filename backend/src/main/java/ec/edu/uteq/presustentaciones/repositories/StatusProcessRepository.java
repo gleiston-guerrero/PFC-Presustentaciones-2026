@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de status process.
+ */
 @Repository
 public interface StatusProcessRepository extends JpaRepository<StatusProcess, Short> {
     /**

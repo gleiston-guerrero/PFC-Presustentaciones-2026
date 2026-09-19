@@ -7,4 +7,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Configuration
 @EnableScheduling
 public class SchedulingConfig {
+
+    /**
+     * Constructor sin argumentos: Spring instancia la configuracion de tareas programadas.
+     * Se declara explicitamente porque javadoc avisa del constructor
+     * por defecto, que no puede llevar comentario.
+     */
+    public SchedulingConfig() {
+        // sin estado que inicializar
+    }
 }

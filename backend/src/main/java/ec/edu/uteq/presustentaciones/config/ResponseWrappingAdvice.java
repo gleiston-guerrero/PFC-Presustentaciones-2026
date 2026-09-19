@@ -10,8 +10,20 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
+/**
+ * Response wrapping advice.
+ */
 @RestControllerAdvice(basePackages = "ec.edu.uteq.presustentaciones.controllers")
 public class ResponseWrappingAdvice implements ResponseBodyAdvice<Object> {
+
+    /**
+     * Constructor sin argumentos: Spring instancia el envoltorio uniforme de respuestas.
+     * Se declara explicitamente porque javadoc avisa del constructor
+     * por defecto, que no puede llevar comentario.
+     */
+    public ResponseWrappingAdvice() {
+        // sin estado que inicializar
+    }
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

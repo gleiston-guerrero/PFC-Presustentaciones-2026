@@ -8,6 +8,9 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Servicio de schedule.
+ */
 public interface ScheduleService {
 
     /**
@@ -33,30 +36,37 @@ public interface ScheduleService {
     Schedule assignAutomatic(Long submissionId);
 
     /**
+     * List schedules.
      * @param pageable configuración de paginación
      * @return página de todos los schedules del sistema
      */
     Page<Schedule> listSchedules(Pageable pageable);
 
     /**
+     * List by student.
      * @param studentId id del student
      * @return los schedules de las submissions de ese student
      */
     List<Schedule> listByStudent(Long studentId);
 
     /**
+     * List by app user.
      * @param appUserId id del appUser autenticado
      * @return los schedules visibles para ese appUser (como student o como panelist/tutor)
      */
     List<Schedule> listByAppUser(Long appUserId);
 
     /**
+     * Search by submission.
      * @param submissionId id de la submission
      * @return el schedule de esa submission, si ya fue programada
      */
     Optional<Schedule> searchBySubmission(Long submissionId);
 
-    /** @param id id del schedule a delete */
+    /**
+     * Elimina los registros.
+     * @param id id del schedule a delete
+     */
     void delete(Long id);
 
     /** RF-04: Verify availability de room en franja horaria

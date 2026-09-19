@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio de evaluation panelist.
+ */
 @Service
 @RequiredArgsConstructor
 public class EvaluationPanelistService {
@@ -107,6 +110,7 @@ public class EvaluationPanelistService {
     }
 
     /**
+     * Obtain evaluation.
      * @param submissionId id de la submission
      * @param panelistId    id del panelist
      * @return la evaluación de ese panelist para esa submission, o {@code null} si aún no evaluó
@@ -122,6 +126,7 @@ public class EvaluationPanelistService {
     }
 
     /**
+     * Obtain panel.
      * @param submissionId id de la submission
      * @return las evaluations registradas por todos los panelists de esa submission
      */

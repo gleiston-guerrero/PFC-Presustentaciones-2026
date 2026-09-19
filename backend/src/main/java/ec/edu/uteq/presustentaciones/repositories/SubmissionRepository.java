@@ -14,17 +14,25 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de submission.
+ */
 @Repository
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     /**
      * Invoca sp_generate_reporte_defensas (JPA 2.1 @NamedStoredProcedureQuery declarada en
      * Submission.java) -- reporte consolidado multi-tabla por program. Fase 3 / Criterio P1.
+     * @param program program
+     * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Procedure(name = "Solicitud.generarReporteDefensas")
     List<ReportDefenseResult> generateReportDefenses(@Param("p_carrera") String program);
 
-    /** Carga submissions con student+appUser en un solo query — evita LazyInitializationException */
+    /**
+     * Carga submissions con student+appUser en un solo query — evita LazyInitializationException
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u ORDER BY s.dateRecord DESC")
     List<Submission> findAllWithStudent();
 
@@ -35,6 +43,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      * está cacheada). El listado completo navegable es {@code GET /api/v1/submissions/paginado}.
      * Como {@code student} y {@code appUser} son asociaciones @ManyToOne (a-uno), Hibernate
      * pagina en SQL sin el warning de "collection fetch + firstResult/maxResults en memoria".
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u ORDER BY s.dateRecord DESC")
     List<Submission> findAllWithStudent(Pageable pageable);
@@ -46,6 +56,15 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      * filtraba por estado, sin buscador), y un rango de fechaRegistro (para poder acotar a
      * "hoy" o a un día concreto desde el frontend). Todos los parámetros son opcionales e
      * independientes entre sí -- mismo patrón que AppUserRepository.searchPaginado.
+     */
+    /**
+     * Search con filtros.
+     * @param status status
+     * @param texto texto
+     * @param dateFrom dateFrom
+     * @param dateTo dateTo
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u " +
            "WHERE (:estado IS NULL OR :estado = '' OR s.status.code = :estado) " +
@@ -61,15 +80,6 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
            "     OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :texto, '%')) " +
            "     OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', :texto, '%'))) " +
            "AND s.dateRecord >= :fechaDesde AND s.dateRecord <= :fechaHasta")
-    /**
-     * Search con filtros.
-     * @param status status
-     * @param texto texto
-     * @param dateFrom dateFrom
-     * @param dateTo dateTo
-     * @param pageable pageable
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     Page<Submission> searchWithFiltros(@Param("estado") String status, @Param("texto") String texto,
                                       @Param("fechaDesde") LocalDateTime dateFrom,
                                       @Param("fechaHasta") LocalDateTime dateTo,
@@ -113,6 +123,9 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     @Query("SELECT s.status.code AS code, COUNT(s) AS total FROM Submission s GROUP BY s.status.code")
     List<StatusCount> countAgrupadoByStatus();
 
+    /**
+     * Status count.
+     */
     interface StatusCount {
         /**
          * Get codigo.
@@ -136,10 +149,6 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      * un {@code :fecha IS NULL} deja a Postgres sin tipo para el bind ("could not determine
      * data type of parameter").
      */
-    @Query("SELECT s.status.code, COUNT(s) FROM Submission s " +
-           "WHERE s.dateRecord >= :desde AND s.dateRecord <= :hasta " +
-           "AND (:program IS NULL OR :program = '' OR LOWER(s.student.program) LIKE LOWER(CONCAT('%', :program, '%'))) " +
-           "GROUP BY s.status.code ORDER BY s.status.code")
     /**
      * Count por estado.
      * @param from from
@@ -147,6 +156,10 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      * @param program program
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT s.status.code, COUNT(s) FROM Submission s " +
+           "WHERE s.dateRecord >= :desde AND s.dateRecord <= :hasta " +
+           "AND (:program IS NULL OR :program = '' OR LOWER(s.student.program) LIKE LOWER(CONCAT('%', :program, '%'))) " +
+           "GROUP BY s.status.code ORDER BY s.status.code")
     List<Object[]> countByStatus(@Param("desde") LocalDateTime from,
                                    @Param("hasta") LocalDateTime to,
                                    @Param("program") String program);

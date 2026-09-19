@@ -80,6 +80,76 @@ def fusionar(doc_arriba, doc_abajo, sangria):
     return "\n".join(lineas)
 
 
+def inicio_grupo_anotaciones(lineas, i):
+    """Primera linea del grupo de anotaciones que precede a la linea i, o None.
+
+    Sube equilibrando parentesis. La version anterior buscaba el grupo con una
+    expresion regular y no veia un `@Query` partido en varios literales
+    concatenados cuyo JPQL trae parentesis: dejaba sin tocar 5 bloques mal
+    colocados que si detecta esta version (AuditRepository, MinutesRepository,
+    SubmissionRepository x2, TopicProposedRepository).
+    """
+    j = i - 1
+    primera = None
+    while j >= 0:
+        s = lineas[j].strip()
+        if not s:
+            j -= 1
+            continue
+        saldo = s.count(')') - s.count('(')
+        if saldo > 0:
+            k = j
+            while k >= 0 and saldo > 0:
+                k -= 1
+                if k < 0:
+                    return primera
+                saldo += lineas[k].strip().count(')') - lineas[k].strip().count('(')
+            t = lineas[k].strip() if k >= 0 else ''
+            if t.startswith('@') and '{' not in t and not t.endswith((';', '}')):
+                primera = k
+                j = k - 1
+                continue
+            return primera
+        if s.startswith('@') and '{' not in s and not s.endswith((';', '}')):
+            primera = j
+            j -= 1
+            continue
+        return primera
+    return primera
+
+
+def recolocar_lineas(texto):
+    """Mueve por lineas los bloques que la version basada en regex no alcanza."""
+    lineas = texto.split('\n')
+    movidos = fusionados = 0
+    i = 0
+    while i < len(lineas):
+        if not lineas[i].strip().startswith('/**'):
+            i += 1
+            continue
+        ini_anot = inicio_grupo_anotaciones(lineas, i)
+        if ini_anot is None:
+            i += 1
+            continue
+        fin = i
+        while fin < len(lineas) and not lineas[fin].strip().endswith('*/'):
+            fin += 1
+        if fin >= len(lineas):
+            break
+        sangria = lineas[ini_anot][:len(lineas[ini_anot]) - len(lineas[ini_anot].lstrip())]
+        doc = lineas[i:fin + 1]
+        resto = lineas[:ini_anot] + lineas[ini_anot:i] + lineas[fin + 1:]
+        # renormaliza la sangria del bloque al nivel de las anotaciones
+        doc = [sangria + l.strip() if l.strip().startswith(('*', '/**')) else l
+               for l in doc]
+        doc = [(sangria + ' ' + l.strip()) if l.strip().startswith('*') and not l.strip().startswith('/**')
+               else (sangria + l.strip()) for l in doc]
+        lineas = resto[:ini_anot] + doc + resto[ini_anot:]
+        movidos += 1
+        i = ini_anot + len(doc) + 1
+    return '\n'.join(lineas), movidos, fusionados
+
+
 def procesar(texto):
     """Devuelve (texto_nuevo, movidos, fusionados)."""
     movidos = fusionados = 0
@@ -119,6 +189,10 @@ def main():
     for f in sorted(glob.glob("backend/src/main/java/**/*.java", recursive=True)):
         txt = io.open(f, encoding="utf-8", errors="replace").read()
         nuevo, m, fu = procesar(txt)
+        # Segunda pasada por lineas, para los grupos de anotaciones que la
+        # expresion regular no alcanza (un @Query concatenado con parentesis).
+        nuevo, m2, _ = recolocar_lineas(nuevo)
+        m += m2
         if m or fu:
             tot_m += m
             tot_f += fu

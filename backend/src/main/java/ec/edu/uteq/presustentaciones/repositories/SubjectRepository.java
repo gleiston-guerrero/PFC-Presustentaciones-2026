@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de subject.
+ */
 @Repository
 public interface SubjectRepository extends JpaRepository<Subject, Integer> {
     /**

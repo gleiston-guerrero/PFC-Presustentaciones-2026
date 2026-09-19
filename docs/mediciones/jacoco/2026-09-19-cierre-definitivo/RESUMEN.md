@@ -19,7 +19,7 @@ que además aplica la regla `jacoco:check` (≥70 % en líneas y en ramas).
 
 | Métrica | Cubierto | Total | Porcentaje |
 |---|---:|---:|---:|
-| **Líneas (LINE)** | 4019 | 4901 | **82.00 %** |
+| **Líneas (LINE)** | 4022 | 4904 | **82.01 %** |
 | **Ramas (BRANCH)** | 1483 | 2018 | **73.49 %** |
 
 ```
@@ -31,6 +31,18 @@ BUILD SUCCESS
 - **Pruebas:** 804
 - **Fallos:** 0
 - **Errores:** 0
+
+## Regenerada el mismo día tras el cierre de avisos de Javadoc
+
+Esta carpeta se regeneró después de cerrar los avisos de `javadoc` (682 → 170). Ese trabajo es casi
+todo comentarios, que no instrumenta JaCoCo, pero incluyó **10 constructores explícitos** en clases de
+configuración que no llevan Lombok — ahí javadoc avisaba de un constructor por defecto que realmente no
+existía en el fuente. Esas 3 líneas nuevas son código, están cubiertas, y por eso el total sube de
+4901 a 4904 líneas instrumentadas y la cifra de 82,00 % a **82,01 %**.
+
+Se sustituye el XML en vez de crear otra carpeta con la misma fecha: lo que documenta esta carpeta es
+*la corrida de cierre del 2026-09-19*, y la corrida de cierre es esta. La anterior no se publicaba en
+ningún sitio que no se haya actualizado en el mismo commit.
 
 ## Por qué se volvió a correr
 

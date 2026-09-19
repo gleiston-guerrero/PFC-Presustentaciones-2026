@@ -26,6 +26,9 @@ import java.util.HashMap;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+/**
+ * Implementacion del servicio de evaluation.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Chat response.
+ */
 @Data
 @Builder
 @NoArgsConstructor

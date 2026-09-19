@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 
+/**
+ * New message request.
+ */
 @Data
 public class NewMessageRequest {
 

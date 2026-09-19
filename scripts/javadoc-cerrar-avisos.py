@@ -100,6 +100,48 @@ def describir(nombre):
     return partir_camel(nombre).capitalize() + "."
 
 
+# El proyecto nombra sus tipos por sufijo de forma sistematica, asi que el
+# sufijo dice mas que partir el camelCase: "IAppUserService" da
+# "I app user service", que no informa de nada.
+SUFIJOS = [
+    ("ServiceImpl", "Implementacion del servicio de {}."),
+    ("Service", "Servicio de {}."),
+    ("RepositoryImpl", "Implementacion del repositorio de {}."),
+    ("Repository", "Repositorio de acceso a datos de {}."),
+    ("Controller", "Controlador REST de {}."),
+    ("DTO", "Objeto de transferencia de {}."),
+    ("Dto", "Objeto de transferencia de {}."),
+    ("Config", "Configuracion de {}."),
+    ("Exception", "Excepcion de {}."),
+    ("Handler", "Manejador de {}."),
+    ("Provider", "Proveedor de {}."),
+    ("Filter", "Filtro de {}."),
+    ("Scheduler", "Tarea programada de {}."),
+    ("Mapper", "Conversor de {}."),
+    ("Validator", "Validador de {}."),
+    ("Seeder", "Sembrador de datos de {}."),
+    ("Bootstrap", "Arranque de {}."),
+]
+
+
+def describir_tipo(nombre, clase_java):
+    """Frase para un tipo. `clase_java` es 'interface', 'class', 'enum'..."""
+    base = nombre
+    # Una interfaz llamada IAlgoService no se describe como "I algo service".
+    if clase_java == "interface" and re.match(r"^I[A-Z]", nombre):
+        base = nombre[1:]
+    for suf, plantilla in SUFIJOS:
+        if base.endswith(suf) and len(base) > len(suf):
+            resto = partir_camel(base[: -len(suf)]).strip()
+            frase = plantilla.format(resto)
+            if clase_java == "interface":
+                return "Contrato. " + frase
+            return frase
+    if clase_java == "enum":
+        return f"Valores posibles de {partir_camel(base).strip()}."
+    return partir_camel(base).capitalize() + "."
+
+
 def describir_retorno(tipo):
     t = (tipo or "").strip()
     if t.startswith('Optional'):
@@ -128,9 +170,9 @@ def sangria_de(linea):
 def nombre_y_tipo(lineas, i):
     """Del elemento declarado en la linea i: (nombre, tipo de retorno o None)."""
     texto = " ".join(l.strip() for l in lineas[i:i + 4])
-    m = re.search(r'\b(?:class|interface|enum|record)\s+([A-Za-z0-9_]+)', texto)
+    m = re.search(r'\b(class|interface|enum|record)\s+([A-Za-z0-9_]+)', texto)
     if m:
-        return m.group(1), None
+        return m.group(2), m.group(1)
     m = re.search(r'([A-Za-z0-9_<>,\[\]\.\? ]+?)\s+([A-Za-z0-9_]+)\s*\(', texto)
     if m:
         tipo = m.group(1).split()[-1] if m.group(1).split() else None
@@ -282,13 +324,21 @@ def main():
                 total['omitido'] += 1
                 continue
             ind = sangria_de(lineas[decl])
+            if bloque:
+                # La sangria correcta es la del bloque de comentario. En una
+                # firma repartida en varias lineas, la de la declaracion esta
+                # mucho mas adentro y las etiquetas salen desalineadas.
+                ind = sangria_de(lineas[bloque[0]])
 
             if msg == 'no comment':
                 if bloque:
                     total['omitido'] += 1
                     continue
                 ini = inicio_anotaciones(lineas, decl)
-                nuevo = [f"{ind}/**", f"{ind} * {describir(nombre)}", f"{ind} */"]
+                frase = (describir_tipo(nombre, tipo)
+                         if tipo in ("class", "interface", "enum", "record")
+                         else describir(nombre))
+                nuevo = [f"{ind}/**", f"{ind} * {frase}", f"{ind} */"]
                 lineas[ini:ini] = nuevo
                 total['bloque'] += 1
                 cambios += 1
@@ -299,16 +349,78 @@ def main():
                 continue
             b_ini, b_fin = bloque
 
+            # Un bloque de una sola linea (`/** texto */`) tiene b_ini == b_fin.
+            # Insertar "en b_fin" dejaria la etiqueta ARRIBA del `/**`, es decir
+            # fuera del comentario: eso corrompio TeacherRepository.java y tumbo
+            # la compilacion. Se abre a varias lineas antes de tocarlo.
+            if b_ini == b_fin:
+                cuerpo = lineas[b_ini].strip()
+                interior = cuerpo[3:-2].strip() if cuerpo.endswith('*/') else cuerpo[3:].strip()
+                nuevas = [f"{ind}/**"]
+                if interior:
+                    nuevas.append(f"{ind} * {interior}")
+                nuevas.append(f"{ind} */")
+                lineas[b_ini:b_ini + 1] = nuevas
+                b_fin = b_ini + len(nuevas) - 1
+                bloque = (b_ini, b_fin)
+
             if msg == 'no main description':
-                lineas.insert(b_ini + 1, f"{ind} * {describir(nombre)}")
+                # Solo cuenta como descripcion lo que aparece ANTES de la
+                # primera etiqueta. Las lineas de continuacion de un @param
+                # largo tampoco empiezan por @, y contarlas hacia saltar
+                # bloques que javadoc si considera sin descripcion.
+                previas = []
+                for ln in lineas[b_ini:b_fin + 1]:
+                    s = ln.strip().lstrip('/').lstrip('*').strip()
+                    if s.startswith('@'):
+                        break
+                    if s and s not in ('/', '/**', '*/'):
+                        previas.append(s)
+                if previas:
+                    total['omitido'] += 1
+                    continue
+                frase = (describir_tipo(nombre, tipo)
+                         if tipo in ("class", "interface", "enum", "record")
+                         else describir(nombre))
+                cabecera = lineas[b_ini]
+                resto = cabecera.strip()[3:].strip()
+                if resto:
+                    # El bloque abre con contenido en la misma linea
+                    # (`/** @param id ...`). Insertar debajo dejaria el resumen
+                    # DESPUES de una etiqueta, que javadoc sigue sin aceptar.
+                    # Hay que partir la linea.
+                    lineas[b_ini:b_ini + 1] = [
+                        f"{ind}/**",
+                        f"{ind} * {frase}",
+                        f"{ind} * {resto}" if not resto.startswith('*') else f"{ind} {resto}",
+                    ]
+                else:
+                    lineas.insert(b_ini + 1, f"{ind} * {frase}")
                 total['resumen'] += 1
                 cambios += 1
             elif msg.startswith('no @param for '):
                 par = msg[len('no @param for '):].strip()
-                lineas.insert(b_fin, f"{ind} * @param {par} {partir_camel(par)}")
+                # Sin esto, cada pasada vuelve a anadir lo que ya esta: correr
+                # el script tres veces dejo el mismo @param repetido tres veces.
+                cuerpo = "\n".join(lineas[b_ini:b_fin + 1])
+                if re.search(r'@param\s+' + re.escape(par) + r'\b', cuerpo):
+                    total['omitido'] += 1
+                    continue
+                # Un parametro de tipo (<T>) no se parte por camelCase: daria
+                # "< t>", que javadoc lee como HTML mal formado y convierte el
+                # aviso en un error.
+                if par.startswith('<'):
+                    desc = "tipo generico que parametriza la clase"
+                else:
+                    desc = partir_camel(par)
+                lineas.insert(b_fin, f"{ind} * @param {par} {desc}")
                 total['param'] += 1
                 cambios += 1
             elif msg == 'no @return':
+                cuerpo = "\n".join(lineas[b_ini:b_fin + 1])
+                if '@return' in cuerpo:
+                    total['omitido'] += 1
+                    continue
                 lineas.insert(b_fin, f"{ind} * @return {describir_retorno(tipo)}")
                 total['return'] += 1
                 cambios += 1

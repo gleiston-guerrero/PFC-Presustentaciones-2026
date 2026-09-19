@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Kind evaluator.
+ */
 @Entity
 @Table(name = "tipos_evaluador", schema = "presus")
 @Getter

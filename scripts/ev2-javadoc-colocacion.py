@@ -36,19 +36,54 @@ import re
 import sys
 
 # Una anotacion con argumentos anidados de hasta dos niveles.
-ANOT = r"@[\w.]+(?:\s*\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\))?"
-# anotacion(es) -> bloque /** -> firma. El Javadoc quedo despues de la anotacion.
-RE_MAL = re.compile(r"(" + ANOT + r")\s*\n(?:\s*" + ANOT + r"\s*\n)*\s*/\*\*")
+def anotacion_encima(lineas, i):
+    """Si la linea i viene precedida por una anotacion, devuelve su nombre.
+
+    Se sube equilibrando parentesis en vez de buscar la anotacion con una sola
+    expresion regular. La version anterior lo hacia con un patron que admitia
+    tres niveles de anidamiento y aun asi fallaba con un `@Query` partido en
+    varios literales concatenados cuyo JPQL trae parentesis
+    (`LOWER(CONCAT('%', :texto, '%'))`): daba por bueno AuditRepository.java,
+    que tenia el bloque mal colocado a la vista.
+    """
+    j = i - 1
+    while j >= 0:
+        s = lineas[j].strip()
+        if not s:
+            j -= 1
+            continue
+        saldo = s.count(')') - s.count('(')
+        if saldo > 0:                      # cola de una anotacion multilinea
+            while j >= 0 and saldo > 0:
+                j -= 1
+                if j < 0:
+                    return None
+                t = lineas[j].strip()
+                saldo += t.count(')') - t.count('(')
+            if j >= 0 and lineas[j].strip().startswith('@'):
+                return lineas[j].strip().split('(')[0]
+            return None
+        if s.startswith('@'):
+            # Una linea que ademas trae la declaracion completa
+            # (`@GetMapping public List<X> f(...) { ... }`) no es una anotacion
+            # colgando: es el elemento anterior, ya cerrado.
+            if '{' in s or s.endswith((';', '}')):
+                return None
+            return s.split('(')[0]
+        return None
+    return None
 
 
 def main():
     hallazgos = []
     for f in glob.glob("backend/src/main/java/**/*.java", recursive=True):
-        txt = io.open(f, encoding="utf-8", errors="replace").read()
-        for m in RE_MAL.finditer(txt):
-            linea = txt[:m.start()].count("\n") + 1
-            anot = m.group(1).split("(")[0]
-            hallazgos.append((f.replace("\\", "/"), linea, anot))
+        lineas = io.open(f, encoding="utf-8", errors="replace").read().split("\n")
+        for i, l in enumerate(lineas):
+            if not l.strip().startswith("/**"):
+                continue
+            anot = anotacion_encima(lineas, i)
+            if anot:
+                hallazgos.append((f.replace("\\", "/"), i + 1, anot))
 
     if not hallazgos:
         print("[OK] ningun bloque Javadoc quedo despues de una anotacion.")

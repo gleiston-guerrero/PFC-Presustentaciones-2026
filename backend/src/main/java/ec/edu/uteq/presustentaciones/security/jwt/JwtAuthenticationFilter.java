@@ -17,6 +17,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Filtro de jwt authentication.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j

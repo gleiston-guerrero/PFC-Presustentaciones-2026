@@ -23,6 +23,7 @@ public class CurrentAppUserService {
     private final StudentRepository studentRepository;
 
     /**
+     * App user.
      * @return el appUser autenticado, resuelto desde el {@code SecurityContext}
      * @throws IllegalStateException si no hay un appUser autenticado, o el email del
      *                                contexto de seguridad no corresponde a ningún appUser
@@ -37,6 +38,7 @@ public class CurrentAppUserService {
     }
 
     /**
+     * Student.
      * @return el perfil de student del appUser autenticado
      * @throws IllegalStateException    si no hay un appUser autenticado
      * @throws IllegalArgumentException si el appUser autenticado no tiene perfil de student
@@ -48,6 +50,7 @@ public class CurrentAppUserService {
     }
 
     /**
+     * Student id or null.
      * @return el id del student autenticado, o {@code null} si no hay un appUser
      *         autenticado o quien consulta no tiene perfil de student
      */

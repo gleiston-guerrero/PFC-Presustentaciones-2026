@@ -10,12 +10,24 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.cache.annotation.EnableCaching;
 
+/**
+ * Configuracion de app.
+ */
 @Configuration
 @EnableJpaRepositories(basePackages = "ec.edu.uteq.presustentaciones.repositories")
 @EnableAsync
 @EnableCaching
 @Slf4j
 public class AppConfig implements CachingConfigurer {
+
+    /**
+     * Constructor sin argumentos: Spring instancia beans compartidos de la aplicacion.
+     * Se declara explicitamente porque javadoc avisa del constructor
+     * por defecto, que no puede llevar comentario.
+     */
+    public AppConfig() {
+        // sin estado que inicializar
+    }
 
     /**
      * RNF-04/RNF-03: a diferencia de la revocación (JwtTokenProvider) y el límite de tasa

@@ -8,9 +8,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * Contrato. Servicio de tutoring.
+ */
 public interface TutoringService {
 
     /**
+     * Obtain summary.
      * @param tutorId   id del registro de tutoría
      * @param appUserId id del appUser que consulta (para resolve permissions de vista)
      * @return resumen de la tutoría: fase actual, progress y estado
@@ -19,6 +23,7 @@ public interface TutoringService {
     TutoringSummaryDTO obtainSummary(Long tutorId, Long appUserId);
 
     /**
+     * Obtain phases.
      * @param tutorId id del registro de tutoría
      * @param appUserId id del appUser que consulta (para resolve permissions)
      * @return las fases registradas de esa tutoría, en orden
@@ -26,6 +31,7 @@ public interface TutoringService {
     List<TutoringPhaseDTO> obtainPhases(Long tutorId, Long appUserId);
 
     /**
+     * Create phase with observation.
      * @param tutorId        id del registro de tutoría
      * @param tutorAppUserId id del appUser teacher que crea la fase
      * @param observation    observación inicial del teacher para esta fase
@@ -35,6 +41,7 @@ public interface TutoringService {
     TutoringPhaseDTO createPhaseWithObservation(Long tutorId, Long tutorAppUserId, String observation);
 
     /**
+     * Upload pdf corrected.
      * @param phaseId              id de la fase de tutoría
      * @param file             PDF corregido subido por el student
      * @param studentAppUserId id del appUser student que sube el archivo
@@ -44,6 +51,7 @@ public interface TutoringService {
     TutoringPhaseDTO uploadPdfCorrected(Long phaseId, MultipartFile file, Long studentAppUserId);
 
     /**
+     * Approve phase.
      * @param phaseId         id de la fase a approve
      * @param tutorAppUserId id del appUser teacher que aprueba
      * @param comment     comentario opcional de aprobación
@@ -53,6 +61,7 @@ public interface TutoringService {
     TutoringPhaseDTO approvePhase(Long phaseId, Long tutorAppUserId, String comment);
 
     /**
+     * Send message.
      * @param phaseId      id de la fase de tutoría
      * @param senderId id del appUser que envía el mensaje
      * @param contenido   texto del mensaje
@@ -63,12 +72,14 @@ public interface TutoringService {
     TutoringMessageDTO sendMessage(Long phaseId, Long senderId, String contenido, String kind);
 
     /**
+     * Mark messages read.
      * @param phaseId    id de la fase de tutoría
      * @param appUserId id del appUser que marca los mensajes como leídos
      */
     void markMessagesRead(Long phaseId, Long appUserId);
 
     /**
+     * Obtain pdf phase.
      * @param phaseId id de la fase de tutoría
      * @param appUserId id del appUser que solicita el PDF
      * @return el resource PDF de esa fase, para descarga
@@ -77,12 +88,14 @@ public interface TutoringService {
     Resource obtainPdfPhase(Long phaseId, Long appUserId);
 
     /**
+     * Obtain tutorings student.
      * @param studentAppUserId id del appUser student
      * @return resúmenes de todas las tutorías de ese student
      */
     List<TutoringSummaryDTO> obtainTutoringsStudent(Long studentAppUserId);
 
     /**
+     * Obtain tutorings teacher.
      * @param teacherAppUserId id del appUser teacher
      * @return resúmenes de todas las tutorías a cargo de ese teacher
      */

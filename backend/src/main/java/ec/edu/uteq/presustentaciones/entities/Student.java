@@ -88,6 +88,9 @@ public class Student {
     @JsonProperty("creadoEn")
     private LocalDateTime creadoEn;
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         creadoEn = LocalDateTime.now();

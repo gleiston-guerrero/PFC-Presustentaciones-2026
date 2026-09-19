@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Implementacion del servicio de topic.
+ */
 @Service
 @RequiredArgsConstructor
 public class TopicServiceImpl implements TopicService {

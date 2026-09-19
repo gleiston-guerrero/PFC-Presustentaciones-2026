@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de progress student.
+ */
 @Repository
 public interface ProgressStudentRepository extends JpaRepository<ProgressStudent, Integer> {
 

@@ -8,6 +8,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de resource degree.
+ */
 @Repository
 public interface ResourceDegreeRepository extends JpaRepository<ResourceDegree, Integer> {
 

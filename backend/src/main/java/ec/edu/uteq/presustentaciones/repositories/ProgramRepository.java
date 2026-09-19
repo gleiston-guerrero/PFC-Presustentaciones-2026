@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de program.
+ */
 @Repository
 public interface ProgramRepository extends JpaRepository<Program, Integer> {
     /**

@@ -13,6 +13,9 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+/**
+ * Controlador REST de schedule.
+ */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/cronogramas")
@@ -100,24 +103,28 @@ public class ScheduleController {
     }
 
     /**
+     * Lista de forma paginada los horarios programados.
      * @param pageable página y tamaño solicitados
      * @return 200 con la página de schedules programados
      */
     @GetMapping public ResponseEntity<Page<Schedule>> list(Pageable pageable) { return ResponseEntity.ok(scheduleService.listSchedules(pageable)); }
 
     /**
+     * Devuelve los horarios de un estudiante concreto.
      * @param id identificador del perfil de student
      * @return schedules de ese student, vacío si aún no tiene defensa programada
      */
     @GetMapping("/estudiante/{id}") public List<Schedule> byStudent(@PathVariable("id") Long id) { return scheduleService.listByStudent(id); }
 
     /**
+     * Devuelve los horarios asociados a una cuenta de usuario.
      * @param id identificador del appUser autenticable
      * @return schedules asociados a ese appUser
      */
     @GetMapping("/usuario/{id}") public List<Schedule> byAppUser(@PathVariable("id") Long id) { return scheduleService.listByAppUser(id); }
 
     /**
+     * Devuelve el horario de defensa asociado a una solicitud.
      * @param id submission consultada
      * @return 200 con el schedule de la submission, o 404 si no tiene defensa programada
      */

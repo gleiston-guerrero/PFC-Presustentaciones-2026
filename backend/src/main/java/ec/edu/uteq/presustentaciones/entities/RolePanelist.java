@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Role panelist.
+ */
 @Entity
 @Table(name = "roles_jurado", schema = "presus")
 @Getter

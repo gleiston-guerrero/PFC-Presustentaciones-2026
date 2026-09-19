@@ -13,7 +13,10 @@ package ec.edu.uteq.presustentaciones.services.backup;
  * {@code EVENTO} las conserva siempre.
  */
 public enum SourceBackup {
+    /** Copia lanzada por una persona desde la interfaz. */
     MANUAL,
+    /** Copia lanzada por el planificador; la unica que borra la retencion GFS. */
     AUTOMATICO,
+    /** Copia disparada por un evento del sistema, no por el calendario. */
     EVENTO
 }

@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import java.util.List;
 
+/**
+ * Evaluation rubric response.
+ */
 @Data @Builder
 public class EvaluationRubricResponse {
     @JsonProperty("solicitudId")
@@ -28,6 +31,9 @@ public class EvaluationRubricResponse {
     @JsonProperty("tribunalCompleto")
     private boolean panelComplete;
 
+    /**
+     * Criterion result.
+     */
     @Data @Builder
     public static class CriterionResult {
         @JsonProperty("criterioId")

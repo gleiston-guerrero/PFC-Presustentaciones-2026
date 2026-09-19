@@ -68,6 +68,9 @@ public class MinutesDetailDTO {
     @JsonProperty("tribunal")
     private List<MemberPanelDTO> panel;
 
+    /**
+     * Objeto de transferencia de member panel.
+     */
     @Getter
     @Builder
     @NoArgsConstructor

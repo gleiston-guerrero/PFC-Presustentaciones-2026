@@ -3,6 +3,9 @@ package ec.edu.uteq.presustentaciones.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+/**
+ * Objeto de transferencia de scale criterion.
+ */
 @Data
 public class ScaleCriterionDTO {
     @JsonProperty("criterioId")

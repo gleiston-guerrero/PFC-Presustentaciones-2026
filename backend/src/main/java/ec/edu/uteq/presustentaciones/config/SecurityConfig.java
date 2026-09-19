@@ -28,6 +28,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
+/**
+ * Configuracion de security.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -161,7 +164,10 @@ public class SecurityConfig {
         return source;
     }
 
-    /** @return el proveedor de autenticación DAO, con el {@link UserDetailsService} y el encoder de contraseñas del sistema */
+    /**
+     * Authentication provider.
+     * @return el proveedor de autenticación DAO, con el {@link UserDetailsService} y el encoder de contraseñas del sistema
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -170,13 +176,17 @@ public class SecurityConfig {
         return authProvider;
     }
 
-    /** @return el codificador de contraseñas (BCrypt) usado en todo el sistema */
+    /**
+     * Password encoder.
+     * @return el codificador de contraseñas (BCrypt) usado en todo el sistema
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     /**
+     * Authentication manager.
      * @param config configuración de autenticación de Spring Security
      * @return el {@link AuthenticationManager} resuelto por Spring, usado por el flujo de login
      * @throws Exception si Spring no puede resolve el manager de autenticación

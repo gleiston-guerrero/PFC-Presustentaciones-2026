@@ -33,6 +33,7 @@ public class SubmissionAccessService {
     private final PermissionService permissionService;
 
     /**
+     * Validate access.
      * @param submission             la submission cuyo dato asociado se quiere leer/escribir
      * @param codigosPermissionBypass  códigos de permission (p.ej. "EVALUACION_CALIFICAR",
      *                              "ANTEPROYECTO_REVISAR") cuya sola tenencia ya autoriza el

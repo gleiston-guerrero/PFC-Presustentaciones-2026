@@ -68,6 +68,7 @@ public class WalPitrService {
     // ── Estado ──────────────────────────────────────────────────────────
 
     /**
+     * Status.
      * @return el estado del archivado de WAL, del directorio compartido y de las bases físicas
      */
     public StatusWalDTO status() {
@@ -210,7 +211,10 @@ public class WalPitrService {
 
     // ── Base física (pg_basebackup) ─────────────────────────────────────
 
-    /** @return las bases físicas generadas, más recientes primero */
+    /**
+     * List base backups.
+     * @return las bases físicas generadas, más recientes primero
+     */
     public List<BasePhysicalDTO> listBaseBackups() {
         Path dir = baseBackupsDir();
         if (!Files.isDirectory(dir)) return List.of();
@@ -260,6 +264,7 @@ public class WalPitrService {
     }
 
     /**
+     * Elimina los registros con base.
      * @param nombre nombre de la base física a delete
      * @throws IllegalArgumentException si el nombre no tiene el formato esperado
      */

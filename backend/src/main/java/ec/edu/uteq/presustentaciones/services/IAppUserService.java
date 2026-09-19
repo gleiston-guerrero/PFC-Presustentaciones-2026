@@ -6,9 +6,13 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Servicio de app user.
+ */
 public interface IAppUserService {
 
     /**
+     * List paged.
      * @param page número de página, base 0
      * @param size tamaño de página (se acota a un máximo de 100)
      * @param q    texto libre de búsqueda por nombre/apellido/email, o {@code null}
@@ -37,39 +41,54 @@ public interface IAppUserService {
      */
     AppUser update(Long id, AppUser appUser);
 
-    /** @param id id del appUser a delete
+    /**
+     * Elimina los registros.
+     * @param id id del appUser a delete
      * @throws RuntimeException si el appUser no existe */
     void delete(Long id);
 
     /**
+     * Obtain by id.
      * @param id id del appUser
      * @return el appUser si existe
      */
     Optional<AppUser> obtainById(Long id);
 
     /**
+     * Obtain by email.
      * @param email email del appUser
      * @return el appUser con ese email, si existe
      */
     Optional<AppUser> obtainByEmail(String email);
 
-    /** @return todos los appUsers del sistema, sin paginar */
+    /**
+     * List all.
+     * @return todos los appUsers del sistema, sin paginar
+     */
     List<AppUser> listAll();
 
-    /** @return los appUsers con {@code activo = true} */
+    /**
+     * List active.
+     * @return los appUsers con {@code activo = true}
+     */
     List<AppUser> listActive();
 
     /**
+     * Indica si existe algún registro con email.
      * @param email email a verify
      * @return {@code true} si ya existe un appUser registrado con ese email
      */
     boolean existsByEmail(String email);
 
-    /** @param id id del appUser a activate
+    /**
+     * Activate.
+     * @param id id del appUser a activate
      * @throws RuntimeException si el appUser no existe */
     void activate(Long id);
 
-    /** @param id id del appUser a deactivate
+    /**
+     * Deactivate.
+     * @param id id del appUser a deactivate
      * @throws RuntimeException si el appUser no existe */
     void deactivate(Long id);
 

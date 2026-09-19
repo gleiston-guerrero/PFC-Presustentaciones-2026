@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Objeto de transferencia de observations submission.
+ */
 @Data @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,6 +28,9 @@ public class ObservationsSubmissionDTO {
     @JsonProperty("coordinador")
     private ObservationsCoordinatorDTO coordinator;
 
+    /**
+     * Objeto de transferencia de observations tutor.
+     */
     @Data @Builder
     @NoArgsConstructor
     @AllArgsConstructor
@@ -39,6 +45,9 @@ public class ObservationsSubmissionDTO {
         private String dateRecord;
     }
 
+    /**
+     * Objeto de transferencia de observations panelist.
+     */
     @Data @Builder
     @NoArgsConstructor
     @AllArgsConstructor
@@ -61,6 +70,9 @@ public class ObservationsSubmissionDTO {
         private String commentPreestablecido;
     }
 
+    /**
+     * Objeto de transferencia de criterion observation.
+     */
     @Data @Builder
     @NoArgsConstructor
     @AllArgsConstructor
@@ -81,6 +93,9 @@ public class ObservationsSubmissionDTO {
         private String observationManual;
     }
 
+    /**
+     * Objeto de transferencia de observations coordinator.
+     */
     @Data @Builder
     @NoArgsConstructor
     @AllArgsConstructor

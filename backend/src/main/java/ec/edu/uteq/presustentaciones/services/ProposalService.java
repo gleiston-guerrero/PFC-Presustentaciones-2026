@@ -4,6 +4,9 @@ import ec.edu.uteq.presustentaciones.entities.Proposal;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.Optional;
 
+/**
+ * Contrato. Servicio de proposal.
+ */
 public interface ProposalService {
 
     /**
@@ -18,6 +21,7 @@ public interface ProposalService {
     Proposal sendProposal(Long submissionId, MultipartFile file);
 
     /**
+     * Approve proposal.
      * @param id            id del proposal a approve
      * @param observations observaciones opcionales del revisor
      * @return el proposal actualizado en estado "APROBADO"
@@ -26,6 +30,7 @@ public interface ProposalService {
     Proposal approveProposal(Long id, String observations);
 
     /**
+     * Reject proposal.
      * @param id            id del proposal a reject
      * @param observations motivo del rechazo
      * @return el proposal actualizado en estado "RECHAZADO"
@@ -34,6 +39,7 @@ public interface ProposalService {
     Proposal rejectProposal(Long id, String observations);
 
     /**
+     * Search by submission.
      * @param submissionId id de la submission
      * @return el proposal de esa submission, si ya fue enviado
      */

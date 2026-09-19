@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de modality degree.
+ */
 @Repository
 public interface ModalityDegreeRepository extends JpaRepository<ModalityDegree, Short> {
     /**

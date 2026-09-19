@@ -38,6 +38,7 @@ public class StudentService {
     private final AuditService auditService;
 
     /**
+     * List paged.
      * @param page número de página, base 0
      * @param size tamaño de página (se acota a un máximo de 100)
      * @param q    texto libre de búsqueda por nombre/apellido/email, o {@code null}
@@ -58,6 +59,7 @@ public class StudentService {
     }
 
     /**
+     * Obtain by id.
      * @param id id del student
      * @return el student con su último proyecto de titulación (si tiene)
      * @throws RuntimeException si el student no existe
@@ -179,7 +181,10 @@ public class StudentService {
         return toDto(saved, null);
     }
 
-    /** @return el catálogo completo de estados académicos disponibles */
+    /**
+     * List statuses academic.
+     * @return el catálogo completo de estados académicos disponibles
+     */
     @Transactional(readOnly = true)
     public List<StatusAcademic> listStatusesAcademic() {
         return statusAcademicRepository.findAll();

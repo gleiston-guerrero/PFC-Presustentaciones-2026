@@ -8,6 +8,9 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Minutes.
+ */
 @Entity
 @Table(name = "actas", schema = "presus")
 @Getter
@@ -106,7 +109,10 @@ public class Minutes {
         this.firmada = firmadaPresidente && firmadaVocal1 && firmadaVocal2 && firmadaTutor;
     }
 
-    /** @return los firmantes pendientes como texto, o cadena vacía si ya firmaron todos */
+    /**
+     * Get signers pending.
+     * @return los firmantes pendientes como texto, o cadena vacía si ya firmaron todos
+     */
     public String getSignersPending() {
         StringBuilder sb = new StringBuilder();
         if (!firmadaPresidente) sb.append("Presidente, ");

@@ -8,6 +8,9 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Servicio de evaluation.
+ */
 public interface EvaluationService {
 
     /**
@@ -50,24 +53,28 @@ public interface EvaluationService {
                                  Double gradeFinal, String observations);
 
     /**
+     * List evaluations.
      * @param pageable configuración de paginación
      * @return página de todas las evaluations finales del sistema
      */
     Page<EvaluationFinal> listEvaluations(Pageable pageable);
 
     /**
+     * List by student.
      * @param studentId id del student
      * @return las evaluations finales de las submissions de ese student
      */
     List<EvaluationFinal> listByStudent(Long studentId);
 
     /**
+     * List by app user.
      * @param appUserId id del appUser autenticado
      * @return las evaluations finales visibles para ese appUser
      */
     List<EvaluationFinal> listByAppUser(Long appUserId);
 
     /**
+     * Search by submission.
      * @param submissionId id de la submission
      * @return la evaluación final de esa submission, si ya fue calificada
      */

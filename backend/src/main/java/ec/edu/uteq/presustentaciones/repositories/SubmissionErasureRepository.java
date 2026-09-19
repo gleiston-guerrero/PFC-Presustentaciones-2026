@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de submission erasure.
+ */
 @Repository
 public interface SubmissionErasureRepository extends JpaRepository<SubmissionErasure, Long> {
     /**

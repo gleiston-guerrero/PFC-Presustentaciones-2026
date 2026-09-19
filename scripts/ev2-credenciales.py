@@ -69,7 +69,7 @@ RE_ASIGNACION = re.compile(
     (?:
         (?P<q>["'])(?P<entre>[^"'\n]{6,})(?P=q)   # "valor" o 'valor'
       |
-        (?P<suelto>[^\s"'(){}\[\],;<>\n]{6,})  # valor=suelto, estilo .properties
+        (?P<suelto>[^\s"'`(){}\[\],;<>\n]{6,})  # valor=suelto, estilo .properties
     )
     """)
 
@@ -99,6 +99,10 @@ RE_TIENE_DIGITO = re.compile(r"\d")
 # tragarse nada sin que quede escrito aqui quien la puso y por que.
 CITADAS = {
     # (archivo, valor): razon
+    ("VERIFICACION.md", "admin123"):
+        "citada como ejemplo en el relato de su propia retirada (seccion Seguridad)",
+    ("VERIFICACION.md", "postgreAdmin19"):
+        "citada como ejemplo de la forma sin comillas, en la misma seccion",
 }
 
 EXENTOS = {
@@ -149,6 +153,8 @@ def main():
     print(f"Archivos versionados revisados: {revisados}")
     for clave, razon in EXENTOS.items():
         print(f"  exento: {clave}  ({razon})")
+    for (arch, _), razon in CITADAS.items():
+        print(f"  citada en {arch}: {razon}")
     print()
 
     if not hallazgos:

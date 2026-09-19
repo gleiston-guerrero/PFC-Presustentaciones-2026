@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de availability room.
+ */
 @Repository
 public interface AvailabilityRoomRepository extends JpaRepository<AvailabilityRoom, Long> {
     /**

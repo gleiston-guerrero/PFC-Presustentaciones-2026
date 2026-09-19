@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de kind message.
+ */
 @Repository
 public interface KindMessageRepository extends JpaRepository<KindMessage, Short> {
     /**

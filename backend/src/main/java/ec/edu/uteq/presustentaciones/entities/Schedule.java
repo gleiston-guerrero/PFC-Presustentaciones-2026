@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Schedule.
+ */
 @Entity
 @Table(name = "cronograma", schema = "presus")
 @Getter
@@ -78,12 +81,18 @@ public class Schedule {
     @JsonProperty("creadoEn")
     private LocalDateTime creadoEn;
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         creadoEn = LocalDateTime.now();
         synchronizeStatusCode();
     }
 
+    /**
+     * On update.
+     */
     @PreUpdate
     protected void onUpdate() {
         synchronizeStatusCode();

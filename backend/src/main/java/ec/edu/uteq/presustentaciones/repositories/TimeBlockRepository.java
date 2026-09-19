@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de time block.
+ */
 @Repository
 public interface TimeBlockRepository extends JpaRepository<TimeBlock, Short> {
     /**

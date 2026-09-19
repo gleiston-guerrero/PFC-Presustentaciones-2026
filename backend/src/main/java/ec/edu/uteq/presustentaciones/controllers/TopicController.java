@@ -75,6 +75,7 @@ public class TopicController {
     }
 
     /**
+     * Detail.
      * @param topicId topic consultado
      * @return 200 con el detalle del topic
      */

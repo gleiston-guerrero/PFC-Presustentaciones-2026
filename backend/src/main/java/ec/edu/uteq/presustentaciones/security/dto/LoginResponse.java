@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Login response.
+ */
 @Data
 @Builder
 @NoArgsConstructor

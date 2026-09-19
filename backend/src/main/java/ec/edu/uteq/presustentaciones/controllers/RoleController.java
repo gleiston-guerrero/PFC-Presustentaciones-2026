@@ -41,6 +41,7 @@ public class RoleController {
     private static final Set<String> ROLES_PROTEGIDOS = Set.of("ADMIN", "DOCENTE", "COORDINADOR", "ESTUDIANTE");
 
     /**
+     * List.
      * @return los roles del sistema, cada uno con su count de appUsers asignados y la lista
      *         de codigos de permission que tiene concedidos
      */

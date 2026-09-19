@@ -3,6 +3,9 @@ package ec.edu.uteq.presustentaciones.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+/**
+ * Update student request.
+ */
 @Data
 public class UpdateStudentRequest {
     @JsonProperty("carreraId")

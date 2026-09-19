@@ -35,6 +35,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Implementacion del servicio de submission.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

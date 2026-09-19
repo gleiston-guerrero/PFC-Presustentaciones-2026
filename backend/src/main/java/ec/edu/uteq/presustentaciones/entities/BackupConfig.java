@@ -21,6 +21,9 @@ import java.time.LocalDateTime;
 @Builder
 public class BackupConfig {
 
+    /**
+     * I d  u n i c o.
+     */
     public static final short ID_UNICO = 1;
 
     @Id

@@ -8,6 +8,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de topic proposed.
+ */
 @Repository
 public interface TopicProposedRepository extends JpaRepository<TopicProposed, Integer> {
 
@@ -37,6 +40,14 @@ public interface TopicProposedRepository extends JpaRepository<TopicProposed, In
      * el endpoint contra Postgres de verdad (los tests con repositorio mockeado nunca
      * ejecutan el SQL real y no lo detectan).
      */
+    /**
+     * Search con filtros.
+     * @param programId programId
+     * @param lineId lineId
+     * @param areaId areaId
+     * @param nivelDificultad nivelDificultad
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("""
             SELECT t FROM TopicProposed t
             LEFT JOIN FETCH t.program c
@@ -48,14 +59,6 @@ public interface TopicProposedRepository extends JpaRepository<TopicProposed, In
               AND (:nivel IS NULL OR LOWER(t.nivelDificultad) = LOWER(CAST(:nivel AS string)))
             ORDER BY t.titulo ASC
             """)
-    /**
-     * Search con filtros.
-     * @param programId programId
-     * @param lineId lineId
-     * @param areaId areaId
-     * @param nivelDificultad nivelDificultad
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     List<TopicProposed> searchWithFiltros(@Param("programId") Integer programId,
                                          @Param("lineId") Integer lineId,
                                          @Param("areaId") Integer areaId,

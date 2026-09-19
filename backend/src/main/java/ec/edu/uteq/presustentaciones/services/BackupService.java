@@ -260,7 +260,10 @@ public class BackupService {
 
     // ── Pruebas de restauración ─────────────────────────────────────────────
 
-    /** @return las últimas 50 pruebas de restauración registradas, de la más reciente a la más antigua */
+    /**
+     * Drills.
+     * @return las últimas 50 pruebas de restauración registradas, de la más reciente a la más antigua
+     */
     public List<BackupDrillRestore> drills() {
         return drillRepo.findTop50ByOrderByDateDesc();
     }
@@ -299,7 +302,10 @@ public class BackupService {
 
     // ── Generación ──────────────────────────────────────────────────────────
 
-    /** Compat: FULL manual. @return el backup FULL manual generado */
+    /**
+     * Compat: genera una copia FULL manual.
+     * @return el respaldo FULL manual generado
+     */
     public BackupInfoDTO generate() {
         return generate(KindBackup.FULL, SourceBackup.MANUAL);
     }

@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * History schedule.
+ */
 @Entity
 @Table(name = "historial_cronograma", schema = "presus")
 @Getter
@@ -63,6 +66,9 @@ public class HistorySchedule {
     @JsonProperty("fechaCambio")
     private LocalDateTime dateCambio= LocalDateTime.now();
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         if (dateCambio == null) {

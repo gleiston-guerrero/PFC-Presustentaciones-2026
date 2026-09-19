@@ -29,6 +29,7 @@ public class ErasureDataService {
     private final SubmissionErasureRepository submissionRepository;
 
     /**
+     * Solicitar.
      * @param appUserId id del appUser titular que solicita la supresión de sus datos
      * @return la submission de supresión creada, en estado "PENDIENTE"
      * @throws IllegalStateException    si ya existe una submission pendiente para esa cuenta
@@ -49,12 +50,16 @@ public class ErasureDataService {
         return submissionRepository.save(submission);
     }
 
-    /** @return todas las submissions de supresión, de la más reciente a la más antigua */
+    /**
+     * List.
+     * @return todas las submissions de supresión, de la más reciente a la más antigua
+     */
     public List<SubmissionErasure> list() {
         return submissionRepository.findAllByOrderByDateSubmissionDesc();
     }
 
     /**
+     * Resolve.
      * @param submissionId   id de la submission de supresión a resolve
      * @param aceptar       true para seudonimizar la cuenta, false para reject la submission
      *                      (p. ej. porque el titular tiene un process de titulación en curso

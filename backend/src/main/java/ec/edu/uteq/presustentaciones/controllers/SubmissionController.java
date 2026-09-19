@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 import ec.edu.uteq.presustentaciones.dto.ResponseWrapper;
 
+/**
+ * Controlador REST de submission.
+ */
 @Slf4j
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -141,6 +144,7 @@ public class SubmissionController {
     }
 
     /**
+     * Approve.
      * @param id submission a approve
      * @return 200 con la submission aprobada, o 400 si no está en un estado que lo permita
      */
@@ -155,6 +159,7 @@ public class SubmissionController {
     }
 
     /**
+     * Reject.
      * @param id submission a reject
      * @return 200 con la submission rechazada, o 400 si la transición no es válida
      */
@@ -267,6 +272,7 @@ public class SubmissionController {
     }
 
     /**
+     * List by student.
      * @param studentId perfil de student consultado
      * @return 200 con las submissions de ese student
      */

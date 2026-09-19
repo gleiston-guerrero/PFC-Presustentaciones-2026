@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Contrato. Servicio de submission.
+ */
 public interface SubmissionService {
 
     /**
@@ -68,7 +71,10 @@ public interface SubmissionService {
      */
     Submission rejectWithObservation(Long submissionId, String observation);
 
-    /** @return todas las submissions del sistema, sin paginar */
+    /**
+     * List submissions.
+     * @return todas las submissions del sistema, sin paginar
+     */
     List<Submission> listSubmissions();
 
     /**
@@ -87,16 +93,21 @@ public interface SubmissionService {
     Page<Submission> listSubmissionsPaged(int pagina, int tamanio, String status, String texto,
                                                LocalDate dateFrom, LocalDate dateTo);
 
-    /** @return count de submissions agrupado por código de estado, para el dashboard */
+    /**
+     * Cuenta los registros con status.
+     * @return count de submissions agrupado por código de estado, para el dashboard
+     */
     Map<String, Long> countByStatus();
 
     /**
+     * List by student.
      * @param studentId id del student
      * @return todas las submissions registradas por ese student
      */
     List<Submission> listByStudent(Long studentId);
 
     /**
+     * List by app user.
      * @param appUserId id del appUser (se resuelve a su perfil de student internamente)
      * @return las submissions del student asociado a ese appUser, o lista vacía si no tiene
      *         perfil de student todavía
@@ -104,6 +115,7 @@ public interface SubmissionService {
     List<Submission> listByAppUser(Long appUserId);
 
     /**
+     * Obtain by id.
      * @param id id de la submission
      * @return la submission si existe, o {@link Optional#empty()} en caso contrario
      */

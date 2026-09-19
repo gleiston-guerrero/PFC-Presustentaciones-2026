@@ -11,6 +11,9 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 
+/**
+ * Contrato. Repositorio de acceso a datos de audit.
+ */
 @Repository
 public interface AuditRepository extends JpaRepository<Audit, Long> {
 
@@ -19,18 +22,13 @@ public interface AuditRepository extends JpaRepository<Audit, Long> {
      * de JPA: no dispara ningún trigger ni evento de aplicación, es un {@code DELETE} directo,
      * y devuelve cuántas filas borró para que {@code CleanupLogScheduler} pueda dejar
      * traza exacta.
+     * @param dateCorte date corte
+     * @return el valor numérico calculado
      */
     @Modifying
     @Query("DELETE FROM Audit a WHERE a.date < :fechaCorte")
     int eraseAnterioresA(@Param("fechaCorte") LocalDateTime dateCorte);
 
-    @Query("SELECT a FROM Audit a WHERE " +
-           "(:tabla IS NULL OR :tabla = '' OR a.tabla = :tabla) " +
-           "AND (:accion IS NULL OR :accion = '' OR a.accion = :accion) " +
-           "AND (:appUserId IS NULL OR a.appUserId = :appUserId) " +
-           "AND (:texto IS NULL OR :texto = '' " +
-           "     OR LOWER(a.appUserNombre) LIKE LOWER(CONCAT('%', :texto, '%')) " +
-           "     OR LOWER(a.tabla) LIKE LOWER(CONCAT('%', :texto, '%')))")
     /**
      * Search con filtros.
      * @param tabla tabla
@@ -40,6 +38,13 @@ public interface AuditRepository extends JpaRepository<Audit, Long> {
      * @param pageable pageable
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT a FROM Audit a WHERE " +
+           "(:tabla IS NULL OR :tabla = '' OR a.tabla = :tabla) " +
+           "AND (:accion IS NULL OR :accion = '' OR a.accion = :accion) " +
+           "AND (:appUserId IS NULL OR a.appUserId = :appUserId) " +
+           "AND (:texto IS NULL OR :texto = '' " +
+           "     OR LOWER(a.appUserNombre) LIKE LOWER(CONCAT('%', :texto, '%')) " +
+           "     OR LOWER(a.tabla) LIKE LOWER(CONCAT('%', :texto, '%')))")
     Page<Audit> searchWithFiltros(@Param("tabla") String tabla,
                                       @Param("accion") String accion,
                                       @Param("appUserId") Long appUserId,

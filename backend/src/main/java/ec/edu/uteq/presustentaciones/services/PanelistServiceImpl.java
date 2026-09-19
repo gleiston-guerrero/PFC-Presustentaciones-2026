@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Implementacion del servicio de panelist.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

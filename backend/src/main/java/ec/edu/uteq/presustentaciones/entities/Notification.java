@@ -6,6 +6,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Notification.
+ */
 @Entity
 @Table(name = "notificaciones", schema = "presus")
 @Getter

@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Status process.
+ */
 @Entity
 @Table(name = "estados_proceso", schema = "presus")
 @Getter

@@ -35,6 +35,7 @@ public class MeController {
     private final PermissionService permissionService;
 
     /**
+     * My permissions.
      * @param authentication autenticación de la sesión actual
      * @return 200 con la lista de códigos de permission del appUser autenticado
      */

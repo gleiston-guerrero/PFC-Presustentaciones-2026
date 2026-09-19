@@ -19,6 +19,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Implementacion del servicio de external api.
+ */
 @Service
 @Slf4j
 public class ExternalApiServiceImpl implements ExternalApiService {

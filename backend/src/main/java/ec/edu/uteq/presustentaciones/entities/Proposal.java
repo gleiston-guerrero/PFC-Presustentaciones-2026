@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 
+/**
+ * Proposal.
+ */
 @Entity
 @Table(name = "anteproyectos", schema = "presus")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

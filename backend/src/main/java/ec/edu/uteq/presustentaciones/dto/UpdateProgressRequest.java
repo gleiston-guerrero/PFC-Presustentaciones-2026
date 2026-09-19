@@ -7,6 +7,9 @@ import lombok.Data;
 
 import java.util.Map;
 
+/**
+ * Update progress request.
+ */
 @Data
 public class UpdateProgressRequest {
 

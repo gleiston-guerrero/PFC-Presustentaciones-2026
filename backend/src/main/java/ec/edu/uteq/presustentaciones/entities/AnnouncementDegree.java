@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+/**
+ * Announcement degree.
+ */
 @Entity
 @Table(name = "convocatorias_titulacion", schema = "presus")
 @Getter

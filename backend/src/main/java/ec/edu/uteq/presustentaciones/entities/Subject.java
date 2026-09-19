@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Subject.
+ */
 @Entity
 @Table(name = "areas_tematicas", schema = "presus")
 @Getter

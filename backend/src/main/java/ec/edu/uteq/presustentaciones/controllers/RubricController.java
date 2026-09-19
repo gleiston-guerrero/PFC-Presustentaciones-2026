@@ -14,6 +14,9 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+/**
+ * Controlador REST de rubric.
+ */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/rubricas")
@@ -24,6 +27,7 @@ public class RubricController {
     private final CriterionRubricRepository criterionRepository;
 
     /**
+     * List.
      * @param pageable pagina y tamano solicitados
      * @return pagina de rubrics de evaluation
      */
@@ -31,6 +35,7 @@ public class RubricController {
     public Page<Rubric> list(Pageable pageable) { return rubricRepository.findAll(pageable); }
 
     /**
+     * Obtain.
      * @param id rubric consultada
      * @return 200 con la rubric, o 404 si no existe
      */
@@ -52,6 +57,7 @@ public class RubricController {
     public Rubric create(@RequestBody Rubric rubric) { return rubricRepository.save(rubric); }
 
     /**
+     * Elimina los registros.
      * @param id rubric a delete
      * @return 204 sin cuerpo
      */
@@ -80,6 +86,7 @@ public class RubricController {
     }
 
     /**
+     * Criteria.
      * @param rubricId rubric consultada
      * @return criterios que componen esa rubric
      */

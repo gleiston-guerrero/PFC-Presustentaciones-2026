@@ -309,7 +309,10 @@ public class AppUserController {
         }
     }
 
-    /** @return 200 con todas las submissions de supresión, más recientes primero (solo ADMIN) */
+    /**
+     * List submissions erasure.
+     * @return 200 con todas las submissions de supresión, más recientes primero (solo ADMIN)
+     */
     @GetMapping("/solicitudes-supresion")
     @PreAuthorize("@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')")
     @Operation(summary = "Listar solicitudes de supresión de datos personales (RNF-19, solo ADMIN)")

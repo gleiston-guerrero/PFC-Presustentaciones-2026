@@ -3,6 +3,9 @@ package ec.edu.uteq.presustentaciones.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+/**
+ * Create student request.
+ */
 @Data
 public class CreateStudentRequest {
     @JsonProperty("nombre")

@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Servicio de rate limiter.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -16,6 +19,7 @@ public class RateLimiterService {
     private final StringRedisTemplate redisTemplate;
 
     /**
+     * Is allowed.
      * @param ipAddress dirección IP del intento de login a limitar
      * @return {@code true} si la IP todavía no alcanzó el máximo de intentos permitidos
      * @throws RateLimiterUnavailableException RNF-04: si Redis no responde, esto NO es "sin

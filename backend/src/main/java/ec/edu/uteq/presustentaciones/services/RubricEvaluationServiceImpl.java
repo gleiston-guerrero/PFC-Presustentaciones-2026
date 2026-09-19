@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Implementacion del servicio de rubric evaluation.
+ */
 @Service
 @RequiredArgsConstructor
 public class RubricEvaluationServiceImpl implements RubricEvaluationService {

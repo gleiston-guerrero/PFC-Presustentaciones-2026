@@ -9,6 +9,9 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Rubric.
+ */
 @Entity
 @Table(name = "rubricas", schema = "presus")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

@@ -11,6 +11,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de teacher.
+ */
 @Repository
 public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 
@@ -63,7 +66,11 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
     @Query("SELECT d FROM Teacher d ORDER BY d.cargaHorariaSemanal ASC")
     List<Teacher> findAllOrdenadosByCarga();
 
-    /** Reportes: nombre de un conjunto acotado de teachers (los que participan en el process). */
+    /**
+     * Reportes: nombre de un conjunto acotado de teachers (los que participan en el process).
+     * @param ids ids
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("SELECT d.id, u.nombre, u.apellido FROM Teacher d JOIN d.appUser u WHERE d.id IN :ids")
     List<Object[]> findNombresByIds(@org.springframework.data.repository.query.Param("ids") java.util.Collection<Long> ids);
 }

@@ -4,6 +4,9 @@ import ec.edu.uteq.presustentaciones.entities.Notification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+/**
+ * Contrato. Servicio de notification.
+ */
 public interface NotificationService {
 
     /**
@@ -20,12 +23,14 @@ public interface NotificationService {
     Notification createNotification(Long appUserId, String message);
 
     /**
+     * List notifications.
      * @param pageable configuración de paginación
      * @return página de todas las notifications del sistema
      */
     Page<Notification> listNotifications(Pageable pageable);
 
     /**
+     * List by app user.
      * @param appUserId id del appUser
      * @param pageable  configuración de paginación
      * @return página de notifications de ese appUser, más recientes primero
@@ -33,19 +38,24 @@ public interface NotificationService {
     Page<Notification> listByAppUser(Long appUserId, Pageable pageable);
 
     /**
+     * Cuenta los registros con unread.
      * @param appUserId id del appUser
      * @return cantidad de notifications no leídas de ese appUser
      */
     long countUnread(Long appUserId);
 
     /**
+     * Mark as read.
      * @param notificationId id de la notificación a marcar
      * @return la notificación actualizada con {@code leida = true}
      * @throws RuntimeException si la notificación no existe
      */
     Notification markAsRead(Long notificationId);
 
-    /** @param appUserId id del appUser cuyas notifications se marcan todas como leídas */
+    /**
+     * Mark all read.
+     * @param appUserId id del appUser cuyas notifications se marcan todas como leídas
+     */
     void markAllRead(Long appUserId);
 
     /**

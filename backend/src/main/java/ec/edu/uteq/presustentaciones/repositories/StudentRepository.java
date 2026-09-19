@@ -12,6 +12,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Repositorio de acceso a datos de student.
+ */
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
@@ -44,6 +47,9 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      * Invoca sp_generate_codigo_expediente (FUNCTION scaler, categoría "generación de
      * códigos secuenciales" del Block A.2): usa nextval() sobre una secuencia dedicada,
      * atómico a nivel de motor -- sin condiciones de program entre altas concurrentes.
+     * @param anio anio
+     * @param codeInicial code inicial
+     * @return el valor encontrado, o null si no existe
      */
     @Procedure(name = "Estudiante.generarCodigoExpediente")
     String generateCodeExpediente(@Param("p_anio") Integer anio, @Param("p_codigo") String codeInicial);

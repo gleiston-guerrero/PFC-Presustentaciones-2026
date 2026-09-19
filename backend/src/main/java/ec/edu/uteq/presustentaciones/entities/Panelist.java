@@ -66,6 +66,9 @@ public class Panelist {
     @JsonProperty("asignadoEn")
     private LocalDateTime asignadoEn;
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         asignadoEn = LocalDateTime.now();

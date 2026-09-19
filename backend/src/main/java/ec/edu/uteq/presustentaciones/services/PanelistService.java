@@ -9,6 +9,9 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Contrato. Servicio de panelist.
+ */
 public interface PanelistService {
 
     // ── Panelists ──────────────────────────────────────────────────────────────
@@ -26,23 +29,29 @@ public interface PanelistService {
     Panelist assignPanelist(Long submissionId, Long teacherId, String role);
 
     /**
+     * List by submission.
      * @param submissionId id de la submission
      * @return los panelists asignados a esa submission (0 a 3 registros)
      */
     List<Panelist> listBySubmission(Long submissionId);
 
     /**
+     * List all.
      * @param pageable configuración de paginación
      * @return página de todos los registros de panelist del sistema
      */
     Page<Panelist> listAll(Pageable pageable);
 
-    /** @param panelistId id del registro de panelist a delete */
+    /**
+     * Elimina los registros con panelist.
+     * @param panelistId id del registro de panelist a delete
+     */
     void deletePanelist(Long panelistId);
 
     // ── Tutor ─────────────────────────────────────────────────────────────────
 
     /**
+     * Assign tutor.
      * @param submissionId id de la submission
      * @param teacherId   id del teacher que actuará como tutor
      * @return el registro de tutoría creado
@@ -50,12 +59,16 @@ public interface PanelistService {
     Tutor assignTutor(Long submissionId, Long teacherId);
 
     /**
+     * Obtain tutor of submission.
      * @param submissionId id de la submission
      * @return el tutor asignado, si existe
      */
     Optional<Tutor> obtainTutorOfSubmission(Long submissionId);
 
-    /** @param tutorId id del registro de tutoría a delete */
+    /**
+     * Elimina los registros con tutor.
+     * @param tutorId id del registro de tutoría a delete
+     */
     void deleteTutor(Long tutorId);
 
     // ── Sugerencia automática ─────────────────────────────────────────────────
@@ -100,18 +113,21 @@ public interface PanelistService {
     // ── Vista del teacher ─────────────────────────────────────────────────────
 
     /**
+     * List by teacher.
      * @param teacherId id del teacher
      * @return las asignaciones de panelist de ese teacher, en cualquier submission
      */
     List<Panelist> listByTeacher(Long teacherId);
 
     /**
+     * List tutorings by teacher.
      * @param teacherId id del teacher
      * @return las tutorías activas de ese teacher
      */
     List<Tutor> listTutoringsByTeacher(Long teacherId);
 
     /**
+     * Obtain info panelist.
      * @param submissionId id de la submission
      * @param appUserId   id del appUser autenticado (se resuelve contra el teacher vinculado)
      * @return la asignación de panelist de ese appUser en esa submission, si existe

@@ -7,6 +7,9 @@ import lombok.*;
 
 import java.time.LocalTime;
 
+/**
+ * Time block.
+ */
 @Entity
 @Table(name = "bloques_horarios", schema = "presus")
 @Getter

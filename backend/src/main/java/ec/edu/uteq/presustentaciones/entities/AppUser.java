@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * App user.
+ */
 @Entity
 @Table(name = "usuarios", schema = "presus")
 @Data
@@ -58,6 +61,9 @@ public class AppUser {
     @JsonProperty("creadoEn")
     private java.time.LocalDateTime creadoEn;
 
+    /**
+     * On create.
+     */
     @PrePersist
     protected void onCreate() {
         creadoEn = java.time.LocalDateTime.now();

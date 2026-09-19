@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Contrato. Repositorio de acceso a datos de permission.
+ */
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission, Short> {
 
