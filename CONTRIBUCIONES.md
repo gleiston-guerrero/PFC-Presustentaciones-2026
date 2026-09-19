@@ -8,7 +8,7 @@ punto de esta ronda).
 > cuatro defectos concretos: «sin firmas, sin correo institucional, sin columna de archivos, y con
 > recuentos que no cuadran (dice 81 commits; son 89)». Los cuatro se responden abajo. El último es el
 > que de verdad importaba, porque es el que se repite solo: cuando se corrigió 81 → 89, dos días
-> después ya eran 101. **Por eso la tabla dejó de escribirse y pasó a generarse.**
+> después ya eran 103. **Por eso la tabla dejó de escribirse y pasó a generarse.**
 
 ## Metodología: la tabla la produce `git`, no el equipo
 
@@ -54,7 +54,7 @@ la cola: cada commit que cierra un punto obliga a regenerar, y el commit que reg
 ## Autoría de esta ronda
 
 **Tramo:** `f3d1ff4..HEAD` — desde el commit que revisó la guía original hasta hoy.
-**Total: 101 commits.**
+**Total: 103 commits.**
 **Una sola persona, sin excepción:** Álava Alvarado, Jean Pierre.
 Identidades de Git que usó en el tramo: Jean30042 <jalavaa@uteq.edu.ec>, Jean30042 <jeanalavaalavarado@gmail.com>
 
@@ -65,7 +65,7 @@ Correcto y confirmado. Reparto real del tramo, con `git log --format=%ae f3d1ff4
 | Correo | Commits |
 |---|---:|
 | `jeanalavaalavarado@gmail.com` (personal) | 92 |
-| `jalavaa@uteq.edu.ec` (institucional) | 9 |
+| `jalavaa@uteq.edu.ec` (institucional) | 11 |
 
 **Corregido a partir del 2026-09-19:** el repositorio quedó fijado a la identidad institucional, de
 forma local y no solo global, para que no dependa de la máquina en la que se trabaje:
@@ -93,9 +93,9 @@ Salida literal de `python scripts/ev4-contribuciones.py`:
 
 | Punto | Commits | Archivos de evidencia (los mas tocados) | Total archivos |
 |---|---|---|---|
-| P1 | `f51db75`, `80e1c08`, `70035fa`, `e38cc0d`, `8488d06`, `05a2135`, `5d6102b`, `79b682a`, `d284a22`, `d42da11`, `23ddf41`, `fd38f8d` | `docs/mediciones/sus/SUS-RESULTS.md`<br>`Informe-Final/secciones/10-evaluacion-empirica.tex`<br>`README.md`<br>`Informe-Final/secciones/12-amenazas-validez.tex` | 38 |
+| P1 | `f51db75`, `80e1c08`, `70035fa`, `e38cc0d`, `8488d06`, `05a2135`, `5d6102b`, `79b682a`, `d284a22`, `d42da11`, `23ddf41`, `fd38f8d`, `29a684a` | `docs/mediciones/sus/SUS-RESULTS.md`<br>`Informe-Final/secciones/10-evaluacion-empirica.tex`<br>`README.md`<br>`docs/mediciones/sus/re-aplicacion/README.md` | 45 |
 | P2 | `2b9ba89`, `9067cad`, `e64d4c7`, `d14ddca`, `536a33b`, `23ddf41` | `Informe-Final/secciones/10-evaluacion-empirica.tex`<br>`docs/mediciones/jacoco/COVERAGE.md`<br>`scripts/verify.sh`<br>`VERIFICACION.md` | 77 |
-| P3 | `2b9ba89`, `41c5bc9`, `ef5d83c`, `e38cc0d`, `e7c49ab`, `71a62d7`, `6aea088`, `5fe6991` | `VERIFICACION.md`<br>`backend/pom.xml`<br>`backend/src/main/java/ec/edu/uteq/presustentaciones/controllers/MinutesController.java`<br>`backend/src/main/java/ec/edu/uteq/presustentaciones/controllers/ProposalController.java` | 162 |
+| P3 | `2b9ba89`, `41c5bc9`, `ef5d83c`, `e38cc0d`, `e7c49ab`, `71a62d7`, `6aea088`, `5fe6991`, `84016c8` | `VERIFICACION.md`<br>`backend/src/main/java/ec/edu/uteq/presustentaciones/controllers/MinutesController.java`<br>`backend/src/main/java/ec/edu/uteq/presustentaciones/controllers/ProposalController.java`<br>`backend/src/main/java/ec/edu/uteq/presustentaciones/repositories/TeacherRepository.java` | 324 |
 | P4 | `49adaee`, `63c7efd`, `e38cc0d`, `40426b3`, `6282d50`, `e7c49ab`, `a73821b`, `e7f0ce5`, `b75abae`, `536a33b`, `02b3fc6`, `556f02a`, `4cc6290`, `7263fbc`, `3593511`, `6a1e0b5`, `32f9847`, `93e6806`, `9fd99e9`, `20b378a` | `VERIFICACION.md`<br>`backend/src/main/java/ec/edu/uteq/presustentaciones/controllers/MinutesController.java`<br>`scripts/verify.sh`<br>`backend/src/main/java/ec/edu/uteq/presustentaciones/controllers/EvaluationController.java` | 582 |
 | P5 | `73ec6c7`, `c5434ab`, `2161280`, `cc41724`, `e440644`, `f9c9483` | `README.md`<br>`Frontend/public/robots.txt`<br>`Informe-Final/secciones/10-evaluacion-empirica.tex`<br>`VERIFICACION.md` | 21 |
 | P6 | `bd2cc84`, `201c2fa`, `6707768`, `c840c2f` | `Informe-Final/secciones/10-evaluacion-empirica.tex`<br>`CONTRIBUTORS.md`<br>`Informe-Final/secciones/00-portada.tex`<br>`Informe-Final/secciones/09-implementacion.tex` | 14 |
@@ -121,7 +121,7 @@ git show --pretty= --name-only <sha>
 **EV-3 no aparece** porque ningún commit lo nombra en el asunto: se cerró declarando la URL pública ya
 existente en `README.md`, sin cambio de código. La revisión del 18-sep lo da por cumplido.
 
-### Commits sin punto declarado (8 de 101)
+### Commits sin punto declarado (8 de 103)
 
 Se listan en vez de repartirlos a ojo entre los puntos, que es exactamente el tipo de atribución que el
 historial no respaldaría:
@@ -175,7 +175,7 @@ copia impresa que se entrega en la defensa; aquí queda la declaración y la ide
 
 | Integrante | Correo institucional | Participación en esta ronda | Firma |
 |---|---|---|---|
-| Álava Alvarado, Jean Pierre | `jalavaa@uteq.edu.ec` | Autor de los 101 commits del tramo | ____________________ |
+| Álava Alvarado, Jean Pierre | `jalavaa@uteq.edu.ec` | Autor de los 103 commits del tramo | ____________________ |
 | Moncayo Loor, Xavier Alejandro | — | Ninguna (reprobó el período regular) | ____________________ |
 | Zamora Arias, Carla Esthefanía | `czamoraa5@uteq.edu.ec` | Ninguna (reprobó el período regular) | ____________________ |
 | Barreto Rosado, Heider Dominick | — | Ninguna (reprobó el período regular) | ____________________ |
