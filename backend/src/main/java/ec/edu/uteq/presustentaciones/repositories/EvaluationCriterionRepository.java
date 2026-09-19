@@ -39,25 +39,23 @@ public interface EvaluationCriterionRepository extends JpaRepository<EvaluationC
      */
     void deleteBySubmissionIdAndEvaluatorId(Long submissionId, Long evaluatorId);
 
-    /** Promedio de notas de todos los panelists para una submission por criterio */
-    @Query("SELECT ec.criterion.id, AVG(ec.gradeObtenida) FROM EvaluationCriterion ec " +
-           "WHERE ec.submission.id = :submissionId GROUP BY ec.criterion.id")
     /**
-     * Promedios por criterio.
+     * Promedio de notas de todos los panelists para una submission por criterio
      * @param submissionId submissionId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT ec.criterion.id, AVG(ec.gradeObtenida) FROM EvaluationCriterion ec " +
+           "WHERE ec.submission.id = :submissionId GROUP BY ec.criterion.id")
     List<Object[]> promediosByCriterion(@Param("submissionId") Long submissionId);
 
-    /** Nota total promedio del tribunal: promedio de (suma por panelist) usando dos pasos en Java */
+    /**
+     * Nota total promedio del tribunal: promedio de (suma por panelist) usando dos pasos en Java
+     * @param submissionId submissionId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("SELECT ec.evaluator.id, SUM(ec.gradeObtenida) " +
            "FROM EvaluationCriterion ec " +
            "WHERE ec.submission.id = :submissionId " +
            "GROUP BY ec.evaluator.id")
-    /**
-     * Suma por evaluator.
-     * @param submissionId submissionId
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     List<Object[]> sumaByEvaluator(@Param("submissionId") Long submissionId);
 }

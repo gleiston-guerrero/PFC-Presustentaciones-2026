@@ -12,6 +12,11 @@ import java.util.List;
 @Repository
 public interface TopicSavedStudentRepository extends JpaRepository<TopicSavedStudent, Integer> {
 
+    /**
+     * Busca el/los registro(s) con student id o der by fecha guardado desc.
+     * @param studentId studentId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("""
             SELECT g FROM TopicSavedStudent g
             LEFT JOIN FETCH g.topicProposed t
@@ -21,11 +26,6 @@ public interface TopicSavedStudentRepository extends JpaRepository<TopicSavedStu
             WHERE g.student.id = :studentId
             ORDER BY g.dateSaved DESC
             """)
-    /**
-     * Busca el/los registro(s) con student id o der by fecha guardado desc.
-     * @param studentId studentId
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     List<TopicSavedStudent> findByStudentIdOrderByDateSavedDesc(@Param("studentId") Long studentId);
 
     /**
@@ -43,20 +43,20 @@ public interface TopicSavedStudentRepository extends JpaRepository<TopicSavedStu
      */
     boolean existsByStudentIdAndTopicProposedId(Long studentId, Integer topicProposedId);
 
-    @Modifying
     /**
      * Elimina los registros con student id y topic propuesto id.
      * @param studentId studentId
      * @param topicProposedId topicProposedId
      * @return la cantidad de registros
      */
+    @Modifying
     int deleteByStudentIdAndTopicProposedId(Long studentId, Integer topicProposedId);
 
-    @Query("SELECT g.topicProposed.id FROM TopicSavedStudent g WHERE g.student.id = :studentId")
     /**
      * Find topic ids by student id.
      * @param studentId studentId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT g.topicProposed.id FROM TopicSavedStudent g WHERE g.student.id = :studentId")
     List<Integer> findTopicIdsByStudentId(@Param("studentId") Long studentId);
 }

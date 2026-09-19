@@ -26,14 +26,14 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
      */
     List<Permission> findByCodeIn(List<String> codigos);
 
-    @Query(value = "SELECT rp.rol_id FROM presus.rol_permisos rp " +
-            "JOIN presus.permisos p ON p.id = rp.permiso_id " +
-            "WHERE p.codigo = :codigo", nativeQuery = true)
     /**
      * Find role ids con permission.
      * @param code code
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query(value = "SELECT rp.rol_id FROM presus.rol_permisos rp " +
+            "JOIN presus.permisos p ON p.id = rp.permiso_id " +
+            "WHERE p.codigo = :codigo", nativeQuery = true)
     List<Short> findRoleIdsWithPermission(@Param("codigo") String code);
 
     /**
@@ -42,6 +42,9 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
      * a role_permissions, así que un cambio en "Gestionar Permisos" aplica de inmediato, sin
      * esperar a que el appUser vuelva a iniciar sesión (el JWT no lleva permissions, solo
      * identidad -- por diseño, para que esto sea realmente dinámico).
+     * @param email email
+     * @param code code
+     * @return true si se cumple la condición, false si no
      */
     @Query(value = "SELECT EXISTS (" +
             "  SELECT 1 FROM presus.rol_permisos rp " +
@@ -49,22 +52,16 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
             "  JOIN presus.usuarios u ON u.rol_id = rp.rol_id " +
             "  WHERE u.email = :email AND p.codigo = :codigo" +
             ")", nativeQuery = true)
-    /**
-     * App user tiene permission.
-     * @param email email
-     * @param code code
-     * @return true si se cumple la condición, false si no
-     */
     boolean appUserTienePermission(@Param("email") String email, @Param("codigo") String code);
 
-    @Query(value = "SELECT p.codigo FROM presus.permisos p " +
-            "JOIN presus.rol_permisos rp ON rp.permiso_id = p.id " +
-            "WHERE rp.rol_id = :roleId", nativeQuery = true)
     /**
      * Find codigos por role.
      * @param roleId roleId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query(value = "SELECT p.codigo FROM presus.permisos p " +
+            "JOIN presus.rol_permisos rp ON rp.permiso_id = p.id " +
+            "WHERE rp.rol_id = :roleId", nativeQuery = true)
     List<String> findCodigosByRole(@Param("roleId") Short roleId);
 
     /**
@@ -72,34 +69,31 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
      * mostrar/ocultar módulos: al remove un permission a un role, el módulo desaparece del
      * panel sin necesidad de que el appUser vuelva a iniciar sesión. Misma unión que
      * {@link #appUserTienePermission}, pero devolviendo la lista completa.
+     * @param email email
+     * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT p.codigo FROM presus.permisos p " +
             "JOIN presus.rol_permisos rp ON rp.permiso_id = p.id " +
             "JOIN presus.usuarios u ON u.rol_id = rp.rol_id " +
             "WHERE u.email = :email", nativeQuery = true)
-    /**
-     * Find codigos por email.
-     * @param email email
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     List<String> findCodigosByEmail(@Param("email") String email);
 
-    @Modifying
-    @Transactional
-    @Query(value = "DELETE FROM presus.rol_permisos WHERE rol_id = :roleId", nativeQuery = true)
     /**
      * Delete permissions de role.
      * @param roleId roleId
      */
-    void deletePermissionsDeRole(@Param("roleId") Short roleId);
-
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO presus.rol_permisos (rol_id, permiso_id) VALUES (:roleId, :permissionId) ON CONFLICT DO NOTHING", nativeQuery = true)
+    @Query(value = "DELETE FROM presus.rol_permisos WHERE rol_id = :roleId", nativeQuery = true)
+    void deletePermissionsDeRole(@Param("roleId") Short roleId);
+
     /**
      * Assign permission.
      * @param roleId roleId
      * @param permissionId permissionId
      */
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO presus.rol_permisos (rol_id, permiso_id) VALUES (:roleId, :permissionId) ON CONFLICT DO NOTHING", nativeQuery = true)
     void assignPermission(@Param("roleId") Short roleId, @Param("permissionId") Short permissionId);
 }

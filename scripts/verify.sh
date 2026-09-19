@@ -1,20 +1,63 @@
 #!/bin/sh
-# Objetivo "make verify" (EV-2, examen suspenso 2026-09-17): re-corre las partes de
-# VERIFICACION.md que NO dependen de Docker/Postgres/Redis levantados, e imprime PASS/WARN
-# por punto. Las que sí dependen de la topologia completa (make test con JaCoCo, Lighthouse,
-# k6) no corren aqui -- serian minutos de infraestructura en cada "make verify"-- se citan
-# con su comando real y su archivo de evidencia ya versionado, tal como documenta
-# VERIFICACION.md para esos puntos.
+# EV-2 -- verificador reproducible del examen suspenso.
 #
-# Sale con codigo 0 aunque haya WARN (son brechas ya conocidas y documentadas, no errores de
-# esta corrida); sale distinto de 0 solo si algo que deberia ser reproducible falla de verdad
-# (un script no corre, un archivo de evidencia no existe).
+# QUE CAMBIO Y POR QUE (2026-09-19)
+# ---------------------------------
+# La revision individual del 18-sep declaro EV-2 "No cumple" con cuatro defectos:
+#
+#   1. `exit 0` incondicional: podia imprimir [FAIL] y dar la corrida por buena.
+#      "En 17 alteraciones, 17 terminaron en 0."
+#   2. Nueve lineas [OK] escritas a mano, sin calcular nada.
+#   3. No ejecutaba pruebas, ni Lighthouse, ni el cuaderno de P6.
+#   4. Dejaba un .pyc sin versionar en el arbol.
+#
+# Los cuatro estan corregidos aqui. El (1) ya se cerro el 18-sep. El (2) es el
+# que importa de fondo: un [OK] que no calcula nada no es una comprobacion, es
+# una afirmacion con otro formato -- y afirmar era justamente lo que estaba en
+# cuestion. Ahora cada [OK] sale de medir algo en esta misma corrida.
+#
+# EJECUCION
+#   scripts/verify.sh            corre TODO, incluida la suite de pruebas real
+#   scripts/verify.sh --rapido   omite lo que necesita Docker o red, con [WARN]
+#
+# Por defecto ejecuta. Si algo que deberia correr no puede correr, es [FAIL], no
+# un comentario: el modo --rapido existe para trabajar en local, no para que la
+# verificacion de cierre se salte la parte cara.
 set -e
+
+# Un verificador no debe ensuciar el arbol que verifica. Sin esto, los propios
+# scripts de aqui dejan __pycache__ al importarse entre si, y el chequeo de
+# higiene de mas abajo se detectaria a si mismo.
+export PYTHONDONTWRITEBYTECODE=1
+
+# Los temporales van en el repositorio, no en /tmp: bajo Git Bash el shell
+# resuelve /tmp a %TEMP% mientras que el Python de Windows lo lee como la raiz
+# del disco C, asi que un archivo escrito por uno resulta invisible para el otro.
+#
+# Y se limpia al final a mano, no con `trap ... EXIT`: esa trampa tambien se
+# dispara al cerrarse cada subshell de $( ), asi que borraba el directorio a
+# mitad de la corrida y los pasos siguientes no encontraban sus temporales.
+TMPV=".verify-tmp"
+rm -rf "$TMPV"; mkdir -p "$TMPV"
+
+RAPIDO=0
+for a in "$@"; do
+  [ "$a" = "--rapido" ] && RAPIDO=1
+done
 
 FAIL=0
 ok()   { printf "  [OK]   %s\n" "$1"; }
 warn() { printf "  [WARN] %s\n" "$1"; }
 fail() { printf "  [FAIL] %s\n" "$1"; FAIL=1; }
+
+# Para lo pesado: en modo normal no poder ejecutarlo es un fallo.
+pesado_no_corrio() {
+  if [ "$RAPIDO" = "1" ]; then
+    warn "$1 (omitido por --rapido)"
+  else
+    fail "$1"
+  fi
+}
 
 echo "=== P1 -- SUS (cifra de cierre = ronda del 18-sep, fecha sellada por un tercero) ==="
 # La cifra que se publica es la del formulario del 18-sep. La ronda en papel se
@@ -43,7 +86,7 @@ print(f'  papel, solo fecha verificable: n={n2} media={m2:.2f} DE={sd2:.2f} IC95
 warn "P1: la ronda del 18-sep es una muestra nueva (ninguno de los 15 respondio antes en papel): el origen de las 11 hojas retractadas sigue abierto -- ver docs/mediciones/sus/SUS-RESULTS.md"
 echo
 
-echo "=== P2 -- Cobertura (jacoco.xml de la corrida de cierre) ==="
+echo "=== P2 -- Cobertura ==="
 # Misma corrida canonica que usa scripts/cifras-publicadas.py: si se cambia una,
 # hay que cambiar la otra, y el gate de P11 lo detecta.
 python -c "
@@ -53,18 +96,100 @@ root = tree.getroot()
 for c in root.findall('counter'):
     if c.get('type') in ('LINE','BRANCH'):
         covered=int(c.get('covered')); missed=int(c.get('missed')); total=covered+missed
-        print(f\"{c.get('type')}: {covered}/{total} ({covered/total*100:.2f}%)\")
+        print(f\"  {c.get('type')}: {covered}/{total} ({covered/total*100:.2f}%)\")
 " || fail "P2: no se pudo parsear jacoco.xml"
-ok "P2: regla jacoco:check (>=70% LINE y BRANCH, fase test) agregada en backend/pom.xml -- corre con './mvnw test'"
+
+# Antes esto era un [OK] escrito a mano. Ahora se comprueba que la regla exista
+# de verdad y con el umbral que se declara.
+if grep -q "jacoco-check" backend/pom.xml && grep -q "0\.70" backend/pom.xml; then
+  ok "P2: regla jacoco:check con umbral 0.70 presente en backend/pom.xml"
+else
+  fail "P2: backend/pom.xml no declara la regla jacoco:check con umbral 0.70"
+fi
+
+# La suite real. No poder correrla es un fallo, no una nota al pie.
+if [ "$RAPIDO" = "1" ]; then
+  warn "P2: suite de pruebas omitida por --rapido"
+elif ! docker compose ps >/dev/null 2>&1; then
+  pesado_no_corrio "P2: Docker no responde, no se pudo correr la suite real (levanta con 'docker compose up -d db redis')"
+else
+  echo "  corriendo la suite real (cd backend && ./mvnw -q clean test)..."
+  if (cd backend && ./mvnw -q clean test > $TMPV/verify-test.log 2>&1); then
+    python -c "
+import xml.etree.ElementTree as ET
+nuevo = ET.parse('backend/target/site/jacoco/jacoco.xml').getroot()
+canon = ET.parse('docs/mediciones/jacoco/2026-09-19-cierre-definitivo/jacoco.xml').getroot()
+def cifras(r):
+    d = {}
+    for c in r.findall('counter'):
+        if c.get('type') in ('LINE','BRANCH'):
+            co, mi = int(c.get('covered')), int(c.get('missed'))
+            d[c.get('type')] = (co, co+mi)
+    return d
+a, b = cifras(nuevo), cifras(canon)
+for k in ('LINE','BRANCH'):
+    print(f'  {k}: corrida de ahora {a[k][0]}/{a[k][1]}   expediente {b[k][0]}/{b[k][1]}')
+assert a == b, 'la corrida de ahora no coincide con la cifra publicada'
+" && ok "P2: la suite corrio y su cobertura coincide con la cifra publicada" \
+       || fail "P2: la suite corrio pero su cobertura NO coincide con la publicada -- regenera docs/mediciones/jacoco/2026-09-19-cierre-definitivo/"
+  else
+    fail "P2: la suite de pruebas fallo -- ver $TMPV/verify-test.log"
+  fi
+fi
 warn "P2: ~2.4 de los 3.49 puntos de margen en ramas vienen de equals/hashCode de Lombok en security/dto/* (fuera de la exclusion de JaCoCo)"
-echo "  (para regenerar esta corrida: cd backend && ./mvnw -q clean test -- requiere Postgres/Redis, no se corre aqui)"
 echo
 
 echo "=== P3 -- Javadoc ==="
 python scripts/javadoc-scan.py || fail "P3: javadoc-scan.py fallo"
-python scripts/javadoc-scan-amplio.py || fail "P3: javadoc-scan-amplio.py fallo"
-ok "P3: doclint reactivado en pom.xml, 5 errores reales corregidos (mvn javadoc:javadoc pasa sin apagar el chequeo)"
-ok "P3: bajo AST amplio (metodos+constructores+interfaces) 95.2% (731/768), arriba del 90%"
+python scripts/javadoc-scan-amplio.py > $TMPV/verify-jd.txt 2>&1 || fail "P3: javadoc-scan-amplio.py fallo"
+cat $TMPV/verify-jd.txt
+
+# Antes: [OK] "doclint reactivado". Ahora se comprueba que nadie lo haya apagado.
+if grep -rq "<doclint>\s*none" backend/pom.xml 2>/dev/null; then
+  fail "P3: algun pom.xml apaga doclint (<doclint>none</doclint>)"
+else
+  ok "P3: ningun pom.xml apaga doclint"
+fi
+
+# Antes: [OK] "95.2%, arriba del 90%" escrito a mano. Ahora se lee de la corrida.
+PCT=$(grep -oE "Con Javadoc COMPLETO: [0-9]+ \([0-9.]+%\)" $TMPV/verify-jd.txt | grep -oE "[0-9.]+%" | tr -d '%')
+if [ -n "$PCT" ] && python -c "import sys; sys.exit(0 if float('$PCT') >= 90 else 1)"; then
+  ok "P3: $PCT% de cobertura de Javadoc (AST amplio), sobre el umbral del 90%"
+else
+  fail "P3: cobertura de Javadoc ${PCT:-desconocida}%, por debajo del 90%"
+fi
+
+# El defecto concreto que midio el ing: bloques colocados DESPUES de la anotacion,
+# que javac no asocia. Un contador que solo mira "hay un /** cerca" no los ve.
+if python scripts/ev2-javadoc-colocacion.py; then
+  ok "P3: ningun bloque Javadoc quedo huerfano debajo de una anotacion"
+else
+  fail "P3: hay Javadoc que javac no asocia -- corrige con scripts/ev2-javadoc-recolocar.py --aplicar"
+fi
+
+# El arbitro de P3 no es un contador propio, es javadoc. Se corre de verdad y se
+# levanta el tope de avisos: por defecto javadoc corta en 100, que es justo la
+# cifra que vio la revision del 18-sep ("100 avisos, el tope") y que por eso no
+# decia cuantos hay en realidad.
+if [ "$RAPIDO" = "1" ]; then
+  warn "P3: javadoc real omitido por --rapido"
+else
+  echo "  corriendo javadoc real con doclint y sin tope de avisos..."
+  if (cd backend && ./mvnw -o javadoc:javadoc "-DadditionalJOption=-Xmaxwarns 100000" \
+        > "../$TMPV/javadoc.log" 2>&1); then
+    JDERR=$(grep -c ": error:" "$TMPV/javadoc.log" || true)
+    JDWARN=$(grep -c ": warning:" "$TMPV/javadoc.log" || true)
+    echo "  javadoc: $JDERR errores, $JDWARN avisos (sin tope)"
+    if [ "$JDERR" = "0" ]; then
+      ok "P3: javadoc:javadoc pasa con doclint activo y 0 errores"
+    else
+      fail "P3: javadoc:javadoc reporta $JDERR error(es) con doclint"
+    fi
+    warn "P3: $JDWARN avisos de javadoc sin el tope de 100 -- el detalle y el plan estan en VERIFICACION.md"
+  else
+    fail "P3: javadoc:javadoc fallo -- ver $TMPV/javadoc.log"
+  fi
+fi
 echo
 
 echo "=== P4 -- Nombres en espanol ==="
@@ -74,20 +199,83 @@ if [ -d backend/target/classes ]; then
 else
   warn "P4: backend/target/classes no existe -- corre 'cd backend && ./mvnw -q test-compile' antes para el conteo completo (javap)"
 fi
-ok "P4: 5 llamadas a procedimientos almacenados con parametro roto corregidas, probado con CALL directo contra Postgres real"
-ok "P4: 18 @RequestParam con nombre de wire roto corregidos en 10 controladores (verificado contra cada llamada Angular real)"
-ok "P4: 7 campos de DTO/entidad sin @JsonProperty corregidos en la ronda anterior (revision manual, no exhaustiva)"
+
+# Antes eran tres [OK] a mano sobre procedimientos, @RequestParam y DTOs. La
+# regresion `desde/hasta` que encontro el ing paso POR DEBAJO de esas tres
+# lineas: estaban escritas, no calculadas.
+if python scripts/ev2-contrato-wire.py; then
+  ok "P4: ningun nombre de cable depende de un identificador Java renombrable"
+else
+  fail "P4: hay nombres de cable implicitos o parametros de procedimiento inexistentes -- ver arriba"
+fi
+
 echo "--- Contrato JSON backend <-> Angular (auditoria sistematica) ---"
 if python scripts/p4-contrato-json.py; then
-  ok "P4: sin desajustes de contrato JSON en lo tipado (23 campos rotos corregidos el 2026-09-18)"
+  ok "P4: sin desajustes de contrato JSON entre el backend y Angular"
 else
   fail "P4: hay contratos JSON rotos entre el backend y Angular -- ver salida de arriba"
 fi
-python scripts/p4-nombres-espanol.py || fail "P4: p4-nombres-espanol.py fallo"
-ok "P4: disputa numerica RESUELTA (2026-09-18) -- reproducimos 121/339 (35.7%) tipos y 39.7% en src/main, identico al ing"
-ok "P4: renombrado completado en src/main -- 0.0% de tipos y metodos bajo la definicion con la que se reprodujo la cifra del ing (antes 35.7% y 39.1%)"
-ok "P4: bajo la definicion mas amplia (con funcionales y cognados) 1.5% tipos / 4.3% metodos -- tambien bajo el 5%"
+
+python scripts/p4-nombres-espanol.py > $TMPV/verify-p4.txt 2>&1 || fail "P4: p4-nombres-espanol.py fallo"
+cat $TMPV/verify-p4.txt
+# Antes: tres [OK] con los porcentajes escritos a mano. Ahora se leen de la corrida
+# y se contrastan contra el techo del 5% que fija la guia.
+python -c "
+import re, sys
+t = open('$TMPV/verify-p4.txt', encoding='utf-8', errors='replace').read()
+# El bloque CONTRASTE reproduce a proposito las cifras del ing (35.7%, 72.2%)
+# para compararlas. Son suyas, no del estado actual: no entran en el umbral.
+t = t.split('CONTRASTE')[0]
+m = re.findall(r'tipos\s+\d+/\d+\s+\(\s*([\d.]+)%\)', t)
+n = re.findall(r'metodos\s+\d+/\d+\s+\(\s*([\d.]+)%\)', t)
+if not m or not n:
+    print('  no se pudo leer el porcentaje de la salida de p4-nombres-espanol.py'); sys.exit(1)
+tipos, metodos = max(map(float, m)), max(map(float, n))
+print(f'  peor caso publicado: tipos {tipos}%  metodos {metodos}%  (techo de la guia: 5%)')
+sys.exit(0 if tipos <= 5.0 and metodos <= 5.0 else 1)
+" && ok "P4: tipos y metodos bajo el techo del 5%, medido en esta corrida" \
+   || fail "P4: el porcentaje de nombres en espanol supera el techo del 5%"
 warn "P4: 436 de 807 nombres de metodo @Test siguen en espanol -- son frases descriptivas completas, no identificadores de dominio; ver VERIFICACION.md"
+echo
+
+echo "=== P5 -- Lighthouse (recalculado desde los JSON versionados) ==="
+python -c "
+import glob, json, statistics, sys
+perf = {}
+for f in sorted(glob.glob('docs/mediciones/perf/lighthouse/prod-runs/*.json')):
+    d = json.load(open(f, encoding='utf-8'))
+    perfil = 'mobile' if 'mobile' in f else 'desktop'
+    perf.setdefault(perfil, []).append(round(d['categories']['performance']['score'] * 100))
+if not perf:
+    print('  no hay corridas versionadas'); sys.exit(1)
+pub = open('docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md', encoding='utf-8').read()
+malo = 0
+for p in sorted(perf):
+    xs = perf[p]
+    media = round(statistics.mean(xs))
+    print(f'  {p}: {len(xs)} corridas {xs} -> promedio {media}')
+    if f'**{media} / 100**' not in pub:
+        print(f'     el reporte no publica {media}/100 para {p}')
+        malo = 1
+sys.exit(malo)
+" && ok "P5: los puntajes publicados coinciden con los JSON versionados" \
+   || fail "P5: el reporte de Lighthouse publica un puntaje que sus JSON no respaldan"
+echo "  (volver a medir contra la URL publica: make bench-lh)"
+echo
+
+echo "=== P6 -- Correccion por comparaciones multiples ==="
+if [ "$RAPIDO" = "1" ]; then
+  warn "P6: cuaderno omitido por --rapido"
+elif ! python -c "import nbconvert" 2>/dev/null; then
+  pesado_no_corrio "P6: nbconvert no esta instalado, no se pudo ejecutar scripts/perf-analysis.ipynb"
+else
+  echo "  ejecutando scripts/perf-analysis.ipynb de punta a punta..."
+  if python -m nbconvert --to notebook --execute --stdout scripts/perf-analysis.ipynb > $TMPV/verify-nb.json 2>$TMPV/verify-nb.err; then
+    ok "P6: el cuaderno de analisis corre de punta a punta sin errores"
+  else
+    fail "P6: scripts/perf-analysis.ipynb fallo al ejecutarse -- ver $TMPV/verify-nb.err"
+  fi
+fi
 echo
 
 echo "=== P8 -- Autorizacion de endpoints de escritura ==="
@@ -97,6 +285,12 @@ echo
 echo "=== P9 -- Etiqueta v1.1.0 ==="
 if git rev-parse v1.1.0 >/dev/null 2>&1; then
   ok "tag v1.1.0 existe -> $(git rev-list -n1 v1.1.0)"
+  DESFASE=$(git rev-list --count v1.1.0..HEAD)
+  if [ "$DESFASE" = "0" ]; then
+    ok "la etiqueta apunta a HEAD: lo que se defiende es lo que esta etiquetado"
+  else
+    warn "P9: la etiqueta va $DESFASE commit(s) por detras de HEAD -- hay que reubicarla antes del cierre"
+  fi
 else
   fail "P9: no existe el tag v1.1.0"
 fi
@@ -109,12 +303,12 @@ PORT=Informe-Final/secciones/00-portada.tex
 PORT_DOI=$(grep -c "zenodo\|doi.org" "$PORT" || true)
 PORT_NOTAS=$(grep -cE "motivo del tag|notas del proceso|nota real sobre el DOI" "$PORT" || true)
 echo "  Portada: $(wc -l < "$PORT") lineas, $PORT_DOI referencias DOI, $PORT_NOTAS notas de proceso"
-[ "$PORT_NOTAS" = "0" ] && ok "portada sin recuadro de notas de proceso (corregido en 9c16cd2)" || fail "P10: la portada todavia lleva notas de proceso"
+[ "$PORT_NOTAS" = "0" ] && ok "portada sin recuadro de notas de proceso" || fail "P10: la portada todavia lleva notas de proceso"
 [ "$PORT_DOI" = "0" ] && ok "portada sin listado de DOI (solo identificacion + URL del repositorio)" || fail "P10: la portada lista $PORT_DOI DOI; el criterio pide solo identificacion + URL"
 grep -q "REPOSITORIO" "$PORT" && ok "portada declara la URL del repositorio" || fail "P10: la portada no declara la URL del repositorio"
 echo
 
-echo "=== P11 -- Cifras unicas (controladores/rutinas) + clases renombradas ==="
+echo "=== P11 -- Cifras unicas ==="
 CTRL=$(find backend/src/main/java -iname "*Controller.java" | wc -l)
 RUT=$(grep -rhoE "CREATE (OR REPLACE )?(PROCEDURE|FUNCTION) [a-zA-Z0-9_.]+" backend/src/main/resources/db/migration/V*.sql | awk '{print $NF}' | sed 's/.*\.//' | sort -u | wc -l)
 echo "  Controladores: $CTRL   Rutinas SQL (nombre distinto): $RUT"
@@ -127,7 +321,6 @@ else
 fi
 # Las cifras de cobertura y el conteo de pruebas estan escritos a mano en decenas
 # de documentos: la revision del 18-sep encontro 82,10 / 82,03 / 82,96 conviviendo.
-# Esto lo comprueba contra el jacoco.xml canonico en vez de confiar en la memoria.
 if PYTHONIOENCODING=utf-8 python scripts/cifras-publicadas.py; then
   ok "toda cifra de cobertura publicada es la de cierre o declara de que corrida es"
 else
@@ -149,11 +342,27 @@ fi
 warn "P12: la conversacion con el docente y el equipo completo sigue sin ocurrir -- no es algo que este script pueda verificar como resuelto"
 echo
 
-echo "=== Puntos que requieren infraestructura completa (no corridos aqui) ==="
-echo "  P2 (corrida limpia)/P7: make test          -- requiere Postgres/Redis (docker compose up -d postgres redis)"
-echo "  P5: Lighthouse ya versionado en docs/mediciones/perf/lighthouse/prod-runs/*.json (6 corridas reales)"
-echo "  P6: python -m nbconvert --execute scripts/perf-analysis.ipynb"
+echo "=== EV-2 / EV-4 -- Higiene del arbol y titularidad ==="
+# Defecto 4 de la revision del 18-sep: un .pyc sin versionar tirado en el arbol.
+PYC=$(find . -name "*.pyc" -not -path "./node_modules/*" -not -path "./Frontend/node_modules/*" 2>/dev/null | wc -l)
+PYCACHE=$(find . -type d -name "__pycache__" -not -path "./node_modules/*" -not -path "./Frontend/node_modules/*" 2>/dev/null | wc -l)
+if [ "$PYC" = "0" ] && [ "$PYCACHE" = "0" ]; then
+  ok "EV-2: ningun .pyc ni __pycache__ en el arbol de trabajo"
+else
+  fail "EV-2: hay $PYC archivo(s) .pyc y $PYCACHE carpeta(s) __pycache__ en el arbol -- borra con: find . -name '__pycache__' -type d -exec rm -rf {} +"
+fi
+if PYTHONIOENCODING=utf-8 python scripts/ev4-contribuciones.py --check; then
+  ok "EV-4: CONTRIBUCIONES.md cuadra con el historial"
+else
+  fail "EV-4: CONTRIBUCIONES.md no cuadra con el historial -- regenera con scripts/ev4-contribuciones.py"
+fi
 echo
+
+rm -rf "$TMPV"
+
+if [ "$RAPIDO" = "1" ]; then
+  echo "(corrida en modo --rapido: lo pesado quedo en [WARN], no verificado)"
+fi
 
 # Sale distinto de 0 si algo fallo. Hasta la revision del 18-sep este script
 # terminaba en `exit 0` incondicional y lo declaraba ("esto es un reporte, no un

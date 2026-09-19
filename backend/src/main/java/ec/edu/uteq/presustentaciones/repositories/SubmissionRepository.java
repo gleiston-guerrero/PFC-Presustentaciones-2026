@@ -75,28 +75,28 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
                                       @Param("fechaHasta") LocalDateTime dateTo,
                                       Pageable pageable);
 
-    @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE e.id = :studentId ORDER BY s.dateRecord DESC")
     /**
      * Busca el/los registro(s) con student id.
      * @param studentId studentId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE e.id = :studentId ORDER BY s.dateRecord DESC")
     List<Submission> findByStudentId(@Param("studentId") Long studentId);
 
-    @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE u.id = :appUserId ORDER BY s.dateRecord DESC")
     /**
      * Busca el/los registro(s) con app user id.
      * @param appUserId appUserId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE u.id = :appUserId ORDER BY s.dateRecord DESC")
     List<Submission> findByAppUserId(@Param("appUserId") Long appUserId);
 
-    @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE s.id = :id")
     /**
      * Busca el/los registro(s) con id with student.
      * @param id id
      * @return el registro si existe, vacío si no
      */
+    @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE s.id = :id")
     Optional<Submission> findByIdWithStudent(@Param("id") Long id);
 
     /**
@@ -106,11 +106,11 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      */
     long countByStatusCode(String code);
 
-    @Query("SELECT s.status.code AS code, COUNT(s) AS total FROM Submission s GROUP BY s.status.code")
     /**
      * Count agrupado por estado.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT s.status.code AS code, COUNT(s) AS total FROM Submission s GROUP BY s.status.code")
     List<StatusCount> countAgrupadoByStatus();
 
     interface StatusCount {
@@ -151,27 +151,25 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
                                    @Param("hasta") LocalDateTime to,
                                    @Param("program") String program);
 
-    /** Cantidad de pre-sustentaciones (submissions) por período académico de su announcement. */
-    @Query("SELECT p.code, COUNT(s) FROM Submission s JOIN s.announcement c JOIN c.periodAcademic p " +
-           "WHERE s.dateRecord >= :desde AND s.dateRecord <= :hasta " +
-           "GROUP BY p.code ORDER BY p.code")
     /**
-     * Count por period.
+     * Cantidad de pre-sustentaciones (submissions) por período académico de su announcement.
      * @param from from
      * @param to to
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT p.code, COUNT(s) FROM Submission s JOIN s.announcement c JOIN c.periodAcademic p " +
+           "WHERE s.dateRecord >= :desde AND s.dateRecord <= :hasta " +
+           "GROUP BY p.code ORDER BY p.code")
     List<Object[]> countByPeriod(@Param("desde") LocalDateTime from, @Param("hasta") LocalDateTime to);
 
-    /** Estadísticas por program: total, completadas y rechazadas. */
+    /**
+     * Estadísticas por program: total, completadas y rechazadas.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("SELECT s.student.program, COUNT(s), " +
            "SUM(CASE WHEN s.status.code = 'COMPLETADA' THEN 1 ELSE 0 END), " +
            "SUM(CASE WHEN s.status.code = 'RECHAZADA' THEN 1 ELSE 0 END) " +
            "FROM Submission s GROUP BY s.student.program ORDER BY COUNT(s) DESC")
-    /**
-     * Estadisticas por program.
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     List<Object[]> statsByProgram();
 
     /**
@@ -182,11 +180,11 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      */
     long countByDateRecordBetween(LocalDateTime from, LocalDateTime to);
 
-    @Query(value = "SELECT * FROM presus.sp_generar_reporte_defensas(:program)", nativeQuery = true)
     /**
      * Generate reporte defensas sp.
      * @param program program
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query(value = "SELECT * FROM presus.sp_generar_reporte_defensas(:program)", nativeQuery = true)
     List<Object[]> generateReportDefensesSp(@Param("program") String program);
 }

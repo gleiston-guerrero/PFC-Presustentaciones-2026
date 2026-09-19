@@ -11,12 +11,12 @@ import java.util.Optional;
 @Repository
 public interface TutoringPhaseRepository extends JpaRepository<TutoringPhase, Long> {
 
-    @org.springframework.data.jpa.repository.Query("SELECT f FROM TutoringPhase f JOIN FETCH f.tutor t JOIN FETCH t.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE f.tutor.id = :tutorId ORDER BY f.numeroPhase ASC")
     /**
      * Busca el/los registro(s) con tutor id o der by numero fase asc.
      * @param tutorId tutorId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @org.springframework.data.jpa.repository.Query("SELECT f FROM TutoringPhase f JOIN FETCH f.tutor t JOIN FETCH t.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE f.tutor.id = :tutorId ORDER BY f.numeroPhase ASC")
     List<TutoringPhase> findByTutorIdOrderByNumeroPhaseAsc(@Param("tutorId") Long tutorId);
 
     /**
@@ -42,7 +42,6 @@ public interface TutoringPhaseRepository extends JpaRepository<TutoringPhase, Lo
      */
     long countByTutorId(Long tutorId);
 
-    @org.springframework.data.jpa.repository.query.Procedure(procedureName = "presus.sp_registrar_tutoria_avance")
     /**
      * Sp register tutoring avance.
      * @param tutorId tutorId
@@ -51,6 +50,7 @@ public interface TutoringPhaseRepository extends JpaRepository<TutoringPhase, Lo
      * @param sizeBytes sizeBytes
      * @param sha256 sha256
      */
+    @org.springframework.data.jpa.repository.query.Procedure(procedureName = "presus.sp_registrar_tutoria_avance")
     void spRegisterTutoringProgress(
             @Param("p_tutor_id") Long tutorId,
             @Param("p_numero_fase") Integer numeroPhase,

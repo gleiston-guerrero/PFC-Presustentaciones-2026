@@ -69,3 +69,6 @@ backend/.env
 # Bytecode de Python: se genera al importar los scripts, no es fuente
 __pycache__/
 *.pyc
+
+# Temporales de scripts/verify.sh (se borran solos al terminar)
+.verify-tmp/

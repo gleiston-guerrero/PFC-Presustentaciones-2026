@@ -53,17 +53,17 @@ public class TopicController {
     // "Quien puede gestionar el catálogo, puede verlo": la pantalla "Gestionar Temas
     // Propuestos" necesita list para poder editar, así que ORIENTACION_CATALOGO_GESTIONAR
     // también autoriza la lectura — de lo contrario ese permission por sí solo es inútil.
-    @GetMapping
-    @PreAuthorize("@permissionService.hasPermission(authentication, 'ORIENTACION_TEMAS_VER') " +
-            "or @permissionService.hasPermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
     /**
      * Explorar.
      * @param programId programId
      * @param researchLineId researchLineId
      * @param areaId areaId
      * @param nivelDificultad nivelDificultad
-     * @return el ResponseEntity<List<TopicPropuestoDTO>> correspondiente
+     * @return el {@code ResponseEntity<List<TopicPropuestoDTO>>} correspondiente
      */
+    @GetMapping
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'ORIENTACION_TEMAS_VER') " +
+            "or @permissionService.hasPermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
     public ResponseEntity<List<TopicProposedDTO>> explore(
             @RequestParam(name = "carreraId", required = false) Integer programId,
             @RequestParam(name = "lineaInvestigacionId", required = false) Integer researchLineId,
@@ -81,11 +81,6 @@ public class TopicController {
     @GetMapping("/{topicId}")
     @PreAuthorize("@permissionService.hasPermission(authentication, 'ORIENTACION_TEMAS_VER') " +
             "or @permissionService.hasPermission(authentication, 'ORIENTACION_CATALOGO_GESTIONAR')")
-    /**
-     * Detalle.
-     * @param topicId topicId
-     * @return el ResponseEntity<TopicPropuestoDTO> correspondiente
-     */
     public ResponseEntity<TopicProposedDTO> detail(@PathVariable("topicId") Integer topicId) {
         return ResponseEntity.ok(topicService.obtainDetail(topicId));
     }

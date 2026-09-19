@@ -1,6 +1,9 @@
 # Makefile para despliegue, verificación y reproducción del entorno PFC-UTEQ
 
-.PHONY: help up down restart logs ps clean all build test bench audit docs pdf wait-backend verify
+.PHONY: help up down restart logs ps clean all build test bench bench-lh audit docs pdf wait-backend verify verify-rapido
+
+# URL publica que mide Lighthouse. Se puede sobrescribir: make bench-lh LH_URL=...
+LH_URL ?= https://steadfast-success-production-2b60.up.railway.app/
 
 help:
 	@echo "Comandos disponibles:"
@@ -73,6 +76,24 @@ bench:
 	done
 	@echo "5 corridas completas. Resumenes crudos en k6/runs/run-{1..5}-summary.json"
 
+bench-lh:
+	@echo "Lighthouse real contra la URL publica (3 corridas por perfil)."
+	@echo "Requiere Node/npx y Chrome. Sobrescribe docs/mediciones/perf/lighthouse/prod-runs/."
+	@mkdir -p docs/mediciones/perf/lighthouse/prod-runs
+	@for i in 1 2 3; do \
+		npx lighthouse "$(LH_URL)" --preset=desktop --quiet \
+			--output=json \
+			--output-path="docs/mediciones/perf/lighthouse/prod-runs/desktop-run$$i.json" \
+			--chrome-flags="--headless --no-sandbox" || exit 1; \
+	done
+	@for i in 1 2 3; do \
+		npx lighthouse "$(LH_URL)" --quiet \
+			--output=json \
+			--output-path="docs/mediciones/perf/lighthouse/prod-runs/mobile-run$$i.json" \
+			--chrome-flags="--headless --no-sandbox" || exit 1; \
+	done
+	@echo "Listo. 'make verify' comprueba que LIGHTHOUSE-REPORT.md siga cuadrando con estos JSON."
+
 audit:
 	@echo "Analisis estatico de seguridad (SpotBugs + find-sec-bugs, incluye SQL dinamico)..."
 	./scripts/audit-sql-dynamic.sh
@@ -97,8 +118,13 @@ pdf:
 	@echo "PDF generado: docs/requisitos/SRS-v1.0.1.pdf"
 
 verify:
-	@echo "Verificacion reproducible (VERIFICACION.md) -- partes que no requieren Docker levantado..."
+	@echo "Verificacion reproducible completa (EV-2): corre la suite real, el cuaderno de P6"
+	@echo "y recalcula cada cifra publicada. Requiere Docker levantado (make up)."
 	@sh scripts/verify.sh
+
+verify-rapido:
+	@echo "Verificacion sin las partes que necesitan Docker o red (quedan en [WARN], no verificadas)."
+	@sh scripts/verify.sh --rapido
 
 ## --- Objetivo de reproducibilidad end-to-end (Fase 10, Criterio R1) ---
 

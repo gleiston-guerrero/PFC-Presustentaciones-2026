@@ -15,21 +15,21 @@ import java.util.Optional;
 
 @Repository
 public interface MinutesRepository extends JpaRepository<Minutes, Long> {
-    @Query("SELECT a FROM Minutes a JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE s.id = :submissionId")
     /**
      * Busca el/los registro(s) con submission id.
      * @param submissionId submissionId
      * @return el registro si existe, vacío si no
      */
+    @Query("SELECT a FROM Minutes a JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE s.id = :submissionId")
     Optional<Minutes> findBySubmissionId(@Param("submissionId") Long submissionId);
 
-    @Query(value = "SELECT a FROM Minutes a JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u",
-           countQuery = "SELECT COUNT(a) FROM Minutes a")
     /**
      * Find all.
      * @param pageable pageable
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query(value = "SELECT a FROM Minutes a JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u",
+           countQuery = "SELECT COUNT(a) FROM Minutes a")
     Page<Minutes> findAll(Pageable pageable);
 
     /** Detalle de un minutes con submission + student + appUser + estado en un solo query. */
@@ -40,6 +40,9 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
      * "Mis actas" del teacher: minutes de pre-sustentaciones en las que el appUser es
      * panelist (members_tribunal) o tutor (tutores). DISTINCT porque un teacher puede
      * ser panelist en más de un role de la misma submission.
+     * @param email email
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT DISTINCT a FROM Minutes a " +
             "JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u JOIN FETCH a.status est " +
@@ -48,25 +51,18 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
            countQuery = "SELECT COUNT(DISTINCT a) FROM Minutes a JOIN a.submission s " +
             "WHERE EXISTS (SELECT 1 FROM Panelist j WHERE j.submission = s AND j.teacher.appUser.email = :email) " +
             "   OR EXISTS (SELECT 1 FROM Tutor t WHERE t.submission = s AND t.teacher.appUser.email = :email)")
-    /**
-     * Find mis minutes.
-     * @param email email
-     * @param pageable pageable
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     Page<Minutes> findMyMinutes(@Param("email") String email, Pageable pageable);
 
-    /** ¿Es el appUser tutor o panelist de la submission de esta minutes? (control de acceso del teacher). */
-    @Query("SELECT (COUNT(a) > 0) FROM Minutes a JOIN a.submission s WHERE a.id = :minutesId AND (" +
-            "EXISTS (SELECT 1 FROM Panelist j WHERE j.submission = s AND j.teacher.appUser.email = :email) " +
-            "OR EXISTS (SELECT 1 FROM Tutor t WHERE t.submission = s AND t.teacher.appUser.email = :email) " +
-            "OR s.student.appUser.email = :email)")
     /**
-     * Es participante.
+     * ¿Es el appUser tutor o panelist de la submission de esta minutes? (control de acceso del teacher).
      * @param minutesId minutesId
      * @param email email
      * @return true si se cumple la condición, false si no
      */
+    @Query("SELECT (COUNT(a) > 0) FROM Minutes a JOIN a.submission s WHERE a.id = :minutesId AND (" +
+            "EXISTS (SELECT 1 FROM Panelist j WHERE j.submission = s AND j.teacher.appUser.email = :email) " +
+            "OR EXISTS (SELECT 1 FROM Tutor t WHERE t.submission = s AND t.teacher.appUser.email = :email) " +
+            "OR s.student.appUser.email = :email)")
     boolean esParticipante(@Param("minutesId") Long minutesId, @Param("email") String email);
 
     /**
@@ -126,15 +122,15 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
      */
     long countByFirmadaFalse();
 
-    @Query("SELECT a.status.code AS code, COUNT(a) AS total FROM Minutes a " +
-           "WHERE a.dateGeneracion >= :desde AND a.dateGeneracion <= :hasta " +
-           "GROUP BY a.status.code")
     /**
      * Count por estado.
      * @param from from
      * @param to to
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT a.status.code AS code, COUNT(a) AS total FROM Minutes a " +
+           "WHERE a.dateGeneracion >= :desde AND a.dateGeneracion <= :hasta " +
+           "GROUP BY a.status.code")
     List<Object[]> countByStatus(@Param("desde") LocalDate from, @Param("hasta") LocalDate to);
 
     /** Invoca sp_sign_minutes_digital (PROCEDURE). Fase 3 / Criterio P1. */

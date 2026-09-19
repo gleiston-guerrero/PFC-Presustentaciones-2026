@@ -44,11 +44,11 @@ public class AdminBootstrap implements CommandLineRunner {
     @Value("${ADMIN_BOOTSTRAP_PASSWORD:}")
     private String bootstrapPassword;
 
-    @Override
     /**
      * Run.
      * @param args args
      */
+    @Override
     public void run(String... args) {
         if (!appUserRepository.findByRole("ADMIN").isEmpty()) {
             log.info("Ya existe al menos un usuario ADMIN; se omite el bootstrap de administración.");

@@ -58,8 +58,34 @@ def parse_param_names(params_str):
 def extract_javadoc_block(text, start_idx):
     lines_before = text[:start_idx].splitlines()
     j = len(lines_before) - 1
-    while j >= 0 and (lines_before[j].strip().startswith('@') or lines_before[j].strip() == ''):
-        j -= 1
+    # Sube saltando el grupo de anotaciones y modificadores. Una anotacion puede
+    # ocupar varias lineas (@Query con la consulta partida en literales), y sus
+    # lineas de continuacion NO empiezan por '@': hay que equilibrar parentesis
+    # para saber donde empieza de verdad. javac asocia el Javadoc que precede a
+    # todo el grupo, asi que contar de otra forma mide algo que no es Javadoc.
+    while j >= 0:
+        s = lines_before[j].strip()
+        if s == '':
+            j -= 1
+            continue
+        if s.endswith('*/'):
+            break
+        saldo = s.count(')') - s.count('(')
+        if saldo > 0:                      # cola de una anotacion multilinea
+            while j >= 0 and saldo > 0:
+                j -= 1
+                if j < 0:
+                    return None
+                t = lines_before[j].strip()
+                saldo += t.count(')') - t.count('(')
+            if j < 0 or not lines_before[j].strip().startswith('@'):
+                return None
+            j -= 1
+            continue
+        if s.startswith('@'):
+            j -= 1
+            continue
+        return None
     if j < 0 or not lines_before[j].strip().endswith('*/'):
         return None
     k = j

@@ -242,8 +242,8 @@ public class SubmissionController {
             @RequestParam(name = "size", defaultValue = "20") int size,
             @RequestParam(name = "estado", required = false) String status,
             @RequestParam(name = "q", required = false) String q,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate dateFrom,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate dateTo) {
+            @RequestParam(name = "fechaDesde", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate dateFrom,
+            @RequestParam(name = "fechaHasta", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate dateTo) {
         Page<Submission> result = submissionService.listSubmissionsPaged(page, size, status, q, dateFrom, dateTo);
         return ResponseEntity.ok(ResponseWrapper.success(Map.of(
                 "content", result.getContent(),

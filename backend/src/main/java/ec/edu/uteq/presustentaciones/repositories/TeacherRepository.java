@@ -33,6 +33,9 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
      * navegador al abrirlo. Búsqueda de texto libre (nombre/apellido/área de especialidad) +
      * paginado, mismo patrón que AppUserRepository.searchPaginado, para alimentar un combobox
      * con typeahead en vez del {@code <select>} nativo.
+     * @param q q
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT d FROM Teacher d JOIN FETCH d.appUser u " +
            "WHERE :q IS NULL OR :q = '' " +
@@ -44,26 +47,20 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
            "OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(d.areaEspecialidad) LIKE LOWER(CONCAT('%', :q, '%'))")
-    /**
-     * Search paginado.
-     * @param q q
-     * @param pageable pageable
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     Page<Teacher> searchPaged(@Param("q") String q, Pageable pageable);
 
-    @Query("SELECT d FROM Teacher d WHERE d.available = true ORDER BY d.cargaHorariaSemanal ASC")
     /**
      * Find disponibles ordenados por carga.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT d FROM Teacher d WHERE d.available = true ORDER BY d.cargaHorariaSemanal ASC")
     List<Teacher> findAvailableOrdenadosByCarga();
 
-    @Query("SELECT d FROM Teacher d ORDER BY d.cargaHorariaSemanal ASC")
     /**
      * Find todos ordenados por carga.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT d FROM Teacher d ORDER BY d.cargaHorariaSemanal ASC")
     List<Teacher> findAllOrdenadosByCarga();
 
     /** Reportes: nombre de un conjunto acotado de teachers (los que participan en el process). */

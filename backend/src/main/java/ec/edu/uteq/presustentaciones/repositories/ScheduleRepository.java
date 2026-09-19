@@ -12,20 +12,20 @@ import java.util.Optional;
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
-    @Query("SELECT c FROM Schedule c JOIN c.submission s JOIN s.student e WHERE e.id = :studentId")
     /**
      * Busca el/los registro(s) con student id.
      * @param studentId studentId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT c FROM Schedule c JOIN c.submission s JOIN s.student e WHERE e.id = :studentId")
     List<Schedule> findByStudentId(@Param("studentId") Long studentId);
 
-    @Query("SELECT c FROM Schedule c JOIN c.submission s JOIN s.student e JOIN e.appUser u WHERE u.id = :appUserId")
     /**
      * Busca el/los registro(s) con app user id.
      * @param appUserId appUserId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT c FROM Schedule c JOIN c.submission s JOIN s.student e JOIN e.appUser u WHERE u.id = :appUserId")
     List<Schedule> findByAppUserId(@Param("appUserId") Long appUserId);
 
     /**
@@ -59,6 +59,10 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     @Query("SELECT c FROM Schedule c WHERE c.status.code = 'PROGRAMADO' AND CAST(c.dateStart AS date) = CAST(:fecha AS date)")
     List<Schedule> findActiveByDate(@Param("fecha") LocalDateTime date);
 
+    /**
+     * Find reporte schedule.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("SELECT c FROM Schedule c " +
            "JOIN FETCH c.submission s " +
            "JOIN FETCH s.student e " +
@@ -69,9 +73,5 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
            "LEFT JOIN FETCH c.block b " +
            "WHERE es.code = 'PROGRAMADO' " +
            "ORDER BY c.dateStart ASC")
-    /**
-     * Find reporte schedule.
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     List<Schedule> findReportSchedule();
 }

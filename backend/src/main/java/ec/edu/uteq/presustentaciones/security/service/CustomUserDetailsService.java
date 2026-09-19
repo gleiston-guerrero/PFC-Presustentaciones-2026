@@ -21,14 +21,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final AppUserRepository appUserRepository;
 
-    @Override
-    @Transactional(readOnly = true)
     /**
      * Load user by username.
      * @param username username
      * @return el UserDetails correspondiente
      * @throws UsernameNotFoundException si ocurre un error real de ejecución
      */
+    @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         AppUser appUser = appUserRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException(

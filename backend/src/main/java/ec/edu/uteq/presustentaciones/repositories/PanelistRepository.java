@@ -27,12 +27,12 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
                                 @Param("p_docente_id") Long teacherId,
                                 @Param("p_rol_codigo") String roleCode);
 
-    @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE s.id = :submissionId")
     /**
      * Busca el/los registro(s) con submission id.
      * @param submissionId submissionId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE s.id = :submissionId")
     List<Panelist> findBySubmissionId(@Param("submissionId") Long submissionId);
 
     /**
@@ -47,40 +47,40 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
                                     @Param("p_duracion_min") Integer duracionMin,
                                     @Param("p_disponible") Boolean availableInicial);
 
-    @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE d.id = :teacherId")
     /**
      * Busca el/los registro(s) con teacher id.
      * @param teacherId teacherId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE d.id = :teacherId")
     List<Panelist> findByTeacherId(@Param("teacherId") Long teacherId);
 
-    @Query("SELECT COUNT(j) FROM Panelist j WHERE j.teacher.id = :teacherId AND j.submission.status.code != 'RECHAZADA'")
     /**
      * Count asignaciones activas by teacher.
      * @param teacherId teacherId
      * @return la cantidad de registros
      */
+    @Query("SELECT COUNT(j) FROM Panelist j WHERE j.teacher.id = :teacherId AND j.submission.status.code != 'RECHAZADA'")
     long countAsignacionesActiveByTeacher(Long teacherId);
 
-    @Query("SELECT j FROM Panelist j JOIN j.teacher d JOIN d.appUser u " +
-           "WHERE j.submission.id = :submissionId AND u.id = :appUserId")
     /**
      * Busca el/los registro(s) con submission id y app user id.
      * @param submissionId submissionId
      * @param appUserId appUserId
      * @return el registro si existe, vacío si no
      */
+    @Query("SELECT j FROM Panelist j JOIN j.teacher d JOIN d.appUser u " +
+           "WHERE j.submission.id = :submissionId AND u.id = :appUserId")
     Optional<Panelist> findBySubmissionIdAndAppUserId(@Param("submissionId") Long submissionId, 
                                                     @Param("appUserId") Long appUserId);
 
-    @org.springframework.data.jpa.repository.query.Procedure(procedureName = "presus.sp_asignar_jurado_masivo")
     /**
      * Sp assign panelist masivo.
      * @param submissionIds submissionIds
      * @param teacherIds teacherIds
      * @param role role
      */
+    @org.springframework.data.jpa.repository.query.Procedure(procedureName = "presus.sp_asignar_jurado_masivo")
     void spAssignPanelistBulk(
             @Param("p_solicitud_ids") Long[] submissionIds,
             @Param("p_docente_ids") Long[] teacherIds,
@@ -88,23 +88,22 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
     );
 
     // ── Reportes: actividad por teacher (GROUP BY en la base) ────────────────
-    @Query("SELECT d.id, u.nombre, u.apellido, COUNT(j) " +
-           "FROM Panelist j JOIN j.teacher d JOIN d.appUser u " +
-           "GROUP BY d.id, u.nombre, u.apellido")
     /**
      * Count asignaciones por teacher.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT d.id, u.nombre, u.apellido, COUNT(j) " +
+           "FROM Panelist j JOIN j.teacher d JOIN d.appUser u " +
+           "GROUP BY d.id, u.nombre, u.apellido")
     List<Object[]> countAsignacionesByTeacher();
 
-    /** Minutes totalmente firmadas de pre-sustentaciones donde el teacher fue panelist. */
+    /**
+     * Minutes totalmente firmadas de pre-sustentaciones donde el teacher fue panelist.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("SELECT j.teacher.id, COUNT(DISTINCT a.id) " +
            "FROM Minutes a, Panelist j WHERE j.submission = a.submission AND a.firmada = true " +
            "GROUP BY j.teacher.id")
-    /**
-     * Count minutes firmadas por teacher.
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     List<Object[]> countMinutesFirmadasByTeacher();
 
     /**

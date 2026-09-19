@@ -42,12 +42,12 @@ public class ExternalApiServiceImpl implements ExternalApiService {
                 .build();
     }
 
-    @Override
-    @org.springframework.cache.annotation.Cacheable(value = "universidades", key = "'ecuador'")
     /**
      * Get universities of ecuador.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Override
+    @org.springframework.cache.annotation.Cacheable(value = "universidades", key = "'ecuador'")
     public List<UniversityDto> getUniversitiesOfEcuador() {
         log.info("Iniciando consumo de API externa de universidades de Hipo Labs...");
         try {

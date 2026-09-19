@@ -19,38 +19,38 @@ public interface EvaluationFinalRepository extends JpaRepository<EvaluationFinal
      */
     Optional<EvaluationFinal> findBySubmissionId(Long submissionId);
 
-    @Query("SELECT ef FROM EvaluationFinal ef WHERE ef.submission.student.id = :studentId")
     /**
      * Busca el/los registro(s) con student id.
      * @param studentId studentId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT ef FROM EvaluationFinal ef WHERE ef.submission.student.id = :studentId")
     List<EvaluationFinal> findByStudentId(@Param("studentId") Long studentId);
 
-    @Query("SELECT ef FROM EvaluationFinal ef WHERE ef.submission.student.appUser.id = :appUserId")
     /**
      * Busca el/los registro(s) con app user id.
      * @param appUserId appUserId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT ef FROM EvaluationFinal ef WHERE ef.submission.student.appUser.id = :appUserId")
     List<EvaluationFinal> findByAppUserId(@Param("appUserId") Long appUserId);
 
-    @Query(value = "SELECT * FROM presus.sp_calcular_promedio_evaluacion(:submissionId)", nativeQuery = true)
     /**
      * Calculate promedio evaluation sp.
      * @param submissionId submissionId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query(value = "SELECT * FROM presus.sp_calcular_promedio_evaluacion(:submissionId)", nativeQuery = true)
     List<Object[]> calculateAverageEvaluationSp(@Param("submissionId") Long submissionId);
 
+    /**
+     * Find all with relationships.
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("SELECT ef FROM EvaluationFinal ef " +
            "JOIN FETCH ef.submission s " +
            "JOIN FETCH s.student e " +
            "JOIN FETCH e.appUser u " +
            "LEFT JOIN FETCH ef.result r")
-    /**
-     * Find all with relationships.
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     List<EvaluationFinal> findAllWithRelationships();
 }

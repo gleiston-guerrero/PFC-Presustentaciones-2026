@@ -61,6 +61,11 @@ public interface TopicProposedRepository extends JpaRepository<TopicProposed, In
                                          @Param("areaId") Integer areaId,
                                          @Param("nivel") String nivelDificultad);
 
+    /**
+     * Busca el/los registro(s) con id con catalogos.
+     * @param id id
+     * @return el {@code java.util.Optional<TopicPropuesto>} correspondiente
+     */
     @Query("""
             SELECT t FROM TopicProposed t
             LEFT JOIN FETCH t.program
@@ -68,10 +73,5 @@ public interface TopicProposedRepository extends JpaRepository<TopicProposed, In
             LEFT JOIN FETCH t.area
             WHERE t.id = :id
             """)
-    /**
-     * Busca el/los registro(s) con id con catalogos.
-     * @param id id
-     * @return el java.util.Optional<TopicPropuesto> correspondiente
-     */
     java.util.Optional<TopicProposed> findByIdWithCatalogs(@Param("id") Integer id);
 }

@@ -11,16 +11,16 @@ import java.util.List;
 @Repository
 public interface HistoryStatusMinutesRepository extends JpaRepository<HistoryStatusMinutes, Long> {
 
-    @Query("SELECT h FROM HistoryStatusMinutes h " +
-           "LEFT JOIN FETCH h.appUser u " +
-           "LEFT JOIN FETCH h.statusAnterior ea " +
-           "JOIN FETCH h.statusNew en " +
-           "WHERE h.minutes.id = :minutesId ORDER BY h.dateCambio DESC, h.id DESC")
     /**
      * Busca el/los registro(s) con minutes id o der by fecha cambio desc.
      * @param minutesId minutesId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT h FROM HistoryStatusMinutes h " +
+           "LEFT JOIN FETCH h.appUser u " +
+           "LEFT JOIN FETCH h.statusAnterior ea " +
+           "JOIN FETCH h.statusNew en " +
+           "WHERE h.minutes.id = :minutesId ORDER BY h.dateCambio DESC, h.id DESC")
     List<HistoryStatusMinutes> findByMinutesIdOrderByDateCambioDesc(@Param("minutesId") Long minutesId);
 
     /**

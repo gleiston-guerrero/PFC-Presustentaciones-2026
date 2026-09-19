@@ -35,22 +35,19 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
      */
     List<AppUser> findByActivoTrue();
 
-    /** La tabla puede tener decenas de miles de filas (datos de carga k6) — el listado del panel de admin siempre pagina. */
+    /**
+     * La tabla puede tener decenas de miles de filas (datos de carga k6) — el listado del panel de admin siempre pagina.
+     * @param q q
+     * @param pageable pageable
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("SELECT u FROM AppUser u WHERE :q IS NULL OR :q = '' " +
            "OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(u.role) LIKE LOWER(CONCAT('%', :q, '%'))")
-    /**
-     * Search paginado.
-     * @param q q
-     * @param pageable pageable
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     Page<AppUser> searchPaged(@Param("q") String q, Pageable pageable);
 
-    @Modifying
-    @Query("UPDATE AppUser u SET u.emailNotifications = :emailNoti, u.phone = :telefono WHERE u.id = :id")
     /**
      * Update perfil.
      * @param id id
@@ -58,6 +55,8 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
      * @param phone phone
      * @return la cantidad de registros
      */
+    @Modifying
+    @Query("UPDATE AppUser u SET u.emailNotifications = :emailNoti, u.phone = :telefono WHERE u.id = :id")
     int updateProfile(@Param("id") Long id,
                          @Param("emailNoti") String emailNotifications,
                          @Param("telefono") String phone);

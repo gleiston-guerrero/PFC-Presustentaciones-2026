@@ -48,13 +48,13 @@ public class ProgressDegreeServiceImpl implements ProgressDegreeService {
                 .clave(clave).orden(orden).titulo(titulo).description(desc).completado(false).build();
     }
 
-    @Override
-    @Transactional(readOnly = true)
     /**
      * Obtain.
      * @param studentId studentId
      * @return el ProgressTitulacionDTO correspondiente
      */
+    @Override
+    @Transactional(readOnly = true)
     public ProgressDegreeDTO obtain(Long studentId) {
         String json = progressRepository.findByStudentId(studentId)
                 .map(ProgressStudent::getPasosJson)
@@ -62,14 +62,14 @@ public class ProgressDegreeServiceImpl implements ProgressDegreeService {
         return buildDTO(readStatus(json));
     }
 
-    @Override
-    @Transactional
     /**
      * Update.
      * @param studentId studentId
      * @param cambios cambios
      * @return el ProgressTitulacionDTO correspondiente
      */
+    @Override
+    @Transactional
     public ProgressDegreeDTO update(Long studentId, Map<String, Boolean> cambios) {
         ProgressStudent progress = progressRepository.findByStudentId(studentId)
                 .orElseGet(() -> createEmpty(studentId));

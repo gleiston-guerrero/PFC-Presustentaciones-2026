@@ -11,23 +11,23 @@ import java.util.List;
 @Repository
 public interface ResourceDegreeRepository extends JpaRepository<ResourceDegree, Integer> {
 
+    /**
+     * List visibles para program.
+     * @param programId programId
+     * @return los resultados encontrados (vacío si no hay coincidencias)
+     */
     @Query("""
             SELECT r FROM ResourceDegree r
             LEFT JOIN FETCH r.program c
             WHERE :programId IS NULL OR c IS NULL OR c.id = :programId
             ORDER BY r.categoria ASC, r.titulo ASC
             """)
-    /**
-     * List visibles para program.
-     * @param programId programId
-     * @return los resultados encontrados (vacío si no hay coincidencias)
-     */
     List<ResourceDegree> listVisiblesForProgram(@Param("programId") Integer programId);
 
-    @Query("SELECT r FROM ResourceDegree r LEFT JOIN FETCH r.program ORDER BY r.categoria ASC, r.titulo ASC")
     /**
      * List todos.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT r FROM ResourceDegree r LEFT JOIN FETCH r.program ORDER BY r.categoria ASC, r.titulo ASC")
     List<ResourceDegree> listAll();
 }

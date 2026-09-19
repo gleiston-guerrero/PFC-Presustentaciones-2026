@@ -13,30 +13,30 @@ import java.util.List;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    @Query(value = "SELECT n FROM Notification n JOIN FETCH n.appUser", countQuery = "SELECT COUNT(n) FROM Notification n")
     /**
      * Find all.
      * @param pageable pageable
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query(value = "SELECT n FROM Notification n JOIN FETCH n.appUser", countQuery = "SELECT COUNT(n) FROM Notification n")
     Page<Notification> findAll(Pageable pageable);
 
-    @Query("SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.date DESC")
     /**
      * Busca el/los registro(s) con app user id o der by fecha desc.
      * @param appUserId appUserId
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query("SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.date DESC")
     List<Notification> findByAppUserIdOrderByDateDesc(@Param("appUserId") Long appUserId);
 
-    @Query(value = "SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.date DESC",
-           countQuery = "SELECT COUNT(n) FROM Notification n WHERE n.appUser.id = :appUserId")
     /**
      * Busca el/los registro(s) con app user id o der by fecha desc.
      * @param appUserId appUserId
      * @param pageable pageable
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query(value = "SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.date DESC",
+           countQuery = "SELECT COUNT(n) FROM Notification n WHERE n.appUser.id = :appUserId")
     Page<Notification> findByAppUserIdOrderByDateDesc(@Param("appUserId") Long appUserId, Pageable pageable);
 
     /**

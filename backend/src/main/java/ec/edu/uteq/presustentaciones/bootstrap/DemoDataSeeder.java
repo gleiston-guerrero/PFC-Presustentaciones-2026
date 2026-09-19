@@ -33,11 +33,11 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final RoleAppUserRepository roleAppUserRepository;
 
-    @Override
     /**
      * Run.
      * @param args args
      */
+    @Override
     public void run(String... args) {
         try {
             // Insertar faculty inicial si no existe

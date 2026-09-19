@@ -44,11 +44,11 @@ public interface TutorRepository extends JpaRepository<Tutor, Long> {
      */
     List<Tutor> findByTeacherAppUserId(Long appUserId);
 
-    @Query(value = "SELECT * FROM presus.sp_obtener_estadisticas_tutores()", nativeQuery = true)
     /**
      * Obtain estadisticas tutores sp.
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
+    @Query(value = "SELECT * FROM presus.sp_obtener_estadisticas_tutores()", nativeQuery = true)
     List<Object[]> obtainStatsTutorsSp();
 
     /** Reportes: cuántas tutorías tiene asignadas cada teacher (GROUP BY en la base). */

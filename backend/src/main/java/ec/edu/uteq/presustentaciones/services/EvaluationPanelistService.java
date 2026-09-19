@@ -106,12 +106,12 @@ public class EvaluationPanelistService {
         return toDTO(evaluation);
     }
 
-    @Transactional(readOnly = true)
     /**
      * @param submissionId id de la submission
      * @param panelistId    id del panelist
      * @return la evaluación de ese panelist para esa submission, o {@code null} si aún no evaluó
      */
+    @Transactional(readOnly = true)
     public EvaluationPanelistDTO obtainEvaluation(Long submissionId, Long panelistId) {
         Submission submission = submissionRepo.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada: " + submissionId));
@@ -121,11 +121,11 @@ public class EvaluationPanelistService {
                 .orElse(null);
     }
 
-    @Transactional(readOnly = true)
     /**
      * @param submissionId id de la submission
      * @return las evaluations registradas por todos los panelists de esa submission
      */
+    @Transactional(readOnly = true)
     public List<EvaluationPanelistDTO> obtainPanel(Long submissionId) {
         Submission submission = submissionRepo.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada: " + submissionId));
