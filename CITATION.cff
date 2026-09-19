@@ -26,7 +26,7 @@ authors:
     orcid: "https://orcid.org/0009-0004-5561-1391"
 title: "Sistema de Gestión de Pre-Sustentaciones de Titulación UTEQ"
 version: "1.1.0"
-date-released: "2026-09-17"
+date-released: "2026-09-19"
 url: "https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026"
 repository-code: "https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026"
 # DOI DE CONCEPTO, no de version. Zenodo asigna dos clases de DOI: uno por cada version
@@ -41,15 +41,19 @@ identifiers:
     value: "10.5281/zenodo.21988563"
     description: "DOI de concepto: resuelve siempre a la version mas reciente publicada"
   - type: doi
+    value: "10.5281/zenodo.22839517"
+    description: "Snapshot de la version v1.1.0 (2026-09-19)"
+  - type: doi
     value: "10.5281/zenodo.22445216"
     description: "Snapshot de la version v1.0.1 (2026-09-06)"
   - type: doi
     value: "10.5281/zenodo.21988564"
     description: "Snapshot de la version v1.0.0 (2026-08-17)"
-# ESTADO DE v1.1.0 (declarado, no maquillado): v1.1.0 todavia NO tiene snapshot propio en
-# Zenodo. Archivarlo es una accion manual en zenodo.org y no se fabrica aqui un DOI que nadie
-# pueda verificar. El procedimiento exacto, y por que la transferencia del repositorio a otra
-# cuenta de GitHub no lo impide, estan en docs/ZENODO.md.
+# v1.1.0 ARCHIVADA el 2026-09-19 en 10.5281/zenodo.22839517. Hasta ese dia este archivo
+# declaraba que aun no tenia snapshot propio, en vez de fabricar un DOI que nadie pudiera
+# verificar; ahora existe y se cita. El snapshot archivado corresponde al commit 35d8199,
+# dato registrado en docs/ZENODO.md junto con la unica diferencia respecto del commit
+# etiquetado, que es este mismo registro del DOI.
 keywords:
   - "pre-sustentacion"
   - "titulacion"

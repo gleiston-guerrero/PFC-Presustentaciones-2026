@@ -34,7 +34,7 @@ commits, para comprobar que ninguna afirmación de este archivo quedó desactual
 | P6 | ✅ Cumple | `\label{tab:holm-bonferroni}` presente y citado con `\ref` en `10-evaluacion-empirica.tex:85` |
 | P7 | ✅ Cumple | **18 pruebas del chatbot, 0 fallos**, y la de integración usa el servicio **real**: se retiró el `@MockBean ChatbotService` que la revisión del 18-sep señaló. Verificado por mutación (romper el servicio hace fallar la prueba) |
 | P8 | ✅ Cumple | 102 endpoints de escritura; los 5 sin anotación son los exentos de pre-login (`login`, `refresh`, `logout`, `recuperar`, `reset`) |
-| P9 | ⚠️ Ver nota | El tag `v1.1.0` existe y `CITATION.cff` + portada lo declaran, **pero va commits por detrás de `HEAD`** (`make verify` reporta el desfase exacto en cada corrida). Falta archivar v1.1.0 en Zenodo |
+| P9 | ✅ Cumple | Tag `v1.1.0` **sobre el commit de cierre** (desfase 0) y **v1.1.0 archivada en Zenodo el 2026-09-19**: DOI `10.5281/zenodo.22839517`, snapshot del commit `35d8199`. `make verify` comprueba que el tag no se adelante al snapshot con nada que no sea el registro del DOI |
 | P10 | ✅ Cumple | Portada: 32 líneas, 0 referencias DOI, 0 notas de proceso, URL del repositorio presente |
 | P11 | ✅ Cumple | 31 controladores, 10 rutinas SQL distintas, cero clases con nombre pre-P4 en el informe activo |
 | P12 | 🟡 Parcial | Ningún commit vacío nuevo desde `f3d1ff4`; la conversación con el docente sigue sin ocurrir |
@@ -784,11 +784,38 @@ version: "1.1.0"
 {\large \textbf{REPOSITORIO:} ...} ... \texttt{v1.1.0} ...
 ```
 
-**Veredicto: ✅ Cumple**, con una salvedad honesta: siguen existiendo `v1.0.0`, `v1.0.1` y
-`v1.0.0-zenodo-archive` en el historial de tags (versiones anteriores reales, no una segunda etiqueta
-compitiendo por el mismo commit). El DOI de Zenodo declarado sigue archivando el contenido de `v1.0.1`;
-`v1.1.0` no tiene su propio snapshot en Zenodo todavía (requiere una acción manual del equipo fuera de
-este repositorio, documentada como pendiente, no fabricada).
+> **Cerrado el 2026-09-19.** La revisión del 18-sep dejó P9 así: *«El DOI de concepto resuelve, pero su
+> última versión es la v1.0.1; la v1.1.0 no está archivada (lo declaran)»*. Ya está archivada.
+
+**Veredicto: ✅ Cumple.**
+
+| | |
+|---|---|
+| Tag `v1.1.0` | Sobre el commit de cierre, **desfase 0** respecto de `HEAD` al etiquetar |
+| DOI de esta versión | [`10.5281/zenodo.22839517`](https://doi.org/10.5281/zenodo.22839517) (2026-09-19) |
+| Commit archivado | `35d8199`, el mismo que el tag |
+| Cadena de versiones | `v1.0.0 → v1.0.1 → v1.1.0` bajo el DOI de concepto `10.5281/zenodo.21988563` |
+
+Antes de mover la etiqueta se comprobó: árbol limpio, nada sin pushear, **CI verde 3/3** sobre el
+commit destino, y el commit anterior (`b1efc83`) confirmado como ancestro — sigue alcanzable, así que
+no se pierde la correspondencia con lo que se revisó el 18-sep. El paquete se generó con `git archive`
+sobre el tag, no desde el directorio de trabajo: 1341 archivos, sin `target/`, sin `node_modules`, sin
+`__pycache__`, y los únicos `.env` son las dos plantillas `.env.example`.
+
+**Un problema de orden que conviene declarar.** Un DOI no existe hasta que se publica, así que los
+commits que lo registran son por fuerza posteriores al snapshot que archiva. Para que eso no se
+convierta en una discrepancia silenciosa, `scripts/p9-snapshot-zenodo.py` —enganchado a `make verify`—
+exige que **lo único** que separe el commit archivado del commit etiquetado sea el registro del propio
+DOI. Si aparece código, una prueba o una medición, falla.
+
+**Pendiente en el registro de Zenodo, no en el repositorio:** al publicar, el campo `Version` quedó
+como `v3` (el correlativo que Zenodo pone cuando se deja vacío) y la descripción quedó la de v1.0.1.
+Los metadatos sí se pueden editar después de publicar —solo los archivos no—, así que se corrigen
+desde «Editar». Detalle en [`docs/ZENODO.md`](docs/ZENODO.md).
+
+Salvedad que se mantiene: siguen existiendo `v1.0.0`, `v1.0.1` y `v1.0.0-zenodo-archive` en el
+historial de tags. Son versiones anteriores reales, no una segunda etiqueta compitiendo por el mismo
+commit.
 
 **Re-verificado hoy (evaluación integral 2026-09-17), sin cambios de código:** el hallazgo del ing sobre
 P9 describe exactamente lo que `OBS-35` ya había corregido en la ronda anterior de este mismo examen —

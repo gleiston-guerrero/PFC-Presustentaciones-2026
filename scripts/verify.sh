@@ -322,6 +322,15 @@ else
 fi
 grep -q 'version: "1.1.0"' CITATION.cff && ok "CITATION.cff declara version 1.1.0" || fail "P9: CITATION.cff no declara 1.1.0"
 grep -q 'v1.1.0' Informe-Final/secciones/00-portada.tex && ok "portada declara v1.1.0" || fail "P9: portada no declara v1.1.0"
+grep -q "zenodo.22839517" CITATION.cff && ok "CITATION.cff cita el DOI de la version v1.1.0 archivada" || fail "P9: CITATION.cff no cita el snapshot de v1.1.0 en Zenodo"
+# Un DOI no existe hasta publicarse, asi que los commits que lo registran son
+# posteriores al snapshot que archiva. Esto acota esa diferencia: lo unico que
+# puede separar el commit archivado del etiquetado es el registro del DOI.
+if PYTHONIOENCODING=utf-8 python scripts/p9-snapshot-zenodo.py; then
+  ok "P9: el tag no se adelanta al snapshot de Zenodo con nada que no sea el registro del DOI"
+else
+  fail "P9: el tag y el snapshot archivado en Zenodo dejaron de describir lo mismo -- ver arriba"
+fi
 echo
 
 echo "=== P10 -- Caratula solo con identificacion + URL ==="

@@ -3,13 +3,49 @@
 **Proyecto:** Sistema de Gestión de Pre-Sustentaciones UTEQ  
 **DOI que se cita (de concepto, resuelve siempre a la versión más reciente):**
 [10.5281/zenodo.21988563](https://doi.org/10.5281/zenodo.21988563)  
-**Última versión archivada:** `v1.0.1` → [10.5281/zenodo.22445216](https://doi.org/10.5281/zenodo.22445216)
-(2026-09-06)  
-**Estado de `v1.1.0`:** 🟡 **etiqueta ya colocada sobre el commit de cierre (2026-09-18); falta el
-snapshot en Zenodo.** Es una acción manual en zenodo.org y no se
-declara un DOI que nadie pueda verificar. La evaluación integral del 17-sep lo señaló
-(«el DOI declarado archiva la v1.0.1») y sigue abierto — procedimiento completo en
-[«Cómo archivar una versión nueva»](#-cómo-archivar-una-versión-nueva-procedimiento-vigente).  
+**Última versión archivada:** `v1.1.0` → [10.5281/zenodo.22839517](https://doi.org/10.5281/zenodo.22839517)
+(2026-09-19)  
+**Estado de `v1.1.0`:** ✅ **Archivada el 2026-09-19.** La evaluación integral del 17-sep señaló que
+«el DOI declarado archiva la v1.0.1», y la del 18-sep que «la v1.1.0 no está archivada». Ya lo está:
+el registro encadena `v1.0.0 → v1.0.1 → v1.1.0` bajo el mismo DOI de concepto.
+
+### Qué commit contiene exactamente el snapshot archivado
+
+| | |
+|---|---|
+| DOI de esta versión | [10.5281/zenodo.22839517](https://doi.org/10.5281/zenodo.22839517) |
+| Registro | <https://zenodo.org/records/22839517> |
+| **Commit archivado** | **`35d8199`** |
+| Archivo | `PFC-Presustentaciones-2026-v1.1.0.tar.gz`, 1341 archivos |
+| Generado con | `sh scripts/zenodo-paquete.sh v1.1.0` (`git archive` sobre el tag, no sobre el directorio de trabajo) |
+
+**Por qué el tag queda por delante del commit archivado, y por qué no es una contradicción.** El DOI
+no existe hasta que se publica, así que los commits que lo registran —este archivo, `CITATION.cff`,
+`VERIFICACION.md`— son necesariamente posteriores al snapshot. Es un problema de orden, no de
+contenido: **lo único que separa `35d8199` del commit etiquetado es el registro de ese mismo DOI.**
+Comprobable en un comando:
+
+```bash
+git diff --stat 35d8199..v1.1.0
+```
+
+`make verify` lo comprueba en cada corrida (`scripts/p9-snapshot-zenodo.py`): si entre el commit
+archivado y el tag aparece cualquier cambio que no sea registro del DOI, **falla**. Sin eso, la frase
+de arriba sería una promesa; con eso, es una comprobación.
+
+### Pendiente en el propio registro de Zenodo (metadatos, no archivos)
+
+Dos campos quedaron mal al publicar. **Se corrigen con el botón «Editar»**: Zenodo permite cambiar
+metadatos después de publicar y solo prohíbe cambiar los archivos.
+
+| Campo | Cómo quedó | Cómo debe quedar |
+|---|---|---|
+| `Version` | `v3` | `v1.1.0` |
+| `Description` | La de v1.0.1 (menciona «Informe final v1.0.1») | El bloque de [`ZENODO-METADATOS-v1.1.0.md`](ZENODO-METADATOS-v1.1.0.md) |
+
+`v3` es el correlativo que Zenodo pone por omisión cuando el campo `Version` se deja vacío. No
+corresponde a ninguna versión de este proyecto y contradice a `CITATION.cff`, al tag de Git y a la
+portada del informe, que dicen `v1.1.0`.  
 **Licencia:** MIT Open Source License  
 **Alcance de este documento:** el DOI del **software** (el código de este repositorio). El
 conjunto de datos de mediciones (k6, ZAP, Lighthouse, JaCoCo) se deposita por separado, con su
