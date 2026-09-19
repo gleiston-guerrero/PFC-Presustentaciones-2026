@@ -51,10 +51,13 @@ pasan, y calcula el resultado del grupo directamente desde
 \texttt{docs/mediciones/sus/sus-respuestas.csv} (ejecutado de punta a punta con \texttt{nbconvert}, sin
 errores).
 
-\textbf{Estado real (Sección~\ref{sec:evaluacion}):} el instrumento se aplicó a 15 personas, pero
-\textbf{solo 4 tienen fecha de aplicación verificable} (\textbf{$n=4$}); las otras 11 tienen una fecha
-escrita a mano que no se sostiene (posterior al commit que las versiona y, en varios casos, posterior al
-día de hoy) y quedan declaradas pendientes de confirmar, no fabricadas ni descartadas --- ver
+\textbf{Estado real (Sección~\ref{sec:evaluacion}):} el resultado que se reporta es el de la ronda del
+2026-09-18, aplicada en un formulario alojado por un tercero que sella cada respuesta con la hora de su
+propio servidor (\textbf{media 52.83/100, DE 12.06, IC 95\,\% [46.16, 59.51], $n=15$}), con
+consentimiento individual explícito en las 15. De la ronda anterior en papel, también de 15 personas,
+\textbf{solo 4 tienen fecha de aplicación verificable}; las otras 11 llevan una fecha escrita a mano que
+no se sostiene (posterior al commit que las versiona y, en varios casos, posterior al día de hoy) y
+quedan retractadas y declaradas pendientes de confirmar, no fabricadas ni descartadas --- ver
 \texttt{docs/mediciones/sus/SUS-RESULTS.md} para el detalle completo del hallazgo. El protocolo de
 consentimiento informado individual está redactado como plantilla en
 \texttt{docs/etica/consentimientos/plantilla-consentimiento.md} (explica qué se recoge, para qué, cuánto
@@ -98,7 +101,10 @@ y la totalidad de sus pasos en verde --- 35 pasos por corrida, ninguno fallido n
 33944802465 & \texttt{76250b7} & \texttt{success} & Merge de la rama del equipo \\
 \bottomrule
 \end{tabular}
-\caption{Corridas verdes de integración continua verificadas contra la API de GitHub.}
+\caption[Corridas verdes de integración continua]{Corridas verdes de integración continua
+verificadas contra la API de GitHub, capturadas el \textbf{2026-09-05}. Las cifras de esa fila
+(63.17\,\% de cobertura, 395 tests) son las de \emph{ese} commit, no las de cierre del informe
+(Sección~\ref{sec:evaluacion}).}
 \label{tab:ci-runs}
 \end{table}
 
@@ -109,7 +115,8 @@ find-sec-bugs; \textbf{Frontend} hace el build de producción de Angular; y \tex
 \texttt{docs/entorno/versions.txt} con las versiones reales de la máquina de CI, para que las versiones
 declaradas en este informe no dependan de la máquina de un integrante. Que las tres estén en verde
 significa que, en una máquina limpia y contra una base de datos real, el proyecto compila, sus 395
-pruebas pasan y el análisis estático de seguridad corre sin romper el pipeline.
+pruebas de entonces (2026-09-05) pasan y el análisis estático de seguridad corre sin romper el
+pipeline; la suite creció después hasta las 804 de la corrida de cierre.
 
 \subsection{Anexo D --- Checklist de estándares empíricos de Ralph et al. (2021)}
 \label{anexo:ralph}

@@ -133,4 +133,6 @@ control por propiedad en el backend.
   IDOR en `obtenerDetalle`, acceso de COORDINADOR vía permiso, `cambiarEstado` registra
   historial, transición no permitida, motivo obligatorio, historial ordenado,
   delegación de `listarMisActas`.
-- Suite completa: **129 → 140 tests, 0 fallos**.
+- Suite completa al cerrar esta rama (2026-09-01, commit `0dbf661`): **129 → 140 tests, 0 fallos**.
+  Es el conteo de *entonces*, no el de cierre del proyecto — ver
+  [`COVERAGE.md`](../mediciones/jacoco/COVERAGE.md) para la corrida vigente.

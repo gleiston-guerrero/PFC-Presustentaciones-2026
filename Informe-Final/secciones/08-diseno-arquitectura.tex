@@ -95,10 +95,12 @@ Eficiencia de desempeño & p95 de \texttt{http\_req\_duration} entre 6.17 y 8.53
 $p = 3.02\times10^{-11}$ (Sección~\ref{sec:evaluacion}). \\
 Compatibilidad & API REST versionada (\texttt{/api/v1}) documentada con OpenAPI 3.0/Swagger UI; JSON como
 formato de intercambio estándar en los 31 controladores. \\
-Usabilidad & Instrumento SUS \cite{brooke1996} aplicado a 15 personas; \textbf{solo 4 con fecha de
-aplicación verificable} ($n=4$, media 48.75/100) --- las 11 restantes quedan declaradas pendientes de
-confirmar en vez de contarse como cerradas (Sección~\ref{sec:evaluacion}). \\
-Fiabilidad & 559 pruebas automatizadas reales (0 fallos), \texttt{/actuator/health} como verificación de
+Usabilidad & Instrumento SUS \cite{brooke1996}, ronda del 18-sep con fecha sellada por un tercero:
+\textbf{media 52.83/100} ($n=15$), por debajo del promedio de la industria (68) --- resultado
+desfavorable, reportado como tal. De la ronda anterior en papel solo 4 de 15 hojas tenían fecha de
+aplicación verificable; las otras 11 quedan retractadas y declaradas pendientes de confirmar, no
+descartadas (Sección~\ref{sec:evaluacion}). \\
+Fiabilidad & 804 pruebas automatizadas reales (0 fallos), \texttt{/actuator/health} como verificación de
 arranque, migraciones Flyway versionadas y reproducibles end-to-end. \\
 Seguridad & Auditoría OWASP ZAP (0 hallazgos High), SpotBugs/find-sec-bugs (0 SQL dinámico), 6 fallos
 reales de autorización (IDOR/mass-assignment) encontrados y corregidos por revisión manual dirigida

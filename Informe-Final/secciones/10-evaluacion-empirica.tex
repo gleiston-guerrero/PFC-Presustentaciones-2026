@@ -287,13 +287,16 @@ completo (las diez preguntas y la fórmula de cálculo) se documenta en el Anexo
 
 \subsection{Cobertura de código}
 
-\textbf{Cifra de cierre definitiva (2026-09-17, la que aplica para el umbral del 70\,\%), corrida limpia
-de una sola sesión:} \textbf{82.03\,\% de líneas (4,017/4,897) y 73.49\,\% de ramas (1,483/2,018)} a
+\textbf{Cifra de cierre definitiva (2026-09-19, la que aplica para el umbral del 70\,\%), corrida limpia
+de una sola sesión:} \textbf{82.00\,\% de líneas (4,019/4,901) y 73.49\,\% de ramas (1,483/2,018)} a
 nivel global, sobre 804 pruebas automatizadas reales (\texttt{mvn clean test} sobre Postgres/Redis reales
 en Docker, 0 fallos, 0 errores, una sola corrida desde cero, sin sesiones acumuladas), recalculado
 directamente desde
-\texttt{docs/mediciones/jacoco/2026-09-17-corrida-limpia-unica-sesion/jacoco.xml} (versionado en el
-repositorio). Desde esta misma ronda se agregó además una regla \texttt{jacoco:check} en \texttt{pom.xml}
+\texttt{docs/mediciones/jacoco/2026-09-19-cierre-definitivo/jacoco.xml} (versionado en el
+repositorio). Las dos corridas limpias previas (\texttt{2026-09-17-corrida-limpia-unica-sesion/} y
+\texttt{2026-09-18-corrida-limpia-reproduccion/}, ambas 82.03\,\%/73.49\,\% sobre 4,897 líneas) se
+conservan sin borrar: la diferencia con la cifra de cierre son las 4 líneas que agregaron las
+correcciones posteriores al 18-sep. Desde esta misma ronda se agregó además una regla \texttt{jacoco:check} en \texttt{pom.xml}
 (fase \texttt{test}, la que corre \texttt{./mvnw test} en CI) que hace fallar el build si la cobertura
 cae del 70\,\% en líneas o en ramas --- pasó en esta corrida. Un snapshot anterior
 (\texttt{docs/mediciones/jacoco/2026-09-17-cierre-examen-suspenso/}, 82.17\,\%/73.49\,\%) acumulaba 71
@@ -339,7 +342,7 @@ un problema de entorno --- lo que ejercitó ese controlador con más profundidad
 \textbf{71.05\,\% de líneas (854/1,202) y 76.47\,\% de ramas (260/340)} --- cruza el umbral de 70\,\%
 exigido en líneas \emph{y} en ramas. Los servicios quedan en 70.22\,\% de líneas (2,245/3,197) y
 54.48\,\% de ramas (717/1,316): superan el umbral en líneas pero no en ramas, a diferencia del estado del
-06-09. Los servicios se habían cerrado antes con 164 pruebas nuevas en
+06-09. Los servicios se habían cerrado antes, el 2026-09-06, con 164 pruebas nuevas en
 8 clases (\texttt{StudentService}, \texttt{TutorServiceImpl}, \texttt{RubricEvaluationServiceImpl},
 \texttt{PanelistServiceImpl}, \texttt{SubmissionServiceImpl}, \texttt{TutoringServiceImpl},
 \texttt{ScheduleServiceImpl}, \texttt{MinutesServiceImpl}), priorizando las clases con más ramas sin
@@ -374,7 +377,7 @@ fail-closed de RNF-04 cuando Redis no responde). Esa primera pasada dejó 71.90\
 encima del umbral pero al filo para el gusto del equipo, así que se hizo una segunda pasada sobre lo
 que quedaba: \texttt{StatusLiveController} y \texttt{ProposalController} (0\,\% cada uno,
 sin ningún test), y \texttt{EmailService}/\texttt{AuditService} (0\,\% cada uno). Resultado:
-\textbf{82.10\,\% de líneas (4,020/4,897) y 73.49\,\% de ramas (1,483/2,018)} a nivel global (801
+\textbf{82.00\,\% de líneas (4,019/4,901) y 73.49\,\% de ramas (1,483/2,018)} a nivel global (804
 pruebas, 0 fallos).
 
 Una precisión metodológica sobre el alcance de la medición: el \texttt{jacoco-maven-plugin} excluye

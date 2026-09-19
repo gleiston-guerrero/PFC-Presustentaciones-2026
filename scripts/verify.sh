@@ -109,6 +109,14 @@ if python scripts/p11-citas-clases.py; then
 else
   fail "P11: el informe cita clases que ya no existen -- ver la lista de arriba"
 fi
+# Las cifras de cobertura y el conteo de pruebas estan escritos a mano en decenas
+# de documentos: la revision del 18-sep encontro 82,10 / 82,03 / 82,96 conviviendo.
+# Esto lo comprueba contra el jacoco.xml canonico en vez de confiar en la memoria.
+if PYTHONIOENCODING=utf-8 python scripts/cifras-publicadas.py; then
+  ok "toda cifra de cobertura publicada es la de cierre o declara de que corrida es"
+else
+  fail "P11: hay cifras publicadas que el expediente no respalda -- ver la lista de arriba"
+fi
 echo
 
 echo "=== P12 -- Commits vacios (desde f3d1ff4, el commit que reviso la guia) ==="

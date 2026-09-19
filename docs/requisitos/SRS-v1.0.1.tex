@@ -2824,8 +2824,8 @@ reproducible.}
 \campo{Método de verificación}{Demostración + Inspección}
 \campo{Estado}{\estadoN}
 \campo{Evidencia}{La orden única está verificada de punta a punta con código de salida 0
-(construcción, contenedores, migraciones, 559 pruebas, carga, auditoría, reportes y compilación
-del informe), y las imágenes están ancladas por resumen. El tercer criterio no se cumple.}
+(construcción, contenedores, migraciones, las 559 pruebas de la etiqueta \texttt{v1.0.1}, carga,
+auditoría, reportes y compilación del informe), y las imágenes están ancladas por resumen. El tercer criterio no se cumple.}
 
 \REQ{RNF-26}{Versionado uniforme de la API}
 \campo{Enunciado}{Todos los endpoints de la API deben exponerse bajo un prefijo de versión
@@ -3216,7 +3216,8 @@ vuelva a aparecer.
 \begin{enumerate}
     \item \textbf{La cobertura de pruebas.} La especificación anterior declaraba 38,88\,\% de líneas y
           «no cumplido» contra un umbral de 60\,\%. La medición vigente en ese mismo momento ya
-          era otra, y la del punto de corte es de \textbf{81,03\,\%} de líneas con 559 pruebas.
+          era otra, y la del punto de corte (etiqueta \texttt{v1.0.1}, 2026-09-06) es de
+          \textbf{81,03\,\%} de líneas con 559 pruebas.
           El requisito pasa a \estadoV{} con umbral elevado al 70\,\% de líneas y de ramas
           (RNF-21). La cifra ahora va fechada dentro del propio requisito.
     \item \textbf{La accesibilidad.} No existía requisito que la exigiera pese a medirse. Se

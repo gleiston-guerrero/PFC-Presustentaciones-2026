@@ -132,10 +132,17 @@ en 11:22, 18 sep»*.
 
 El formulario existía cinco horas antes que el script. No pudo generarse con él.
 
-**3. El script nunca llegó a usarse para este formulario.** Se escribió a las 16:37, cuando la ronda ya
-estaba casi completa (12 de 15 respuestas), en respuesta a una petición de simplificar el procedimiento
-manual. Quedó en el repositorio como herramienta para futuras aplicaciones, no como el origen de esta.
-El registro de ejecuciones de Apps Script lo confirma y puede mostrarse en la defensa.
+**3. El script nunca llegó a usarse para este formulario; se pidió para versionarlo.** El formulario se
+transcribió a mano desde la hoja en papel —la misma cuyas fechas manuscritas quedaron en disputa, que
+es justamente lo que motivó rehacer la medición— y se repartió a las 11:22. El script se escribió a las
+16:37, con la ronda ya casi completa (12 de 15 respuestas), cuando se pidió dejar en el repositorio una
+forma reproducible de crear el instrumento. Es decir: **el script documenta el formulario que ya
+existía, no lo generó.** Que la redacción coincida es la consecuencia esperable de que ambos se
+derivaran de la misma hoja, no la causa de la coincidencia.
+
+El **registro de ejecuciones** del proyecto de Apps Script lo confirma de forma independiente: si el
+script nunca se ejecutó, no pudo crear nada. Es una comprobación de un minuto y se puede mostrar en la
+defensa.
 
 **Qué queda por mostrar en la defensa**, porque una captura la aporta el equipo y lo que el evaluador
 pidió es acceso directo: la pestaña **Detalles** del formulario en Drive con su fecha de creación, la

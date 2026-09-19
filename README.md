@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-v1.1.0-blue.svg)](https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026)
 [![CI](https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![JaCoCo Coverage](https://img.shields.io/badge/coverage-82.03%25_lines-brightgreen.svg)](docs/mediciones/jacoco/COVERAGE.md)
+[![JaCoCo Coverage](https://img.shields.io/badge/coverage-82.00%25_lines-brightgreen.svg)](docs/mediciones/jacoco/COVERAGE.md)
 [![OWASP Top 10](https://img.shields.io/badge/OWASP-5%2F6_controles_con_evidencia-yellow.svg)](docs/mediciones/sec/owasp/OWASP-AUDIT.md)
 
 Sistema web para la automatización, gestión y evaluación de pre-sustentaciones de trabajos de titulación de la **Universidad Técnica Estatal de Quevedo (UTEQ)**.
@@ -109,8 +109,9 @@ make all
 Ver [`docs/entorno/VIDEO-DEMO-SCRIPT.md`](docs/entorno/VIDEO-DEMO-SCRIPT.md) para el guion que se
 siguió al grabarlo.
 
-`make all` está verificado con éxito de punta a punta (109/109 tests, k6, auditoría, trazabilidad y PDF
-final, exit 0) — detalle completo de la verificación y de un bug real de migración que encontró en el
+`make all` está verificado con éxito de punta a punta (2026-08-31: 109/109 tests, k6, auditoría,
+trazabilidad y PDF final, exit 0; la suite creció desde entonces a 804 tests, ver
+[`COVERAGE.md`](docs/mediciones/jacoco/COVERAGE.md)) — detalle completo de la verificación y de un bug real de migración que encontró en el
 camino en [`docs/entorno/TROUBLESHOOTING.md`](docs/entorno/TROUBLESHOOTING.md).
 
 ## Cómo Compilar el Informe Académico
@@ -210,7 +211,7 @@ README para evitar dejarlas expuestas en el historial público del repositorio.
 | **Auditoría OWASP** | [`docs/mediciones/sec/owasp/OWASP-AUDIT.md`](docs/mediciones/sec/owasp/OWASP-AUDIT.md) | Revisión manual de 6 controles OWASP Top 10 + herramientas automáticas reales: OWASP ZAP (0 FAIL, 0 High; 5 hallazgos corregidos en total — 4 headers + 1 `@angular/core` vulnerable), SpotBugs/find-sec-bugs (0 SQL dinámico, 1 timing-attack corregido), `npm audit` (14 deps vulnerables, todas en tooling de build de íconos — bajó de 41 tras actualizar Angular). |
 | **Escaneo OWASP ZAP** | [`docs/mediciones/sec/zap/`](docs/mediciones/sec/zap/) | Reporte HTML/JSON de la corrida real (plan de automatización `zap.yaml`), re-verificada 2026-08-29; corrida anterior conservada como `*.PREVIOUS.*`. |
 | **Análisis estático** | [`docs/mediciones/sec/static-analysis/STATIC-ANALYSIS.md`](docs/mediciones/sec/static-analysis/STATIC-ANALYSIS.md) | SpotBugs + find-sec-bugs: 233 hallazgos reales (actualizado 2026-08-29; 189 en la corrida del 17-08), 0 de SQL dinámico. |
-| **Usabilidad SUS** | [`docs/mediciones/sus/sus-respuestas.csv`](docs/mediciones/sus/sus-respuestas.csv) | Recolectadas 15 hojas, pero solo **4 con fecha de aplicación verificable** (las otras 11 tienen una fecha que no se sostiene — ver [`SUS-RESULTS.md`](docs/mediciones/sus/SUS-RESULTS.md)). Resultado de cierre sobre las 4 verificables: media SUS **48,75/100**, DE **1,44**, IC 95% **[46,45, 51,05]** — CSV versionado con las 15 respuestas + puntaje + columna de fecha verificable, 15 hojas de evidencia cruda sin modificar en [`respuestas-crudas/`](docs/mediciones/sus/respuestas-crudas/). |
+| **Usabilidad SUS** | [`docs/mediciones/sus/SUS-RESULTS.md`](docs/mediciones/sus/SUS-RESULTS.md) | **Resultado de cierre — ronda del 2026-09-18**, aplicada en un formulario alojado por un tercero que sella cada respuesta con la hora de su propio servidor: media SUS **52,83/100**, DE **12,06**, IC 95% **[46,16, 59,51]**, **n=15**, las 15 con consentimiento individual explícito. Por debajo del promedio de la industria (68, Bangor et al.) — resultado desfavorable, reportado como tal. Datos sin editar en [`re-aplicacion/`](docs/mediciones/sus/re-aplicacion/), reproducible con `scripts/sus-ingesta.py`. **Ronda anterior en papel, retractada:** de sus 15 hojas solo **4 tienen fecha de aplicación verificable**; las otras 11 llevan una fecha que no se sostiene y no cuentan para ninguna cifra publicada — se conservan versionadas y sin modificar en [`respuestas-crudas/`](docs/mediciones/sus/respuestas-crudas/) y [`sus-respuestas.csv`](docs/mediciones/sus/sus-respuestas.csv), declaradas pendientes de confirmar, no borradas. |
 | **Lighthouse Frontend** | [`docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md`](docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md) | 6 corridas reales contra el **despliegue público real** (3 desktop + 3 mobile, 2026-09-17, no `localhost`): Performance **94/100 desktop, 81/100 mobile** (ambos ≥80 ✅), Accessibility 100, Best Practices 100, SEO 100 en los dos perfiles. Los 4 umbrales de la guía se cumplen. Mediciones anteriores contra `localhost` (2026-08-17 a 2026-09-06, con la investigación real de rendimiento que motivó las optimizaciones de imagen/caché/SEO) se conservan como histórico en el reporte — no satisfacían el criterio de "contra el despliegue público". |
 | **Arquitectura C4** | [`docs/arquitectura/README.md`](docs/arquitectura/README.md) | Diagramas de Arquitectura Modelo C4 (Niveles 1 Contexto, 2 Contenedores, 3 Componentes). |
 | **Registros ADR** | [`docs/adr/`](docs/adr/) | 7 Registros de Decisiones Arquitectónicas (ADR-001 a ADR-007). ADR-005 documenta el control de acceso por permisos dinámicos que reemplazó al RBAC estático descrito originalmente en ADR-004 (seguridad OWASP). ADR-006 (separación CRUD/SP) y ADR-007 (despliegue) se renumeraron el 2026-09-01 para coincidir con los temas específicos que la guía de la Entrega Final exige en esos dos números — mismo contenido, solo cambió el orden. |

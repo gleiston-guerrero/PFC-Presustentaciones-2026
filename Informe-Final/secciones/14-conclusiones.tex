@@ -23,23 +23,24 @@ anteriores (usabilidad, rendimiento web, evidencia de trazabilidad, integridad d
 despliegue, custodia de consentimientos informados) y su corrección sistemática, documentada de forma
 trazable en \texttt{docs/mediciones/DATA-PROVENANCE.md} y en la bitácora de cada fase del proyecto. Esa
 corrección no fue cosmética: implicó reportar una cobertura de código de 63.17\,\% de líneas en ese
-momento (hoy 70.00\,\% global, ver Sección~\ref{sec:evaluacion}) en vez de un ``$>$60\,\%'' previamente afirmado
-sin evidencia, y declarar la usabilidad como ``sin datos'' en vez de mantener un puntaje fabricado (hoy aplicado con
-$n=4$ de fecha verificable, en vez de las 15 respuestas recolectadas cuando 11 tienen una fecha que no
-se sostiene --- ver \texttt{docs/mediciones/sus/SUS-RESULTS.md}).
+momento (hoy 82.00\,\% global, ver Sección~\ref{sec:evaluacion}) en vez de un ``$>$60\,\%'' previamente afirmado
+sin evidencia, y declarar la usabilidad como ``sin datos'' en vez de mantener un puntaje fabricado (hoy
+se reporta la ronda del 18-sep, $n=15$ con fecha sellada por un tercero, en vez de las 15 hojas en papel
+recolectadas cuando 11 llevan una fecha que no se sostiene --- ver
+\texttt{docs/mediciones/sus/SUS-RESULTS.md}).
 
 Esa misma lógica de corrección continua se aplicó también a la evaluación del propio proyecto: una
 revisión de checkpoint durante el desarrollo calificó el estado del proyecto en ese momento con 6.53
 sobre 10. En vez de tratar esa cifra como un resultado a superar en el reporte final, se documenta aquí
 como el punto de partida real, y las correcciones descritas en este informe (el cierre de los 6 fallos de
 autorización de la Sección~\ref{sec:seguridad-corregida}, la sincronización de las secuencias de
-PostgreSQL, los índices en columnas de alto tráfico, y el crecimiento de 109 a 559 pruebas automatizadas
-con la cobertura subiendo de 38.88\,\% a 70.00\,\% de líneas) como las acciones concretas y verificables
+PostgreSQL, los índices en columnas de alto tráfico, y el crecimiento de 109 a 804 pruebas automatizadas
+con la cobertura subiendo de 38.88\,\% a 82.00\,\% de líneas) como las acciones concretas y verificables
 tomadas después de esa evaluación. Este informe no reporta ni infiere una nota final --- eso corresponde
 a una evaluación posterior por el docente-director, no a una autoevaluación del propio equipo.
 
-Las brechas que quedan (cobertura de pruebas incompleta, fecha de aplicación sin confirmar en 11 de las
-15 respuestas del SUS, dependencias vulnerables sin corregir) se declaran explícitamente en la
+Las brechas que quedan (cobertura de pruebas incompleta, el origen sin aclarar de 11 de las 15 hojas SUS
+en papel, dependencias vulnerables sin corregir) se declaran explícitamente en la
 Sección~\ref{sec:trabajo-futuro} en vez de ocultarse o rellenarse con contenido que simule completitud.
 Esta decisión --- priorizar un informe más corto pero verificable sobre uno más extenso pero con
 contenido fabricado --- es, en sí misma, la conclusión metodológica central de este trabajo: en un

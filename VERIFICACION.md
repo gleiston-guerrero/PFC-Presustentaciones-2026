@@ -125,6 +125,28 @@ Versionada en [`docs/mediciones/jacoco/2026-09-18-corrida-limpia-reproduccion/`]
 versionado. El valor de ramas coincide además, al dígito, con el que el propio ingeniero calculó sumando
 los contadores del XML (1483/2018 = 73,49 %).
 
+**Corrida de cierre definitiva (2026-09-19, la que se publica):**
+```
+Tests run: 804, Failures: 0, Errors: 0, Skipped: 0
+jacoco:check (jacoco-check) --- All coverage checks have been met.
+BUILD SUCCESS
+sessioninfo en el XML: 1
+BRANCH: 1483/2018 (73.49%)
+LINE:   4019/4901 (82.00%)
+```
+Versionada en [`docs/mediciones/jacoco/2026-09-19-cierre-definitivo/`](docs/mediciones/jacoco/2026-09-19-cierre-definitivo/).
+Las 4 líneas de diferencia con el 17 y el 18 de septiembre (4901 instrumentadas en vez de 4897) son
+código que agregaron las correcciones posteriores al 18-sep, no un cambio de método de medición.
+
+**Por qué se volvió a correr:** la revisión del 18-sep encontró conviviendo en los documentos vigentes
+tres cifras de cobertura (82,10 / 82,03 / 82,96) y tres conteos de pruebas (559 / 801 / 804). Ninguna
+era inventada —cada una era la cifra real de *alguna* corrida— pero publicadas a la vez son una
+contradicción. Se unificó todo contra este `jacoco.xml` y se agregó
+[`scripts/cifras-publicadas.py`](scripts/cifras-publicadas.py) a `make verify`: extrae cada cifra de
+cobertura y cada conteo de pruebas de los documentos **vigentes** (las bitácoras y los informes fechados
+se saltan a propósito: registran lo que era cierto cuando se escribieron) y los contrasta contra el XML
+canónico. Si alguien publica un número que el expediente no respalda, `make verify` falla.
+
 **Veredicto: ✅ Cumple**, con los 3 defectos que señaló el ing verificados y 2 de los 3 corregidos de
 verdad esta vez (no solo documentados): (1) **corregido** — el `jacoco.xml` de 71 sesiones se conserva
 como snapshot anterior, pero la cifra que aplica ahora sale de una corrida limpia única
