@@ -16,23 +16,39 @@ ok()   { printf "  [OK]   %s\n" "$1"; }
 warn() { printf "  [WARN] %s\n" "$1"; }
 fail() { printf "  [FAIL] %s\n" "$1"; FAIL=1; }
 
-echo "=== P1 -- SUS (n con fecha verificable) ==="
+echo "=== P1 -- SUS (cifra de cierre = ronda del 18-sep, fecha sellada por un tercero) ==="
+# La cifra que se publica es la del formulario del 18-sep. La ronda en papel se
+# recalcula igual, pero como contexto: sus 11 hojas de fecha no verificable estan
+# retractadas y no cuentan para ninguna cifra del informe.
 python -c "
 import csv, statistics
 from scipy import stats
-rows = list(csv.DictReader(open('docs/mediciones/sus/sus-respuestas.csv', encoding='utf-8')))
-scores = [float(r['sus_score']) for r in rows if r['fecha_verificable']=='si']
-n=len(scores); mean=statistics.mean(scores); sd=statistics.stdev(scores)
-se=sd/n**0.5; t=stats.t.ppf(0.975, df=n-1); m=t*se
-print(f'n={n} media={mean:.2f} DE={sd:.2f} IC95=[{mean-m:.2f},{mean+m:.2f}]')
-" || fail "P1: no se pudo recalcular sus-respuestas.csv"
-warn "P1: solo 4/15 respuestas tienen fecha verificable -- ver docs/mediciones/sus/SUS-RESULTS.md"
+
+def resumen(ruta, filtro=None):
+    rows = list(csv.DictReader(open(ruta, encoding='utf-8')))
+    xs = [float(r['sus_score']) for r in rows if filtro is None or filtro(r)]
+    n = len(xs); mean = statistics.mean(xs); sd = statistics.stdev(xs)
+    m = stats.t.ppf(0.975, df=n-1) * sd / n**0.5
+    return n, mean, sd, mean-m, mean+m
+
+n, mean, sd, lo, hi = resumen('docs/mediciones/sus/re-aplicacion/sus-respuestas-formulario.csv')
+print(f'  cierre (18-sep): n={n} media={mean:.2f} DE={sd:.2f} IC95=[{lo:.2f},{hi:.2f}]')
+assert n == 15, f'se esperaban 15 respuestas selladas, hay {n}'
+assert abs(mean - 52.83) < 0.01, f'la media publicada (52.83) no cuadra: {mean:.2f}'
+
+n2, m2, sd2, lo2, hi2 = resumen('docs/mediciones/sus/sus-respuestas.csv',
+                                lambda r: r['fecha_verificable'] == 'si')
+print(f'  papel, solo fecha verificable: n={n2} media={m2:.2f} DE={sd2:.2f} IC95=[{lo2:.2f},{hi2:.2f}]')
+" || fail "P1: la cifra SUS publicada no se reproduce desde los CSV versionados"
+warn "P1: la ronda del 18-sep es una muestra nueva (ninguno de los 15 respondio antes en papel): el origen de las 11 hojas retractadas sigue abierto -- ver docs/mediciones/sus/SUS-RESULTS.md"
 echo
 
-echo "=== P2 -- Cobertura (jacoco.xml de la corrida limpia de una sola sesion) ==="
+echo "=== P2 -- Cobertura (jacoco.xml de la corrida de cierre) ==="
+# Misma corrida canonica que usa scripts/cifras-publicadas.py: si se cambia una,
+# hay que cambiar la otra, y el gate de P11 lo detecta.
 python -c "
 import xml.etree.ElementTree as ET
-tree = ET.parse('docs/mediciones/jacoco/2026-09-17-corrida-limpia-unica-sesion/jacoco.xml')
+tree = ET.parse('docs/mediciones/jacoco/2026-09-19-cierre-definitivo/jacoco.xml')
 root = tree.getroot()
 for c in root.findall('counter'):
     if c.get('type') in ('LINE','BRANCH'):
