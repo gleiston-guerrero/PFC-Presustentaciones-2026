@@ -114,7 +114,14 @@ elif ! docker compose ps >/dev/null 2>&1; then
   pesado_no_corrio "P2: Docker no responde, no se pudo correr la suite real (levanta con 'docker compose up -d db redis')"
 else
   echo "  corriendo la suite real (cd backend && ./mvnw -q clean test)..."
-  if (cd backend && ./mvnw -q clean test > $TMPV/verify-test.log 2>&1); then
+  # Hay que cargar .env, igual que hace el target `test` del Makefile. Sin esto,
+  # DB_PASSWORD cae al valor por defecto de application.properties y los tests
+  # con @SpringBootTest real fallan con "password authentication failed" contra
+  # el Postgres correcto: 804 pruebas, 0 fallos y 15 errores de contexto. Es un
+  # defecto ya documentado en el Makefile desde el 2026-08-31, y este script lo
+  # habia vuelto a introducir por correr ./mvnw en crudo.
+  if (set -a; [ -f .env ] && . ./.env; set +a; \
+      cd backend && ./mvnw -q clean test > "../$TMPV/verify-test.log" 2>&1); then
     python -c "
 import xml.etree.ElementTree as ET
 nuevo = ET.parse('backend/target/site/jacoco/jacoco.xml').getroot()
@@ -358,7 +365,13 @@ else
 fi
 echo
 
-rm -rf "$TMPV"
+# Los temporales se borran solo si todo paso: si algo fallo, el mensaje remite a
+# un log, y borrarlo dejaria al que verifica sin lo unico que explica el fallo.
+if [ "$FAIL" = "1" ]; then
+  echo "(se conserva $TMPV/ con los logs de esta corrida para poder revisar los fallos)"
+else
+  rm -rf "$TMPV"
+fi
 
 if [ "$RAPIDO" = "1" ]; then
   echo "(corrida en modo --rapido: lo pesado quedo en [WARN], no verificado)"
