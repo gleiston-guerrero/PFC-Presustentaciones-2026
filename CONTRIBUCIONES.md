@@ -22,7 +22,7 @@ Salida real (2026-09-18):
 Jean30042|jeanalavaalavarado@gmail.com
 ```
 
-Un único autor, sin excepción, en los **81 commits** de esta ronda (`git rev-list --count f3d1ff4..HEAD`, 2026-09-18).
+Un único autor, sin excepción, en los **89 commits** de esta ronda (`git rev-list --count f3d1ff4..HEAD`, 2026-09-18).
 
 **Por qué (aclaración P12, evaluación integral 2026-09-17):** este examen suspenso lo está cursando y
 sustentando Álava Alvarado en solitario. Los otros tres integrantes originales del equipo (Moncayo

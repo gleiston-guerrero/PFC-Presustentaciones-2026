@@ -166,8 +166,8 @@ public class MinutesController {
     public ResponseEntity<?> search(
             @RequestParam(name = "estado", required = false) String status,
             @RequestParam(name = "carrera", required = false) String program,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(name = "desde", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(name = "hasta", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(name = "q", required = false) String q,
             Pageable pageable) {
         return ResponseEntity.ok(ResponseWrapper.success(

@@ -65,3 +65,7 @@ backend/.env
 *.out
 *.toc
 *.synctex.gz
+
+# Bytecode de Python: se genera al importar los scripts, no es fuente
+__pycache__/
+*.pyc

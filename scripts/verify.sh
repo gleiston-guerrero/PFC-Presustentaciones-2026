@@ -131,7 +131,13 @@ echo "  P5: Lighthouse ya versionado en docs/mediciones/perf/lighthouse/prod-run
 echo "  P6: python -m nbconvert --execute scripts/perf-analysis.ipynb"
 echo
 
+# Sale distinto de 0 si algo fallo. Hasta la revision del 18-sep este script
+# terminaba en `exit 0` incondicional y lo declaraba ("esto es un reporte, no un
+# gate"), de modo que podia imprimir [FAIL] y aun asi dar por buena la corrida.
+# Un verificador que nunca falla no verifica nada.
 if [ "$FAIL" = "1" ]; then
-  echo "make verify: hay hallazgos FAIL/disputas abiertas arriba (esperado -- ver VERIFICACION.md para el detalle de cada uno). Saliendo con 0 igual: esto es un reporte, no un gate de CI."
+  echo "make verify: FALLO -- hay hallazgos [FAIL] arriba. Revisa VERIFICACION.md."
+  exit 1
 fi
+echo "make verify: OK -- ningun [FAIL]. Los [WARN] son brechas ya declaradas."
 exit 0

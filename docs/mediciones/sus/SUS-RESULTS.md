@@ -92,6 +92,56 @@ derivado reproducible con `python scripts/sus-ingesta.py <ese csv>`.
 | Fecha verificable | 15 de 15 |
 | Interpretación (Bangor et al.) | **por debajo** del promedio de la industria (68) |
 
+### Objeción del 2026-09-18 sobre la autenticidad de esta ronda, y su refutación
+
+La revisión individual del 18-sep plantea que esta ronda podría estar fabricada. Su razonamiento, que
+merece tomarse en serio porque está bien construido:
+
+> El CSV usa, en la cabecera de la pregunta de consentimiento, **literalmente** la redacción del script
+> `crear-formulario.gs`, subido a las 16:37. Pero 12 de las 15 respuestas están selladas entre las 11:36
+> y las 16:32, *antes* de que esa redacción existiera en el repositorio. Si el formulario se creó
+> después de las 11:36, las respuestas son fabricadas.
+
+La cronología de los commits es correcta y se verificó: a las 16:32 (`5d6102b`) el repositorio decía
+«He leído **lo anterior** y acepto participar»; a las 16:37 (`79b682a`) apareció «He leído **el
+consentimiento informado** y acepto participar en estas condiciones», que es la que trae el CSV.
+
+**El paso que no se sostiene es la inferencia, no los hechos.** Tres comprobaciones:
+
+**1. La redacción no nació en el script: viene de la hoja en papel.** El instrumento original
+[`Cuestionario-Usabilidad-SUS.docx`](Cuestionario-Usabilidad-SUS.docx), versionado el **2026-09-16 a
+las 22:48** en `f51db75` —dos días antes de todo esto— ya contiene las dos piezas de la frase:
+
+> «**Consentimiento informado**: tu participación es voluntaria y anónima. […] confirmas que aceptas
+> **participar en estas condiciones**.»
+
+Quien transcribió el formulario a Google Forms y quien escribió después el script partieron del mismo
+documento, así que llegar a la misma frase no requiere que uno copie del otro. La fuente común es
+anterior a ambos y está versionada.
+
+**2. El formulario se creó antes de la primera respuesta.** Registro de actividad de Google Drive
+([captura](evidencia/drive-creacion-formulario-2026-09-18.webp)): *«Has creado y compartido un elemento
+en 11:22, 18 sep»*.
+
+| Hito | Hora |
+|---|---|
+| Formulario creado y compartido (Drive) | **11:22** |
+| Primera respuesta (marca de Google) | 11:36:04 — 14 min después |
+| Última respuesta | 16:56:21 |
+| `crear-formulario.gs` subido al repositorio | 16:37:49 — **5 h 15 min después de crear el formulario** |
+
+El formulario existía cinco horas antes que el script. No pudo generarse con él.
+
+**3. El script nunca llegó a usarse para este formulario.** Se escribió a las 16:37, cuando la ronda ya
+estaba casi completa (12 de 15 respuestas), en respuesta a una petición de simplificar el procedimiento
+manual. Quedó en el repositorio como herramienta para futuras aplicaciones, no como el origen de esta.
+El registro de ejecuciones de Apps Script lo confirma y puede mostrarse en la defensa.
+
+**Qué queda por mostrar en la defensa**, porque una captura la aporta el equipo y lo que el evaluador
+pidió es acceso directo: la pestaña **Detalles** del formulario en Drive con su fecha de creación, la
+pestaña **Respuestas**, y el **registro de ejecuciones** del proyecto de Apps Script. Las tres son
+comprobaciones de un minuto sobre datos que el equipo no controla.
+
 ### Lo que esta ronda SÍ resuelve
 
 Los dos defectos de forma que señaló la evaluación quedan cerrados: la fecha ya no depende de lo que
