@@ -175,6 +175,50 @@ Las tres mediciones son **estadísticamente indistinguibles** entre sí:
 Welch: papel(15) vs formulario, **t = 0,519, p = 0,608**; papel(4) vs formulario, **t = −1,278,
 p = 0,220**. Ninguna diferencia significativa.
 
+**Corrección por comparaciones múltiples (agregada el 2026-09-19).** La revisión del 18-sep señaló que
+estos dos contrastes no llevaban corrección, y tenía razón: son la misma medición comparada contra dos
+referencias, es decir una familia, y sin corregir el 5 % declarado no es el riesgo real. El proyecto ya
+aplicaba Holm-Bonferroni a la familia de pruebas de rendimiento y no lo hacía aquí. Aplicado con la
+misma definición (`scripts/sus-estadistica.py`):
+
+| # | Contraste | p crudo | Umbral Holm | p ajustado | Decisión |
+|---|---|---|---|---|---|
+| 1 | papel(4, fecha verificable) vs formulario | 0,2204 | 0,025 | 0,4408 | no rechaza H0 |
+| 2 | papel(15) vs formulario | 0,6077 | 0,050 | 0,6077 | no rechaza H0 |
+
+Ninguno se rechaza. **La corrección no cambia la conclusión** — se aplica porque corresponde, no porque
+mueva el resultado a favor.
+
+### Consistencia interna: alfa de Cronbach = 0,599
+
+La misma revisión observó que la consistencia interna es «anómalamente baja (α = 0,60; lo habitual en el
+SUS es 0,85–0,92)». El equipo no lo había calculado. Calculado ahora, **se confirma al dígito**:
+
+| Muestra | α |
+|---|---|
+| Formulario 18-sep (n=15), polaridad corregida | **0,599** |
+| Papel, las 15 hojas, polaridad corregida | 0,619 |
+| Formulario 18-sep, sin invertir los ítems pares | 0,267 |
+
+Tres cosas que conviene decir, en este orden:
+
+1. **La observación es correcta y se acepta.** 0,599 queda claramente por debajo del rango que se
+   reporta habitualmente para el SUS (Bangor et al. 2008; Sauro 2011).
+2. **No es un defecto de la ronda nueva.** La ronda en papel da 0,619, prácticamente lo mismo. Si el
+   α bajo indicara respuestas fabricadas, no habría razón para que las dos rondas —una en papel, otra en
+   formulario, con participantes distintos— coincidieran en él. Apunta a cómo se aplicó el instrumento
+   en este contexto, no a una de las dos aplicaciones.
+3. **La tercera fila es la que explica el mecanismo.** Sin invertir los ítems pares el α se desploma a
+   0,267, que es lo esperado si la polaridad alternada no se respeta. Que suba a 0,599 al invertirlos
+   confirma que los participantes **sí** percibieron la polaridad — no marcaron en línea recta — pero no
+   de forma lo bastante consistente como para que los diez ítems midan una sola dimensión.
+
+**Qué implica para lo que se reporta:** con α = 0,599 y n = 15, el puntaje SUS de 52,83 debe leerse como
+un indicador débil, no como una medición consolidada de usabilidad. Se mantiene como resultado porque es
+lo que se midió, pero con esta limitación declarada junto a la cifra y no en una nota al pie.
+
+Reproducible: `python scripts/sus-estadistica.py`.
+
 Una muestra nueva, independiente y con fecha verificable **reproduce el mismo resultado** que la ronda
 en papel. Eso no arregla la fecha de las 11 hojas — no puede — pero sí dice algo sobre una lectura
 posible del hallazgo: **los puntajes de las hojas no son números inventados para quedar bien.** Si lo

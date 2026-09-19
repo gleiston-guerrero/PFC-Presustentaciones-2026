@@ -60,9 +60,17 @@ CREATE DATABASE presusDb;
 La configuración en `application.properties` es:
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/presusDb
-spring.datasource.username=postgres
-spring.datasource.password=postgreAdmin19
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
 ```
+
+> **Las credenciales no se escriben aqui.** `DB_USERNAME` y `DB_PASSWORD` salen de `.env`, que no esta
+> versionado; copia [`.env.example`](../.env.example) a `.env` y pon ahi los valores de tu maquina.
+> Docker Compose lo carga solo, y el target `test` del `Makefile` tambien.
+>
+> Una version anterior de este archivo traia la contrasena de la base local escrita en claro. Era una
+> credencial de desarrollo, no de produccion, pero una credencial escrita en un repositorio publico se
+> lee como una credencial: el lector no tiene forma de saber que no lo es. Se retira por eso.
 
 ### Paso 3: Ejecutar la Aplicación
 

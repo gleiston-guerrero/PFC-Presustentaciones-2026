@@ -83,6 +83,10 @@ n2, m2, sd2, lo2, hi2 = resumen('docs/mediciones/sus/sus-respuestas.csv',
                                 lambda r: r['fecha_verificable'] == 'si')
 print(f'  papel, solo fecha verificable: n={n2} media={m2:.2f} DE={sd2:.2f} IC95=[{lo2:.2f},{hi2:.2f}]')
 " || fail "P1: la cifra SUS publicada no se reproduce desde los CSV versionados"
+# Holm sobre la familia de contrastes y alfa de Cronbach: las dos cosas que la
+# revision del 18-sep echo en falta en el analisis del SUS.
+python scripts/sus-estadistica.py || fail "P1: sus-estadistica.py fallo"
+warn "P1: consistencia interna alfa = 0,599, por debajo del 0,85-0,92 habitual en el SUS -- declarado en SUS-RESULTS.md y en el informe"
 warn "P1: la ronda del 18-sep es una muestra nueva (ninguno de los 15 respondio antes en papel): el origen de las 11 hojas retractadas sigue abierto -- ver docs/mediciones/sus/SUS-RESULTS.md"
 echo
 
@@ -182,6 +186,11 @@ if [ "$RAPIDO" = "1" ]; then
   warn "P3: javadoc real omitido por --rapido"
 else
   echo "  corriendo javadoc real con doclint y sin tope de avisos..."
+  # Hay que borrar la salida anterior: si target/site/apidocs existe, el plugin
+  # dice "everything is up to date" y NO genera nada, con lo que esta
+  # comprobacion reportaria "0 avisos" sin haber mirado una sola clase. Se
+  # verifico que lo hacia.
+  rm -rf backend/target/site/apidocs
   if (cd backend && ./mvnw -o javadoc:javadoc "-DadditionalJOption=-Xmaxwarns 100000" \
         > "../$TMPV/javadoc.log" 2>&1); then
     JDERR=$(grep -c ": error:" "$TMPV/javadoc.log" || true)
@@ -357,6 +366,13 @@ if [ "$PYC" = "0" ] && [ "$PYCACHE" = "0" ]; then
   ok "EV-2: ningun .pyc ni __pycache__ en el arbol de trabajo"
 else
   fail "EV-2: hay $PYC archivo(s) .pyc y $PYCACHE carpeta(s) __pycache__ en el arbol -- borra con: find . -name '__pycache__' -type d -exec rm -rf {} +"
+fi
+# Las dos contrasenas en claro que senalo la revision del 18-sep ya se
+# retiraron; esto existe para que no vuelvan.
+if PYTHONIOENCODING=utf-8 python scripts/ev2-credenciales.py; then
+  ok "Seguridad: ninguna credencial en claro en los archivos versionados"
+else
+  fail "Seguridad: hay credenciales en claro en archivos versionados -- ver arriba"
 fi
 if PYTHONIOENCODING=utf-8 python scripts/ev4-contribuciones.py --check; then
   ok "EV-4: CONTRIBUCIONES.md cuadra con el historial"

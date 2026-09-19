@@ -26,15 +26,15 @@ commits, para comprobar que ninguna afirmación de este archivo quedó desactual
 
 | # | Estado | Qué se corrió hoy y qué dio |
 |---|---|---|
-| P1 | 🟡 Parcial | `n=4 media=48.75 DE=1.44 IC95=[46.45,51.05]` — reproduce exacto; 15 filas en el CSV |
-| P2 | ✅ Cumple | `./mvnw clean test`: **804 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE 82,03 %, BRANCH 73,49 % |
-| P3 | ✅ Cumple | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, exit 0, 0 errores**, con `doclint` activo (no hay `<doclint>` en ningún `pom.xml`); 731/768 elementos documentados (95,2 %) |
+| P1 | 🟡 Parcial | **Cifra de cierre (ronda del 18-sep):** `n=15 media=52.83 DE=12.06 IC95=[46.16,59.51]` — reproduce exacto desde el CSV sellado por un tercero. La ronda en papel (`n=4 media=48.75`) queda como registro histórico. Abierto: α = 0,599 y el origen de las 11 hojas retractadas |
+| P2 | ✅ Cumple | `./mvnw clean test`: **804 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,00 %** (4019/4901), BRANCH **73,49 %** (1483/2018) — corrida de cierre del 2026-09-19 |
+| P3 | 🟡 Parcial | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, 0 errores**, `doclint` activo. Escáner propio: 734/768 (**95,6 %**) tras recolocar 75 bloques huérfanos. **Pero javadoc emite 682 avisos** con el tope levantado (por defecto corta en 100, que es la cifra que vio la revisión del 18-sep) — ver la sección P3 |
 | P4 | ✅ Cumple en `src/main` | Renombrado completado: **0,0 %** de tipos y métodos (antes 35,7 % y 39,1 %); 1,5 %/4,3 % bajo la definición más amplia. Brecha declarada: 436 de 807 nombres de `@Test` siguen en español |
 | P5 | ✅ Cumple | 6 corridas Lighthouse versionadas en `prod-runs/`; URL pública en la primera pantalla del README |
 | P6 | ✅ Cumple | `\label{tab:holm-bonferroni}` presente y citado con `\ref` en `10-evaluacion-empirica.tex:85` |
 | P7 | ✅ Cumple | Surefire de hoy: 11 + 2 + 3 = **16 pruebas del chatbot, 0 fallos** |
 | P8 | ✅ Cumple | 102 endpoints de escritura; los 5 sin anotación son los exentos de pre-login (`login`, `refresh`, `logout`, `recuperar`, `reset`) |
-| P9 | ⚠️ Ver nota | El tag `v1.1.0` existe y `CITATION.cff` + portada lo declaran, **pero apunta 37 commits atrás** |
+| P9 | ⚠️ Ver nota | El tag `v1.1.0` existe y `CITATION.cff` + portada lo declaran, **pero va commits por detrás de `HEAD`** (`make verify` reporta el desfase exacto en cada corrida). Falta archivar v1.1.0 en Zenodo |
 | P10 | ✅ Cumple | Portada: 32 líneas, 0 referencias DOI, 0 notas de proceso, URL del repositorio presente |
 | P11 | ✅ Cumple | 31 controladores, 10 rutinas SQL distintas, cero clases con nombre pre-P4 en el informe activo |
 | P12 | 🟡 Parcial | Ningún commit vacío nuevo desde `f3d1ff4`; la conversación con el docente sigue sin ocurrir |
@@ -57,30 +57,52 @@ para una revisión que lea `v1.1.0`.
 **Criterio:** al menos 15 respuestas reales en un CSV versionado, con el instrumento de 10 ítems de
 Brooke, consentimiento de cada participante, y recálculo según Brooke.
 
+> **Corregido el 2026-09-19.** La revisión individual del 18-sep señaló, con razón, que esta sección
+> «verifica un resultado ya retirado (n = 4, 48,75), no el 52,83 que se informa». Era cierto: el
+> informe ya reportaba la ronda del 18-sep mientras este archivo seguía recalculando las 4 hojas de
+> papel. Un verificador que comprueba una cifra distinta de la que se publica no verifica nada.
+
 **Comando:**
 ```bash
-python -c "
-import csv, statistics
-from scipy import stats
-rows = list(csv.DictReader(open('docs/mediciones/sus/sus-respuestas.csv', encoding='utf-8')))
-scores = [float(r['sus_score']) for r in rows if r['fecha_verificable']=='si']
-n=len(scores); mean=statistics.mean(scores); sd=statistics.stdev(scores)
-se=sd/n**0.5; t=stats.t.ppf(0.975, df=n-1); m=t*se
-print(f'n={n} media={mean:.2f} DE={sd:.2f} IC95=[{mean-m:.2f},{mean+m:.2f}]')
-"
+python scripts/sus-estadistica.py
 ```
 
-**Salida real (2026-09-17):**
+**Salida real (2026-09-19):**
 ```
-n=4 media=48.75 DE=1.44 IC95=[46.45,51.05]
+  cierre (18-sep): n=15 media=52.83 DE=12.06 IC95=[46.16,59.51]
+  papel, solo fecha verificable: n=4 media=48.75 DE=1.44 IC95=[46.45,51.05]
+
+  #  contraste                                       p crudo  umbral  p ajust.  decision
+  1  papel(4, fecha verificable) vs formulario(15)   0.2204   0.025   0.4408    no rechaza
+  2  papel(15) vs formulario(15)                     0.6077   0.05    0.6077    no rechaza
+
+  Formulario 18-sep (n=15), polaridad corregida: alfa = 0.599
+  Formulario 18-sep, SIN invertir los pares:      alfa = 0.267
+  Papel, las 15 hojas, polaridad corregida:       alfa = 0.619
 ```
 
-**Veredicto: 🟡 Parcial.** De las 15 hojas recolectadas, 11 tienen una fecha escrita a mano que no se
-sostiene (posterior al commit que las versiona y, en varios casos, posterior a hoy) — hallazgo real
-verificado a 400 dpi sobre los PDF originales, ver `docs/mediciones/sus/SUS-RESULTS.md`. No se fabricó
-ni se alteró ninguna fecha para cerrar esto: el resultado se reporta solo sobre las 4 hojas con fecha
-verificable. No hay consentimiento individual firmado, solo una nota impresa de consentimiento
-implícito (brecha ya reconocida, no subsanada).
+`make verify` no se limita a imprimir esto: **asegura** que la media del CSV sellado sea 52,83 y que
+haya 15 respuestas. Si el informe y el expediente se separan, la verificación falla.
+
+**Veredicto: 🟡 Parcial.** Lo que cumple y lo que no:
+
+- ✅ **La cifra que se publica es la que se verifica.** Ronda del 18-sep, n = 15, en un formulario
+  alojado por un tercero que sella cada respuesta con la hora de su propio servidor, y con
+  consentimiento individual explícito en las 15 — lo que cierra también la objeción de que el
+  consentimiento era solo una nota impresa.
+- ✅ **Corrección por comparaciones múltiples aplicada.** Los dos contrastes de Welch son una familia
+  y no la llevaban; ahora llevan Holm-Bonferroni, con la misma definición que la familia de pruebas
+  de rendimiento. Ninguno se rechaza: la corrección no cambia la conclusión, y se aplica porque
+  corresponde, no porque mueva el resultado a favor.
+- ❌ **Consistencia interna baja: α = 0,599**, frente al 0,85–0,92 habitual en el SUS. La observación
+  del 18-sep se confirma al dígito. No es un defecto de la ronda nueva —la de papel da 0,619— y el
+  mecanismo se ve en la tercera fila: sin invertir los ítems pares α cae a 0,267, así que los
+  participantes sí percibieron la polaridad alternada, pero no de forma lo bastante consistente. Con
+  α = 0,599 y n = 15, el 52,83 es un **indicador débil**, no una medición consolidada.
+- ❌ **El origen de las 11 hojas retractadas sigue abierto.** La ronda del 18-sep es una muestra
+  nueva: ninguno de los 15 declara haber respondido antes en papel. No cierra el Piso 3.
+
+Detalle completo en `docs/mediciones/sus/SUS-RESULTS.md`.
 
 ---
 
@@ -213,6 +235,72 @@ $ cd backend && ./mvnw -q javadoc:javadoc
    `mvn javadoc:javadoc` sigue en 0 errores con doclint activo, y los 804 tests siguen en verde.
    El sub-hallazgo "164 comentarios son solo etiquetas" no se pudo reproducir con estas herramientas —
    no descartado, no verificado.
+
+### Revisión del 2026-09-19: el veredicto anterior era optimista
+
+La revisión individual del 18-sep midió **85,2 %** contando interfaces, donde este archivo declaraba
+**95,2 %**, y dio una causa concreta: *«92 bloques están colocados después de `@Query` y `javac` no los
+asocia»*. **Tenía razón, y la causa es exactamente esa.** Lo que sigue es lo que se encontró al
+comprobarlo.
+
+**1. El defecto existía.** 75 bloques Javadoc en 31 archivos estaban escritos *debajo* de la anotación:
+
+```java
+@Query("SELECT u FROM AppUser u ...")
+/**
+ * Search paginado.
+ * @param q q
+ */
+Page<AppUser> searchPaged(@Param("q") String q, Pageable pageable);
+```
+
+Para una persona ese método está documentado. Para `javac` no: el Javadoc debe preceder a *todo* el
+grupo de modificadores y anotaciones. Ahí el bloque queda huérfano y el método cuenta como sin
+documentar. Detectado con `scripts/ev2-javadoc-colocacion.py`, corregido con
+`scripts/ev2-javadoc-recolocar.py` (61 bloques movidos, 14 fusionados con el que ya tenían encima,
+conservando la prosa y añadiendo solo las etiquetas que faltaban).
+
+**2. Los dos escáneres propios tenían la misma ceguera, y por eso daban 95,2 %.** Subían desde la
+firma saltando líneas que empiezan por `@` — pero las líneas de continuación de un `@Query` multilínea
+empiezan por comillas o por `)`, así que el escáner se detenía ahí. Corregido con un salto que
+equilibra paréntesis, igual que hace `javac`. **El 95,2 % no era una cifra inflada a propósito: era una
+medición con un defecto que producía el resultado favorable.**
+
+**3. Al recolocar aparecieron 3 errores de javadoc que llevaban tiempo ahí.** Genéricos crudos en
+`@return` (`ResponseEntity<List<TopicPropuestoDTO>>`) que `doclint` lee como HTML mal formado. Eran
+invisibles **porque el bloque no se procesaba**: la confirmación más directa de que el diagnóstico del
+18-sep era correcto. Envueltos en `{@code}`.
+
+**4. Los «100 avisos» eran el tope, no el total.** `javadoc` corta en 100 avisos por defecto
+(`-Xmaxwarns`). Levantado el tope, la corrida real da:
+
+```
+BUILD SUCCESS -- 0 errores, 682 avisos
+   247  no comment
+   180  use of default constructor, which does not provide a comment
+   147  no main description
+    71  no @param for <x>
+    37  no @return
+```
+
+`make verify` corre ahora `javadoc:javadoc` con el tope levantado y **publica ese número** en cada
+corrida, en vez de dejarlo escondido detrás del corte.
+
+**Veredicto revisado: 🟡 Parcial.**
+
+| | |
+|---|---|
+| `mvn javadoc:javadoc` con `doclint` activo | ✅ BUILD SUCCESS, **0 errores** |
+| Escáner propio, metodología amplia | 734/768 = **95,6 %**, sobre el umbral del 90 % |
+| Bloques huérfanos bajo una anotación | ✅ 0 (eran 75) |
+| Avisos de `javadoc` sin tope | ❌ **682** |
+
+Los 682 avisos **no** hacen fallar el build ni incumplen el criterio literal de la guía (*«90 % o más
+de los métodos públicos con Javadoc completo y `javadoc:javadoc` sin error»*), pero son una brecha real
+y se declara como tal en vez de ampararse en que el criterio no los mide. La mayor parte —los 180 de
+constructores por defecto y buena parte de los 247 «no comment»— corresponde a elementos que el
+escáner propio no cuenta en su universo; la diferencia entre ambas metodologías está ahora medida, no
+supuesta.
 
 ---
 
@@ -869,6 +957,45 @@ con el detalle exacto de la imprecisión, y esta vez sí se corrigió lo que sí
   debían tener — la recuperación, tal como está planteada, ya no es un trabajo de equipo activo, así
   que una "conversación con el equipo completo" no es estructuralmente posible en este momento. Anotado
   también en `BITACORA-COMMITS-2026-09-02.md`.
+
+---
+
+## Seguridad — Credenciales escritas en claro (señalado el 2026-09-18)
+
+**Lo que se señaló:** *«`k6/load-test.js:28` tiene escrita la contraseña de la cuenta de administrador
+de demostración, y `backend/INSTRUCCIONES.md:64` una contraseña de base de datos. No las probé.»*
+
+**Verificado: las dos existían.** Ninguna era de producción —`admin123` era de la cuenta que siembra
+`DemoDataSeeder`, que está anotado `@Profile("dev")` y nunca se instancia fuera de ese perfil;
+`postgreAdmin19` era la base local de Docker— pero **ese argumento no lo puede comprobar quien lee el
+repositorio**: una cadena con pinta de credencial se lee como una credencial, y el lector no tiene
+forma de saber que no lo es. Se retiran por eso, no por el riesgo directo.
+
+**Corregido:**
+
+- `k6/load-test.js` lee las credenciales del entorno (`K6_USER` / `K6_PASS`) y **falla con un mensaje
+  explícito** si faltan, en vez de llevarlas escritas. Hallazgo de paso: el valor que estaba escrito
+  (`admin123`) **ya no era el del sembrador**, así que ese `setup()` habría fallado igualmente —
+  pidiéndolas por entorno el fallo es explícito en vez de silencioso.
+- `backend/INSTRUCCIONES.md` usa `${DB_USERNAME}` / `${DB_PASSWORD}` y remite a `.env.example`, con la
+  razón escrita en el propio archivo.
+
+**Y para que no vuelvan:** `scripts/ev2-credenciales.py`, enganchado a `make verify`, revisa los
+archivos que `git` rastrea —los que ve cualquiera que clone— y falla si aparece un literal de aspecto
+credencial. Acepta las dos formas, entrecomillada (`password: 'admin123'`) y suelta al estilo
+`.properties` (`spring.datasource.password=postgreAdmin19`), porque los dos hallazgos originales tenían
+una forma distinta cada uno.
+
+**Dos cosas sobre el detector, dichas porque importan más que el detector:**
+
+1. **Una primera versión marcaba 28 sitios, todos falsos** (`token = jwtService.generateToken(...)`,
+   `token = localStorage.getItem(...)`). Un detector que grita en falso se termina ignorando, que es el
+   mismo defecto que se está corrigiendo. Se restringió a literales con al menos un dígito.
+2. **Una segunda versión no detectaba nada**, porque exigía comillas y la forma original de
+   `INSTRUCCIONES.md` no las lleva. Se comprobó reintroduciendo las dos líneas: **las dos disparan**, y
+   las cinco formas de código normal que antes daban falso positivo, no.
+
+**Veredicto: ✅ Cumple**, con las dos credenciales retiradas y una comprobación que falla si vuelven.
 
 ---
 

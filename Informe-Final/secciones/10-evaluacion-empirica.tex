@@ -267,9 +267,27 @@ abierto.
 indistinguibles entre sí: papel con las 15 hojas (55.17), papel con solo las 4 de fecha verificable
 (48.75) y el formulario del 18-sep (52.83), con prueba de Welch $t=0.519$, $p=0.608$ para la primera
 comparación y $t=-1.278$, $p=0.220$ para la segunda
-(Figura~\ref{fig:sus-comparacion}). Que una muestra distinta, independiente y con
-fecha verificable caiga en el mismo rango es evidencia \emph{indirecta} de que los puntajes de las hojas
-no son cifras inventadas para quedar bien; no dice nada sobre su fecha, y se presenta con ese límite.
+(Figura~\ref{fig:sus-comparacion}). Esos dos contrastes son la misma medición comparada contra dos
+referencias, es decir una \emph{familia}, así que llevan corrección de Holm-Bonferroni con la misma
+definición que la familia de pruebas de rendimiento (Sección~\ref{sec:evaluacion}): $p$ ajustados de
+0.441 y 0.608 respectivamente, ninguno significativo. La corrección no cambia la conclusión --- se
+aplica porque corresponde, no porque mueva el resultado a favor. Que una muestra distinta,
+independiente y con fecha verificable caiga en el mismo rango es evidencia \emph{indirecta} de que los
+puntajes de las hojas no son cifras inventadas para quedar bien; no dice nada sobre su fecha, y se
+presenta con ese límite.
+
+\textbf{Consistencia interna: $\alpha$ de Cronbach $= 0.599$.} El instrumento tiene una consistencia
+interna \textbf{por debajo} de lo que se reporta habitualmente para el SUS (0.85--0.92 en Bangor et al.
+2008 y Sauro 2011), y eso se declara junto a la cifra y no en una nota al pie. Tres precisiones. Primera:
+\emph{no es un defecto de la ronda nueva} --- la ronda en papel da $\alpha = 0.619$, prácticamente lo
+mismo, pese a ser otro soporte y otros participantes; si un $\alpha$ bajo indicara respuestas
+fabricadas, no habría razón para que ambas coincidieran en él. Segunda: sin invertir los ítems pares el
+$\alpha$ cae a 0.267, de modo que el salto a 0.599 al corregir la polaridad confirma que los
+participantes \emph{sí} percibieron la alternancia del instrumento --- no marcaron en línea recta ---
+pero no de forma lo bastante consistente como para que los diez ítems midan una sola dimensión.
+Tercera, y es la que importa para leer el resultado: con $\alpha = 0.599$ y $n = 15$, el puntaje de
+52.83 es un \textbf{indicador débil}, no una medición consolidada de usabilidad. Se mantiene porque es
+lo que se midió. Reproducible con \texttt{scripts/sus-estadistica.py}.
 
 Instrumento SUS de diez ítems. Las respuestas crudas de la ronda en papel están versionadas en
 \texttt{docs/mediciones/sus/sus-respuestas.csv} (con una columna \texttt{fecha\_verificable}), con las 15

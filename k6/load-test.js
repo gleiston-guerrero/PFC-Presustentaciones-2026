@@ -24,8 +24,28 @@ const BASE_URL = `${__ENV.BASE_URL || 'http://localhost:8080/api/v1'}`;
 // 99% de las peticiones terminan bloqueadas por diseno (no es un fallo real
 // de capacidad, es el rate limiter funcionando). El login se prueba aparte;
 // esta prueba de carga mide el flujo real de un usuario ya autenticado.
+// Las credenciales se leen del entorno, no se escriben aqui (senalado en la
+// revision del 18-sep). La cuenta es la que siembra DemoDataSeeder, que existe
+// SOLO bajo el perfil `dev`: un despliegue sin ese perfil nunca la crea. Aun
+// asi, una cadena con pinta de contrasena en un repositorio publico se lee como
+// una contrasena, y el lector no tiene forma de saber que no lo es.
+//
+//   k6 run -e K6_USER=admin@uteq.edu.ec -e K6_PASS=<la del seeder> load-test.js
+//
+// De paso: el valor que estaba escrito ('admin123') ya no era el del seeder, asi
+// que este setup habria fallado. Al pedirlo por entorno el fallo es explicito en
+// vez de silencioso.
+const USER = __ENV.K6_USER || 'admin@uteq.edu.ec';
+const PASS = __ENV.K6_PASS;
+
 export function setup() {
-    const payload = JSON.stringify({ email: 'admin@uteq.edu.ec', password: 'admin123' });
+    if (!PASS) {
+        throw new Error(
+            'Falta K6_PASS. Esta prueba necesita en el entorno la contrasena del ' +
+            'usuario de demostracion (perfil dev, ver DemoDataSeeder), no escrita ' +
+            'en este archivo. Ejemplo: k6 run -e K6_PASS=... load-test.js');
+    }
+    const payload = JSON.stringify({ email: USER, password: PASS });
     const params = { headers: { 'Content-Type': 'application/json' } };
     const res = http.post(`${BASE_URL}/auth/login`, payload, params);
     if (res.status !== 200) {
