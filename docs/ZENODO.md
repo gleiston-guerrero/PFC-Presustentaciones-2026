@@ -100,6 +100,23 @@ Ese botón conserva el **DOI de concepto** (`10.5281/zenodo.21988563`) y encaden
 las anteriores. Un «New upload» crearía una familia separada y rompería la cadena de citación — es el
 error más fácil de cometer aquí.
 
+> ### ⚠️ «Editar» y «Nueva versión» hacen cosas distintas
+>
+> El registro publicado muestra los dos botones juntos, y confundirlos es el error más caro de este
+> procedimiento:
+>
+> | Botón | Qué hace | Resultado si se usa aquí |
+> |---|---|---|
+> | **Editar** | Modifica ese mismo registro en el sitio | Conserva su DOI, **sus archivos** y su fecha. Cambiarle la etiqueta a `v1.1.0` dejaría un DOI que *dice* v1.1.0 y *contiene* el ZIP de v1.0.0, fechado antes que v1.0.1 — un registro que afirma archivar algo que no tiene |
+> | **Nueva versión** | Crea un registro nuevo con DOI propio | ✅ Lo correcto. Encadena `v1.0.0 → v1.0.1 → v1.1.0` bajo el mismo DOI de concepto |
+>
+> «Editar» sirve para corregir un metadato equivocado de una versión ya publicada (un ORCID mal
+> escrito, por ejemplo), nunca para convertir una versión en otra.
+>
+> Conviene además pulsar «Nueva versión» desde la **versión más reciente** (`v1.0.1`,
+> [10.5281/zenodo.22445216](https://doi.org/10.5281/zenodo.22445216)) y no desde `v1.0.0`: funciona
+> desde cualquiera, pero así el formulario llega prellenado con los metadatos más nuevos.
+
 **3. Subir y completar**
 
 - Borrar el archivo de la versión anterior que Zenodo arrastra al formulario y subir el `.tar.gz` nuevo.
