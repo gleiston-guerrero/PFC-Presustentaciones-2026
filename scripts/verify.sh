@@ -396,7 +396,14 @@ else
 fi
 grep -q 'version: "1.1.0"' CITATION.cff && ok "CITATION.cff declara version 1.1.0" || fail "P9: CITATION.cff no declara 1.1.0"
 grep -q 'v1.1.0' Informe-Final/secciones/00-portada.tex && ok "portada declara v1.1.0" || fail "P9: portada no declara v1.1.0"
-grep -q "zenodo.22839517" CITATION.cff && ok "CITATION.cff cita el DOI de la version v1.1.0 archivada" || fail "P9: CITATION.cff no cita el snapshot de v1.1.0 en Zenodo"
+DOI_V=$(python -c "
+import re, io
+t = io.open('docs/ZENODO.md', encoding='utf-8').read()
+print(re.search(r'DOI de esta versi[oó]n \| \[10\.5281/zenodo\.(\d+)\]', t).group(1))
+" 2>/dev/null) || DOI_V=""
+# El DOI de la version archivada sale de docs/ZENODO.md (donde se registra al publicar), no de una
+# constante aqui: cada vez que se archiva una version nueva, este script seguia citando la anterior.
+if [ -n "$DOI_V" ] && grep -q "zenodo.$DOI_V" CITATION.cff; then ok "CITATION.cff cita el DOI de la version v1.1.0 archivada (zenodo.$DOI_V)"; else fail "P9: CITATION.cff no cita el DOI que docs/ZENODO.md registra para v1.1.0"; fi
 # Un DOI no existe hasta publicarse, asi que los commits que lo registran son
 # posteriores al snapshot que archiva. Esto acota esa diferencia: lo unico que
 # puede separar el commit archivado del etiquetado es el registro del DOI.

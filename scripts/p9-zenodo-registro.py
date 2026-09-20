@@ -20,7 +20,7 @@ Ademas: el campo Version es `v1.1.0` (ya fallo una vez como "v3") y la
 descripcion no contiene el texto de una instruccion pegada por error (tambien
 fallo una vez).
 
-Los datos esperados salen de CITATION.cff y de docs/ZENODO-DATASET.md, no de
+Los datos esperados salen de CITATION.cff, docs/ZENODO.md y docs/ZENODO-DATASET.md, no de
 constantes aqui: si se escribieran en dos sitios, envejecerian en uno.
 
 Uso:
@@ -49,8 +49,11 @@ def leer(ruta):
 def esperado():
     cff = leer("CITATION.cff")
     repo = re.search(r'^repository-code:\s*"([^"]+)"', cff, re.M).group(1)
-    doi_v = re.search(r'value:\s*"10\.5281/zenodo\.(\d+)"\s*\n\s*description:\s*"Snapshot de la version '
-                      + re.escape(TAG), cff).group(1)
+    # El registro que se comprueba es el que docs/ZENODO.md declara como el de esta version: asi,
+    # al archivar una version nueva basta registrarla ahi (antes se leia de una descripcion de
+    # CITATION.cff que hay que reescribir a mano y que envejecia).
+    zen = leer("docs/ZENODO.md")
+    doi_v = re.search(r"DOI de esta versi[oó]n\s*\|\s*\[10\.5281/zenodo\.(\d+)\]", zen).group(1)
     ds = leer("docs/ZENODO-DATASET.md")
     doi_ds = re.search(r"\*\*DOI \(esta versi[oó]n, v1\):\*\*\s*`10\.5281/zenodo\.(\d+)`", ds).group(1)
     return repo, doi_v, doi_ds

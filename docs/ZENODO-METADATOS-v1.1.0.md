@@ -3,6 +3,14 @@
 Contenido listo para copiar en el borrador de **Nueva versión**. Cada campo va tal cual; las notas
 entre paréntesis son instrucciones, no texto a copiar.
 
+> **Esta es la SEGUNDA vez que se archiva `v1.1.0`.** La primera (2026-09-19, registro `22839517`, commit
+> `35d8199`) se hizo antes de las correcciones de la revisión final; desde entonces cambiaron el informe, el
+> Javadoc, los nombres de las pruebas y los verificadores, es decir, algo más que el registro del DOI. La
+> etiqueta `v1.1.0` no se renombra (la revisión evalúa esa etiqueta): se archiva otra vez el contenido
+> final bajo el mismo nombre de versión, y el registro anterior queda como el primer snapshot, superado.
+> `make verify` (`scripts/p9-snapshot-zenodo.py`) exige que lo único que separe el commit archivado de la
+> etiqueta sea el registro del DOI nuevo.
+
 > ⚠️ **Antes de subir nada:** el paquete se genera desde el tag de Git. Comprobar que `v1.1.0` apunta
 > al commit de cierre que se quiere archivar:
 >
@@ -82,10 +90,10 @@ v1.1.0
 ## 7. Fecha de publicación
 
 ```
-2026-09-19
+(la fecha que imprima scripts/zenodo-paquete.sh)
 ```
 
-Es la fecha del commit al que apunta el tag (`1e32fa1`). La imprime `scripts/zenodo-paquete.sh` al
+Es la fecha del commit al que apunta el tag al empaquetar. La imprime `scripts/zenodo-paquete.sh` al
 correr, para no teclearla de memoria.
 
 ---
@@ -128,9 +136,16 @@ desplegada con Docker Compose y nginx.</p>
       identificador interno, y de que no queden credenciales escritas en el repositorio.</li>
   <li>Documentación del código: los avisos de <code>javadoc</code> pasan de 682 a 170, y los 170
       restantes corresponden a una única causa declarada (constructores generados por Lombok que la
-      herramienta no observa al analizar el código fuente).</li>
+      herramienta no observa al analizar el código fuente). Los <code>@param</code> que solo repetían el
+      nombre del parámetro pasan de 35 % a 0 %, y se recuperó documentación que <code>javadoc</code>
+      descartaba en silencio (bloques apilados) y un comentario que había quedado dentro de una
+      consulta JPQL.</li>
+  <li>Nombres de las pruebas automatizadas: 789 métodos de prueba con nombre en español pasan a
+      inglés, con una comprobación automatizada de tolerancia cero.</li>
   <li>Trazabilidad de las cifras publicadas: todas proceden de una corrida versionada, y una
-      comprobación automatizada rechaza cualquier cifra que el expediente no respalde.</li>
+      comprobación automatizada rechaza cualquier cifra que el expediente no respalde (cobertura, SUS,
+      valores p, Lighthouse, archivos de evidencia citados). El propio verificador se prueba con un
+      arnés de 33 mutaciones que inyecta defectos y exige que cada uno sea detectado.</li>
 </ul>
 
 <p><strong>Estado verificado de esta versión:</strong> 806 pruebas automatizadas (0 fallos, 0
@@ -170,7 +185,13 @@ owasp
 | Relación | Identificador | Tipo |
 |---|---|---|
 | `is supplemented by` | `10.5281/zenodo.22398713` | DOI (dataset de mediciones) |
-| `is supplement to` | `https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026` | URL |
+| `is supplement to` | `https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026/tree/v1.1.0` | URL (tipo Software) |
+
+Y en la sección *Software* del formulario, **Repository URL**:
+
+```
+https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026
+```
 
 ---
 
@@ -186,11 +207,16 @@ Sin embargo (no aplicar embargo).
 
 ## Después de publicar
 
-Zenodo devuelve un **DOI de versión** nuevo. Hay que:
+Zenodo devuelve un **DOI de versión** nuevo. Hay que registrarlo (lo hace quien tenga el repositorio abierto;
+son archivos de registro, los únicos que pueden cambiar entre el snapshot y la etiqueta):
 
-1. Añadirlo a la lista `identifiers` de [`CITATION.cff`](../CITATION.cff).
-2. Añadir la fila correspondiente a la tabla de versiones de [`ZENODO.md`](ZENODO.md).
-3. Actualizar el estado de `v1.1.0` en la cabecera de ese mismo documento.
+1. En [`ZENODO.md`](ZENODO.md): DOI de esta versión, enlace al registro, **commit archivado** (el commit
+   al que apuntaba la etiqueta al empaquetar) y fila de la tabla de versiones. `p9-snapshot-zenodo.py` y
+   `p9-zenodo-registro.py` leen de ahí.
+2. En [`CITATION.cff`](../CITATION.cff): añadir el DOI a `identifiers` y marcar el anterior como el primer
+   snapshot, superado.
+3. En `README.md` y `VERIFICACION.md` (P9): el DOI de la versión.
+4. Mover la etiqueta `v1.1.0` al último commit y volver a correr `make verify`.
 
 **No hay que tocar el campo `doi:` de `CITATION.cff` ni el badge del README:** ambos citan el DOI de
 concepto `10.5281/zenodo.21988563`, que pasa a resolver automáticamente a esta versión nueva.
