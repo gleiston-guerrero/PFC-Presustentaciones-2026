@@ -8,7 +8,7 @@ punto de esta ronda).
 > cuatro defectos concretos: «sin firmas, sin correo institucional, sin columna de archivos, y con
 > recuentos que no cuadran (dice 81 commits; son 89)». Los cuatro se responden abajo. El último es el
 > que de verdad importaba, porque es el que se repite solo: cuando se corrigió 81 → 89, dos días
-> después ya eran 122. **Por eso la tabla dejó de escribirse y pasó a generarse.**
+> después ya eran 123. **Por eso la tabla dejó de escribirse y pasó a generarse.**
 
 ## Metodología: la tabla la produce `git`, no el equipo
 
@@ -54,7 +54,7 @@ la cola: cada commit que cierra un punto obliga a regenerar, y el commit que reg
 ## Autoría de esta ronda
 
 **Tramo:** `f3d1ff4..HEAD` — desde el commit que revisó la guía original hasta hoy.
-**Total: 122 commits.**
+**Total: 123 commits.**
 **Una sola persona, sin excepción:** Álava Alvarado, Jean Pierre.
 Identidades de Git que usó en el tramo: Jean30042 <jalavaa@uteq.edu.ec>, Jean30042 <jeanalavaalavarado@gmail.com>
 
@@ -65,7 +65,7 @@ Correcto y confirmado. Reparto real del tramo, con `git log --format=%ae f3d1ff4
 | Correo | Commits |
 |---|---:|
 | `jeanalavaalavarado@gmail.com` (personal) | 92 |
-| `jalavaa@uteq.edu.ec` (institucional) | 30 |
+| `jalavaa@uteq.edu.ec` (institucional) | 31 |
 
 **Corregido a partir del 2026-09-19:** el repositorio quedó fijado a la identidad institucional, de
 forma local y no solo global, para que no dependa de la máquina en la que se trabaje:
@@ -105,9 +105,9 @@ Salida literal de `python scripts/ev4-contribuciones.py`:
 | P10 | `bd2cc84`, `85c13cf`, `d301e8b`, `9c16cd2`, `dfd93e3`, `e36f25e`, `2275fa6`, `52bf35b`, `4a99a8e` | `CONTRIBUCIONES.md`<br>`Informe-Final/secciones/00-portada.tex`<br>`VERIFICACION.md`<br>`Informe-Final/secciones/10-evaluacion-empirica.tex` | 23 |
 | P11 | `bd2cc84`, `73771be`, `6282d50`, `53de5be`, `7b7016c`, `7210c75`, `dd3e192`, `95923ea`, `e40718f`, `f7bd8c5` | `Informe-Final/secciones/10-evaluacion-empirica.tex`<br>`VERIFICACION.md`<br>`docs/requisitos/SRS-v1.0.1.tex`<br>`scripts/verify.sh` | 50 |
 | P12 | `bd2cc84`, `25f0896`, `28276f9`, `9bfa665`, `7a22271`, `efa4134`, `2275fa6`, `19c028a` | `VERIFICACION.md`<br>`CONTRIBUCIONES.md`<br>`docs/observaciones/BITACORA-COMMITS-2026-09-02.md`<br>`CONTRIBUTORS.md` | 17 |
-| EV-1 | `9fd9d0c`, `feb9d64`, `f63e903`, `2275fa6`, `fd38f8d` | `VERIFICACION.md`<br>`CONTRIBUCIONES.md`<br>`scripts/verify.sh`<br>`Informe-Final/secciones/10-evaluacion-empirica.tex` | 13 |
+| EV-1 | `9fd9d0c`, `feb9d64`, `f63e903`, `2275fa6`, `fd38f8d`, `9bafe85` | `VERIFICACION.md`<br>`CONTRIBUCIONES.md`<br>`scripts/verify.sh`<br>`Informe-Final/secciones/10-evaluacion-empirica.tex` | 17 |
 | EV-2 | `9fd9d0c`, `feb9d64`, `20b378a`, `512608e`, `7d3d004`, `ef11139`, `f7bd8c5`, `a920a70` | `CONTRIBUCIONES.md`<br>`scripts/verify.sh`<br>`.gitignore`<br>`Makefile` | 63 |
-| EV-4 | `9fd9d0c`, `feb9d64`, `2275fa6`, `512608e`, `1c9c9da`, `142c35f`, `eefc32c`, `ef11139`, `34ffa44`, `ff33e15`, `4a99a8e`, `1e32fa1`, `35d8199`, `63d1a1e`, `a0dead6`, `33cd83e`, `a920a70`, `ab1c922` | `CONTRIBUCIONES.md`<br>`scripts/ev4-contribuciones.py`<br>`Makefile`<br>`VERIFICACION.md` | 45 |
+| EV-4 | `9fd9d0c`, `feb9d64`, `2275fa6`, `512608e`, `1c9c9da`, `142c35f`, `eefc32c`, `ef11139`, `34ffa44`, `ff33e15`, `4a99a8e`, `1e32fa1`, `35d8199`, `63d1a1e`, `a0dead6`, `33cd83e`, `a920a70`, `ab1c922`, `9bafe85` | `CONTRIBUCIONES.md`<br>`scripts/ev4-contribuciones.py`<br>`VERIFICACION.md`<br>`scripts/verify.sh` | 47 |
 
 La columna **Archivos de evidencia** lista los archivos que más commits del punto tocaron, excluyendo
 tres que toca casi todo y por eso no distinguen nada (`informe-final.pdf`, `SRS-v1.0.1.pdf` y
@@ -121,7 +121,7 @@ git show --pretty= --name-only <sha>
 **EV-3 no aparece** porque ningún commit lo nombra en el asunto: se cerró declarando la URL pública ya
 existente en `README.md`, sin cambio de código. La revisión del 18-sep lo da por cumplido.
 
-### Commits sin punto declarado (8 de 122)
+### Commits sin punto declarado (8 de 123)
 
 Se listan en vez de repartirlos a ojo entre los puntos, que es exactamente el tipo de atribución que el
 historial no respaldaría:
@@ -169,12 +169,12 @@ Sale de `git log`, no se escribe: los números crecen con cada commit y una tabl
 
 | Integrante | Identidades de Git (commits de cada una) | Commits |
 |---|---|---:|
-| Álava Alvarado, Jean Pierre | `Jean30042 <jeanalavaalavarado@gmail.com>` (227), `Jean30042 <jalavaa@uteq.edu.ec>` (30), `jalavaa-dev <jalavaa@uteq.edu.ec>` (1) | 258 |
+| Álava Alvarado, Jean Pierre | `Jean30042 <jeanalavaalavarado@gmail.com>` (227), `Jean30042 <jalavaa@uteq.edu.ec>` (31), `jalavaa-dev <jalavaa@uteq.edu.ec>` (1) | 259 |
 | Zamora Arias, Carla Esthefania | `carla22072004 <czamoraa5@uteq.edu.ec>` (126), `Carla Esthefania Zamora Arias <czamoraa5@uteq.edu.ec>` (2) | 128 |
 | Barreto Rosado, Heider Dominick | `dominick1245 <dominickelyolo@gmail.com>` (32), `dominick1245 <144386724+dominick1245@users.noreply.github.com>` (13) | 45 |
 | Moncayo Loor, Xavier Alejandro | `XAML25 <xavierloor52@gmail.com>` (13) | 13 |
 
-**Total en la historia de `main`: 444 commits.** La suma de la columna es exactamente ese total: cada
+**Total en la historia de `main`: 445 commits.** La suma de la columna es exactamente ese total: cada
 commit pertenece a una sola persona, y `scripts/ev4-contribuciones.py --check` para si aparece una identidad
 de Git que no está asignada a nadie. (Una versión anterior de este archivo decía «403 commits únicos» y
 sumaba 369 en la tabla, explicando la diferencia con `git shortlog --all`; era una explicación para dos
@@ -187,7 +187,7 @@ copia impresa que se entrega en la defensa; aquí queda la declaración y la ide
 
 | Integrante | Correo institucional | Participación en esta ronda | Firma |
 |---|---|---|---|
-| Álava Alvarado, Jean Pierre | `jalavaa@uteq.edu.ec` | Autor de los 122 commits del tramo | ____________________ |
+| Álava Alvarado, Jean Pierre | `jalavaa@uteq.edu.ec` | Autor de los 123 commits del tramo | ____________________ |
 | Moncayo Loor, Xavier Alejandro | — | Sin commits en el tramo | ____________________ |
 | Zamora Arias, Carla Esthefanía | `czamoraa5@uteq.edu.ec` | Sin commits en el tramo | ____________________ |
 | Barreto Rosado, Heider Dominick | — | Sin commits en el tramo | ____________________ |
