@@ -276,6 +276,15 @@ for p in sorted(perf):
 sys.exit(malo)
 " && ok "P5: los puntajes publicados coinciden con los JSON versionados" \
    || fail "P5: el reporte de Lighthouse publica un puntaje que sus JSON no respaldan"
+# La revision del 19-sep encontro que el informe dibujaba 68/61 (localhost) bajo un
+# pie que decia "despliegue publico": la figura se regenero en docs/ y nadie la
+# copio a Informe-Final/. Comprobar los numeros publicados no lo detectaba porque
+# el defecto estaba en la IMAGEN, no en el texto.
+if cmp -s docs/mediciones/perf/figuras/fig-lighthouse-scores.png Informe-Final/figuras/fig-lighthouse-scores.png; then
+  ok "P5: la figura del informe es la generada desde los JSON (misma imagen)"
+else
+  fail "P5: Informe-Final/figuras/fig-lighthouse-scores.png difiere de la generada (make docs regenera y copia; luego make pdf)"
+fi
 echo "  (volver a medir contra la URL publica: make bench-lh)"
 echo
 

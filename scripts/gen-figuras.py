@@ -129,7 +129,12 @@ def fig_lighthouse_scores():
     ax.set_xticklabels(cats)
     ax.set_ylabel("Puntaje (0-100)")
     ax.set_title("Lighthouse -- promedio por categoria y perfil (build de produccion)")
-    ax.legend()
+    for barras in ax.containers:
+        ax.bar_label(barras, fmt="%.0f", padding=2)
+    ax.set_ylim(0, 112)
+    # Leyenda fuera del area de barras: en su posicion por defecto tapaba la barra
+    # de Performance en escritorio, que es justo la que hay que poder leer.
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, frameon=False)
     fig.tight_layout()
     out = os.path.join(OUT_DIR, "fig-lighthouse-scores.png")
     fig.savefig(out, dpi=150)

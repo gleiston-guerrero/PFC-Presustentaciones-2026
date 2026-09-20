@@ -251,7 +251,9 @@ Detalle en \texttt{docs/mediciones/sus/SUS-RESULTS.md}.
 \textbf{Ronda del 2026-09-18 con fecha sellada por un tercero.} Para cerrar el defecto de forma sin
 tocar la evidencia original, el instrumento se volvió a aplicar en un formulario alojado por un
 tercero, que sella cada respuesta con la hora de su propio servidor: una marca de tiempo que el equipo
-no controla, que es exactamente lo que faltaba. El formulario no registra ninguna hora del lado del
+no controla, que es exactamente lo que faltaba. «Sellada» significa hora de servidor de Google, no un
+sello criptográfico: la evidencia son nueve capturas, atadas al repositorio porque el código del
+historial de Apps Script coincide línea por línea con \texttt{crear-formulario.gs}. El formulario no registra ninguna hora del lado del
 cliente, por diseño. Se recogieron \textbf{15 respuestas} el 2026-09-18 entre las 11:36 y las 16:56, las
 15 con fecha verificable y las 15 con \textbf{consentimiento individual explícito} --- lo que cierra
 también la segunda objeción, la de que el consentimiento era solo una nota impresa. Resultado:
@@ -485,7 +487,7 @@ Desktop & 94 & 100 & 100 & 100 \\
 Mobile & 81 & 100 & 100 & 100 \\
 \bottomrule
 \end{tabular}
-\caption{Lighthouse, average of 3 runs per profile (2026-09-17, contra el despliegue público en Railway).}
+\caption{Lighthouse, media de 3 corridas por perfil (2026-09-17, contra el despliegue público en Railway).}
 \end{table}
 
 La Figura~\ref{fig:lighthouse} grafica estos mismos puntajes por categoría y perfil. Con $n=3$ por

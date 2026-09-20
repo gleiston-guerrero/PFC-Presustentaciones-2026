@@ -104,7 +104,9 @@ haya 15 respuestas. Si el informe y el expediente se separan, la verificación f
   sesiones convocadas — de ahí las quince horas distintas entre 11:36 y 16:56. Composición recontada
   desde el CSV: 7 estudiantes, 5 docentes, 2 coordinadores, 1 administrador. Es autoselección, y se
   declara como tal.
-- ✅ **Cronología sellada por Google, no por el equipo.** Apps Script guardado **11:16**, formulario
+- ✅ **Cronología con hora de servidor de Google, no del equipo.** «Sellada» no es un sello criptográfico:
+  son nueve capturas cuyo código coincide línea por línea con el archivo versionado, y el evaluador
+  puede abrir el formulario él mismo (acceso de editor). Apps Script guardado **11:16**, formulario
   creado **11:22**, primera respuesta **11:36:04**. El commit de las 16:37 es la hora en que se subió el
   archivo al repositorio, no en que se escribió; no haberlo comiteado en su momento fue un descuido
   real, y es lo que hizo posible la lectura del evaluador. Capturas en

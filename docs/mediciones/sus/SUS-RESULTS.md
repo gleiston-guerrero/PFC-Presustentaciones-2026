@@ -83,6 +83,14 @@ lleva la marca de tiempo del servidor de Google, no del equipo. Evidencia versio
 [`re-aplicacion/respuestas-formulario-2026-09-18.csv`](re-aplicacion/respuestas-formulario-2026-09-18.csv);
 derivado reproducible con `python scripts/sus-ingesta.py <ese csv>`.
 
+> **Qué significa «sellada».** Significa que la hora la escribe el servidor de Google (visible en la hoja
+> de respuestas y en los detalles de Drive), no el equipo. **No** es un sello criptográfico ni una
+> exportación con cabeceras firmadas: la evidencia son **nueve capturas** en
+> [`re-aplicacion/evidencia/`](re-aplicacion/evidencia/). Lo que las ata al repositorio es que el
+> código visible en la captura del historial de Apps Script (versión actual, guardada a las 11:16) es
+> idéntico, línea por línea, a `crear-formulario.gs`. El evaluador tiene acceso de *editor* al formulario
+> y puede comprobarlo sin depender de ninguna captura.
+
 **SUS = 52,83** · DE 12,06 · IC 95 % [46,16 – 59,51] · n=15
 
 | | valor |
