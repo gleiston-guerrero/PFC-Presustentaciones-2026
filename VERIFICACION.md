@@ -929,7 +929,7 @@ grep -n 'v1.1.0' Informe-Final/secciones/00-portada.tex
 
 **Salida real (hoy):**
 ```
-v1.1.0          v1.1.0 — cierre del examen suspenso (2026-09-19)
+v1.1.0          v1.1.0 — cierre del examen suspenso (2026-09-20)
 tag
 version: "1.1.0"
 16:{\large Informe Final --- Tag \texttt{v1.1.0}}\\[0.8cm]
