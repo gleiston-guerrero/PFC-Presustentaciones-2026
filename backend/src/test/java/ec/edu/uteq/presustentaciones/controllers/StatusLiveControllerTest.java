@@ -46,7 +46,7 @@ class StatusLiveControllerTest {
     }
 
     @Test
-    void statusSubmissionMarcaMinutesGeneradaFalseYTraeTimestampCuandoNoHayNadaTodavia() {
+    void statusSubmissionMarksMinutesGeneratedFalseAndBringsTimestampWhenNotHasNothingYet() {
         allEmpty(1L);
 
         Map<String, Object> status = controller.statusSubmission(1L).getBody();
@@ -57,7 +57,7 @@ class StatusLiveControllerTest {
     }
 
     @Test
-    void statusSubmissionIncluyeElStatusDeLaSubmissionCuandoExists() {
+    void statusSubmissionIncludesStatusOfSubmissionWhenExists() {
         allEmpty(1L);
         Submission s = Submission.builder().id(1L).status(StatusSubmission.builder().code("EVALUACION").build()).build();
         when(submissionRepo.findById(1L)).thenReturn(Optional.of(s));
@@ -69,7 +69,7 @@ class StatusLiveControllerTest {
     }
 
     @Test
-    void statusSubmissionMarcaIntegrityVerificadaSegunHayaHashODeProposal() {
+    void statusSubmissionMarksIntegrityVerifiedAccordingHasHashOrOfProposal() {
         allEmpty(1L);
         Proposal sinHash = Proposal.builder().id(2L).status("PENDIENTE").sha256Hash(null).build();
         when(proposalRepo.findBySubmissionId(1L)).thenReturn(Optional.of(sinHash));
@@ -81,7 +81,7 @@ class StatusLiveControllerTest {
     }
 
     @Test
-    void statusSubmissionIncluyeLaRoomDelScheduleCuandoIsAsignada() {
+    void statusSubmissionIncludesRoomOfScheduleWhenIsAssigned() {
         allEmpty(1L);
         Room room = Room.builder().id(3L).nombre("Sala Magna").build();
         Schedule c = Schedule.builder().id(4L).room(room).build();
@@ -93,7 +93,7 @@ class StatusLiveControllerTest {
     }
 
     @Test
-    void statusSubmissionNoIncluyeRoomSiElScheduleAunNoTieneUnaAsignada() {
+    void statusSubmissionNotIncludesRoomIfScheduleStillNotHasAssigned() {
         allEmpty(1L);
         Schedule c = Schedule.builder().id(4L).room(null).build();
         when(scheduleRepo.findBySubmissionId(1L)).thenReturn(Optional.of(c));
@@ -104,7 +104,7 @@ class StatusLiveControllerTest {
     }
 
     @Test
-    void statusSubmissionIncluyeLaGradeYResultDeLaEvaluation() {
+    void statusSubmissionIncludesGradeAndResultOfEvaluation() {
         allEmpty(1L);
         Evaluation e = Evaluation.builder().id(5L).gradeFinal(8.5).result("APROBADO").build();
         when(evaluationRepo.findBySubmissionId(1L)).thenReturn(Optional.of(e));
@@ -116,7 +116,7 @@ class StatusLiveControllerTest {
     }
 
     @Test
-    void statusSubmissionMarcaMinutesGeneradaTrueYReflejaLasSignatures() {
+    void statusSubmissionMarksMinutesGeneratedTrueAndReflectsSignatures() {
         allEmpty(1L);
         Minutes minutes = Minutes.builder().id(6L)
                 .firmadaPresidente(true).firmadaVocal1(true).firmadaVocal2(false)
@@ -134,7 +134,7 @@ class StatusLiveControllerTest {
     // ── estadoBatch ──────────────────────────────────────────────────────────
 
     @Test
-    void statusBatchMarcaEvaluadaFalseForUnaSubmissionWithoutEvaluation() {
+    void statusBatchMarksEvaluatedFalseForSubmissionWithoutEvaluation() {
         when(submissionRepo.findById(1L)).thenReturn(Optional.of(Submission.builder().id(1L).status(StatusSubmission.builder().code("EVALUACION").build()).build()));
         when(evaluationRepo.findBySubmissionId(1L)).thenReturn(Optional.empty());
 
@@ -145,7 +145,7 @@ class StatusLiveControllerTest {
     }
 
     @Test
-    void statusBatchMarcaEvaluadaTrueYManejaVariasSubmissionsALaVez() {
+    void statusBatchMarksEvaluatedTrueAndHandlesSeveralSubmissionsToTime() {
         when(submissionRepo.findById(1L)).thenReturn(Optional.of(Submission.builder().id(1L).build()));
         when(submissionRepo.findById(2L)).thenReturn(Optional.empty());
         when(evaluationRepo.findBySubmissionId(1L)).thenReturn(Optional.of(Evaluation.builder().id(9L).build()));

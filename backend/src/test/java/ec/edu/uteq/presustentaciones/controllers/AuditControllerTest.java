@@ -57,21 +57,21 @@ class AuditControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void sinAuthenticateDevuelve401() throws Exception {
+    void withoutAuthenticateReturns401() throws Exception {
         mockMvc.perform(get("/api/v1/auditoria/paginado"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(username = DOCENTE)
-    void sinPermissionAuditViewDevuelve403() throws Exception {
+    void withoutPermissionAuditViewReturns403() throws Exception {
         mockMvc.perform(get("/api/v1/auditoria/paginado"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(username = COORDINADOR)
-    void coordinatorTambienRecibe403PorqueElPermissionEsExclusivoDeAdmin() throws Exception {
+    void coordinatorAlsoReceives403BecausePermissionIsExclusiveOfAdmin() throws Exception {
         // Asimetria deliberada (SRS §6.4): a diferencia de otros permissions administrativos que
         // ADMIN y COORDINADOR comparten, AUDITORIA_VER solo se asigna al role ADMIN en V15.
         mockMvc.perform(get("/api/v1/auditoria/paginado"))
@@ -80,7 +80,7 @@ class AuditControllerTest {
 
     @Test
     @WithMockUser(username = ADMIN)
-    void adminWithPermissionObtieneLaPaginaFiltradaByTabla() throws Exception {
+    void adminWithPermissionGetsPageFilteredByTable() throws Exception {
         // Garantiza al menos una fila real con tabla=appUsers antes de filtrar.
         modifyDemoAppUserPhone();
 
@@ -102,7 +102,7 @@ class AuditControllerTest {
 
     @Test
     @WithMockUser(username = ADMIN)
-    void ningunaEntradaDeAuditDeAppUsersExponeElPassword() throws Exception {
+    void auditEntriesOfAppUsersNeverExposePassword() throws Exception {
         Long recordId = modifyDemoAppUserPhone();
 
         MvcResult result = mockMvc.perform(get("/api/v1/auditoria/paginado")
@@ -134,7 +134,7 @@ class AuditControllerTest {
 
     @Test
     @WithMockUser(username = ADMIN)
-    void tablesAuditedDevuelveElCatalogFijoDeTables() throws Exception {
+    void tablesAuditedReturnsCatalogFixedOfTables() throws Exception {
         mockMvc.perform(get("/api/v1/auditoria/tablas"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("usuarios")));

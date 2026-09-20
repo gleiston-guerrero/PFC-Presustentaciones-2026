@@ -38,7 +38,7 @@ class ReportServiceImplTest {
     @InjectMocks private ReportServiceImpl reportService;
 
     @Test
-    void submissionsByStatusMapeaLasFilasAgrupadas() {
+    void submissionsByStatusMapsRowsGrouped() {
         when(submissionRepository.countByStatus(any(), any(), any())).thenReturn(java.util.List.<Object[]>of(
                 new Object[]{"COMPLETADA", 9L},
                 new Object[]{"RECHAZADA", 2L}));
@@ -51,7 +51,7 @@ class ReportServiceImplTest {
     }
 
     @Test
-    void summaryMinutesRellenaLosStatusesFaltantesWithCero() {
+    void summaryMinutesFillsStatusesMissingWithZero() {
         when(minutesRepository.countByStatus(any(), any())).thenReturn(java.util.List.<Object[]>of(
                 new Object[]{"FINALIZADA", 5L}));
         when(minutesRepository.countByFirmadaFalse()).thenReturn(3L);
@@ -66,7 +66,7 @@ class ReportServiceImplTest {
     }
 
     @Test
-    void activityByTeacherCombinaPanelistTutorYMinutesFirmadas() {
+    void activityByTeacherCombinesPanelistTutorAndMinutesSigned() {
         when(panelistRepository.countAsignacionesByTeacher()).thenReturn(java.util.List.<Object[]>of(
                 new Object[]{1L, "Luis", "Pérez", 4L}));
         when(tutorRepository.countTutoringsByTeacher()).thenReturn(java.util.List.<Object[]>of(
@@ -86,7 +86,7 @@ class ReportServiceImplTest {
     }
 
     @Test
-    void summaryCalculaTotalesYEnProcess() {
+    void summaryCalculatesTotalsAndInProcess() {
         when(submissionRepository.countByStatus(any(), any(), any())).thenReturn(java.util.List.<Object[]>of(
                 new Object[]{"COMPLETADA", 10L},
                 new Object[]{"EVALUACION", 5L},

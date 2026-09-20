@@ -56,7 +56,7 @@ class TutorServiceImplTest {
     // ---- assignTutor ----
 
     @Test
-    void assignTutorLanzaSiSubmissionNoExists() {
+    void assignTutorThrowsIfSubmissionNotExists() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class, () -> tutorService.assignTutor(10L, 1L));
         assertTrue(ex.getMessage().contains("Solicitud no encontrada"));
@@ -64,7 +64,7 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void assignTutorLanzaSiTeacherNoExists() {
+    void assignTutorThrowsIfTeacherNotExists() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(1L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class, () -> tutorService.assignTutor(10L, 1L));
@@ -72,7 +72,7 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void assignTutorWithoutTutorPrevioNoEliminaNada() {
+    void assignTutorWithoutTutorPreviousNotRemovesNothing() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(1L)).thenReturn(Optional.of(teacher));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.empty());
@@ -89,7 +89,7 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void assignTutorReemplazaTutorPrevio() {
+    void assignTutorReplacesTutorPrevious() {
         Tutor tutorPrevio = Tutor.builder().id(5L).status("ACTIVO").build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(1L)).thenReturn(Optional.of(teacher));
@@ -104,7 +104,7 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void assignTutorCreaStatusTutoringSiNoExistsEnCatalog() {
+    void assignTutorCreatesStatusTutoringIfNotExistsInCatalog() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(1L)).thenReturn(Optional.of(teacher));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.empty());
@@ -118,7 +118,7 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void assignTutorNoPropagaFalloDeNotification() {
+    void assignTutorNotPropagatesFailureOfNotification() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
         when(teacherRepository.findById(1L)).thenReturn(Optional.of(teacher));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.empty());
@@ -137,14 +137,14 @@ class TutorServiceImplTest {
     // ---- delegados simples ----
 
     @Test
-    void searchBySubmissionDelega() {
+    void searchBySubmissionDelegates() {
         Tutor tutor = Tutor.builder().id(1L).build();
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(tutor));
         assertEquals(Optional.of(tutor), tutorService.searchBySubmission(10L));
     }
 
     @Test
-    void listAllDelega() {
+    void listAllDelegates() {
         Pageable pageable = mock(Pageable.class);
         Page<Tutor> pagina = new PageImpl<>(List.of());
         when(tutorRepository.findAll(pageable)).thenReturn(pagina);
@@ -152,7 +152,7 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void deleteTutorDelega() {
+    void deleteTutorDelegates() {
         tutorService.deleteTutor(5L);
         verify(tutorRepository).deleteById(5L);
     }
@@ -160,7 +160,7 @@ class TutorServiceImplTest {
     // ---- misStudents ----
 
     @Test
-    void myStudentsMapeaWithProgramEntidadYStatusAcademic() {
+    void myStudentsMapsWithProgramEntityAndStatusAcademic() {
         Program program = Program.builder().id(1).nombre("Software").build();
         StatusAcademic ea = StatusAcademic.builder().code("ACTIVO").nombre("Activo").build();
         Student est = Student.builder().id(1L).appUser(appUserStudent).phone("099")
@@ -181,7 +181,7 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void myStudentsUsaFallbacksWithoutProgramEntidadNiStatusNiStatusSubmission() {
+    void myStudentsUsesFallbacksWithoutProgramEntityOrStatusOrStatusSubmission() {
         Student est = Student.builder().id(1L).appUser(appUserStudent).program("Carrera Legado").build();
         Submission sol = Submission.builder().id(10L).tituloTopic("Tema").student(est).statusCode("BORRADOR").build();
         Tutor tutor = Tutor.builder().id(7L).submission(sol).teacher(teacher).status("ACTIVO").build();
@@ -198,7 +198,7 @@ class TutorServiceImplTest {
     // ---- obtainEstadisticasTutoresSP ----
 
     @Test
-    void obtainStatsTutorsSPMapeaCadaRow() {
+    void obtainStatsTutorsSPMapsEachRow() {
         Object[] row = {1L, "Carlos Ruiz", 3, 5, 12};
         when(tutorRepository.obtainStatsTutorsSp()).thenReturn(List.<Object[]>of(row));
 
@@ -213,7 +213,7 @@ class TutorServiceImplTest {
     }
 
     @Test
-    void obtainStatsTutorsSPDevuelveEmptyWithoutFilas() {
+    void obtainStatsTutorsSPReturnsEmptyWithoutRows() {
         when(tutorRepository.obtainStatsTutorsSp()).thenReturn(List.of());
         assertTrue(tutorService.obtainStatsTutorsSP().isEmpty());
     }

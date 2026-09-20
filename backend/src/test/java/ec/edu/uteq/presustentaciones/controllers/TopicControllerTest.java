@@ -65,7 +65,7 @@ class TopicControllerTest {
     }
 
     @Test
-    void explorePasaElIdDelStudentAuthenticated() {
+    void explorePassesIdOfStudentAuthenticated() {
         when(topicService.explore(eq(1), eq(2), eq(3), eq("BASICO"), eq(7L)))
                 .thenReturn(Collections.singletonList(topicMock));
 
@@ -78,7 +78,7 @@ class TopicControllerTest {
     }
 
     @Test
-    void detailDelegaEnElServicio() {
+    void detailDelegatesInService() {
         when(topicService.obtainDetail(1)).thenReturn(topicMock);
 
         ResponseEntity<TopicProposedDTO> response = topicController.detail(1);
@@ -88,7 +88,7 @@ class TopicControllerTest {
     }
 
     @Test
-    void generateSuggestionsDevuelveLaLista() {
+    void generateSuggestionsReturnsList() {
         GenerateTopicRequest request = new GenerateTopicRequest();
         request.setProgramId(1);
         when(topicService.generateSuggestions(any(GenerateTopicRequest.class)))
@@ -101,7 +101,7 @@ class TopicControllerTest {
     }
 
     @Test
-    void myTopicsSavedUsaElStudentAuthenticated() {
+    void myTopicsSavedUsesStudentAuthenticated() {
         when(topicService.obtainTopicsSaved(7L)).thenReturn(Collections.singletonList(topicMock));
 
         ResponseEntity<List<TopicProposedDTO>> response = topicController.myTopicsSaved();
@@ -111,7 +111,7 @@ class TopicControllerTest {
     }
 
     @Test
-    void saveDevuelve201YResuelveElStudentDelToken() {
+    void saveReturns201AndResolvesStudentOfToken() {
         ResponseEntity<Void> response = topicController.save(9);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -119,7 +119,7 @@ class TopicControllerTest {
     }
 
     @Test
-    void removeSavedDevuelve204() {
+    void removeSavedReturns204() {
         ResponseEntity<Void> response = topicController.removeSaved(9);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
@@ -127,7 +127,7 @@ class TopicControllerTest {
     }
 
     @Test
-    void saveFallaSiElAppUserNoTieneProfileDeStudent() {
+    void saveFailsIfAppUserNotHasProfileOfStudent() {
         when(studentRepository.findByAppUserId(50L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> topicController.save(9));
@@ -135,7 +135,7 @@ class TopicControllerTest {
     }
 
     @Test
-    void createDelegaYDevuelve201() {
+    void createDelegatesAndReturns201() {
         var req = new ec.edu.uteq.presustentaciones.dto.SaveTopicProposedRequest();
         req.setTitulo("Tema");
         when(topicService.create(req)).thenReturn(topicMock);
@@ -147,7 +147,7 @@ class TopicControllerTest {
     }
 
     @Test
-    void updateDelega() {
+    void updateDelegates() {
         var req = new ec.edu.uteq.presustentaciones.dto.SaveTopicProposedRequest();
         req.setTitulo("Tema");
         when(topicService.update(3, req)).thenReturn(topicMock);
@@ -159,7 +159,7 @@ class TopicControllerTest {
     }
 
     @Test
-    void deleteDelegaYDevuelve204() {
+    void deleteDelegatesAndReturns204() {
         ResponseEntity<Void> r = topicController.delete(3);
 
         assertEquals(HttpStatus.NO_CONTENT, r.getStatusCode());

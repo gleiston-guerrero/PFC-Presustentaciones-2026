@@ -39,7 +39,7 @@ class RedisDegradationTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void isTokenBlacklistedWithRedisDownTrataElTokenAsRevocado() {
+    void isTokenBlacklistedWithRedisDownTreatsTokenAsRevoked() {
         StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
         when(redisTemplate.hasKey(anyString())).thenThrow(redisDown());
 
@@ -62,7 +62,7 @@ class RedisDegradationTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void isTokenBlacklistedWithTokenMalformadoNoLoConfundeWithFalloDeRedis() {
+    void isTokenBlacklistedWithTokenMalformedNotConfusesWithFailureOfRedis() {
         // Un token malformado no debe disparar el fail-closed de availability: Redis nunca
         // se llega a consultar porque el parseo del token falla antes.
         StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
@@ -79,7 +79,7 @@ class RedisDegradationTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void rateLimiterWithRedisDownLanzaExcepcionDeDegradationEnVezDePermitirODevolver500Crudo() {
+    void rateLimiterWithRedisDownThrowsExceptionOfDegradationInTimeOfAllowOrReturn500Raw() {
         StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
         ValueOperations<String, String> valueOps = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
@@ -94,7 +94,7 @@ class RedisDegradationTest {
     // ── 3) Caché de lectura: fail-OPEN -- se resuelve contra el origen, no se corta la petición ──
 
     @Test
-    void cacheErrorHandlerNoPropagaLaExcepcionDeLecturaDeCache() {
+    void cacheErrorHandlerNotPropagatesExceptionOfReadingOfCache() {
         AppConfig appConfig = new AppConfig();
         CacheErrorHandler errorHandler = appConfig.errorHandler();
         Cache cache = mock(Cache.class);
@@ -109,7 +109,7 @@ class RedisDegradationTest {
     }
 
     @Test
-    void otrasExcepcionesDeAccessADataTambienDisparanElMismoComportamientoBySerDataAccessException() {
+    void otherExceptionsOfAccessToDataAlsoTriggerSameBehaviorByBeDataAccessException() {
         // QueryTimeoutException es otra subclase real de DataAccessException (no
         // necesariamente de Redis) -- confirma que la distincion es por tipo de excepcion
         // ("y afines", como pide el encargo), no por un chequeo especifico de Redis.

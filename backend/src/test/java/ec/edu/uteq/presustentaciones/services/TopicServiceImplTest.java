@@ -65,7 +65,7 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void generateSuggestionsByProgramYLine() {
+    void generateSuggestionsByProgramAndLine() {
         GenerateTopicRequest request = new GenerateTopicRequest();
         request.setProgramId(1);
         request.setResearchLineId(1);
@@ -81,7 +81,7 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void generateSuggestionsSoloByProgramCuandoNoHayLine() {
+    void generateSuggestionsOnlyByProgramWhenNotHasLine() {
         GenerateTopicRequest request = new GenerateTopicRequest();
         request.setProgramId(1);
         when(topicProposedRepository.findByProgramId(1)).thenReturn(Collections.singletonList(topicMock));
@@ -94,7 +94,7 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void exploreMarcaLosTopicsYaSavedDelStudent() {
+    void exploreMarksTopicsAlreadySavedOfStudent() {
         when(topicProposedRepository.searchWithFiltros(1, null, null, null))
                 .thenReturn(Collections.singletonList(topicMock));
         when(topicSavedStudentRepository.findTopicIdsByStudentId(1L))
@@ -107,7 +107,7 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void exploreWithoutStudentNoConsultaSaved() {
+    void exploreWithoutStudentNotQuerySaved() {
         when(topicProposedRepository.searchWithFiltros(null, null, null, null))
                 .thenReturn(Collections.singletonList(topicMock));
 
@@ -118,14 +118,14 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void obtainDetailLanzaSiNoExists() {
+    void obtainDetailThrowsIfNotExists() {
         when(topicProposedRepository.findByIdWithCatalogs(99)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> topicService.obtainDetail(99));
     }
 
     @Test
-    void saveTopicStudentExitoso() {
+    void saveTopicStudentSuccessful() {
         when(topicSavedStudentRepository.existsByStudentIdAndTopicProposedId(1L, 1)).thenReturn(false);
         when(studentRepository.findById(1L)).thenReturn(Optional.of(studentMock));
         when(topicProposedRepository.findById(1)).thenReturn(Optional.of(topicMock));
@@ -136,7 +136,7 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void saveTopicYaSavedLanzaIllegalState() {
+    void saveTopicAlreadySavedThrowsIllegalState() {
         when(topicSavedStudentRepository.existsByStudentIdAndTopicProposedId(1L, 1)).thenReturn(true);
 
         assertThrows(IllegalStateException.class, () -> topicService.saveTopicStudent(1L, 1));
@@ -144,21 +144,21 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void removeTopicSavedExitoso() {
+    void removeTopicSavedSuccessful() {
         when(topicSavedStudentRepository.deleteByStudentIdAndTopicProposedId(1L, 1)).thenReturn(1);
 
         assertDoesNotThrow(() -> topicService.removeTopicSaved(1L, 1));
     }
 
     @Test
-    void removeTopicSavedInexistenteLanza() {
+    void removeTopicSavedNonexistentThrows() {
         when(topicSavedStudentRepository.deleteByStudentIdAndTopicProposedId(1L, 1)).thenReturn(0);
 
         assertThrows(IllegalArgumentException.class, () -> topicService.removeTopicSaved(1L, 1));
     }
 
     @Test
-    void obtainTopicsSavedMapeaYMarcaSaved() {
+    void obtainTopicsSavedMapsAndMarksSaved() {
         TopicSavedStudent saved = TopicSavedStudent.builder()
                 .id(1).student(studentMock).topicProposed(topicMock).build();
         when(topicSavedStudentRepository.findByStudentIdOrderByDateSavedDesc(1L))
@@ -180,7 +180,7 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void createTopicWithoutCatalogsGuardaYRecortaCampos() {
+    void createTopicWithoutCatalogsSavesAndTrimsFields() {
         when(topicProposedRepository.save(any(TopicProposed.class))).thenAnswer(i -> i.getArgument(0));
 
         TopicProposedDTO dto = topicService.create(reqCreate());
@@ -192,7 +192,7 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void createTopicWithProgramInexistenteLanza() {
+    void createTopicWithProgramNonexistentThrows() {
         SaveTopicProposedRequest r = reqCreate();
         r.setProgramId(9);
         when(programRepository.findById(9)).thenReturn(Optional.empty());
@@ -202,7 +202,7 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void createTopicWithAreaQueNoPerteneceALaLineLanza() {
+    void createTopicWithAreaThatNotBelongsToLineThrows() {
         SaveTopicProposedRequest r = reqCreate();
         r.setResearchLineId(1);
         r.setAreaId(2);
@@ -222,20 +222,20 @@ class TopicServiceImplTest {
     }
 
     @Test
-    void updateTopicInexistenteLanza() {
+    void updateTopicNonexistentThrows() {
         when(topicProposedRepository.findById(7)).thenReturn(Optional.empty());
         assertThrows(IllegalArgumentException.class, () -> topicService.update(7, reqCreate()));
     }
 
     @Test
-    void deleteTopicInexistenteLanza() {
+    void deleteTopicNonexistentThrows() {
         when(topicProposedRepository.existsById(7)).thenReturn(false);
         assertThrows(IllegalArgumentException.class, () -> topicService.delete(7));
         verify(topicProposedRepository, never()).deleteById(any());
     }
 
     @Test
-    void deleteTopicExistingBorra() {
+    void deleteTopicExistingDeletes() {
         when(topicProposedRepository.existsById(1)).thenReturn(true);
         topicService.delete(1);
         verify(topicProposedRepository).deleteById(1);

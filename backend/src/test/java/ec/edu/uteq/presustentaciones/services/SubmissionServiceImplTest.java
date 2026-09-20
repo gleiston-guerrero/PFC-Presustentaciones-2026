@@ -62,7 +62,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testCreateSubmissionExitosa() {
+    void testCreateSubmissionSuccessful() {
         Submission data = Submission.builder().tituloTopic("Sistema X").modalityDegree(modality).build();
 
         when(studentRepository.findById(5L)).thenReturn(Optional.of(student));
@@ -80,7 +80,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testCreateSubmissionFallaWithoutModality() {
+    void testCreateSubmissionFailsWithoutModality() {
         Submission data = Submission.builder().tituloTopic("Sistema X").build();
         when(studentRepository.findById(5L)).thenReturn(Optional.of(student));
         when(statusSubmissionRepository.findByCode("CREADA")).thenReturn(Optional.of(status("CREADA")));
@@ -92,7 +92,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testCreateSubmissionFallaSiStudentNoExists() {
+    void testCreateSubmissionFailsIfStudentNotExists() {
         Submission data = Submission.builder().tituloTopic("Sistema X").modalityDegree(modality).build();
         when(studentRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -100,7 +100,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testCreateSubmissionByAppUserCreaProfileStudentAutomatically() {
+    void testCreateSubmissionByAppUserCreatesProfileStudentAutomatically() {
         Program program = Program.builder().id(1).nombre("Ingeniería en Software").build();
         Submission data = Submission.builder().tituloTopic("Sistema Y").modalityDegree(modality).build();
 
@@ -130,7 +130,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testSendSubmissionFallaWithoutPdfProposal() {
+    void testSendSubmissionFailsWithoutPdfProposal() {
         Submission s = Submission.builder().id(10L).student(student).tituloTopic("X").build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(s));
         when(proposalRepository.findBySubmissionId(10L)).thenReturn(Optional.empty());
@@ -141,7 +141,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testSendSubmissionExitosaWithPdf() {
+    void testSendSubmissionSuccessfulWithPdf() {
         Submission s = Submission.builder().id(10L).student(student).tituloTopic("X").build();
         Proposal ap = Proposal.builder().filePdf("anteproyecto.pdf").build();
 
@@ -156,7 +156,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testApproveSubmissionTransicionaAAprobada() {
+    void testApproveSubmissionTransitionsToApproved() {
         Submission s = Submission.builder().id(10L).student(student).tituloTopic("X").status(status("ENVIADA")).build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(s));
         when(statusSubmissionRepository.findByCode("APROBADA")).thenReturn(Optional.of(status("APROBADA")));
@@ -168,7 +168,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testRejectWithObservationGuardaElMotivo() {
+    void testRejectWithObservationSavesReason() {
         Submission s = Submission.builder().id(10L).student(student).tituloTopic("X").status(status("ENVIADA")).build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(s));
         when(statusSubmissionRepository.findByCode("RECHAZADA")).thenReturn(Optional.of(status("RECHAZADA")));
@@ -181,7 +181,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testSuspendSubmissionFallaEnStatusCreada() {
+    void testSuspendSubmissionFailsInStatusCreated() {
         Submission s = Submission.builder().id(10L).student(student).tituloTopic("X").status(status("CREADA")).build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(s));
 
@@ -191,7 +191,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testSuspendSubmissionFallaWithoutMotivo() {
+    void testSuspendSubmissionFailsWithoutReason() {
         Submission s = Submission.builder().id(10L).student(student).tituloTopic("X").status(status("EVALUACION")).build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(s));
 
@@ -201,7 +201,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testSuspendSubmissionExitosaFromStatusSuspendable() {
+    void testSuspendSubmissionSuccessfulFromStatusSuspendable() {
         Submission s = Submission.builder().id(10L).student(student).tituloTopic("X").status(status("EVALUACION")).build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(s));
         when(statusSubmissionRepository.findByCode("SUSPENDIDA")).thenReturn(Optional.of(status("SUSPENDIDA")));
@@ -215,7 +215,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testGenerateReportDefensesSPMapeaCadaColumnaDeLaRowCruda() {
+    void testGenerateReportDefensesSPMapsEachColumnOfRowRaw() {
         // sp_generate_reporte_defensas (Fase 3 / Criterio P1) devuelve filas posicionales;
         // sin este test, un cambio en el orden de columnas del SP rompería el mapeo sin
         // que ningún test lo detectara.
@@ -239,7 +239,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void testGenerateReportDefensesSPRetornaListaVaciaWithoutFilas() {
+    void testGenerateReportDefensesSPReturnsListEmptyWithoutRows() {
         when(submissionRepository.generateReportDefensesSp("Inexistente")).thenReturn(List.of());
 
         List<java.util.Map<String, Object>> report = submissionService.generateReportDefensesSP("Inexistente");
@@ -250,7 +250,7 @@ class SubmissionServiceImplTest {
     // ── createSubmission: validaciones y ramas restantes ──────────────────────
 
     @Test
-    void createSubmissionLanzaSiTituloEmpty() {
+    void createSubmissionThrowsIfTitleEmpty() {
         Submission data = Submission.builder().tituloTopic("  ").build();
         when(studentRepository.findById(5L)).thenReturn(Optional.of(student));
 
@@ -259,7 +259,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionLanzaSiTituloExcede300Caracteres() {
+    void createSubmissionThrowsIfTitleExceeds300Characters() {
         Submission data = Submission.builder().tituloTopic("A".repeat(301)).build();
         when(studentRepository.findById(5L)).thenReturn(Optional.of(student));
 
@@ -268,7 +268,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionLanzaSiModalityIndicadaNoExists() {
+    void createSubmissionThrowsIfModalityGivenNotExists() {
         Submission data = Submission.builder().tituloTopic("Sistema X").modalityDegree(modality).build();
         when(studentRepository.findById(5L)).thenReturn(Optional.of(student));
         when(statusSubmissionRepository.findByCode("CREADA")).thenReturn(Optional.of(status("CREADA")));
@@ -279,7 +279,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionUsaAnnouncementExplicitaSiViene() {
+    void createSubmissionUsesAnnouncementExplicitIfComes() {
         AnnouncementDegree otraConv = AnnouncementDegree.builder().id(2).code("CONV-2026-02").build();
         Submission data = Submission.builder().tituloTopic("Sistema X").modalityDegree(modality)
                 .announcement(AnnouncementDegree.builder().id(2).build()).build();
@@ -296,7 +296,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionLanzaSiAnnouncementExplicitaNoExists() {
+    void createSubmissionThrowsIfAnnouncementExplicitNotExists() {
         Submission data = Submission.builder().tituloTopic("Sistema X").modalityDegree(modality)
                 .announcement(AnnouncementDegree.builder().id(99).build()).build();
         when(studentRepository.findById(5L)).thenReturn(Optional.of(student));
@@ -309,7 +309,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionResuelveLineDeResearchSiViene() {
+    void createSubmissionResolvesLineOfResearchIfComes() {
         ResearchLine line = ResearchLine.builder().id(3).nombre("IA").build();
         Submission data = Submission.builder().tituloTopic("Sistema X").modalityDegree(modality)
                 .researchLine(ResearchLine.builder().id(3).build()).build();
@@ -326,7 +326,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionLanzaSiLineDeResearchIndicadaNoExists() {
+    void createSubmissionThrowsIfLineOfResearchGivenNotExists() {
         Submission data = Submission.builder().tituloTopic("Sistema X").modalityDegree(modality)
                 .researchLine(ResearchLine.builder().id(99).build()).build();
         when(studentRepository.findById(5L)).thenReturn(Optional.of(student));
@@ -340,7 +340,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionResuelveSubjectValidaForLaLine() {
+    void createSubmissionResolvesSubjectValidatesForLine() {
         ResearchLine line = ResearchLine.builder().id(3).nombre("IA").build();
         Subject area = Subject.builder().id(7).nombre("Visión por computador").researchLine(line).build();
         Submission data = Submission.builder().tituloTopic("Sistema X").modalityDegree(modality)
@@ -360,7 +360,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionLanzaSiSubjectNoPerteneceALaLine() {
+    void createSubmissionThrowsIfSubjectNotBelongsToLine() {
         ResearchLine lineElegida = ResearchLine.builder().id(3).nombre("IA").build();
         ResearchLine otraLine = ResearchLine.builder().id(4).nombre("Redes").build();
         Subject areaDeOtraLine = Subject.builder().id(7).nombre("Seguridad de redes").researchLine(otraLine).build();
@@ -379,7 +379,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionLanzaSiSubjectIndicadaNoExists() {
+    void createSubmissionThrowsIfSubjectGivenNotExists() {
         Submission data = Submission.builder().tituloTopic("Sistema X").modalityDegree(modality)
                 .subject(Subject.builder().id(99).build()).build();
         when(studentRepository.findById(5L)).thenReturn(Optional.of(student));
@@ -395,7 +395,7 @@ class SubmissionServiceImplTest {
     // ── createPerfilStudent (via createSubmissionPorAppUser) ────────────────
 
     @Test
-    void createSubmissionByAppUserLanzaSiAppUserNoExists() {
+    void createSubmissionByAppUserThrowsIfAppUserNotExists() {
         when(studentRepository.findByAppUserId(999L)).thenReturn(Optional.empty());
         when(appUserRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -405,7 +405,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionByAppUserLanzaSiAppUserNoEsStudent() {
+    void createSubmissionByAppUserThrowsIfAppUserNotIsStudent() {
         AppUser teacherAppUser = AppUser.builder().id(300L).role("DOCENTE").build();
         when(studentRepository.findByAppUserId(300L)).thenReturn(Optional.empty());
         when(appUserRepository.findById(300L)).thenReturn(Optional.of(teacherAppUser));
@@ -416,7 +416,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void createSubmissionByAppUserLanzaSiNoHayProgramsConfiguradas() {
+    void createSubmissionByAppUserThrowsIfNotHasProgramsConfigured() {
         when(studentRepository.findByAppUserId(201L)).thenReturn(Optional.empty());
         when(appUserRepository.findById(201L)).thenReturn(Optional.of(appUserStudent));
         when(programRepository.findAll()).thenReturn(List.of());
@@ -429,20 +429,20 @@ class SubmissionServiceImplTest {
     // ── Consultas simples ────────────────────────────────────────────────────
 
     @Test
-    void listByAppUserDevuelveEmptySiNoTieneProfileDeStudent() {
+    void listByAppUserReturnsEmptyIfNotHasProfileOfStudent() {
         when(studentRepository.findByAppUserId(999L)).thenReturn(Optional.empty());
         assertTrue(submissionService.listByAppUser(999L).isEmpty());
     }
 
     @Test
-    void listByAppUserDelegaAlRepositorioSiTieneProfile() {
+    void listByAppUserDelegatesToRepositoryIfHasProfile() {
         when(studentRepository.findByAppUserId(201L)).thenReturn(Optional.of(student));
         when(submissionRepository.findByStudentId(5L)).thenReturn(List.of());
         assertTrue(submissionService.listByAppUser(201L).isEmpty());
     }
 
     @Test
-    void countByStatusIncluyeElTotalGeneralYCadaStatus() {
+    void countByStatusIncludesTotalGeneralAndEachStatus() {
         when(submissionRepository.count()).thenReturn(42L);
         SubmissionRepository.StatusCount c1 = mock(SubmissionRepository.StatusCount.class);
         when(c1.getCode()).thenReturn("CREADA");
@@ -456,20 +456,20 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void obtainByIdDelega() {
+    void obtainByIdDelegates() {
         Submission s = Submission.builder().id(10L).build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(s));
         assertEquals(Optional.of(s), submissionService.obtainById(10L));
     }
 
     @Test
-    void listByStudentDelega() {
+    void listByStudentDelegates() {
         when(submissionRepository.findByStudentId(5L)).thenReturn(List.of());
         assertTrue(submissionService.listByStudent(5L).isEmpty());
     }
 
     @Test
-    void rejectSubmissionDelegaARejectWithObservationWithoutMotivo() {
+    void rejectSubmissionDelegatesToRejectWithObservationWithoutReason() {
         Submission s = Submission.builder().id(10L).student(student).tituloTopic("X").status(status("ENVIADA")).build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(s));
         when(statusSubmissionRepository.findByCode("RECHAZADA")).thenReturn(Optional.of(status("RECHAZADA")));
@@ -482,13 +482,13 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void listSubmissionsDelegaWithLimiteFijo() {
+    void listSubmissionsDelegatesWithLimitFixed() {
         when(submissionRepository.findAllWithStudent(any())).thenReturn(List.of());
         assertTrue(submissionService.listSubmissions().isEmpty());
     }
 
     @Test
-    void listSubmissionsPagedAcotaPaginaYTamanio() {
+    void listSubmissionsPagedBoundsPageAndSize() {
         when(submissionRepository.searchWithFiltros(any(), any(), any(), any(), any()))
                 .thenReturn(org.springframework.data.domain.Page.empty());
         submissionService.listSubmissionsPaged(-1, 1000, "ENVIADA", "texto", null, null);
@@ -498,13 +498,13 @@ class SubmissionServiceImplTest {
     // ── obtainTracking ───────────────────────────────────────────────────
 
     @Test
-    void obtainTrackingLanzaSiSubmissionNoExists() {
+    void obtainTrackingThrowsIfSubmissionNotExists() {
         when(submissionRepository.findById(99L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> submissionService.obtainTracking(99L));
     }
 
     @Test
-    void obtainTrackingStatusEnviadaWithoutPdf() {
+    void obtainTrackingStatusSentWithoutPdf() {
         Submission s = Submission.builder().id(10L).tituloTopic("X").status(status("ENVIADA"))
                 .dateRecord(java.time.LocalDateTime.now()).actualizadoEn(java.time.LocalDateTime.now()).build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(s));
@@ -519,7 +519,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void obtainTrackingStatusAprobadaWithPdf() {
+    void obtainTrackingStatusApprovedWithPdf() {
         Submission s = Submission.builder().id(10L).tituloTopic("X").status(status("APROBADA"))
                 .dateRecord(java.time.LocalDateTime.now()).actualizadoEn(java.time.LocalDateTime.now()).build();
         Proposal ap = Proposal.builder().filePdf("doc.pdf").build();
@@ -535,7 +535,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void obtainTrackingStatusRechazadaIncluyeObservations() {
+    void obtainTrackingStatusRejectedIncludesObservations() {
         Submission s = Submission.builder().id(10L).tituloTopic("X").status(status("RECHAZADA"))
                 .observations("Tema duplicado")
                 .dateRecord(java.time.LocalDateTime.now()).actualizadoEn(java.time.LocalDateTime.now()).build();
@@ -549,7 +549,7 @@ class SubmissionServiceImplTest {
     }
 
     @Test
-    void obtainTrackingStatusCreadaEsProgressMinimo() {
+    void obtainTrackingStatusCreatedIsProgressMinimum() {
         Submission s = Submission.builder().id(10L).tituloTopic("X").status(status("CREADA"))
                 .dateRecord(java.time.LocalDateTime.now()).build();
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(s));

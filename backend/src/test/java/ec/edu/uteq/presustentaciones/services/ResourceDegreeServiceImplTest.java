@@ -37,7 +37,7 @@ class ResourceDegreeServiceImplTest {
     }
 
     @Test
-    void listWithoutProgramUsaListAll() {
+    void listWithoutProgramUsesListAll() {
         when(resourceRepository.listAll()).thenReturn(List.of(resource()));
 
         List<ResourceDegreeDTO> r = service.list(null);
@@ -49,7 +49,7 @@ class ResourceDegreeServiceImplTest {
     }
 
     @Test
-    void listWithProgramFiltra() {
+    void listWithProgramFilters() {
         when(resourceRepository.listVisiblesForProgram(1)).thenReturn(List.of(resource()));
 
         assertEquals(1, service.list(1).size());
@@ -70,7 +70,7 @@ class ResourceDegreeServiceImplTest {
     }
 
     @Test
-    void createWithProgramInexistenteLanza() {
+    void createWithProgramNonexistentThrows() {
         SaveResourceRequest req = new SaveResourceRequest();
         req.setTitulo("X"); req.setCategoria("Y"); req.setUrlFile("Z"); req.setProgramId(99);
         when(programRepository.findById(99)).thenReturn(Optional.empty());
@@ -79,7 +79,7 @@ class ResourceDegreeServiceImplTest {
     }
 
     @Test
-    void updateInexistenteLanza() {
+    void updateNonexistentThrows() {
         when(resourceRepository.findById(7)).thenReturn(Optional.empty());
         SaveResourceRequest req = new SaveResourceRequest();
         req.setTitulo("X"); req.setCategoria("Y"); req.setUrlFile("Z");
@@ -88,14 +88,14 @@ class ResourceDegreeServiceImplTest {
     }
 
     @Test
-    void deleteInexistenteLanza() {
+    void deleteNonexistentThrows() {
         when(resourceRepository.existsById(7)).thenReturn(false);
         assertThrows(IllegalArgumentException.class, () -> service.delete(7));
         verify(resourceRepository, never()).deleteById(any());
     }
 
     @Test
-    void deleteExistingBorra() {
+    void deleteExistingDeletes() {
         when(resourceRepository.existsById(5)).thenReturn(true);
         service.delete(5);
         verify(resourceRepository).deleteById(5);

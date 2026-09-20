@@ -157,7 +157,7 @@ class RefreshTokenRotationTest {
     }
 
     @Test
-    void refreshVigenteDevuelveAccessNewYRefreshNew() {
+    void refreshCurrentReturnsAccessNewAndRefreshNew() {
         String refreshToken = jwtTokenProvider.generateRefreshToken(EMAIL);
 
         ResponseEntity<?> respuesta = authController.refresh(requestWithRefresh(refreshToken), new MockHttpServletResponse());
@@ -170,7 +170,7 @@ class RefreshTokenRotationTest {
     }
 
     @Test
-    void elRefreshUsadoDejaDeValerDeInmediato() {
+    void refreshUsedLeavesOfBeWorthOfImmediate() {
         String refreshToken = jwtTokenProvider.generateRefreshToken(EMAIL);
 
         ResponseEntity<?> primerUso = authController.refresh(requestWithRefresh(refreshToken), new MockHttpServletResponse());
@@ -181,7 +181,7 @@ class RefreshTokenRotationTest {
     }
 
     @Test
-    void reutilizarUnRefreshYaUsadoRevocaAllLasSesionesActiveDelAppUser() {
+    void reuseRefreshAlreadyUsedRevokesAllSessionsActiveOfAppUser() {
         String primerRefresh = jwtTokenProvider.generateRefreshToken(EMAIL);
         // Segunda sesión activa del mismo appUser (p.ej. otro dispositivo), sin relación con el ataque.
         String segundoRefresh = jwtTokenProvider.generateRefreshToken(EMAIL);
@@ -204,7 +204,7 @@ class RefreshTokenRotationTest {
     }
 
     @Test
-    void sinRefreshTokenEnLaRequestDevuelve400() {
+    void withoutRefreshTokenInRequestReturns400() {
         ResponseEntity<?> respuesta = authController.refresh(requestWithRefresh(null), new MockHttpServletResponse());
         assertEquals(HttpStatus.BAD_REQUEST, respuesta.getStatusCode());
     }

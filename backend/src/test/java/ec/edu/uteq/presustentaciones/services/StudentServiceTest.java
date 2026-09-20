@@ -65,7 +65,7 @@ class StudentServiceTest {
     // ---- listPaginado ----
 
     @Test
-    void listPagedDevuelveDtosWithProyectoCuandoExists() {
+    void listPagedReturnsDtosWithProjectWhenExists() {
         Page<Student> pagina = new PageImpl<>(List.of(student));
         when(studentRepository.searchPaged(eq("ana"), any(PageRequest.class))).thenReturn(pagina);
         when(studentRepository.findLastProyectoByStudentIds(List.of(1L)))
@@ -81,7 +81,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void listPagedWithoutResultsNoConsultaProyectos() {
+    void listPagedWithoutResultsNotQueryProjects() {
         when(studentRepository.searchPaged(isNull(), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
@@ -92,7 +92,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void listPagedAcotaPaginaYTamanioFueraDeRange() {
+    void listPagedBoundsPageAndSizeOutsideOfRange() {
         when(studentRepository.searchPaged(any(), any(PageRequest.class))).thenReturn(new PageImpl<>(List.of()));
 
         studentService.listPaged(-5, 500, null);
@@ -103,7 +103,7 @@ class StudentServiceTest {
     // ---- obtainPorId ----
 
     @Test
-    void obtainByIdDevuelveDtoWithProyecto() {
+    void obtainByIdReturnsDtoWithProject() {
         when(studentRepository.findByIdWithAppUser(1L)).thenReturn(Optional.of(student));
         when(studentRepository.findLastProyectoByStudentIds(List.of(1L)))
                 .thenReturn(List.<Object[]>of(new Object[]{1L, "Tema Y", "APROBADA"}));
@@ -114,7 +114,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void obtainByIdDevuelveDtoWithoutProyectoSiNoTiene() {
+    void obtainByIdReturnsDtoWithoutProjectIfNotHas() {
         when(studentRepository.findByIdWithAppUser(1L)).thenReturn(Optional.of(student));
         when(studentRepository.findLastProyectoByStudentIds(List.of(1L))).thenReturn(List.of());
 
@@ -124,7 +124,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void obtainByIdLanzaSiNoExists() {
+    void obtainByIdThrowsIfNotExists() {
         when(studentRepository.findByIdWithAppUser(99L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.obtainById(99L));
@@ -144,7 +144,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void createLanzaSiFaltanCamposObligatorios() {
+    void createThrowsIfMissingFieldsRequired() {
         CreateStudentRequest req = new CreateStudentRequest();
         RuntimeException ex = assertThrows(RuntimeException.class, () -> studentService.create(req));
         assertTrue(ex.getMessage().contains("obligatorios"));
@@ -153,7 +153,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void createLanzaSiEmailYaExists() {
+    void createThrowsIfEmailAlreadyExists() {
         CreateStudentRequest req = requestValid();
         when(appUserRepository.existsByEmail("ana@uteq.edu.ec")).thenReturn(true);
 
@@ -162,7 +162,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void createLanzaSiProgramNoExists() {
+    void createThrowsIfProgramNotExists() {
         CreateStudentRequest req = requestValid();
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
         when(programRepository.findById(1)).thenReturn(Optional.empty());
@@ -172,7 +172,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void createLanzaSiPeriodIngresoIndicadoNoExists() {
+    void createThrowsIfPeriodIncomeGivenNotExists() {
         CreateStudentRequest req = requestValid();
         req.setPeriodIngresoId(5);
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
@@ -184,7 +184,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void createLanzaSiStatusActivoNoSembrado() {
+    void createThrowsIfStatusActiveNotSeeded() {
         CreateStudentRequest req = requestValid();
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
         when(programRepository.findById(1)).thenReturn(Optional.of(program));
@@ -195,7 +195,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void createLanzaSiRoleStudentNoExists() {
+    void createThrowsIfRoleStudentNotExists() {
         CreateStudentRequest req = requestValid();
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
         when(programRepository.findById(1)).thenReturn(Optional.of(program));
@@ -207,7 +207,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void createExitosoWithoutPeriodUsaSemestreByDefault() {
+    void createSuccessfulWithoutPeriodUsesSemesterByDefault() {
         CreateStudentRequest req = requestValid(); // sin periodIngresoId ni semestreActual
         when(appUserRepository.existsByEmail(anyString())).thenReturn(false);
         when(programRepository.findById(1)).thenReturn(Optional.of(program));
@@ -231,7 +231,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void createExitosoWithPeriodYSemestreExplicitos() {
+    void createSuccessfulWithPeriodAndSemesterExplicit() {
         CreateStudentRequest req = requestValid();
         req.setPeriodIngresoId(1);
         req.setSemestreActual((short) 4);
@@ -254,7 +254,7 @@ class StudentServiceTest {
     // ---- update ----
 
     @Test
-    void updateLanzaSiStudentNoExists() {
+    void updateThrowsIfStudentNotExists() {
         when(studentRepository.findById(99L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> studentService.update(99L, new UpdateStudentRequest()));
@@ -262,7 +262,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void updateNoTocaCamposEnNull() {
+    void updateNotTouchesFieldsInNull() {
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
         when(studentRepository.save(any(Student.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -274,7 +274,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void updateLanzaSiProgramNuevaNoExists() {
+    void updateThrowsIfProgramNewNotExists() {
         UpdateStudentRequest req = new UpdateStudentRequest();
         req.setProgramId(99);
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
@@ -285,7 +285,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void updateLanzaSiPeriodNewNoExists() {
+    void updateThrowsIfPeriodNewNotExists() {
         UpdateStudentRequest req = new UpdateStudentRequest();
         req.setPeriodIngresoId(77);
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
@@ -296,7 +296,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void updateLanzaSiStatusAcademicInvalido() {
+    void updateThrowsIfStatusAcademicInvalid() {
         UpdateStudentRequest req = new UpdateStudentRequest();
         req.setStatusAcademicCode("INEXISTENTE");
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
@@ -307,7 +307,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void updateAplicaAllLosCamposCuandoVienenAll() {
+    void updateAppliesAllFieldsWhenComeAll() {
         Program nuevaProgram = Program.builder().id(2).nombre("Sistemas").build();
         PeriodAcademic targetPeriod = PeriodAcademic.builder().id(2).nombre("2026-2").build();
         StatusAcademic suspendido = StatusAcademic.builder().code("SUSPENDIDO").nombre("Suspendido").build();
@@ -335,7 +335,7 @@ class StudentServiceTest {
     // ---- listEstadosAcademicos ----
 
     @Test
-    void listStatusesAcademicDelegaAlRepositorio() {
+    void listStatusesAcademicDelegatesToRepository() {
         when(statusAcademicRepository.findAll()).thenReturn(List.of(activo));
         List<StatusAcademic> result = studentService.listStatusesAcademic();
         assertEquals(1, result.size());

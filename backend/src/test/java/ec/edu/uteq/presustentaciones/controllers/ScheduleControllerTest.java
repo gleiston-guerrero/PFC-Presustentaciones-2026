@@ -46,7 +46,7 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void createDevuelveElScheduleProgramado() {
+    void createReturnsScheduleScheduled() {
         LocalDate date = LocalDate.of(2026, 9, 10);
         LocalTime hora = LocalTime.of(9, 0);
         Schedule schedule = Schedule.builder().id(1L).build();
@@ -59,7 +59,7 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void createWithPanelistEnConflictoDevuelve400WithElMessageDelProcedimiento() {
+    void createWithPanelistInConflictReturns400WithMessageOfProcedure() {
         LocalDate date = LocalDate.of(2026, 9, 10);
         LocalTime hora = LocalTime.of(9, 0);
         when(scheduleService.createSchedule(1L, 2L, date, hora))
@@ -72,7 +72,7 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void assignAutomaticDevuelveElScheduleYTraduceErroresA400() {
+    void assignAutomaticReturnsScheduleAndTranslatesErrorsTo400() {
         Schedule schedule = Schedule.builder().id(1L).build();
         when(scheduleService.assignAutomatic(1L)).thenReturn(schedule);
         assertSame(schedule, controller.assignAutomatic(1L).getBody());
@@ -85,7 +85,7 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void availabilityDevuelveLasSlotsWithLaDateYDuracionConsultadas() {
+    void availabilityReturnsSlotsWithDateAndDurationQueried() {
         LocalDate date = LocalDate.of(2026, 9, 10);
         List<LocalDateTime> slots = List.of(date.atTime(9, 0), date.atTime(10, 0));
         when(scheduleService.slotsAvailable(date, 45)).thenReturn(slots);
@@ -99,7 +99,7 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void verifyAvailabilityDevuelveMessageDistintoSegunElResult() {
+    void verifyAvailabilityReturnsMessageDifferentAccordingResult() {
         LocalDateTime start = LocalDateTime.of(2026, 9, 10, 9, 0);
         when(scheduleService.isAvailable(1L, start, 45)).thenReturn(true);
         when(scheduleService.isAvailable(2L, start, 45)).thenReturn(false);
@@ -116,7 +116,7 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void listByStudentYByAppUserDeleganEnElServicio() {
+    void listByStudentAndByAppUserDelegateInService() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Schedule> pagina = new PageImpl<>(List.of(Schedule.builder().id(1L).build()));
         List<Schedule> byStudent = List.of(Schedule.builder().id(2L).build());
@@ -131,14 +131,14 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void bySubmissionDevuelve404CuandoNoHayScheduleProgramado() {
+    void bySubmissionReturns404WhenNotHasScheduleScheduled() {
         when(scheduleService.searchBySubmission(1L)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, controller.bySubmission(1L).getStatusCode());
     }
 
     @Test
-    void bySubmissionDevuelveElScheduleCuandoExists() {
+    void bySubmissionReturnsScheduleWhenExists() {
         Schedule schedule = Schedule.builder().id(1L).build();
         when(scheduleService.searchBySubmission(1L)).thenReturn(Optional.of(schedule));
 
@@ -146,7 +146,7 @@ class ScheduleControllerTest {
     }
 
     @Test
-    void deleteDevuelve204() {
+    void deleteReturns204() {
         assertEquals(HttpStatus.NO_CONTENT, controller.delete(3L).getStatusCode());
         verify(scheduleService).delete(3L);
     }

@@ -35,7 +35,7 @@ class CleanupLogSchedulerTest {
     }
 
     @Test
-    void purgeBorraLoAnteriorAlCorteYDejaTrazaWithElCountExacto() {
+    void purgeDeletesPreviousToCutoffAndLeavesTraceWithCountExact() {
         when(auditRepository.eraseAnterioresA(any())).thenReturn(42);
 
         scheduler.purge();
@@ -56,7 +56,7 @@ class CleanupLogSchedulerTest {
     }
 
     @Test
-    void purgeWithoutNadaQueEraseTambienDejaTraza() {
+    void purgeWithoutNothingThatEraseAlsoLeavesTrace() {
         when(auditRepository.eraseAnterioresA(any())).thenReturn(0);
 
         scheduler.purge();
@@ -65,7 +65,7 @@ class CleanupLogSchedulerTest {
     }
 
     @Test
-    void elPeriodDeRetentionEsConfigurable() {
+    void periodOfRetentionIsConfigurable() {
         ReflectionTestUtils.setField(scheduler, "retentionDias", 30);
         when(auditRepository.eraseAnterioresA(any())).thenReturn(5);
 

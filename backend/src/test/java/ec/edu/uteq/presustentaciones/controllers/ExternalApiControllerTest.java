@@ -67,13 +67,13 @@ class ExternalApiControllerTest {
     private ec.edu.uteq.presustentaciones.repositories.AppUserRepository appUserRepository;
 
     @Test
-    void sinTokenDevuelve401() throws Exception {
+    void withoutTokenReturns401() throws Exception {
         mockMvc.perform(get("/api/v1/universidades").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void devuelveLasUniversidadesFromElServicio() throws Exception {
+    void returnsUniversitiesFromService() throws Exception {
         String email = "docente@uteq.edu.ec";
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",

@@ -37,30 +37,30 @@ class TopicProposedRepositoryIntegrationTest {
     private TopicProposedRepository topicProposedRepository;
 
     @Test
-    void searchWithFiltros_sinNingunFiltro_noLanzaYDevuelveLista() {
+    void searchWithFilters_withoutFilter_notThrowsAndReturnsList() {
         List<TopicProposed> result = assertDoesNotThrow(
                 () -> topicProposedRepository.searchWithFiltros(null, null, null, null));
         assertNotNull(result);
     }
 
     @Test
-    void searchWithFiltros_soloNivelDificultadNull_noLanza() {
+    void searchWithFilters_onlyLevelDificultadNull_notThrows() {
         // El caso exacto que rompía: algún filtro presente, nivel ausente.
         assertDoesNotThrow(() -> topicProposedRepository.searchWithFiltros(1, null, null, null));
     }
 
     @Test
-    void searchWithFiltros_soloProgramId_noLanza() {
+    void searchWithFilters_onlyProgramId_notThrows() {
         assertDoesNotThrow(() -> topicProposedRepository.searchWithFiltros(1, null, null, null));
     }
 
     @Test
-    void searchWithFiltros_soloResearchLineId_noLanza() {
+    void searchWithFilters_onlyResearchLineId_notThrows() {
         assertDoesNotThrow(() -> topicProposedRepository.searchWithFiltros(null, 1, null, null));
     }
 
     @Test
-    void searchWithFiltros_soloNivelDificultad_noLanzaYFiltraCorrectamente() {
+    void searchWithFilters_onlyLevelDificultad_notThrowsAndFiltersCorrectly() {
         List<TopicProposed> result = assertDoesNotThrow(
                 () -> topicProposedRepository.searchWithFiltros(null, null, null, "BASICO"));
         assertNotNull(result);
@@ -70,7 +70,7 @@ class TopicProposedRepositoryIntegrationTest {
     }
 
     @Test
-    void searchWithFiltros_nivelDificultadEnMinusculas_esCaseInsensitive() {
+    void searchWithFilters_levelDificultadInLowercase_isCaseInsensitive() {
         // LOWER(...) = LOWER(CAST(...)) debe seguir siendo insensible a mayúsculas/minúsculas.
         List<TopicProposed> mayus = topicProposedRepository.searchWithFiltros(null, null, null, "BASICO");
         List<TopicProposed> minus = topicProposedRepository.searchWithFiltros(null, null, null, "basico");
@@ -79,12 +79,12 @@ class TopicProposedRepositoryIntegrationTest {
     }
 
     @Test
-    void searchWithFiltros_combinacionDeFiltros_noLanza() {
+    void searchWithFilters_combinationOfFilters_notThrows() {
         assertDoesNotThrow(() -> topicProposedRepository.searchWithFiltros(1, 1, null, "INTERMEDIO"));
     }
 
     @Test
-    void searchWithFiltros_areaIdWithoutNivel_noLanza() {
+    void searchWithFilters_areaIdWithoutLevel_notThrows() {
         assertDoesNotThrow(() -> topicProposedRepository.searchWithFiltros(null, null, 1, null));
     }
 }

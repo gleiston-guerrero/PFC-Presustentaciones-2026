@@ -63,7 +63,7 @@ class PanelistControllerTest {
     // ── Asignación individual ─────────────────────────────────────────────────
 
     @Test
-    void assignPanelistDevuelveElPanelistAsignado() {
+    void assignPanelistReturnsPanelistAssigned() {
         Panelist panelist = Panelist.builder().id(1L).build();
         when(panelistService.assignPanelist(1L, 2L, "PRESIDENTE")).thenReturn(panelist);
 
@@ -76,7 +76,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void assignPanelistTraduceElErrorDelServicioA400() {
+    void assignPanelistTranslatesErrorOfServiceTo400() {
         when(panelistService.assignPanelist(1L, 2L, "PRESIDENTE"))
                 .thenThrow(new RuntimeException("El docente ya es jurado de esta solicitud"));
 
@@ -88,7 +88,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void assignAutomaticallyDevuelveLosPanelistsResultantes() {
+    void assignAutomaticallyReturnsPanelistsResulting() {
         List<Panelist> panelists = List.of(Panelist.builder().id(1L).build(), Panelist.builder().id(2L).build());
         when(panelistService.listBySubmission(1L)).thenReturn(panelists);
 
@@ -100,7 +100,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void assignAutomaticallyTraduceElErrorDelServicioA400() {
+    void assignAutomaticallyTranslatesErrorOfServiceTo400() {
         doThrow(new RuntimeException("No hay suficientes docentes disponibles"))
                 .when(panelistService).assignPanelistsAutomatically(1L);
 
@@ -114,7 +114,7 @@ class PanelistControllerTest {
     // ── Consultas ─────────────────────────────────────────────────────────────
 
     @Test
-    void listBySubmissionEnvuelveLaListaDelServicio() {
+    void listBySubmissionWrapsListOfService() {
         List<Panelist> panelists = List.of(Panelist.builder().id(1L).build());
         when(panelistService.listBySubmission(1L)).thenReturn(panelists);
 
@@ -122,7 +122,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void listAllPropagaLaPaginacionRecibida() {
+    void listAllPropagatesPaginationReceived() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Panelist> pagina = new PageImpl<>(List.of(Panelist.builder().id(1L).build()));
         when(panelistService.listAll(pageable)).thenReturn(pagina);
@@ -131,13 +131,13 @@ class PanelistControllerTest {
     }
 
     @Test
-    void deletePanelistDevuelve204() {
+    void deletePanelistReturns204() {
         assertEquals(HttpStatus.NO_CONTENT, controller.deletePanelist(9L).getStatusCode());
         verify(panelistService).deletePanelist(9L);
     }
 
     @Test
-    void suggestTeachersUsaLaCantidadSolicitada() {
+    void suggestTeachersUsesAmountRequested() {
         List<Teacher> teachers = List.of(Teacher.builder().id(1L).build());
         when(panelistService.suggestTeachers(1L, 3)).thenReturn(teachers);
 
@@ -145,7 +145,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void listByTeacherYTutoringsByTeacherDeleganEnElServicio() {
+    void listByTeacherAndTutoringsByTeacherDelegateInService() {
         when(panelistService.listByTeacher(4L)).thenReturn(List.of(Panelist.builder().id(1L).build()));
         when(panelistService.listTutoringsByTeacher(4L)).thenReturn(List.of(Tutor.builder().id(1L).build()));
 
@@ -156,7 +156,7 @@ class PanelistControllerTest {
     // ── Tutor ─────────────────────────────────────────────────────────────────
 
     @Test
-    void assignTutorDevuelveElTutorAsignado() {
+    void assignTutorReturnsTutorAssigned() {
         Tutor tutor = Tutor.builder().id(1L).build();
         when(panelistService.assignTutor(1L, 2L)).thenReturn(tutor);
 
@@ -167,7 +167,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void assignTutorTraduceElErrorDelServicioA400() {
+    void assignTutorTranslatesErrorOfServiceTo400() {
         when(panelistService.assignTutor(1L, 2L)).thenThrow(new RuntimeException("La solicitud ya tiene tutor"));
 
         ResponseEntity<?> response = controller.assignTutor(1L, 2L);
@@ -177,14 +177,14 @@ class PanelistControllerTest {
     }
 
     @Test
-    void obtainTutorDevuelve404CuandoLaSubmissionNoTieneTutor() {
+    void obtainTutorReturns404WhenSubmissionNotHasTutor() {
         when(panelistService.obtainTutorOfSubmission(1L)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, controller.obtainTutor(1L).getStatusCode());
     }
 
     @Test
-    void obtainTutorDevuelveElTutorCuandoExists() {
+    void obtainTutorReturnsTutorWhenExists() {
         Tutor tutor = Tutor.builder().id(1L).build();
         when(panelistService.obtainTutorOfSubmission(1L)).thenReturn(Optional.of(tutor));
 
@@ -195,7 +195,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void deleteTutorDevuelve204() {
+    void deleteTutorReturns204() {
         assertEquals(HttpStatus.NO_CONTENT, controller.deleteTutor(7L).getStatusCode());
         verify(panelistService).deleteTutor(7L);
     }
@@ -203,7 +203,7 @@ class PanelistControllerTest {
     // ── Info de panelist (armado manual del Map de respuesta) ───────────────────
 
     @Test
-    void obtainInfoPanelistArmaElNombreDelTeacherCuandoLaCadenaIsComplete() {
+    void obtainInfoPanelistBuildsNameOfTeacherWhenStringIsComplete() {
         when(panelistService.obtainInfoPanelist(1L, 2L))
                 .thenReturn(Optional.of(panelistWithTeacher("Ana", "Pérez", "PRESIDENTE")));
 
@@ -218,7 +218,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void obtainInfoPanelistWithoutTeacherNiRoleNoRompeYDevuelveCadenasVacias() {
+    void obtainInfoPanelistWithoutTeacherOrRoleNotBreaksAndReturnsStringsEmpty() {
         // Panelist sin teacher y sin rolePanelist: getRole() devuelve null y el nombre queda vacío.
         // Map.of no admite valores nulos, así que si el controlador no hiciera el fallback
         // este endpoint reventaría con NullPointerException en produccion.
@@ -236,7 +236,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void obtainInfoPanelistDevuelveDataNulaCuandoNoHayAsignacion() {
+    void obtainInfoPanelistReturnsDataNullWhenNotHasAssignment() {
         when(panelistService.obtainInfoPanelist(1L, 2L)).thenReturn(Optional.empty());
 
         ResponseEntity<?> response = controller.obtainInfoPanelist(1L, 2L);
@@ -248,7 +248,7 @@ class PanelistControllerTest {
     // ── sp_assign_panelist_masivo ──────────────────────────────────────────────
 
     @Test
-    void assignBulkConvierteLosIdsJsonAArreglosLongYLlamaAlProcedimiento() {
+    void assignBulkConvertsIdsJsonToArraysLongAndCallsToProcedure() {
         ResponseEntity<?> response = controller.assignBulk(Map.of(
                 "solicitudIds", List.of(1, 2, 3),
                 "docenteIds", List.of(4, 5, 6),
@@ -270,7 +270,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void assignBulkRechazaElCuerpoIncompletoWithoutLlamarAlProcedimiento() {
+    void assignBulkRejectsBodyIncompleteWithoutCallToProcedure() {
         ResponseEntity<?> sinRole = controller.assignBulk(Map.of(
                 "solicitudIds", List.of(1), "docenteIds", List.of(2)));
 
@@ -282,7 +282,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void assignBulkTraduceElErrorDelProcedimientoA400() {
+    void assignBulkTranslatesErrorOfProcedureTo400() {
         doThrow(new RuntimeException("rol_jurado inexistente"))
                 .when(panelistService).assignPanelistBulkSP(any(), any(), eq("INVENTADO"));
 

@@ -84,7 +84,7 @@ class MinutesControllerTest {
     }
 
     @Test
-    void deleteRechazaAStudentAunqueSeaDuenoDeLaSubmission() throws Exception {
+    void deleteRejectsToStudentAlthoughIsOwnerOfSubmission() throws Exception {
         // Caso que exponía la vulnerabilidad: antes, ser el student dueño/panelist/tutor
         // (via validateAcceso en el service) bastaba para erase el minutes. Ahora ni siquiera
         // llega al service: @PreAuthorize lo rechaza antes.
@@ -99,7 +99,7 @@ class MinutesControllerTest {
     }
 
     @Test
-    void deleteRechazaATeacherPanelistOTutorWithoutMinutesGestionar() throws Exception {
+    void deleteRejectsToTeacherPanelistOrTutorWithoutMinutesManage() throws Exception {
         authenticateAs("docente@uteq.edu.ec", "DOCENTE", false);
 
         mockMvc.perform(delete("/api/v1/actas/1")
@@ -111,7 +111,7 @@ class MinutesControllerTest {
     }
 
     @Test
-    void deletePermiteAAdminWithMinutesGestionar() throws Exception {
+    void deleteAllowsToAdminWithMinutesManage() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(delete("/api/v1/actas/1")
@@ -123,7 +123,7 @@ class MinutesControllerTest {
     }
 
     @Test
-    void deleteWithoutTokenDevuelve401() throws Exception {
+    void deleteWithoutTokenReturns401() throws Exception {
         mockMvc.perform(delete("/api/v1/actas/1").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }

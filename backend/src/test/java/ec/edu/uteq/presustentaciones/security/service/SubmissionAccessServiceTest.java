@@ -62,26 +62,26 @@ class SubmissionAccessServiceTest {
     }
 
     @Test
-    void sinAuthenticateLanzaAccessDenied() {
+    void withoutAuthenticateThrowsAccessDenied() {
         assertThrows(AccessDeniedException.class,
                 () -> submissionAccessService.validateAccess(submission, "EVALUACION_CALIFICAR"));
     }
 
     @Test
-    void adminSiempreTieneAccess() {
+    void adminAlwaysHasAccess() {
         authenticateAs("admin@uteq.edu.ec", "ROLE_ADMIN");
         assertDoesNotThrow(() -> submissionAccessService.validateAccess(submission, "EVALUACION_CALIFICAR"));
     }
 
     @Test
-    void holderDelPermissionDeBypassTieneAccess() {
+    void holderOfPermissionOfBypassHasAccess() {
         authenticateAs("coordinador@uteq.edu.ec", "ROLE_COORDINADOR");
         when(permissionService.hasPermission(any(), eq("EVALUACION_CALIFICAR"))).thenReturn(true);
         assertDoesNotThrow(() -> submissionAccessService.validateAccess(submission, "EVALUACION_CALIFICAR"));
     }
 
     @Test
-    void studentPropietarioTieneAccess() {
+    void studentOwnerHasAccess() {
         // El chequeo de "estudiante dueño" resuelve el acceso antes de consultar panelists/tutor,
         // así que aquí solo hace falta stubear el permission de bypass (no se cumple).
         authenticateAs("estudiante.dueno@uteq.edu.ec", "ROLE_ESTUDIANTE");
@@ -91,7 +91,7 @@ class SubmissionAccessServiceTest {
     }
 
     @Test
-    void otroStudentWithoutRelacionRecibeAccessDenied() {
+    void otherStudentWithoutRelationReceivesAccessDenied() {
         // Caso IDOR: un appUser autenticado que no es el student dueño, ni panelist, ni tutor.
         authenticateAs("otro.estudiante@uteq.edu.ec", "ROLE_ESTUDIANTE");
         when(permissionService.hasPermission(any(), any())).thenReturn(false);
@@ -103,7 +103,7 @@ class SubmissionAccessServiceTest {
     }
 
     @Test
-    void panelistAsignadoTieneAccess() {
+    void panelistAssignedHasAccess() {
         AppUser appUserTeacher = AppUser.builder().id(50L).email("jurado@uteq.edu.ec").build();
         Teacher teacher = Teacher.builder().id(5L).appUser(appUserTeacher).build();
         Panelist panelist = Panelist.builder().id(1L).submission(submission).teacher(teacher).build();
@@ -116,7 +116,7 @@ class SubmissionAccessServiceTest {
     }
 
     @Test
-    void teacherQueNoEsPanelistNiTutorRecibeAccessDenied() {
+    void teacherThatNotIsPanelistOrTutorReceivesAccessDenied() {
         // Caso IDOR: un DOCENTE autenticado que no participa en esta submission como panelist/tutor.
         authenticateAs("docente.ajeno@uteq.edu.ec", "ROLE_DOCENTE");
         when(permissionService.hasPermission(any(), any())).thenReturn(false);
@@ -128,7 +128,7 @@ class SubmissionAccessServiceTest {
     }
 
     @Test
-    void tutorAsignadoTieneAccess() {
+    void tutorAssignedHasAccess() {
         AppUser appUserTeacher = AppUser.builder().id(60L).email("tutor@uteq.edu.ec").build();
         Teacher teacher = Teacher.builder().id(6L).appUser(appUserTeacher).build();
         Tutor tutor = Tutor.builder().id(2L).submission(submission).teacher(teacher).build();

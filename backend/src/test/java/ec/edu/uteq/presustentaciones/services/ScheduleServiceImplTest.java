@@ -71,7 +71,7 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void testCreateScheduleFallaSiPanelIncompleto() {
+    void testCreateScheduleFailsIfPanelIncomplete() {
         when(panelistRepository.findBySubmissionId(10L)).thenReturn(List.of(presidente, vocal));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
@@ -81,7 +81,7 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void testCreateScheduleFallaSiTutoringNoCompletada() {
+    void testCreateScheduleFailsIfTutoringNotCompleted() {
         when(panelistRepository.findBySubmissionId(10L)).thenReturn(List.of(presidente, vocal, secretario));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(Tutor.builder().status("EN_PROCESO").build()));
 
@@ -91,7 +91,7 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void testCreateScheduleFallaByConflictoDePanelist() {
+    void testCreateScheduleFailsByConflictOfPanelist() {
         when(panelistRepository.findBySubmissionId(10L)).thenReturn(List.of(presidente, vocal, secretario));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(tutorCompletado));
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
@@ -109,7 +109,7 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void testCreateScheduleExitosoWithoutConflictos() {
+    void testCreateScheduleSuccessfulWithoutConflicts() {
         when(panelistRepository.findBySubmissionId(10L)).thenReturn(List.of(presidente, vocal, secretario));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(tutorCompletado));
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
@@ -135,7 +135,7 @@ class ScheduleServiceImplTest {
     // ── assignAutomatico ────────────────────────────────────────────────────
 
     @Test
-    void assignAutomaticDevuelveElExistingSiYaIsProgramado() {
+    void assignAutomaticReturnsExistingIfAlreadyIsScheduled() {
         when(panelistRepository.findBySubmissionId(10L)).thenReturn(List.of(presidente, vocal, secretario));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(tutorCompletado));
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
@@ -150,7 +150,7 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void assignAutomaticLanzaSiNoHayRoomsAvailable() {
+    void assignAutomaticThrowsIfNotHasRoomsAvailable() {
         when(panelistRepository.findBySubmissionId(10L)).thenReturn(List.of(presidente, vocal, secretario));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(tutorCompletado));
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
@@ -162,7 +162,7 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void assignAutomaticEncuentraLaPrimeraFranjaFree() {
+    void assignAutomaticFindsFirstWindowFree() {
         when(panelistRepository.findBySubmissionId(10L)).thenReturn(List.of(presidente, vocal, secretario));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(tutorCompletado));
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
@@ -185,7 +185,7 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void assignAutomaticLanzaSiNoHayAvailabilityEn30Dias() {
+    void assignAutomaticThrowsIfNotHasAvailabilityIn30Days() {
         when(panelistRepository.findBySubmissionId(10L)).thenReturn(List.of(presidente, vocal, secretario));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(tutorCompletado));
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
@@ -200,7 +200,7 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void assignAutomaticValidaPrerequisitesPrimero() {
+    void assignAutomaticValidatesPrerequisitesFirst() {
         when(panelistRepository.findBySubmissionId(10L)).thenReturn(List.of(presidente, vocal)); // tribunal incompleto
         RuntimeException ex = assertThrows(RuntimeException.class, () -> scheduleService.assignAutomatic(10L));
         assertTrue(ex.getMessage().contains("tribunal no está completo"));
@@ -210,7 +210,7 @@ class ScheduleServiceImplTest {
     // ── estaDisponible / franjasDisponibles ──────────────────────────────────
 
     @Test
-    void isAvailableEsFalsoSiHayConflicto() {
+    void isAvailableIsFalseIfHasConflict() {
         LocalDateTime start = LocalDateTime.of(2026, 9, 10, 9, 0);
         when(scheduleRepository.findConflictos(1L, start, start.plusMinutes(45)))
                 .thenReturn(List.of(Schedule.builder().id(1L).build()));
@@ -218,14 +218,14 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void isAvailableEsVerdaderoWithoutConflictos() {
+    void isAvailableIsTrueWithoutConflicts() {
         LocalDateTime start = LocalDateTime.of(2026, 9, 10, 9, 0);
         when(scheduleRepository.findConflictos(1L, start, start.plusMinutes(45))).thenReturn(List.of());
         assertTrue(scheduleService.isAvailable(1L, start, 45));
     }
 
     @Test
-    void slotsAvailableGeneraSlotsDe8a17WithLaDuracionIndicada() {
+    void slotsAvailableGeneratesSlotsOf8To17WithDurationGiven() {
         List<LocalDateTime> slots = scheduleService.slotsAvailable(LocalDate.of(2026, 9, 10), 45);
 
         assertFalse(slots.isEmpty());
@@ -236,7 +236,7 @@ class ScheduleServiceImplTest {
     // ── delegados simples ────────────────────────────────────────────────────
 
     @Test
-    void listSchedulesDelega() {
+    void listSchedulesDelegates() {
         org.springframework.data.domain.Pageable pageable = mock(org.springframework.data.domain.Pageable.class);
         org.springframework.data.domain.Page<Schedule> pagina = org.springframework.data.domain.Page.empty();
         when(scheduleRepository.findAll(pageable)).thenReturn(pagina);
@@ -244,31 +244,31 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void listByStudentDelega() {
+    void listByStudentDelegates() {
         when(scheduleRepository.findByStudentId(5L)).thenReturn(List.of());
         assertTrue(scheduleService.listByStudent(5L).isEmpty());
     }
 
     @Test
-    void listByAppUserDelega() {
+    void listByAppUserDelegates() {
         when(scheduleRepository.findByAppUserId(50L)).thenReturn(List.of());
         assertTrue(scheduleService.listByAppUser(50L).isEmpty());
     }
 
     @Test
-    void searchBySubmissionDelega() {
+    void searchBySubmissionDelegates() {
         when(scheduleRepository.findBySubmissionId(10L)).thenReturn(Optional.empty());
         assertTrue(scheduleService.searchBySubmission(10L).isEmpty());
     }
 
     @Test
-    void deleteDelega() {
+    void deleteDelegates() {
         scheduleService.delete(5L);
         verify(scheduleRepository).deleteById(5L);
     }
 
     @Test
-    void createScheduleNoPropagaFalloDeNotification() {
+    void createScheduleNotPropagatesFailureOfNotification() {
         when(panelistRepository.findBySubmissionId(10L)).thenReturn(List.of(presidente, vocal, secretario));
         when(tutorRepository.findBySubmissionId(10L)).thenReturn(Optional.of(tutorCompletado));
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));

@@ -261,7 +261,13 @@ print(f'  peor caso publicado: tipos {tipos}%  metodos {metodos}%  (techo de la 
 sys.exit(0 if tipos <= 5.0 and metodos <= 5.0 else 1)
 " && ok "P4: tipos y metodos bajo el techo del 5%, medido en esta corrida" \
    || fail "P4: el porcentaje de nombres en espanol supera el techo del 5%"
-warn "P4: 436 de 807 nombres de metodo @Test siguen en espanol -- son frases descriptivas completas, no identificadores de dominio; ver VERIFICACION.md"
+# La cifra "436 de 807" que estaba aqui era una advertencia escrita a mano; el conteo real
+# era 789 de 809. Ahora se mide, con tolerancia cero, contra un diccionario espanol->ingles.
+if PYTHONIOENCODING=utf-8 python scripts/p4-tests-espanol.py; then
+  ok "P4: ningun metodo @Test tiene palabras en espanol en su nombre (diccionario de scripts/p4-diccionario-es-en.txt)"
+else
+  fail "P4: hay metodos @Test con nombre en espanol -- ver arriba"
+fi
 echo
 
 echo "=== P5 -- Lighthouse (recalculado desde los JSON versionados) ==="

@@ -38,14 +38,14 @@ class ChatbotServiceTest {
     }
 
     @Test
-    void sinAutenticacionPideIniciarSesion() {
+    void withoutAuthenticationAsksStartSession() {
         ChatResponse resp = chatbotService.processMessage(req("hola"));
         assertTrue(resp.getResponse().contains("iniciar sesión"));
         assertNull(resp.getOptions());
     }
 
     @Test
-    void appUserAnonimoPideIniciarSesion() {
+    void appUserAnonymousAsksStartSession() {
         SecurityContextHolder.getContext().setAuthentication(
                 new AnonymousAuthenticationToken("key", "anonymousUser",
                         AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
@@ -54,7 +54,7 @@ class ChatbotServiceTest {
     }
 
     @Test
-    void messageNuloDevuelveRespuestaByDefault() {
+    void messageNullReturnsResponseByDefault() {
         authenticate();
         ChatResponse resp = chatbotService.processMessage(req(null));
         assertTrue(resp.getResponse().contains("No estoy seguro"));
@@ -62,40 +62,40 @@ class ChatbotServiceTest {
     }
 
     @Test
-    void preguntaSobreSubmission() {
+    void questionOnSubmission() {
         authenticate();
         assertTrue(chatbotService.processMessage(req("¿Cómo veo mi SOLICITUD?")).getResponse().contains("Solicitudes"));
     }
 
     @Test
-    void preguntaSobreProposal() {
+    void questionOnProposal() {
         authenticate();
         assertTrue(chatbotService.processMessage(req("dudas del anteproyecto")).getResponse().contains("anteproyecto"));
     }
 
     @Test
-    void preguntaSobreNotifications() {
+    void questionOnNotifications() {
         authenticate();
         assertTrue(chatbotService.processMessage(req("tengo notificaciones")).getResponse().contains("notificaciones"));
         assertTrue(chatbotService.processMessage(req("una notificación")).getResponse().contains("notificaciones"));
     }
 
     @Test
-    void preguntaSobreProfile() {
+    void questionOnProfile() {
         authenticate();
         assertTrue(chatbotService.processMessage(req("quiero ver mi perfil")).getResponse().contains("Mi Perfil"));
         assertTrue(chatbotService.processMessage(req("mis datos personales")).getResponse().contains("Mi Perfil"));
     }
 
     @Test
-    void preguntaSobreDefense() {
+    void questionOnDefense() {
         authenticate();
         assertTrue(chatbotService.processMessage(req("cuando es mi sustentacion")).getResponse().contains("sustentación"));
         assertTrue(chatbotService.processMessage(req("mi sustentación")).getResponse().contains("sustentación"));
     }
 
     @Test
-    void preguntaSobreContrasena() {
+    void questionOnPassword() {
         authenticate();
         assertTrue(chatbotService.processMessage(req("olvide mi contraseña")).getResponse().contains("contraseña"));
         assertTrue(chatbotService.processMessage(req("cambiar contrasena")).getResponse().contains("contraseña"));
@@ -103,7 +103,7 @@ class ChatbotServiceTest {
     }
 
     @Test
-    void preguntaDeAyuda() {
+    void questionOfHelp() {
         authenticate();
         assertTrue(chatbotService.processMessage(req("ayuda")).getResponse().contains("Puedo ayudarte"));
         assertTrue(chatbotService.processMessage(req("no sé qué hacer")).getResponse().contains("Puedo ayudarte"));
@@ -113,7 +113,7 @@ class ChatbotServiceTest {
     }
 
     @Test
-    void messageWithoutCoincidenciasDevuelveRespuestaByDefaultWithOpciones() {
+    void messageWithoutMatchesReturnsResponseByDefaultWithOptions() {
         authenticate();
         ChatResponse resp = chatbotService.processMessage(req("cuál es el sentido de la vida"));
         assertTrue(resp.getResponse().contains("No estoy seguro"));

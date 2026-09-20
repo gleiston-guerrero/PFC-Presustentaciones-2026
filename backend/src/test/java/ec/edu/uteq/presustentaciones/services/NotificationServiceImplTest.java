@@ -48,7 +48,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void createNotificationLanzaExcepcionSiElAppUserNoExists() {
+    void createNotificationThrowsExceptionIfAppUserNotExists() {
         when(appUserRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> notificationService.createNotification(99L, "hola"));
@@ -56,7 +56,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void createNotificationGuardaLaNotificationAunWithoutEmailConfigurado() {
+    void createNotificationSavesNotificationStillWithoutEmailConfigured() {
         AppUser receiver = receiverWith(null);
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(receiver));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -69,7 +69,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void createNotificationEnviaEmailSiElReceiverTieneEmailNotificationsConfigurado() {
+    void createNotificationSendsEmailIfReceiverHasEmailNotificationsConfigured() {
         AppUser receiver = receiverWith("atorres.notif@gmail.com");
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(receiver));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -84,7 +84,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void createNotificationNoEnviaEmailSiEmailNotificationsIsEnBlanco() {
+    void createNotificationNotSendsEmailIfEmailNotificationsIsInBlank() {
         AppUser receiver = receiverWith("   ");
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(receiver));
         when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -95,7 +95,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void createNotificationUsaNombreYEmailDelAppUserAuthenticatedAsSender() {
+    void createNotificationUsesNameAndEmailOfAppUserAuthenticatedAsSender() {
         AppUser receiver = receiverWith("atorres.notif@gmail.com");
         AppUser coordinator = AppUser.builder().id(2L).nombre("Jorge").apellido("Coordinador")
                 .email("jcoordinador@uteq.edu.ec").build();
@@ -114,7 +114,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void markAsReadLanzaExcepcionSiLaNotificationNoExists() {
+    void markAsReadThrowsExceptionIfNotificationNotExists() {
         when(notificationRepository.findById(5L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> notificationService.markAsRead(5L));
     }
@@ -128,7 +128,7 @@ class NotificationServiceImplTest {
     // ADMIN en MinutesServiceImplTest.
 
     @Test
-    void markAsReadActualizaElFlagYGuarda() {
+    void markAsReadUpdatesFlagAndSaves() {
         AppUser propietario = AppUser.builder().id(1L).email("atorres@uteq.edu.ec").build();
         Notification n = Notification.builder().id(5L).message("x").read(false).appUser(propietario).build();
         when(notificationRepository.findById(5L)).thenReturn(Optional.of(n));
@@ -144,7 +144,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void countUnreadDelegaAlRepositorio() {
+    void countUnreadDelegatesToRepository() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin@uteq.edu.ec", null,
                         AuthorityUtils.createAuthorityList("ROLE_ADMIN")));
@@ -153,7 +153,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void markAllReadDelegaAlRepositorio() {
+    void markAllReadDelegatesToRepository() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin@uteq.edu.ec", null,
                         AuthorityUtils.createAuthorityList("ROLE_ADMIN")));
@@ -162,7 +162,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void deleteNotificationExitosoSiEsPropietario() {
+    void deleteNotificationSuccessfulIfIsOwner() {
         AppUser receiver = AppUser.builder().id(1L).email("atorres@uteq.edu.ec").build();
         Notification n = Notification.builder().id(5L).appUser(receiver).build();
         when(notificationRepository.findById(5L)).thenReturn(Optional.of(n));
@@ -177,7 +177,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void deleteNotificationLanzaAccessDeniedSiNoEsPropietario() {
+    void deleteNotificationThrowsAccessDeniedIfNotIsOwner() {
         AppUser receiver = AppUser.builder().id(1L).email("atorres@uteq.edu.ec").build();
         AppUser otro = AppUser.builder().id(2L).email("otro@uteq.edu.ec").build();
         Notification n = Notification.builder().id(5L).appUser(receiver).build();

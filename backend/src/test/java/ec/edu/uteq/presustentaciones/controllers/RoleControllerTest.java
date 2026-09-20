@@ -51,7 +51,7 @@ class RoleControllerTest {
     }
 
     @Test
-    void listArmaElDtoWithAppUsersAsignadosYPermissionsDeCadaRole() {
+    void listBuildsDtoWithAppUsersAssignedAndPermissionsOfEachRole() {
         when(roleAppUserRepository.findAll()).thenReturn(List.of(role((short) 1, "ADMIN", "Administrador")));
         when(appUserRepository.findByRole("ADMIN")).thenReturn(List.of(
                 AppUser.builder().id(1L).build(), AppUser.builder().id(2L).build()));
@@ -71,7 +71,7 @@ class RoleControllerTest {
     // ── Creación ──────────────────────────────────────────────────────────────
 
     @Test
-    void createNormalizaElCodeYCalculaElSiguienteIdAvailable() {
+    void createNormalizesCodeAndCalculatesNextIdAvailable() {
         when(roleAppUserRepository.findByCode("SECRETARIA_ACADEMICA")).thenReturn(Optional.empty());
         when(roleAppUserRepository.findAll()).thenReturn(List.of(
                 role((short) 1, "ADMIN", "Administrador"), role((short) 4, "ESTUDIANTE", "Estudiante")));
@@ -92,7 +92,7 @@ class RoleControllerTest {
     }
 
     @Test
-    void createRechazaCodeONombreVacios() {
+    void createRejectsCodeOrNameEmpty() {
         ResponseEntity<?> sinCode = controller.create(Map.of("nombre", "Secretaría"));
         ResponseEntity<?> sinNombre = controller.create(Map.of("codigo", "SECRETARIA"));
 
@@ -103,7 +103,7 @@ class RoleControllerTest {
     }
 
     @Test
-    void createRechazaCodeDuplicado() {
+    void createRejectsCodeDuplicate() {
         when(roleAppUserRepository.findByCode("ADMIN"))
                 .thenReturn(Optional.of(role((short) 1, "ADMIN", "Administrador")));
 
@@ -117,7 +117,7 @@ class RoleControllerTest {
     // ── Renombrado ────────────────────────────────────────────────────────────
 
     @Test
-    void renameCambiaSoloElNombreVisibleNoElCode() {
+    void renameChangesOnlyNameVisibleNotCode() {
         RoleAppUser existing = role((short) 5, "SECRETARIA", "Secretaria");
         when(roleAppUserRepository.findById((short) 5)).thenReturn(Optional.of(existing));
         when(roleAppUserRepository.save(existing)).thenReturn(existing);
@@ -135,7 +135,7 @@ class RoleControllerTest {
     }
 
     @Test
-    void renameRoleInexistenteDevuelve404() {
+    void renameRoleNonexistentReturns404() {
         when(roleAppUserRepository.findById((short) 99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND,
@@ -143,7 +143,7 @@ class RoleControllerTest {
     }
 
     @Test
-    void renameRechazaNombreEmpty() {
+    void renameRejectsNameEmpty() {
         when(roleAppUserRepository.findById((short) 5))
                 .thenReturn(Optional.of(role((short) 5, "SECRETARIA", "Secretaria")));
 
@@ -157,7 +157,7 @@ class RoleControllerTest {
     // ── Eliminación ───────────────────────────────────────────────────────────
 
     @Test
-    void noSeCanDeleteNingunoDeLosCuatroRolesBase() {
+    void notCanDeleteNoneOfFourRolesBase() {
         for (String code : List.of("ADMIN", "DOCENTE", "COORDINADOR", "ESTUDIANTE")) {
             when(roleAppUserRepository.findById((short) 1))
                     .thenReturn(Optional.of(role((short) 1, code, code)));
@@ -171,7 +171,7 @@ class RoleControllerTest {
     }
 
     @Test
-    void noSeCanDeleteUnRoleWithAppUsersAsignados() {
+    void notCanDeleteRoleWithAppUsersAssigned() {
         when(roleAppUserRepository.findById((short) 5))
                 .thenReturn(Optional.of(role((short) 5, "SECRETARIA", "Secretaría")));
         when(appUserRepository.findByRole("SECRETARIA")).thenReturn(List.of(
@@ -185,14 +185,14 @@ class RoleControllerTest {
     }
 
     @Test
-    void deleteRoleInexistenteDevuelve404() {
+    void deleteRoleNonexistentReturns404() {
         when(roleAppUserRepository.findById((short) 99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, controller.delete((short) 99).getStatusCode());
     }
 
     @Test
-    void unRoleNewWithoutAppUsersSiSeCanDelete() {
+    void roleNewWithoutAppUsersIfCanDelete() {
         RoleAppUser role = role((short) 5, "SECRETARIA", "Secretaría");
         when(roleAppUserRepository.findById((short) 5)).thenReturn(Optional.of(role));
         when(appUserRepository.findByRole("SECRETARIA")).thenReturn(List.of());
@@ -205,7 +205,7 @@ class RoleControllerTest {
     }
 
     @Test
-    void siLaBaseRechazaElBorradoByReferenciasSeDevuelveUnMessageLegible() {
+    void ifBaseRejectsDeletedByReferencesReturnsMessageReadable() {
         RoleAppUser role = role((short) 5, "SECRETARIA", "Secretaría");
         when(roleAppUserRepository.findById((short) 5)).thenReturn(Optional.of(role));
         when(appUserRepository.findByRole("SECRETARIA")).thenReturn(List.of());

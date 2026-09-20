@@ -81,7 +81,7 @@ class ProposalServiceImplTest {
     }
 
     @Test
-    void testSendProposalExitoso() {
+    void testSendProposalSuccessful() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
         when(proposalRepository.findBySubmissionId(10L)).thenReturn(Optional.empty());
         when(proposalRepository.save(any(Proposal.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -98,7 +98,7 @@ class ProposalServiceImplTest {
     }
 
     @Test
-    void testSendProposalFallaSiSubmissionSuspendida() {
+    void testSendProposalFailsIfSubmissionSuspendida() {
         StatusSubmission susp = StatusSubmission.builder().code("SUSPENDIDA").nombre("Suspendida").build();
         submission.setStatus(susp);
         submission.setMotivoSuspension("Incumplimiento de fechas");
@@ -114,7 +114,7 @@ class ProposalServiceImplTest {
     }
 
     @Test
-    void testSendProposalFallaSiNoEsPdf() {
+    void testSendProposalFailsIfNotIsPdf() {
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
 
         MockMultipartFile fileTxt = new MockMultipartFile(
@@ -126,7 +126,7 @@ class ProposalServiceImplTest {
     }
 
     @Test
-    void testSendProposalRechazaAAppUserQueNoEsElDuenoDeLaSubmission() {
+    void testSendProposalRejectsToAppUserThatNotIsOwnerOfSubmission() {
         // Caso IDOR de escritura: un tercero (otro student) intenta upload el PDF de una
         // submission que no le pertenece cambiando el submissionId.
         when(submissionRepository.findById(10L)).thenReturn(Optional.of(submission));
@@ -143,7 +143,7 @@ class ProposalServiceImplTest {
     }
 
     @Test
-    void testSearchBySubmissionPropagaAccessDeniedSiSubmissionAccessServiceLoRechaza() {
+    void testSearchBySubmissionPropagatesAccessDeniedIfSubmissionAccessServiceRejects() {
         // Caso IDOR de lectura: el proposal existe pero SubmissionAccessService decide que
         // este appUser no participa en la submission (student ajeno, ni panelist ni tutor).
         Proposal ap = Proposal.builder().id(1L).submission(submission).status("ENVIADO").build();

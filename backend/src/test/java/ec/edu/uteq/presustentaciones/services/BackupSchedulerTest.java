@@ -49,7 +49,7 @@ class BackupSchedulerTest {
     // ── tick ─────────────────────────────────────────────────────────────────
 
     @Test
-    void tickNoHaceNadaSiYaHayUnaCorridaEnCurso() {
+    void tickNotMakesNothingIfAlreadyHasRunInCourse() {
         ReflectionTestUtils.setField(scheduler, "corriendo", true);
 
         scheduler.tick();
@@ -58,7 +58,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void tickNoHaceNadaSiNoHayConfiguracion() {
+    void tickNotMakesNothingIfNotHasConfiguration() {
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.empty());
 
         scheduler.tick();
@@ -67,7 +67,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void tickNoHaceNadaSiLaSchedulingIsPausada() {
+    void tickNotMakesNothingIfSchedulingIsPaused() {
         BackupConfig cfg = configBase();
         cfg.setActivo(false);
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(cfg));
@@ -78,7 +78,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void tickNoHaceNadaSiElCronIsEnBlanco() {
+    void tickNotMakesNothingIfCronIsInBlank() {
         BackupConfig cfg = configBase();
         cfg.setCron("   ");
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(cfg));
@@ -89,7 +89,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void tickNoHaceNadaSiElCronEsInvalido() {
+    void tickNotMakesNothingIfCronIsInvalid() {
         BackupConfig cfg = configBase();
         cfg.setCron("no-es-un-cron");
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(cfg));
@@ -100,7 +100,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void tickNoGeneraNadaSiTodaviaNoTocaSegunElCron() {
+    void tickNotGeneratesNothingIfYetNotTouchesAccordingCron() {
         BackupConfig cfg = configBase();
         cfg.setCron("0 0 0 1 1 *"); // una vez al año, 1 de enero medianoche
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(cfg));
@@ -112,7 +112,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void tickGeneraElBackupYAplicaRetentionCuandoYaToca() {
+    void tickGeneratesBackupAndAppliesRetentionWhenAlreadyTouches() {
         BackupConfig cfg = configBase();
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(cfg));
         when(backupService.dateLastAutomatic()).thenReturn(LocalDateTime.now().minusMinutes(5));
@@ -124,7 +124,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void tickNoPropagaLaExcepcionSiElBackupFalla() {
+    void tickNotPropagatesExceptionIfBackupFails() {
         BackupConfig cfg = configBase();
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(cfg));
         when(backupService.dateLastAutomatic()).thenReturn(LocalDateTime.now().minusMinutes(5));
@@ -138,7 +138,7 @@ class BackupSchedulerTest {
     // ── tickDiferencial ──────────────────────────────────────────────────────
 
     @Test
-    void tickDifferentialNoHaceNadaSiIsDesactivado() {
+    void tickDifferentialNotMakesNothingIfIsDisabled() {
         BackupConfig cfg = configBase();
         cfg.setDifferentialActivo(false);
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(cfg));
@@ -149,7 +149,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void tickDifferentialGeneraElBackupCuandoYaToca() {
+    void tickDifferentialGeneratesBackupWhenAlreadyTouches() {
         BackupConfig cfg = configBase();
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(cfg));
         when(backupService.dateLastDifferentialAutomatic()).thenReturn(LocalDateTime.now().minusMinutes(5));
@@ -162,7 +162,7 @@ class BackupSchedulerTest {
     // ── barridoRetencion ─────────────────────────────────────────────────────
 
     @Test
-    void sweepRetentionNoHaceNadaSiLaSchedulingIsInactiva() {
+    void sweepRetentionNotMakesNothingIfSchedulingIsInactive() {
         BackupConfig cfg = configBase();
         cfg.setActivo(false);
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(cfg));
@@ -173,7 +173,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void sweepRetentionNoHaceNadaSiNoHayConfiguracion() {
+    void sweepRetentionNotMakesNothingIfNotHasConfiguration() {
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.empty());
 
         scheduler.sweepRetention();
@@ -182,7 +182,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void sweepRetentionAplicaLaRetentionSiIsActive() {
+    void sweepRetentionAppliesRetentionIfIsActive() {
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(configBase()));
 
         scheduler.sweepRetention();
@@ -191,7 +191,7 @@ class BackupSchedulerTest {
     }
 
     @Test
-    void sweepRetentionNoPropagaLaExcepcionSiLaRetentionFalla() {
+    void sweepRetentionNotPropagatesExceptionIfRetentionFails() {
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(configBase()));
         doThrow(new RuntimeException("disco lleno")).when(backupService).applyRetention();
 

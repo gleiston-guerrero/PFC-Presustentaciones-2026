@@ -64,7 +64,7 @@ class AppUserServiceImplTest {
     }
 
     @Test
-    void testObtainByIdExitoso() {
+    void testObtainByIdSuccessful() {
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(appUser));
         Optional<AppUser> result = appUserService.obtainById(1L);
         assertTrue(result.isPresent());
@@ -81,7 +81,7 @@ class AppUserServiceImplTest {
     }
 
     @Test
-    void testCreateAppUserIgnoraIdDelClienteForEvitarSobrescribirAppUserExisting() {
+    void testCreateAppUserIgnoresIdOfClientForAvoidOverwriteAppUserExisting() {
         // Hallazgo real: save el "usuario" recibido tal cual, con save(appUser), es solo
         // seguro si id=null. Si el id llega no-nulo (por ejemplo, 1L = el appUser ADMIN real),
         // Spring Data JPA hace merge() en vez de persist() y SOBRESCRIBE esa fila existente en
@@ -99,7 +99,7 @@ class AppUserServiceImplTest {
     }
 
     @Test
-    void testCreateAppUserEncriptaLaContrasena() {
+    void testCreateAppUserEncryptsPassword() {
         appUser.setPassword("claveEnTextoPlano");
         when(passwordEncoder.encode("claveEnTextoPlano")).thenReturn("hash-bcrypt-simulado");
         when(appUserRepository.save(any(AppUser.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -111,7 +111,7 @@ class AppUserServiceImplTest {
     }
 
     @Test
-    void testCreateAppUserAsignaRoleAppUser() {
+    void testCreateAppUserAssignsRoleAppUser() {
         // Regresión: create() guardaba la columna 'role' (string) pero dejaba 'role_id' (FK) nulo,
         // lo que violaba la restricción NOT NULL de la base de datos real.
         when(passwordEncoder.encode(any())).thenReturn("hash");
@@ -124,7 +124,7 @@ class AppUserServiceImplTest {
     }
 
     @Test
-    void testUpdateSincronizaRoleAppUserAlChangeRole() {
+    void testUpdateSyncsRoleAppUserToChangeRole() {
         AppUser existing = new AppUser();
         existing.setId(1L);
         existing.setRole("ESTUDIANTE");
@@ -146,14 +146,14 @@ class AppUserServiceImplTest {
     }
 
     @Test
-    void testCreateAppUserRechazaEmailDuplicado() {
+    void testCreateAppUserRejectsEmailDuplicate() {
         when(appUserRepository.existsByEmail(appUser.getEmail())).thenReturn(true);
         assertThrows(IllegalArgumentException.class, () -> appUserService.create(appUser));
         verify(appUserRepository, never()).save(any());
     }
 
     @Test
-    void testChangeStatusActivo() {
+    void testChangeStatusActive() {
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(appUser));
         when(appUserRepository.save(any(AppUser.class))).thenReturn(appUser);
         

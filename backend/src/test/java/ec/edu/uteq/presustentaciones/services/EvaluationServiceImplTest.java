@@ -64,13 +64,13 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void calculateAverageSpLanzaExcepcionSiLaSubmissionNoExists() {
+    void calculateAverageSpThrowsExceptionIfSubmissionNotExists() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> evaluationService.calculateAverageSp(7L));
     }
 
     @Test
-    void calculateAverageSpCreaLaRowBaseSiNoExistsYLuegoInvocaElProcedimiento() {
+    void calculateAverageSpCreatesRowBaseIfNotExistsAndThenInvokesProcedure() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(evaluationSpRepository.findBySubmissionId(7L)).thenReturn(Optional.empty());
         when(evaluationRepository.findBySubmissionId(7L)).thenReturn(Optional.empty());
@@ -88,7 +88,7 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void calculateAverageSpNoCreaRowBaseSiYaExists() {
+    void calculateAverageSpNotCreatesRowBaseIfAlreadyExists() {
         Evaluation existing = Evaluation.builder().id(1L).submission(submission).gradeInstructor(8.0).build();
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(evaluationSpRepository.findBySubmissionId(7L)).thenReturn(Optional.of(existing));
@@ -101,7 +101,7 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void calculateAverageSpLanzaExcepcionSiElProcedimientoNoDevuelveFilas() {
+    void calculateAverageSpThrowsExceptionIfProcedureNotReturnsRows() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(evaluationSpRepository.findBySubmissionId(7L)).thenReturn(
                 Optional.of(Evaluation.builder().id(1L).submission(submission).build()));
@@ -112,7 +112,7 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void evaluateSubmissionRechazaPesosQueNoSumanCien() {
+    void evaluateSubmissionRejectsWeightsThatNotAddHundred() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(rubricRepository.findById(1L)).thenReturn(Optional.of(Rubric.builder().id(1L).build()));
 
@@ -122,7 +122,7 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void evaluateSubmissionRechazaNotasFueraDeRange() {
+    void evaluateSubmissionRejectsNotesOutsideOfRange() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(rubricRepository.findById(1L)).thenReturn(Optional.of(Rubric.builder().id(1L).build()));
 
@@ -131,7 +131,7 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void evaluateSubmissionCalculaGradeFinalYCambiaStatusACalificada() {
+    void evaluateSubmissionCalculatesGradeFinalAndChangesStatusToGraded() {
         when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
         when(rubricRepository.findById(1L)).thenReturn(Optional.of(Rubric.builder().id(1L).build()));
         when(resultEvaluationRepository.findByCode("APROBADO"))
@@ -149,7 +149,7 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void listByStudentRechazaConsultaDeOtroStudent() {
+    void listByStudentRejectsQueryOfOtherStudent() {
         // Caso IDOR: el student autenticado (id 99) intenta ver las evaluations del
         // student 3 cambiando el id en la URL.
         SecurityContextHolder.getContext().setAuthentication(
@@ -161,7 +161,7 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void listByStudentPermiteConsultarLaPropiaInformacion() {
+    void listByStudentAllowsViewOwnInformation() {
         // Caso permitido: el student autenticado consulta sus propias evaluations.
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("estudiante@uteq.edu.ec", null,
@@ -173,7 +173,7 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void listByStudentPermiteAAdminConsultarCualquierStudent() {
+    void listByStudentAllowsToAdminViewAnyStudent() {
         // Caso administrativo: ADMIN/COORDINADOR conservan su acceso completo.
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin@uteq.edu.ec", null,
@@ -185,7 +185,7 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void listByAppUserRechazaConsultaDeOtroAppUser() {
+    void listByAppUserRejectsQueryOfOtherAppUser() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("otro@uteq.edu.ec", null,
                         org.springframework.security.core.authority.AuthorityUtils.createAuthorityList("ROLE_DOCENTE")));
@@ -195,7 +195,7 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void searchBySubmissionPropagaAccessDeniedSiSubmissionAccessServiceLoRechaza() {
+    void searchBySubmissionPropagatesAccessDeniedIfSubmissionAccessServiceRejects() {
         // Caso IDOR de lectura: la evaluación existe pero SubmissionAccessService decide que
         // este appUser no participa en la submission.
         EvaluationFinal evaluation = EvaluationFinal.builder().id(1L).submission(submission).build();
@@ -207,12 +207,12 @@ class EvaluationServiceImplTest {
     }
 
     @Test
-    void generateCommentByRangeRetornaEmptySiGradeEsNull() {
+    void generateCommentByRangeReturnsEmptyIfGradeIsNull() {
         assertEquals("", evaluationService.generateCommentByRange(null));
     }
 
     @Test
-    void generateCommentByRangeDistingueLosTresNiveles() {
+    void generateCommentByRangeDistinguishesThreeLevels() {
         assertTrue(evaluationService.generateCommentByRange(2.0).contains("falencias significativas"));
         assertTrue(evaluationService.generateCommentByRange(5.0).contains("aspectos que requieren mejoras"));
         assertTrue(evaluationService.generateCommentByRange(9.0).contains("cumple satisfactoriamente"));

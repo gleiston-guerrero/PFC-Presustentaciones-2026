@@ -125,13 +125,13 @@ class AppUserControllerTest {
     // ── listTodos / listPaginado / listActivos ─────────────────────────────
 
     @Test
-    void listAllWithoutTokenDevuelve401() throws Exception {
+    void listAllWithoutTokenReturns401() throws Exception {
         mockMvc.perform(get("/api/v1/usuarios"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void listAllRechazaWithoutPermissionAppUsersGestionar() throws Exception {
+    void listAllRejectsWithoutPermissionAppUsersManage() throws Exception {
         authenticateAs("docente@uteq.edu.ec", "DOCENTE", false);
 
         mockMvc.perform(get("/api/v1/usuarios").header("Authorization", bearer("docente@uteq.edu.ec")))
@@ -139,7 +139,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void listAllPermiteAAdminWithPermission() throws Exception {
+    void listAllAllowsToAdminWithPermission() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(appUserService.listAll()).thenReturn(List.of(currentAppUser));
 
@@ -148,7 +148,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void listPagedDelegaEnElServicioWithLosParametros() throws Exception {
+    void listPagedDelegatesInServiceWithParameters() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         Page<AppUser> pagina = new PageImpl<>(List.of(currentAppUser));
         when(appUserService.listPaged(0, 20, "torres")).thenReturn(pagina);
@@ -160,7 +160,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void listActivePermiteAAdmin() throws Exception {
+    void listActiveAllowsToAdmin() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(appUserService.listActive()).thenReturn(List.of(currentAppUser));
 
@@ -171,7 +171,7 @@ class AppUserControllerTest {
     // ── obtainPorId (control de propiedad real, no solo permission) ────────────────
 
     @Test
-    void obtainByIdPermiteAlOwnAppUserWithoutPermissionAdmin() throws Exception {
+    void obtainByIdAllowsToOwnAppUserWithoutPermissionAdmin() throws Exception {
         authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
         when(appUserService.obtainById(50L)).thenReturn(Optional.of(currentAppUser));
 
@@ -180,7 +180,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void obtainByIdRechazaConsultarElProfileDeOtroAppUser() throws Exception {
+    void obtainByIdRejectsViewProfileOfOtherAppUser() throws Exception {
         // Caso IDOR: student 50 intenta ver la ficha del appUser 99 cambiando el id de la URL.
         authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
 
@@ -191,7 +191,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void obtainByIdPermiteAAdminConsultarCualquierAppUser() throws Exception {
+    void obtainByIdAllowsToAdminViewAnyAppUser() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(appUserService.obtainById(99L)).thenReturn(Optional.of(currentAppUser));
 
@@ -200,7 +200,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void obtainByIdDevuelve404SiNoExists() throws Exception {
+    void obtainByIdReturns404IfNotExists() throws Exception {
         authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
         when(appUserService.obtainById(50L)).thenReturn(Optional.empty());
 
@@ -211,7 +211,7 @@ class AppUserControllerTest {
     // ── searchPorEmail ────────────────────────────────────────────────────────────
 
     @Test
-    void searchByEmailDevuelveElAppUserEncontrado() throws Exception {
+    void searchByEmailReturnsAppUserFound() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(appUserService.obtainByEmail("ana@uteq.edu.ec")).thenReturn(Optional.of(currentAppUser));
 
@@ -220,7 +220,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void searchByEmailDevuelve404SiNoExists() throws Exception {
+    void searchByEmailReturns404IfNotExists() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(appUserService.obtainByEmail("nadie@uteq.edu.ec")).thenReturn(Optional.empty());
 
@@ -231,7 +231,7 @@ class AppUserControllerTest {
     // ── create / update / activate / deactivate / delete ─────────────────────
 
     @Test
-    void createDevuelve201WithElAppUserCreado() throws Exception {
+    void createReturns201WithAppUserCreated() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         RegisterRequest req = new RegisterRequest();
         req.setNombre("Mario");
@@ -249,7 +249,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void createDevuelveBadRequestSiElServicioRechaza() throws Exception {
+    void createReturnsBadRequestIfServiceRejects() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         RegisterRequest req = new RegisterRequest();
         req.setNombre("Mario");
@@ -267,7 +267,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void updateDevuelveElAppUserActualizado() throws Exception {
+    void updateReturnsAppUserUpdated() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(appUserService.update(eq(50L), any(AppUser.class))).thenReturn(currentAppUser);
 
@@ -279,7 +279,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void activateInvocaElServicioYDevuelve200() throws Exception {
+    void activateInvokesServiceAndReturns200() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(patch("/api/v1/usuarios/50/activar").header("Authorization", bearer("admin@uteq.edu.ec")))
@@ -289,7 +289,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void deactivateInvocaElServicioYDevuelve200() throws Exception {
+    void deactivateInvokesServiceAndReturns200() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(patch("/api/v1/usuarios/50/desactivar").header("Authorization", bearer("admin@uteq.edu.ec")))
@@ -299,7 +299,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void deleteDevuelveBadRequestSiElServicioRechazaByReferencias() throws Exception {
+    void deleteReturnsBadRequestIfServiceRejectsByReferences() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         org.mockito.Mockito.doThrow(new RuntimeException("El usuario tiene solicitudes asociadas"))
                 .when(appUserService).delete(50L);
@@ -311,7 +311,7 @@ class AppUserControllerTest {
     // ── updatePerfil (auto-servicio, sin permission de admin) ───────────────────
 
     @Test
-    void updateProfilePermiteAlOwnAppUser() throws Exception {
+    void updateProfileAllowsToOwnAppUser() throws Exception {
         authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
         ProfileRequest req = new ProfileRequest();
         req.setEmailNotifications("alterno@gmail.com");
@@ -326,7 +326,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void updateProfileRechazaEditarElProfileDeOtroAppUser() throws Exception {
+    void updateProfileRejectsEditProfileOfOtherAppUser() throws Exception {
         authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
         ProfileRequest req = new ProfileRequest();
         req.setPhone("0999999999");
@@ -343,7 +343,7 @@ class AppUserControllerTest {
     // ── supresion de datos personales (RNF-19) ───────────────────────────────────
 
     @Test
-    void solicitarErasurePermiteAlOwnHolder() throws Exception {
+    void requestErasureAllowsToOwnHolder() throws Exception {
         authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
         SubmissionErasure submission = new SubmissionErasure();
         when(erasureDataService.solicitar(50L)).thenReturn(submission);
@@ -354,7 +354,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void solicitarErasureRechazaEnNombreDeOtroAppUser() throws Exception {
+    void requestErasureRejectsInNameOfOtherAppUser() throws Exception {
         authenticateAs("estudiante@uteq.edu.ec", "ESTUDIANTE", false);
 
         mockMvc.perform(post("/api/v1/usuarios/99/solicitar-supresion")
@@ -365,7 +365,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void listSubmissionsErasurePermiteAAdmin() throws Exception {
+    void listSubmissionsErasureAllowsToAdmin() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(erasureDataService.list()).thenReturn(List.of());
 
@@ -374,7 +374,7 @@ class AppUserControllerTest {
     }
 
     @Test
-    void resolveErasureResuelveLaSubmissionAsAdmin() throws Exception {
+    void resolveErasureResolvesSubmissionAsAdmin() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(appUserRepository.findByEmail("admin@uteq.edu.ec")).thenReturn(Optional.of(currentAppUser));
         ResolveErasureRequest req = new ResolveErasureRequest();

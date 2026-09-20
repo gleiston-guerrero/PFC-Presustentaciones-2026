@@ -34,7 +34,7 @@ class ErasureDataServiceTest {
     }
 
     @Test
-    void solicitarCreaLaSubmissionEnStatusPendiente() {
+    void requestCreatesSubmissionInStatusPending() {
         when(appUserRepository.existsById(5L)).thenReturn(true);
         when(submissionRepository.existsByAppUserIdAndStatus(5L, "PENDIENTE")).thenReturn(false);
 
@@ -46,7 +46,7 @@ class ErasureDataServiceTest {
     }
 
     @Test
-    void noSeCanSolicitarDosVecesMientrasHayaUnaPendiente() {
+    void notCanRequestTwoTimesWhileHasPending() {
         when(submissionRepository.existsByAppUserIdAndStatus(5L, "PENDIENTE")).thenReturn(true);
 
         assertThrows(IllegalStateException.class, () -> service.solicitar(5L));
@@ -54,7 +54,7 @@ class ErasureDataServiceTest {
     }
 
     @Test
-    void resolveAceptandoSeudonimizaAlHolderWithoutEraseLaRow() {
+    void resolveAcceptingPseudonymizesToHolderWithoutEraseRow() {
         AppUser holder = new AppUser();
         holder.setId(5L);
         holder.setNombre("Ana");
@@ -88,7 +88,7 @@ class ErasureDataServiceTest {
     }
 
     @Test
-    void resolveRechazandoNoTocaAlAppUser() {
+    void resolveRejectingNotTouchesToAppUser() {
         SubmissionErasure submission = SubmissionErasure.builder()
                 .id(2L).appUserId(5L).status("PENDIENTE").build();
         when(submissionRepository.findById(2L)).thenReturn(Optional.of(submission));
@@ -102,7 +102,7 @@ class ErasureDataServiceTest {
     }
 
     @Test
-    void noSeCanResolveDosVeces() {
+    void notCanResolveTwoTimes() {
         SubmissionErasure yaResuelta = SubmissionErasure.builder()
                 .id(3L).appUserId(5L).status("RESUELTA").build();
         when(submissionRepository.findById(3L)).thenReturn(Optional.of(yaResuelta));
@@ -112,7 +112,7 @@ class ErasureDataServiceTest {
     }
 
     @Test
-    void elRecordDeLaSubmissionNuncaContieneElDatoSuprimido() {
+    void recordOfSubmissionNeverContainsDataSuppressed() {
         // La entidad SubmissionSupresion (ver su clase) no tiene ningun campo de
         // nombre/correo/telefono -- solo appUserId. Esta prueba documenta esa garantia
         // estructural: intentar save el dato ahi no compila.

@@ -66,14 +66,14 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationLanzaExcepcionSiLaSubmissionNoExists() {
+    void saveEvaluationThrowsExceptionIfSubmissionNotExists() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class,
                 () -> evaluationPanelistService.saveEvaluation(7L, 3L, 8.0, "bien"));
     }
 
     @Test
-    void saveEvaluationLanzaExcepcionSiElPanelistNoExists() {
+    void saveEvaluationThrowsExceptionIfPanelistNotExists() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class,
@@ -81,7 +81,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationRechazaPanelistQueNoPerteneceALaSubmission() {
+    void saveEvaluationRejectsPanelistThatNotBelongsToSubmission() {
         Submission otraSubmission = Submission.builder().id(999L).build();
         Panelist panelistDeOtraSubmission = Panelist.builder().id(3L).submission(otraSubmission).build();
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
@@ -93,7 +93,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationRechazaGradeFueraDeRange() {
+    void saveEvaluationRejectsGradeOutsideOfRange() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
 
@@ -104,7 +104,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationWithGradeMayorOIgualA7ResultaAprobado() {
+    void saveEvaluationWithGradeGreaterOrEqualTo7ResultsApproved() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
         when(evaluationPanelistRepo.findBySubmissionIdAndPanelistId(7L, 3L)).thenReturn(Optional.empty());
@@ -119,7 +119,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationWithGradeMenorA7ResultaReprobado() {
+    void saveEvaluationWithGradeLessThan7ResultsFailed() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
         when(evaluationPanelistRepo.findBySubmissionIdAndPanelistId(7L, 3L)).thenReturn(Optional.empty());
@@ -132,7 +132,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationWithGradeMuyBajaUsaElCommentMasSevero() {
+    void saveEvaluationWithGradeVeryLowUsesCommentMoreSevere() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
         when(evaluationPanelistRepo.findBySubmissionIdAndPanelistId(7L, 3L)).thenReturn(Optional.empty());
@@ -145,7 +145,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationActualizaLaEvaluationExistingEnVezDeCreateOtra() {
+    void saveEvaluationUpdatesEvaluationExistingInTimeOfCreateOther() {
         EvaluationPanelist existing = EvaluationPanelist.builder().id(1L).submission(submission).panelist(panelist)
                 .gradePanelist(5.0).result("REPROBADO").build();
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
@@ -162,7 +162,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationPermiteAlOwnPanelistRegisterSuGrade() {
+    void saveEvaluationAllowsToOwnPanelistRegisterGrade() {
         // Caso permitido: el teacher autenticado ES el panelist asignado a esta submission.
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
@@ -178,7 +178,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void saveEvaluationRechazaAPanelistQueRegistraANombreDeOtro() {
+    void saveEvaluationRejectsToPanelistThatRecordsToNameOfOther() {
         // Caso IDOR de escritura: un teacher que NO es el panelist asignado intenta register
         // la nota a nombre de otro cambiando el panelistId.
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
@@ -195,14 +195,14 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void obtainEvaluationRetornaNullSiNoExists() {
+    void obtainEvaluationReturnsNullIfNotExists() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(evaluationPanelistRepo.findBySubmissionIdAndPanelistId(7L, 3L)).thenReturn(Optional.empty());
         assertNull(evaluationPanelistService.obtainEvaluation(7L, 3L));
     }
 
     @Test
-    void obtainEvaluationPropagaAccessDeniedSiSubmissionAccessServiceLoRechaza() {
+    void obtainEvaluationPropagatesAccessDeniedIfSubmissionAccessServiceRejects() {
         // Caso IDOR: SubmissionAccessService es quien decide; aquí solo verificamos que
         // EvaluationPanelistService no atrapa/oculta ese rechazo (debe seguir siendo 403).
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
@@ -213,7 +213,7 @@ class EvaluationPanelistServiceTest {
     }
 
     @Test
-    void obtainPanelMapeaAllLasEvaluationsDeLaSubmission() {
+    void obtainPanelMapsAllEvaluationsOfSubmission() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         EvaluationPanelist eval1 = EvaluationPanelist.builder().id(1L).submission(submission).panelist(panelist)
                 .gradePanelist(8.0).result("APROBADO").build();

@@ -54,7 +54,7 @@ class TutorControllerTest {
     }
 
     @Test
-    void myStudentsResuelveElTeacherAuthenticatedAntesDeConsultar() {
+    void myStudentsResolvesTeacherAuthenticatedBeforeOfView() {
         AppUser teacher = AppUser.builder().id(50L).email("docente@uteq.edu.ec").build();
         List<MyStudentTuteeDTO> roster = List.of();
         when(appUserRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.of(teacher));
@@ -67,7 +67,7 @@ class TutorControllerTest {
     }
 
     @Test
-    void myStudentsFallaSiElAppUserDelTokenYaNoExists() {
+    void myStudentsFailsIfAppUserOfTokenAlreadyNotExists() {
         when(appUserRepository.findByEmail("docente@uteq.edu.ec")).thenReturn(Optional.empty());
 
         RuntimeException error = assertThrows(RuntimeException.class, () -> controller.myStudents());
@@ -77,7 +77,7 @@ class TutorControllerTest {
     }
 
     @Test
-    void assignDevuelveElTutorCreado() {
+    void assignReturnsTutorCreated() {
         Tutor tutor = Tutor.builder().id(1L).build();
         when(tutorService.assignTutor(1L, 2L)).thenReturn(tutor);
 
@@ -88,7 +88,7 @@ class TutorControllerTest {
     }
 
     @Test
-    void assignDevuelve400WithoutCuerpoCuandoElServicioRechaza() {
+    void assignReturns400WithoutBodyWhenServiceRejects() {
         when(tutorService.assignTutor(1L, 2L)).thenThrow(new RuntimeException("La solicitud ya tiene tutor"));
 
         ResponseEntity<Tutor> response = controller.assign(1L, 2L);
@@ -98,14 +98,14 @@ class TutorControllerTest {
     }
 
     @Test
-    void bySubmissionDevuelve404CuandoNoHayTutorAsignado() {
+    void bySubmissionReturns404WhenNotHasTutorAssigned() {
         when(tutorService.searchBySubmission(1L)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, controller.bySubmission(1L).getStatusCode());
     }
 
     @Test
-    void bySubmissionDevuelveElTutorCuandoExists() {
+    void bySubmissionReturnsTutorWhenExists() {
         Tutor tutor = Tutor.builder().id(1L).build();
         when(tutorService.searchBySubmission(1L)).thenReturn(Optional.of(tutor));
 
@@ -113,7 +113,7 @@ class TutorControllerTest {
     }
 
     @Test
-    void listPropagaLaPaginacionRecibida() {
+    void listPropagatesPaginationReceived() {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Tutor> pagina = new PageImpl<>(List.of(Tutor.builder().id(1L).build()));
         when(tutorService.listAll(pageable)).thenReturn(pagina);
@@ -122,7 +122,7 @@ class TutorControllerTest {
     }
 
     @Test
-    void deleteDevuelve204() {
+    void deleteReturns204() {
         assertEquals(HttpStatus.NO_CONTENT, controller.delete(3L).getStatusCode());
         verify(tutorService).deleteTutor(3L);
     }
@@ -130,7 +130,7 @@ class TutorControllerTest {
     // ── sp_obtain_estadisticas_tutores ───────────────────────────────────────
 
     @Test
-    void statsDevuelveLasFilasDelProcedimientoAlmacenado() {
+    void statsReturnsRowsOfProcedureStored() {
         List<Map<String, Object>> stats = List.of(Map.of(
                 "tutorDocenteId", 1L, "tutorNombre", "Ana Pérez",
                 "tutoriasActivas", 3L, "tutoriasCompletadas", 5L, "totalFasesAprobadas", 12L));
@@ -143,7 +143,7 @@ class TutorControllerTest {
     }
 
     @Test
-    void statsTraduceElErrorDelProcedimientoA400() {
+    void statsTranslatesErrorOfProcedureTo400() {
         when(tutorService.obtainStatsTutorsSP())
                 .thenThrow(new RuntimeException("function presus.sp_obtener_estadisticas_tutores() does not exist"));
 

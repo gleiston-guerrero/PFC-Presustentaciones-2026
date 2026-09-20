@@ -89,19 +89,19 @@ class BackupServiceTest {
     // ── list / aInfo ───────────────────────────────────────────────────────
 
     @Test
-    void listDevuelveListaVaciaSiElDirectoryNoExists() {
+    void listReturnsListEmptyIfDirectoryNotExists() {
         ReflectionTestUtils.setField(backupService, "backupsDir", tempDir.resolve("no-existe").toString());
         assertEquals(List.of(), backupService.list());
     }
 
     @Test
-    void listIgnoraArchivosQueNoSonBackup() throws IOException {
+    void listIgnoresFilesThatNotAreBackup() throws IOException {
         createFile("notas.txt", Instant.now());
         assertEquals(List.of(), backupService.list());
     }
 
     @Test
-    void listParseaElFormatNewWithKindYSource() throws IOException {
+    void listParsesFormatNewWithKindAndSource() throws IOException {
         createFile("respaldo_FULL_AUTOMATICO_20260907_230000.dump", Instant.now());
 
         List<BackupInfoDTO> result = backupService.list();
@@ -112,7 +112,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void listInterpretaElFormatAntiguoAsFullManual() throws IOException {
+    void listInterpretsFormatOldAsFullManual() throws IOException {
         createFile("respaldo_20260101_000000.dump", Instant.now());
 
         List<BackupInfoDTO> result = backupService.list();
@@ -123,7 +123,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void listOrdenaDelMasRecienteAlMasAntiguo() throws IOException {
+    void listSortsOfMoreRecentToMoreOld() throws IOException {
         Instant ahora = Instant.now();
         createFile("respaldo_FULL_MANUAL_20260101_000000.dump", ahora.minusSeconds(3600));
         createFile("respaldo_FULL_MANUAL_20260102_000000.dump", ahora);
@@ -137,7 +137,7 @@ class BackupServiceTest {
     // ── config / configDTO ───────────────────────────────────────────────────
 
     @Test
-    void configDevuelveLaExistingSiYaHayUnaGuardada() {
+    void configReturnsExistingIfAlreadyHasSaved() {
         BackupConfig existing = configByDefault();
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(existing));
 
@@ -145,7 +145,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void configCreaUnaByDefaultSiNoExistsNinguna() {
+    void configCreatesByDefaultIfNoneExists() {
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.empty());
         when(configRepo.save(any(BackupConfig.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -156,7 +156,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void configDtoDescribeElCronReconocidoYElNoReconocido() {
+    void configDtoDescribesCronRecognizedAndNotRecognized() {
         BackupConfig c = configByDefault();
         c.setCronDifferential("0 15 4 * * *"); // no esta en el catalogo de presets
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(c));
@@ -168,7 +168,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void configDtoUsaCatorceAsRetenerDiasWalByDefaultSiEsNull() {
+    void configDtoUsesFourteenAsRetainDaysWalByDefaultIfIsNull() {
         BackupConfig c = configByDefault();
         c.setRetenerDiasWal(null);
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(c));
@@ -177,7 +177,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void updateConfigRechazaUnCronPrincipalInvalido() {
+    void updateConfigRejectsCronMainInvalid() {
         BackupConfigDTO dto = new BackupConfigDTO();
         dto.setCron("no-es-un-cron");
         dto.setCronDifferential("0 30 2 * * WED,FRI");
@@ -186,7 +186,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void updateConfigRechazaUnCronDifferentialInvalido() {
+    void updateConfigRejectsCronDifferentialInvalid() {
         BackupConfigDTO dto = new BackupConfigDTO();
         dto.setCron("0 0 23 * * SUN");
         dto.setCronDifferential("no-es-un-cron");
@@ -195,7 +195,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void updateConfigGuardaLosNuevosValores() {
+    void updateConfigSavesNewValues() {
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(configByDefault()));
         ArgumentCaptor<BackupConfig> captor = ArgumentCaptor.forClass(BackupConfig.class);
         when(configRepo.save(captor.capture())).thenAnswer(inv -> inv.getArgument(0));
@@ -220,19 +220,19 @@ class BackupServiceTest {
     // ── pruebas / registerPrueba ────────────────────────────────────────────
 
     @Test
-    void drillsDelegaAlRepositorio() {
+    void drillsDelegatesToRepository() {
         when(drillRepo.findTop50ByOrderByDateDesc()).thenReturn(List.of(BackupDrillRestore.builder().build()));
         assertEquals(1, backupService.drills().size());
     }
 
     @Test
-    void registerDrillRechazaUnNombreInvalido() {
+    void registerDrillRejectsNameInvalid() {
         assertThrows(IllegalArgumentException.class,
                 () -> backupService.registerDrill("../etc/passwd", "EXITOSA", "a@uteq.edu.ec", "ok"));
     }
 
     @Test
-    void registerDrillNormalizaResultDesconocidoAExitosa() {
+    void registerDrillNormalizesResultUnknownToSuccessful() {
         when(drillRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         BackupDrillRestore p = backupService.registerDrill(
@@ -243,7 +243,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void registerDrillConservaResultFallida() {
+    void registerDrillKeepsResultFailed() {
         when(drillRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         BackupDrillRestore p = backupService.registerDrill(
@@ -256,13 +256,13 @@ class BackupServiceTest {
     // ── aplicarRetencion (GFS) ───────────────────────────────────────────────
 
     @Test
-    void applyRetentionNoHaceNadaSiNoHayAutomaticas() {
+    void applyRetentionNotMakesNothingIfNotHasAutomatic() {
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(configByDefault()));
         assertEquals(List.of(), backupService.applyRetention());
     }
 
     @Test
-    void applyRetentionConservaLaMasRecienteAunqueLaRetentionSeaCero() throws IOException {
+    void applyRetentionKeepsMoreRecentAlthoughRetentionIsZero() throws IOException {
         BackupConfig cfg = configByDefault();
         cfg.setRetenerDiarios((short) 0);
         cfg.setRetenerSemanales((short) 0);
@@ -278,7 +278,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void applyRetentionNuncaTocaManualNiEvento() throws IOException {
+    void applyRetentionNeverTouchesManualOrEvent() throws IOException {
         BackupConfig cfg = configByDefault();
         cfg.setRetenerDiarios((short) 0);
         when(configRepo.findById(BackupConfig.ID_UNICO)).thenReturn(Optional.of(cfg));
@@ -295,7 +295,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void applyRetentionEliminaLasAutomaticasFueraDeLaVentanaDiariaSemanalYMensual() throws IOException {
+    void applyRetentionRemovesAutomaticOutsideOfWindowDailyWeeklyAndMonthly() throws IOException {
         BackupConfig cfg = configByDefault();
         cfg.setRetenerDiarios((short) 1);
         cfg.setRetenerSemanales((short) 0);
@@ -316,7 +316,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void applyRetentionRespetaElLimiteDeCoposSemanalesEntreVariasSemanas() throws IOException {
+    void applyRetentionRespectsLimitOfQuotaWeeklyBetweenSeveralWeeks() throws IOException {
         BackupConfig cfg = configByDefault();
         cfg.setRetenerDiarios((short) 0);
         cfg.setRetenerSemanales((short) 1); // solo 1 cupo semanal ademas de la salvavidas
@@ -342,18 +342,18 @@ class BackupServiceTest {
     // ── leer / delete / resolveExistente ──────────────────────────────────
 
     @Test
-    void readRechazaUnNombreWithTraversal() {
+    void readRejectsNameWithTraversal() {
         assertThrows(IllegalArgumentException.class, () -> backupService.read("../../etc/passwd"));
     }
 
     @Test
-    void readRechazaUnFileQueNoExists() {
+    void readRejectsFileThatNotExists() {
         assertThrows(IllegalArgumentException.class,
                 () -> backupService.read("respaldo_FULL_MANUAL_20260101_000000.dump"));
     }
 
     @Test
-    void readDevuelveElContenidoReal() throws IOException {
+    void readReturnsContentReal() throws IOException {
         Files.writeString(tempDir.resolve("respaldo_FULL_MANUAL_20260101_000000.dump"), "datos-reales");
 
         byte[] contenido = backupService.read("respaldo_FULL_MANUAL_20260101_000000.dump");
@@ -362,7 +362,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void deleteBorraElFileReal() throws IOException {
+    void deleteDeletesFileReal() throws IOException {
         Files.writeString(tempDir.resolve("respaldo_FULL_MANUAL_20260101_000000.dump"), "x");
 
         backupService.delete("respaldo_FULL_MANUAL_20260101_000000.dump");
@@ -373,7 +373,7 @@ class BackupServiceTest {
     // ── restore / generateDiferencial: solo la rama de validacion previa ────
 
     @Test
-    void restoreRechazaUnDifferentialPorqueNoSeRestauraSolo() throws IOException {
+    void restoreRejectsDifferentialBecauseNotRestoresOnly() throws IOException {
         Files.writeString(tempDir.resolve("respaldo_DIFERENCIAL_MANUAL_20260101_000000.tar.gz"), "x");
 
         assertThrows(IllegalArgumentException.class,
@@ -381,7 +381,7 @@ class BackupServiceTest {
     }
 
     @Test
-    void generateDifferentialFallaSiNoHayNingunFullDelQuePartir() {
+    void generateDifferentialFailsIfFullBackupMissingBeforeStart() {
         assertThrows(IllegalStateException.class,
                 () -> backupService.generateDifferential(SourceBackup.MANUAL));
     }

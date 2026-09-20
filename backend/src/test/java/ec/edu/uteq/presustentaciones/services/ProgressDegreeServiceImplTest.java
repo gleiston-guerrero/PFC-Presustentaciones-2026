@@ -27,7 +27,7 @@ class ProgressDegreeServiceImplTest {
     @InjectMocks private ProgressDegreeServiceImpl service;
 
     @Test
-    void obtainWithoutRecordDevuelveAllEnCero() {
+    void obtainWithoutRecordReturnsAllInZero() {
         when(progressRepository.findByStudentId(1L)).thenReturn(Optional.empty());
 
         ProgressDegreeDTO dto = service.obtain(1L);
@@ -39,7 +39,7 @@ class ProgressDegreeServiceImplTest {
     }
 
     @Test
-    void obtainWithStatusSavedCalculaPorcentaje() {
+    void obtainWithStatusSavedCalculatesPercentage() {
         ProgressStudent pe = ProgressStudent.builder()
                 .pasosJson("{\"tema_definido\":true,\"tutor_asignado\":true}")
                 .build();
@@ -52,7 +52,7 @@ class ProgressDegreeServiceImplTest {
     }
 
     @Test
-    void updateFusionaWithLoSavedYPersiste() {
+    void updateMergesWithSavedAndPersists() {
         Student est = new Student();
         est.setId(1L);
         ProgressStudent pe = ProgressStudent.builder()
@@ -68,7 +68,7 @@ class ProgressDegreeServiceImplTest {
     }
 
     @Test
-    void updateIgnoraClavesFueraDelCatalog() {
+    void updateIgnoresKeysOutsideOfCatalog() {
         Student est = new Student();
         est.setId(1L);
         when(progressRepository.findByStudentId(1L)).thenReturn(Optional.empty());
@@ -83,7 +83,7 @@ class ProgressDegreeServiceImplTest {
     }
 
     @Test
-    void updateCreaRecordSiNoExistsYFallaSiStudentNoExists() {
+    void updateCreatesRecordIfNotExistsAndFailsIfStudentNotExists() {
         when(progressRepository.findByStudentId(1L)).thenReturn(Optional.empty());
         when(studentRepository.findById(1L)).thenReturn(Optional.empty());
 

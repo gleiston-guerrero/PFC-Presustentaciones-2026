@@ -79,7 +79,7 @@ class SubmissionControllerTest {
     // ── Creación ──────────────────────────────────────────────────────────────
 
     @Test
-    void createDevuelveLaSubmissionCreada() {
+    void createReturnsSubmissionCreated() {
         Submission data = Submission.builder().tituloTopic("Tema").build();
         Submission creada = Submission.builder().id(1L).build();
         when(submissionService.createSubmission(7L, data)).thenReturn(creada);
@@ -92,7 +92,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void createTraduceElErrorDelServicioA400() {
+    void createTranslatesErrorOfServiceTo400() {
         Submission data = Submission.builder().build();
         when(submissionService.createSubmission(7L, data))
                 .thenThrow(new RuntimeException("El estudiante ya tiene una solicitud activa"));
@@ -104,7 +104,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void createByAppUserIgnoraElIdDelPathYUsaElDelToken() {
+    void createByAppUserIgnoresIdOfPathAndUsesOfToken() {
         authenticate("est@uteq.edu.ec");
         Submission data = Submission.builder().build();
         Submission creada = Submission.builder().id(1L).build();
@@ -121,7 +121,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void createByAppUserWithTokenDeAppUserInexistenteDevuelve400() {
+    void createByAppUserWithTokenOfAppUserNonexistentReturns400() {
         authenticate("fantasma@uteq.edu.ec");
         when(appUserRepository.findByEmail("fantasma@uteq.edu.ec")).thenReturn(Optional.empty());
 
@@ -134,7 +134,7 @@ class SubmissionControllerTest {
     // ── Listados propios ──────────────────────────────────────────────────────
 
     @Test
-    void mySubmissionsResuelveElAppUserFromElToken() {
+    void mySubmissionsResolvesAppUserFromToken() {
         authenticate("est@uteq.edu.ec");
         List<Submission> submissions = List.of(Submission.builder().id(1L).build());
         when(appUserRepository.findByEmail("est@uteq.edu.ec"))
@@ -148,7 +148,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void mySubmissionsDevuelveListaVaciaEnVezDeErrorSiFallaLaResolucion() {
+    void mySubmissionsReturnsListEmptyInTimeOfErrorIfFailsResolution() {
         authenticate("fantasma@uteq.edu.ec");
         when(appUserRepository.findByEmail("fantasma@uteq.edu.ec")).thenReturn(Optional.empty());
 
@@ -161,7 +161,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void listByAppUserDevuelveListaVaciaSiElServicioFalla() {
+    void listByAppUserReturnsListEmptyIfServiceFails() {
         when(submissionService.listByAppUser(50L)).thenThrow(new RuntimeException("boom"));
 
         ResponseEntity<?> response = controller.listByAppUser(50L);
@@ -173,7 +173,7 @@ class SubmissionControllerTest {
     // ── Comprobación de propiedad (validateAccesoSubmission) ────────────────────
 
     @Test
-    void unStudentNoCanOpenLaSubmissionDeOtro() {
+    void studentNotCanOpenSubmissionOfOther() {
         authenticate("otro@uteq.edu.ec");
         when(permissionService.hasPermission(any(), any())).thenReturn(false);
         when(submissionService.obtainById(1L)).thenReturn(Optional.of(submissionOf("dueno@uteq.edu.ec")));
@@ -186,7 +186,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void elPropietarioSiCanOpenSuSubmission() {
+    void ownerIfCanOpenSubmission() {
         authenticate("dueno@uteq.edu.ec");
         when(permissionService.hasPermission(any(), any())).thenReturn(false);
         Submission propia = submissionOf("dueno@uteq.edu.ec");
@@ -199,7 +199,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void unRevisorCanOpenCualquierSubmissionWithoutComprobarPropiedad() {
+    void reviewerCanOpenAnySubmissionWithoutCheckOwnership() {
         authenticate("coord@uteq.edu.ec", "SOLICITUDES_REVISAR");
         when(permissionService.hasPermission(any(), any())).thenReturn(true);
         Submission ajena = submissionOf("dueno@uteq.edu.ec");
@@ -212,7 +212,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void unAdminCanOpenCualquierSubmission() {
+    void adminCanOpenAnySubmission() {
         authenticate("admin@uteq.edu.ec", "ROLE_ADMIN");
         when(submissionService.obtainById(1L)).thenReturn(Optional.of(submissionOf("dueno@uteq.edu.ec")));
 
@@ -220,7 +220,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void obtainDevuelve404CuandoElRevisorPideUnaSubmissionInexistente() {
+    void obtainReturns404WhenReviewerAsksSubmissionNonexistent() {
         authenticate("coord@uteq.edu.ec", "SOLICITUDES_REVISAR");
         when(permissionService.hasPermission(any(), any())).thenReturn(true);
         when(submissionService.obtainById(99L)).thenReturn(Optional.empty());
@@ -232,7 +232,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void sendExigeSerPropietarioAntesDeSendARevision() {
+    void sendRequiresBeOwnerBeforeOfSendToReview() {
         authenticate("otro@uteq.edu.ec");
         when(permissionService.hasPermission(any(), any())).thenReturn(false);
         when(submissionService.obtainById(1L)).thenReturn(Optional.of(submissionOf("dueno@uteq.edu.ec")));
@@ -244,7 +244,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void sendFuncionaForElPropietario() {
+    void sendWorksForOwner() {
         authenticate("dueno@uteq.edu.ec");
         when(permissionService.hasPermission(any(), any())).thenReturn(false);
         Submission enviada = Submission.builder().id(1L).build();
@@ -258,7 +258,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void obtainTrackingExigeLaMismaComprobacionDePropiedad() {
+    void obtainTrackingRequiresSameCheckOfOwnership() {
         authenticate("otro@uteq.edu.ec");
         when(permissionService.hasPermission(any(), any())).thenReturn(false);
         when(submissionService.obtainById(1L)).thenReturn(Optional.of(submissionOf("dueno@uteq.edu.ec")));
@@ -268,7 +268,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void obtainTrackingDevuelveElHistoryAlPropietario() {
+    void obtainTrackingReturnsHistoryToOwner() {
         authenticate("dueno@uteq.edu.ec");
         when(permissionService.hasPermission(any(), any())).thenReturn(false);
         TrackingDTO tracking = mock(TrackingDTO.class);
@@ -284,7 +284,7 @@ class SubmissionControllerTest {
     // ── Transiciones de estado (revisor) ──────────────────────────────────────
 
     @Test
-    void approveRejectYRejectWithObservationDeleganEnElServicio() {
+    void approveRejectAndRejectWithObservationDelegateInService() {
         Submission result = Submission.builder().id(1L).build();
         when(submissionService.approveSubmission(1L)).thenReturn(result);
         when(submissionService.rejectSubmission(2L)).thenReturn(result);
@@ -297,7 +297,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void rejectWithObservationWithoutObservationUsaCadenaVacia() {
+    void rejectWithObservationWithoutObservationUsesStringEmpty() {
         when(submissionService.rejectWithObservation(3L, "")).thenReturn(Submission.builder().id(3L).build());
 
         assertEquals(HttpStatus.OK, controller.rejectWithObservation(3L, Map.of()).getStatusCode());
@@ -305,7 +305,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void approveTraduceElErrorDeTransicionInvalidaA400() {
+    void approveTranslatesErrorOfTransitionInvalidTo400() {
         when(submissionService.approveSubmission(1L))
                 .thenThrow(new RuntimeException("La solicitud no está en estado ENVIADA"));
 
@@ -316,7 +316,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void suspendPasaElMotivoAlServicioYTraduceErrores() {
+    void suspendPassesReasonToServiceAndTranslatesErrors() {
         Submission suspendida = Submission.builder().id(1L).build();
         when(submissionService.suspendSubmission(1L, "Estudiante retirado")).thenReturn(suspendida);
         assertEquals("Solicitud suspendida",
@@ -332,7 +332,7 @@ class SubmissionControllerTest {
     // ── Listados administrativos ──────────────────────────────────────────────
 
     @Test
-    void listYCountByStatusDeleganEnElServicio() {
+    void listAndCountByStatusDelegateInService() {
         List<Submission> all = List.of(Submission.builder().id(1L).build());
         Map<String, Long> count = Map.of("ENVIADA", 3L);
         when(submissionService.listSubmissions()).thenReturn(all);
@@ -343,7 +343,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void listPagedArmaLaRespuestaWithLosMetadatosDePagina() {
+    void listPagedBuildsResponseWithMetadataOfPage() {
         Page<Submission> pagina = new PageImpl<>(
                 List.of(Submission.builder().id(1L).build()), PageRequest.of(2, 20), 45);
         LocalDate from = LocalDate.of(2026, 1, 1);
@@ -366,7 +366,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void listByStudentDelegaEnElServicio() {
+    void listByStudentDelegatesInService() {
         List<Submission> submissions = List.of(Submission.builder().id(1L).build());
         when(submissionService.listByStudent(7L)).thenReturn(submissions);
 
@@ -376,7 +376,7 @@ class SubmissionControllerTest {
     // ── sp_generate_reporte_defensas ───────────────────────────────────────────
 
     @Test
-    void reportDefensesDevuelveLasFilasDelProcedimientoAlmacenado() {
+    void reportDefensesReturnsRowsOfProcedureStored() {
         List<Map<String, Object>> report = List.of(Map.of("estudianteNombre", "Ana Pérez"));
         when(submissionService.generateReportDefensesSP("Software")).thenReturn(report);
 
@@ -387,7 +387,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void reportDefensesTraduceElErrorDelProcedimientoA400() {
+    void reportDefensesTranslatesErrorOfProcedureTo400() {
         when(submissionService.generateReportDefensesSP(""))
                 .thenThrow(new RuntimeException("cursor \"reporte_defensas_cursor\" does not exist"));
 

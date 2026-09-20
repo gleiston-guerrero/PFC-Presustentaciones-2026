@@ -84,7 +84,7 @@ class ReportControllerTest {
     // ── PDF de schedule ─────────────────────────────────────────────────────
 
     @Test
-    void reportScheduleGeneraPdfRealWithFilasCompletasYWithRelacionesNulas() throws Exception {
+    void reportScheduleGeneratesPdfRealWithRowsCompleteAndWithRelationsNull() throws Exception {
         Schedule complete = Schedule.builder()
                 .id(1L)
                 .submission(submissionComplete())
@@ -110,7 +110,7 @@ class ReportControllerTest {
     }
 
     @Test
-    void reportScheduleWithoutDataGeneraPdfWithTablaVacia() throws Exception {
+    void reportScheduleWithoutDataGeneratesPdfWithTableEmpty() throws Exception {
         when(scheduleRepo.findReportSchedule()).thenReturn(List.of());
 
         assertIsPdfDownloadable(controller.reportSchedule(), "cronograma_presustentaciones.pdf");
@@ -119,7 +119,7 @@ class ReportControllerTest {
     // ── PDF de estadísticas ───────────────────────────────────────────────────
 
     @Test
-    void reportStatsGeneraPdfRealWithAprobadosReprobadosYWithoutResult() throws Exception {
+    void reportStatsGeneratesPdfRealWithApprovedFailedAndWithoutResult() throws Exception {
         EvaluationFinal aprobado = EvaluationFinal.builder()
                 .id(1L)
                 .submission(submissionComplete())
@@ -142,7 +142,7 @@ class ReportControllerTest {
     }
 
     @Test
-    void reportStatsWithoutEvaluationsUsaAverageCeroYNoFalla() throws Exception {
+    void reportStatsWithoutEvaluationsUsesAverageZeroAndNotFails() throws Exception {
         when(evaluationFinalRepo.findAllWithRelationships()).thenReturn(List.of());
 
         assertIsPdfDownloadable(controller.reportStats(), "estadisticas_evaluaciones.pdf");
@@ -151,7 +151,7 @@ class ReportControllerTest {
     // ── Procedimiento almacenado sp_generate_reporte_defensas ──────────────────
 
     @Test
-    void reportDefensesDelegaEnElProcedimientoAlmacenado() {
+    void reportDefensesDelegatesInProcedureStored() {
         List<ReportDefenseResult> esperado = List.of(new ReportDefenseResult());
         when(submissionRepo.generateReportDefenses("Software")).thenReturn(esperado);
 
@@ -165,7 +165,7 @@ class ReportControllerTest {
     // ── Estadísticas JSON ─────────────────────────────────────────────────────
 
     @Test
-    void statsJsonCalculaTotalesAverageYTasaDeAprobacion() {
+    void statsJsonCalculatesTotalsAverageAndRateOfApproval() {
         EvaluationFinal aprobado1 = EvaluationFinal.builder().gradeFinal(8.0)
                 .result(ResultEvaluation.builder().code("APROBADO").build()).build();
         EvaluationFinal aprobado2 = EvaluationFinal.builder().gradeFinal(9.0)
@@ -193,7 +193,7 @@ class ReportControllerTest {
     }
 
     @Test
-    void statsJsonWithoutEvaluationsDevuelveTasaCeroWithoutDividirByCero() {
+    void statsJsonWithoutEvaluationsReturnsRateZeroWithoutSplitByZero() {
         when(evaluationFinalRepo.findAllWithRelationships()).thenReturn(List.of());
         when(submissionRepo.countByStatusCode("APROBADA")).thenReturn(0L);
 
@@ -211,7 +211,7 @@ class ReportControllerTest {
     // ── Módulo de reportes JSON (delegación en ReporteService) ────────────────
 
     @Test
-    void summaryDelegaEnElServicioWithFiltrosDeDateYProgram() {
+    void summaryDelegatesInServiceWithFiltersOfDateAndProgram() {
         LocalDate from = LocalDate.of(2026, 1, 1);
         LocalDate to = LocalDate.of(2026, 12, 31);
         ReportSummaryDTO esperado = ReportSummaryDTO.builder().build();
@@ -224,7 +224,7 @@ class ReportControllerTest {
     }
 
     @Test
-    void summaryWithoutFiltrosPasaNullsAlServicio() {
+    void summaryWithoutFiltersPassesNullsToService() {
         when(reportService.summary(null, null, null)).thenReturn(ReportSummaryDTO.builder().build());
 
         assertEquals(HttpStatus.OK, controller.summary(null, null, null).getStatusCode());
@@ -232,7 +232,7 @@ class ReportControllerTest {
     }
 
     @Test
-    void submissionsByStatusDelegaEnElServicio() {
+    void submissionsByStatusDelegatesInService() {
         List<ReportCountDTO> esperado = List.of(new ReportCountDTO());
         when(reportService.submissionsByStatus(null, null, null)).thenReturn(esperado);
 
@@ -243,7 +243,7 @@ class ReportControllerTest {
     }
 
     @Test
-    void defensesByPeriodDelegaEnElServicio() {
+    void defensesByPeriodDelegatesInService() {
         List<ReportCountDTO> esperado = List.of(new ReportCountDTO());
         when(reportService.defensesByPeriod(null, null)).thenReturn(esperado);
 
@@ -254,7 +254,7 @@ class ReportControllerTest {
     }
 
     @Test
-    void summaryMinutesDelegaEnElServicio() {
+    void summaryMinutesDelegatesInService() {
         Map<String, Long> esperado = Map.of("generadas", 3L);
         when(reportService.summaryMinutes(null, null)).thenReturn(esperado);
 
@@ -265,7 +265,7 @@ class ReportControllerTest {
     }
 
     @Test
-    void activityTeacherDelegaEnElServicio() {
+    void activityTeacherDelegatesInService() {
         when(reportService.activityByTeacher()).thenReturn(List.of());
 
         assertEquals(HttpStatus.OK, controller.activityTeacher().getStatusCode());
@@ -273,7 +273,7 @@ class ReportControllerTest {
     }
 
     @Test
-    void byProgramDelegaEnElServicio() {
+    void byProgramDelegatesInService() {
         List<Map<String, Object>> esperado = List.of(Map.of("carrera", "Software"));
         when(reportService.statsByProgram()).thenReturn(esperado);
 

@@ -51,12 +51,12 @@ class CurrentAppUserServiceTest {
     // ── appUser() ────────────────────────────────────────────────────────────
 
     @Test
-    void appUserLanzaExcepcionWithoutAuthenticationEnElContexto() {
+    void appUserThrowsExceptionWithoutAuthenticationInContext() {
         assertThrows(IllegalStateException.class, () -> service.appUser());
     }
 
     @Test
-    void appUserLanzaExcepcionSiNoIsAuthenticated() {
+    void appUserThrowsExceptionIfNotIsAuthenticated() {
         Authentication auth = new UsernamePasswordAuthenticationToken("x@uteq.edu.ec", "pass");
         auth.setAuthenticated(false);
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -65,7 +65,7 @@ class CurrentAppUserServiceTest {
     }
 
     @Test
-    void appUserLanzaExcepcionForAppUserAnonimo() {
+    void appUserThrowsExceptionForAppUserAnonymous() {
         SecurityContextHolder.getContext().setAuthentication(
                 new AnonymousAuthenticationToken("key", "anonymousUser",
                         AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
@@ -74,7 +74,7 @@ class CurrentAppUserServiceTest {
     }
 
     @Test
-    void appUserLanzaExcepcionSiElAuthenticatedNoIsEnLaBase() {
+    void appUserThrowsExceptionIfAuthenticatedNotIsInBase() {
         authenticateAs("fantasma@uteq.edu.ec");
         when(appUserRepository.findByEmail("fantasma@uteq.edu.ec")).thenReturn(Optional.empty());
 
@@ -82,7 +82,7 @@ class CurrentAppUserServiceTest {
     }
 
     @Test
-    void appUserDevuelveElAppUserAuthenticated() {
+    void appUserReturnsAppUserAuthenticated() {
         authenticateAs("estudiante@uteq.edu.ec");
         AppUser u = new AppUser();
         u.setId(5L);
@@ -95,7 +95,7 @@ class CurrentAppUserServiceTest {
     // ── student() ─────────────────────────────────────────────────────────
 
     @Test
-    void studentLanzaExcepcionSiElAppUserNoTieneProfileDeStudent() {
+    void studentThrowsExceptionIfAppUserNotHasProfileOfStudent() {
         authenticateAs("docente@uteq.edu.ec");
         AppUser u = new AppUser();
         u.setId(9L);
@@ -107,7 +107,7 @@ class CurrentAppUserServiceTest {
     }
 
     @Test
-    void studentDevuelveElProfileAsociado() {
+    void studentReturnsProfileAssociated() {
         authenticateAs("estudiante@uteq.edu.ec");
         AppUser u = new AppUser();
         u.setId(5L);
@@ -122,12 +122,12 @@ class CurrentAppUserServiceTest {
     // ── studentIdOrNull() ─────────────────────────────────────────────────
 
     @Test
-    void studentIdOrNullDevuelveNullSiNoHayAutenticacion() {
+    void studentIdOrNullReturnsNullIfNotHasAuthentication() {
         assertNull(service.studentIdOrNull());
     }
 
     @Test
-    void studentIdOrNullDevuelveNullSiNoTieneProfileDeStudent() {
+    void studentIdOrNullReturnsNullIfNotHasProfileOfStudent() {
         authenticateAs("docente@uteq.edu.ec");
         AppUser u = new AppUser();
         u.setId(9L);
@@ -139,7 +139,7 @@ class CurrentAppUserServiceTest {
     }
 
     @Test
-    void studentIdOrNullDevuelveElIdReal() {
+    void studentIdOrNullReturnsIdReal() {
         authenticateAs("estudiante@uteq.edu.ec");
         AppUser u = new AppUser();
         u.setId(5L);

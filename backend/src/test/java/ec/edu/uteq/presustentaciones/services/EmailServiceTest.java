@@ -42,7 +42,7 @@ class EmailServiceTest {
     // ── sendNotification(4 args) ───────────────────────────────────────────
 
     @Test
-    void sendNotificationNoEnviaNadaSiElFeatureFlagIsDesactivado() {
+    void sendNotificationNotSendsNothingIfFeatureFlagIsDisabled() {
         ReflectionTestUtils.setField(service, "enabled", false);
 
         service.sendNotification("x@uteq.edu.ec", "hola", "Ana", "ana@uteq.edu.ec");
@@ -51,7 +51,7 @@ class EmailServiceTest {
     }
 
     @Test
-    void sendNotificationNoEnviaNadaSiNoHayMailSenderAunqueElFlagEsteActivo() {
+    void sendNotificationNotSendsNothingIfNotHasMailSenderAlthoughFlagThisActive() {
         ReflectionTestUtils.setField(service, "enabled", true);
         ReflectionTestUtils.setField(service, "mailSender", null);
 
@@ -60,7 +60,7 @@ class EmailServiceTest {
     }
 
     @Test
-    void sendNotificationEnviaElCorreoRealCuandoIsHabilitado() throws Exception {
+    void sendNotificationSendsEmailRealWhenIsEnabled() throws Exception {
         ReflectionTestUtils.setField(service, "enabled", true);
         when(mailSender.createMimeMessage()).thenReturn(mimeReal());
 
@@ -70,7 +70,7 @@ class EmailServiceTest {
     }
 
     @Test
-    void sendNotificationWithoutSenderUsaValorGenerico() {
+    void sendNotificationWithoutSenderUsesValueGeneric() {
         ReflectionTestUtils.setField(service, "enabled", true);
         when(mailSender.createMimeMessage()).thenReturn(mimeReal());
 
@@ -82,7 +82,7 @@ class EmailServiceTest {
     // ── sendRecuperacionPassword ───────────────────────────────────────────
 
     @Test
-    void sendRecoveryPasswordNoEnviaNadaSiElFeatureFlagIsDesactivado() {
+    void sendRecoveryPasswordNotSendsNothingIfFeatureFlagIsDisabled() {
         ReflectionTestUtils.setField(service, "enabled", false);
 
         service.sendRecoveryPassword("x@uteq.edu.ec", "token-123");
@@ -91,7 +91,7 @@ class EmailServiceTest {
     }
 
     @Test
-    void sendRecoveryPasswordEnviaElCorreoRealCuandoIsHabilitado() {
+    void sendRecoveryPasswordSendsEmailRealWhenIsEnabled() {
         ReflectionTestUtils.setField(service, "enabled", true);
         when(mailSender.createMimeMessage()).thenReturn(mimeReal());
 

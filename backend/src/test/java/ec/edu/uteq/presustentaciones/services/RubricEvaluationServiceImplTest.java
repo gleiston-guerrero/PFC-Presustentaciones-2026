@@ -74,7 +74,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationRechazaAPanelistQueRegistraANombreDeOtro() {
+    void registerEvaluationRejectsToPanelistThatRecordsToNameOfOther() {
         // Caso IDOR de escritura, mismo patrón que EvaluationPanelistServiceTest: un teacher que
         // NO es el panelist asignado no puede register la evaluación de rúbrica a su nombre. El
         // caso "permitido" para este mismo guardia (validatePuedeRegister) ya se prueba a fondo
@@ -104,7 +104,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void obtainEvaluationPanelistPropagaAccessDeniedSiSubmissionAccessServiceLoRechaza() {
+    void obtainEvaluationPanelistPropagatesAccessDeniedIfSubmissionAccessServiceRejects() {
         Submission submission = Submission.builder().id(7L).build();
         Panelist panelist = Panelist.builder().id(3L).submission(submission).build();
         when(panelistRepo.findById(3L)).thenReturn(Optional.of(panelist));
@@ -115,7 +115,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void calculateGradePanelPromediaLasSumasDeCadaPanelist() {
+    void calculateGradePanelAveragesSumsOfEachPanelist() {
         stubSubmission(10L);
         // 3 panelists, cada uno con su suma de notas ponderadas por criterio: (90 + 85 + 78) / 3 = 84.33
         List<Object[]> filas = Arrays.asList(row(1L, 90.0), row(2L, 85.0), row(3L, 78.0));
@@ -127,7 +127,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void calculateGradePanelRedondeaADosDecimales() {
+    void calculateGradePanelRoundsToTwoDecimals() {
         stubSubmission(11L);
         List<Object[]> filas = Arrays.asList(row(1L, 100.0), row(2L, 100.0), row(3L, 66.0));
         when(evalCriterionRepo.sumaByEvaluator(11L)).thenReturn(filas);
@@ -139,7 +139,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void calculateGradePanelRetornaNullSiNoHayEvaluations() {
+    void calculateGradePanelReturnsNullIfNotHasEvaluations() {
         stubSubmission(12L);
         when(evalCriterionRepo.sumaByEvaluator(12L)).thenReturn(Collections.emptyList());
 
@@ -147,7 +147,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void calculateGradePanelWithUnSoloPanelistDevuelveSuPropiaGrade() {
+    void calculateGradePanelWithOnlyPanelistReturnsOwnGrade() {
         stubSubmission(13L);
         when(evalCriterionRepo.sumaByEvaluator(13L)).thenReturn(Collections.singletonList(row(1L, 95.5)));
 
@@ -171,7 +171,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationLanzaSiSubmissionNoExists() {
+    void registerEvaluationThrowsIfSubmissionNotExists() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> service.registerEvaluation(requestBase(7L, 3L, 1L)));
@@ -179,7 +179,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationLanzaSiPanelistNoExists() {
+    void registerEvaluationThrowsIfPanelistNotExists() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(Submission.builder().id(7L).build()));
         when(panelistRepo.findById(3L)).thenReturn(Optional.empty());
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -188,7 +188,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationLanzaSiPanelistNoPerteneceALaSubmission() {
+    void registerEvaluationThrowsIfPanelistNotBelongsToSubmission() {
         Submission submission = Submission.builder().id(7L).build();
         Submission otraSubmission = Submission.builder().id(999L).build();
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
@@ -205,7 +205,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationLanzaSiRubricNoExists() {
+    void registerEvaluationThrowsIfRubricNotExists() {
         Submission submission = Submission.builder().id(7L).build();
         Teacher teacher = Teacher.builder().id(1L).appUser(AppUser.builder().id(50L).build()).build();
         Panelist panelist = panelistOfSubmission(submission, teacher);
@@ -220,7 +220,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationLanzaSiRubricWithoutCriteria() {
+    void registerEvaluationThrowsIfRubricWithoutCriteria() {
         Submission submission = Submission.builder().id(7L).build();
         Teacher teacher = Teacher.builder().id(1L).appUser(AppUser.builder().id(50L).build()).build();
         Panelist panelist = panelistOfSubmission(submission, teacher);
@@ -236,7 +236,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationLanzaSiNoEvaluaAllLosCriteria() {
+    void registerEvaluationThrowsIfNotEvaluatesAllCriteria() {
         Submission submission = Submission.builder().id(7L).build();
         Teacher teacher = Teacher.builder().id(1L).appUser(AppUser.builder().id(50L).build()).build();
         Panelist panelist = panelistOfSubmission(submission, teacher);
@@ -259,7 +259,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationLanzaSiScaleFueraDeRange() {
+    void registerEvaluationThrowsIfScaleOutsideOfRange() {
         Submission submission = Submission.builder().id(7L).build();
         Teacher teacher = Teacher.builder().id(1L).appUser(AppUser.builder().id(50L).build()).build();
         Panelist panelist = panelistOfSubmission(submission, teacher);
@@ -281,7 +281,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationLanzaSiCriterionDelDtoNoExistsEnLaRubric() {
+    void registerEvaluationThrowsIfCriterionOfDtoNotExistsInRubric() {
         Submission submission = Submission.builder().id(7L).build();
         Teacher teacher = Teacher.builder().id(1L).appUser(AppUser.builder().id(50L).build()).build();
         Panelist panelist = panelistOfSubmission(submission, teacher);
@@ -305,7 +305,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationLanzaSiKindEvaluatorPanelistNoConfigurado() {
+    void registerEvaluationThrowsIfKindEvaluatorPanelistNotConfigured() {
         Submission submission = Submission.builder().id(7L).build();
         Teacher teacher = Teacher.builder().id(1L).appUser(AppUser.builder().id(50L).build()).build();
         Panelist panelist = panelistOfSubmission(submission, teacher);
@@ -330,7 +330,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationExitosaCreaEvaluatorNewYCalculaGrade() {
+    void registerEvaluationSuccessfulCreatesEvaluatorNewAndCalculatesGrade() {
         Submission submission = Submission.builder().id(7L).build();
         Teacher teacher = Teacher.builder().id(1L).appUser(AppUser.builder().id(50L).nombre("Ana").apellido("Ruiz").build()).build();
         Panelist panelist = panelistOfSubmission(submission, teacher);
@@ -376,7 +376,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void registerEvaluationReusaEvaluatorExistingYPermiteReevaluation() {
+    void registerEvaluationReusesEvaluatorExistingAndAllowsReevaluation() {
         Submission submission = Submission.builder().id(7L).build();
         Teacher teacher = Teacher.builder().id(1L).appUser(AppUser.builder().id(50L).nombre("Ana").apellido("Ruiz").build()).build();
         Panelist panelist = panelistOfSubmission(submission, teacher);
@@ -409,13 +409,13 @@ class RubricEvaluationServiceImplTest {
     // ── obtainEvaluationsSubmission ─────────────────────────────────────────
 
     @Test
-    void obtainEvaluationsSubmissionLanzaSiSubmissionNoExists() {
+    void obtainEvaluationsSubmissionThrowsIfSubmissionNotExists() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> service.obtainEvaluationsSubmission(7L));
     }
 
     @Test
-    void obtainEvaluationsSubmissionMarcaPanelIncompletoSiFaltaUnPanelist() {
+    void obtainEvaluationsSubmissionMarksPanelIncompleteIfMissingPanelist() {
         Submission submission = Submission.builder().id(7L).build();
         Teacher teacher1 = Teacher.builder().id(1L).appUser(AppUser.builder().id(50L).nombre("A").apellido("B").build()).build();
         Teacher teacher2 = Teacher.builder().id(2L).appUser(AppUser.builder().id(51L).nombre("C").apellido("D").build()).build();
@@ -440,13 +440,13 @@ class RubricEvaluationServiceImplTest {
     // ── obtainObservacionesSubmission ────────────────────────────────────────
 
     @Test
-    void obtainObservationsSubmissionLanzaSiSubmissionNoExists() {
+    void obtainObservationsSubmissionThrowsIfSubmissionNotExists() {
         when(submissionRepo.findById(7L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> service.obtainObservationsSubmission(7L));
     }
 
     @Test
-    void obtainObservationsSubmissionDevuelveAllEmptyWithoutTutorPanelistsNiEvaluationFinal() {
+    void obtainObservationsSubmissionReturnsAllEmptyWithoutTutorPanelistsOrEvaluationFinal() {
         Submission submission = Submission.builder().id(7L).tituloTopic("Tema").build();
         when(submissionRepo.findById(7L)).thenReturn(Optional.of(submission));
         when(tutorRepo.findBySubmissionId(7L)).thenReturn(Optional.empty());
@@ -463,7 +463,7 @@ class RubricEvaluationServiceImplTest {
     }
 
     @Test
-    void obtainObservationsSubmissionArmaElReportComplete() {
+    void obtainObservationsSubmissionBuildsReportComplete() {
         AppUser appUserStudent = AppUser.builder().id(1L).nombre("Ana").apellido("Torres").build();
         Student student = Student.builder().id(1L).appUser(appUserStudent).build();
         Submission submission = Submission.builder().id(7L).tituloTopic("Tema X").student(student).build();

@@ -104,13 +104,13 @@ class TeacherControllerTest {
     }
 
     @Test
-    void obtainByAppUserWithoutTokenDevuelve401() throws Exception {
+    void obtainByAppUserWithoutTokenReturns401() throws Exception {
         mockMvc.perform(get("/api/v1/docentes/usuario/50").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void obtainByAppUserPermiteConsultarElOwnProfile() throws Exception {
+    void obtainByAppUserAllowsViewOwnProfile() throws Exception {
         authenticateAs("docente@uteq.edu.ec", "DOCENTE");
         when(currentAppUserService.appUser()).thenReturn(appUserTeacher);
 
@@ -121,7 +121,7 @@ class TeacherControllerTest {
     }
 
     @Test
-    void obtainByAppUserRechazaConsultaDeOtroTeacher() throws Exception {
+    void obtainByAppUserRejectsQueryOfOtherTeacher() throws Exception {
         // Caso IDOR: un teacher autenticado (id 50) intenta ver el perfil del teacher 99
         // cambiando el appUserId en la URL.
         authenticateAs("docente@uteq.edu.ec", "DOCENTE");
@@ -134,7 +134,7 @@ class TeacherControllerTest {
     }
 
     @Test
-    void obtainByAppUserPermiteAAdminConsultarCualquierAppUser() throws Exception {
+    void obtainByAppUserAllowsToAdminViewAnyAppUser() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN");
 
         mockMvc.perform(get("/api/v1/docentes/usuario/99")
@@ -144,7 +144,7 @@ class TeacherControllerTest {
     }
 
     @Test
-    void obtainByAppUserPermiteACoordinatorConsultarCualquierAppUser() throws Exception {
+    void obtainByAppUserAllowsToCoordinatorViewAnyAppUser() throws Exception {
         authenticateAs("coord@uteq.edu.ec", "COORDINADOR");
 
         mockMvc.perform(get("/api/v1/docentes/usuario/99")
@@ -154,7 +154,7 @@ class TeacherControllerTest {
     }
 
     @Test
-    void listSigueFuncionandoForCualquierAuthenticated() throws Exception {
+    void listKeepsWorkingForAnyAuthenticated() throws Exception {
         // No debe change: el directorio completo (usado para seleccionar panelist/tutor) sigue
         // abierto a cualquier autenticado, sin control de propiedad -- no es el mismo caso.
         authenticateAs("docente@uteq.edu.ec", "DOCENTE");
@@ -167,7 +167,7 @@ class TeacherControllerTest {
     }
 
     @Test
-    void obtainByIdSigueFuncionandoWithoutControlDePropiedad() throws Exception {
+    void obtainByIdKeepsWorkingWithoutControlOfOwnership() throws Exception {
         authenticateAs("docente@uteq.edu.ec", "DOCENTE");
         when(teacherRepository.findById(7L)).thenReturn(Optional.of(teacher));
 
@@ -178,7 +178,7 @@ class TeacherControllerTest {
     }
 
     @Test
-    void availableListaSoloTeachersWithAvailableTrue() throws Exception {
+    void availableListOnlyTeachersWithAvailableTrue() throws Exception {
         authenticateAs("docente@uteq.edu.ec", "DOCENTE");
         when(teacherRepository.findByAvailableTrue()).thenReturn(List.of(teacher));
 
@@ -189,7 +189,7 @@ class TeacherControllerTest {
     }
 
     @Test
-    void listPagedDelegaEnElRepositorioWithElFiltroDeTexto() throws Exception {
+    void listPagedDelegatesInRepositoryWithFilterOfText() throws Exception {
         authenticateAs("docente@uteq.edu.ec", "DOCENTE");
         org.springframework.data.domain.Page<Teacher> pagina =
                 new org.springframework.data.domain.PageImpl<>(List.of(teacher));

@@ -95,7 +95,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void testCreatePhaseWithObservationExitoso() {
+    void testCreatePhaseWithObservationSuccessful() {
         when(tutorRepository.findById(1L)).thenReturn(Optional.of(tutor));
         when(tutoringPhaseRepository.countByTutorId(1L)).thenReturn(0L);
         when(tutoringPhaseRepository.save(any(TutoringPhase.class))).thenAnswer(inv -> {
@@ -113,7 +113,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void testCreatePhaseWithObservationFallaSiAppUserNoEsElTutor() {
+    void testCreatePhaseWithObservationFailsIfAppUserNotIsTutor() {
         when(tutorRepository.findById(1L)).thenReturn(Optional.of(tutor));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
@@ -122,7 +122,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void testCreatePhaseWithObservationFallaSiExcedeTresPhases() {
+    void testCreatePhaseWithObservationFailsIfExceedsThreePhases() {
         when(tutorRepository.findById(1L)).thenReturn(Optional.of(tutor));
         when(tutoringPhaseRepository.countByTutorId(1L)).thenReturn(3L);
 
@@ -132,7 +132,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void testUploadPdfCorrectedExitoso() {
+    void testUploadPdfCorrectedSuccessful() {
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         when(tutoringPhaseRepository.save(any(TutoringPhase.class))).thenAnswer(inv -> inv.getArgument(0));
         when(appUserRepository.findById(20L)).thenReturn(Optional.of(appUserStudent));
@@ -148,7 +148,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void testUploadPdfFallaSiSubmissionIsSuspendida() {
+    void testUploadPdfFailsIfSubmissionIsSuspendida() {
         StatusSubmission statusSusp = StatusSubmission.builder().code("SUSPENDIDA").nombre("Suspendida").build();
         submission.setStatus(statusSusp);
         submission.setMotivoSuspension("Plagio detectado");
@@ -164,7 +164,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void testApprovePhaseExitoso() {
+    void testApprovePhaseSuccessful() {
         phase1.setStatus("PENDIENTE_TUTOR");
         phase1.setFilePdfStudent("archivo_fase1.pdf");
 
@@ -182,7 +182,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void testSendMessageExitosoByTutorYStudent() {
+    void testSendMessageSuccessfulByTutorAndStudent() {
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         when(appUserRepository.findById(10L)).thenReturn(Optional.of(appUserTeacher));
         when(tutoringMessageRepository.save(any(TutoringMessage.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -193,7 +193,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void testSendMessageRechazaAppUserNoAutorizado() {
+    void testSendMessageRejectsAppUserNotAuthorized() {
         AppUser ajeno = AppUser.builder().id(999L).role("ESTUDIANTE").build();
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         when(appUserRepository.findById(999L)).thenReturn(Optional.of(ajeno));
@@ -206,14 +206,14 @@ class TutoringServiceImplTest {
     // ── validateAccesoATutoring (via obtainResumen/obtainFases) ─────────────
 
     @Test
-    void obtainSummaryLanzaSiAppUserNoExists() {
+    void obtainSummaryThrowsIfAppUserNotExists() {
         when(tutorRepository.findById(1L)).thenReturn(Optional.of(tutor));
         when(appUserRepository.findById(999L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> tutoringService.obtainSummary(1L, 999L));
     }
 
     @Test
-    void obtainSummaryPermiteAccessAAdminWithoutSerTutorNiStudent() {
+    void obtainSummaryAllowsAccessToAdminWithoutBeTutorOrStudent() {
         AppUser admin = AppUser.builder().id(500L).role("ADMIN").build();
         when(tutorRepository.findById(1L)).thenReturn(Optional.of(tutor));
         when(appUserRepository.findById(500L)).thenReturn(Optional.of(admin));
@@ -223,7 +223,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void obtainSummaryRechazaAppUserAjeno() {
+    void obtainSummaryRejectsAppUserForeign() {
         AppUser ajeno = AppUser.builder().id(999L).role("ESTUDIANTE").build();
         when(tutorRepository.findById(1L)).thenReturn(Optional.of(tutor));
         when(appUserRepository.findById(999L)).thenReturn(Optional.of(ajeno));
@@ -233,7 +233,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void obtainPhasesPermiteAlOwnStudent() {
+    void obtainPhasesAllowsToOwnStudent() {
         when(tutorRepository.findById(1L)).thenReturn(Optional.of(tutor));
         when(appUserRepository.findById(20L)).thenReturn(Optional.of(appUserStudent));
         when(tutoringPhaseRepository.findByTutorIdOrderByNumeroPhaseAsc(1L)).thenReturn(List.of(phase1));
@@ -246,7 +246,7 @@ class TutoringServiceImplTest {
     // ── createFaseConObservacion: rama restante ──────────────────────────────
 
     @Test
-    void createPhaseWithObservationFallaSiLaPhaseAnteriorNoIsAprobada() {
+    void createPhaseWithObservationFailsIfPhasePreviousNotIsApproved() {
         TutoringPhase phaseAnteriorPendiente = TutoringPhase.builder().id(1L).tutor(tutor).numeroPhase(1).status("PENDIENTE_TUTOR").build();
         when(tutorRepository.findById(1L)).thenReturn(Optional.of(tutor));
         when(tutoringPhaseRepository.countByTutorId(1L)).thenReturn(1L);
@@ -260,7 +260,7 @@ class TutoringServiceImplTest {
     // ── uploadPdfCorregido: ramas de validacion ──────────────────────────────
 
     @Test
-    void uploadPdfRechazaAppUserQueNoEsElStudentDeLaSubmission() {
+    void uploadPdfRejectsAppUserThatNotIsStudentOfSubmission() {
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         MockMultipartFile pdf = new MockMultipartFile("archivo", "d.pdf", "application/pdf", "x".getBytes());
 
@@ -269,7 +269,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void uploadPdfRechazaStatusDistintoDePendienteStudent() {
+    void uploadPdfRejectsStatusDifferentOfPendingStudent() {
         phase1.setStatus("PENDIENTE_TUTOR");
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         MockMultipartFile pdf = new MockMultipartFile("archivo", "d.pdf", "application/pdf", "x".getBytes());
@@ -280,7 +280,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void uploadPdfRechazaContentTypeDistintoDePdf() {
+    void uploadPdfRejectsContentTypeDifferentOfPdf() {
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         MockMultipartFile file = new MockMultipartFile("archivo", "d.docx",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "x".getBytes());
@@ -291,7 +291,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void uploadPdfRechazaFileMayorA10MB() {
+    void uploadPdfRejectsFileGreaterThan10MB() {
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         byte[] contenidoGrande = new byte[11 * 1024 * 1024];
         MockMultipartFile file = new MockMultipartFile("archivo", "grande.pdf", "application/pdf", contenidoGrande);
@@ -302,7 +302,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void uploadPdfEliminaFileAnteriorSiExists() throws Exception {
+    void uploadPdfRemovesFilePreviousIfExists() throws Exception {
         // sube un primer PDF, luego uno de reemplazo -- ejercita la rama de borrado del anterior.
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         when(tutoringPhaseRepository.save(any(TutoringPhase.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -320,14 +320,14 @@ class TutoringServiceImplTest {
     // ── approveFase: ramas de validacion y flujo de cierre (3 fases) ────────
 
     @Test
-    void approvePhaseRechazaAppUserQueNoEsElTutor() {
+    void approvePhaseRejectsAppUserThatNotIsTutor() {
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         assertThrows(org.springframework.security.access.AccessDeniedException.class,
                 () -> tutoringService.approvePhase(1L, 999L, "ok"));
     }
 
     @Test
-    void approvePhaseRechazaSiNoIsPendienteDeTutor() {
+    void approvePhaseRejectsIfNotIsPendingOfTutor() {
         phase1.setStatus("PENDIENTE_ESTUDIANTE");
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -336,7 +336,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void approvePhaseRechazaSiNoHayPdfDelStudent() {
+    void approvePhaseRejectsIfNotHasPdfOfStudent() {
         phase1.setStatus("PENDIENTE_TUTOR");
         phase1.setFilePdfStudent(null);
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
@@ -346,7 +346,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void approvePhaseUsaCommentByDefaultSiVieneEmpty() {
+    void approvePhaseUsesCommentByDefaultIfComesEmpty() {
         phase1.setStatus("PENDIENTE_TUTOR");
         phase1.setFilePdfStudent("a.pdf");
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
@@ -361,7 +361,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void approvePhaseCompleteLasTresPhasesYActualizaElProposal() throws Exception {
+    void approvePhaseCompleteThreePhasesAndUpdatesProposal() throws Exception {
         // Prepara fisicamente el PDF de la fase 3 en el tempDir, para que Files.copy() real
         // encuentre el origen (mismo mecanismo que usa el codigo de produccion).
         String uploadDir = (String) ReflectionTestUtils.getField(tutoringService, "uploadDir");
@@ -393,7 +393,7 @@ class TutoringServiceImplTest {
     // ── sendMensaje: ramas restantes ───────────────────────────────────────
 
     @Test
-    void sendMessagePermiteAlStudent() {
+    void sendMessageAllowsToStudent() {
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         when(appUserRepository.findById(20L)).thenReturn(Optional.of(appUserStudent));
         when(tutoringMessageRepository.save(any(TutoringMessage.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -402,7 +402,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void sendMessagePermiteAAppUserPrivilegiadoAunNoSiendoParteDeLaTutoring() {
+    void sendMessageAllowsToAppUserPrivilegedStillNotBeingPartOfTutoring() {
         AppUser coordinator = AppUser.builder().id(700L).role("COORDINADOR").build();
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         when(appUserRepository.findById(700L)).thenReturn(Optional.of(coordinator));
@@ -414,7 +414,7 @@ class TutoringServiceImplTest {
     // ── marcarMensajesLeidos / listados / registerAvanceSP / obtainPdfFase ─
 
     @Test
-    void markMessagesReadMarcaAllLosNoRead() {
+    void markMessagesReadMarksAllNotRead() {
         TutoringMessage m1 = TutoringMessage.builder().id(1L).leido(false).build();
         TutoringMessage m2 = TutoringMessage.builder().id(2L).leido(false).build();
         when(tutoringMessageRepository.findByPhaseIdAndLeidoFalseAndSenderIdNot(1L, 20L))
@@ -428,7 +428,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void obtainTutoringsStudentDelega() {
+    void obtainTutoringsStudentDelegates() {
         when(tutorRepository.findBySubmissionStudentAppUserId(20L)).thenReturn(List.of(tutor));
         when(tutoringPhaseRepository.findByTutorIdOrderByNumeroPhaseAsc(1L)).thenReturn(List.of());
 
@@ -437,7 +437,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void obtainTutoringsTeacherDelega() {
+    void obtainTutoringsTeacherDelegates() {
         when(tutorRepository.findByTeacherAppUserId(10L)).thenReturn(List.of(tutor));
         when(tutoringPhaseRepository.findByTutorIdOrderByNumeroPhaseAsc(1L)).thenReturn(List.of());
 
@@ -446,7 +446,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void registerProgressSPValidaAccessYDelegaAlProcedimiento() {
+    void registerProgressSPValidatesAccessAndDelegatesToProcedure() {
         when(tutorRepository.findById(1L)).thenReturn(Optional.of(tutor));
         when(appUserRepository.findById(10L)).thenReturn(Optional.of(appUserTeacher));
 
@@ -456,7 +456,7 @@ class TutoringServiceImplTest {
     }
 
     @Test
-    void obtainPdfPhaseLanzaSiNoHayFile() {
+    void obtainPdfPhaseThrowsIfNotHasFile() {
         when(tutoringPhaseRepository.findById(1L)).thenReturn(Optional.of(phase1));
         when(appUserRepository.findById(10L)).thenReturn(Optional.of(appUserTeacher));
 

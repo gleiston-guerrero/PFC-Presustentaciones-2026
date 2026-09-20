@@ -50,7 +50,7 @@ class PasswordPolicyValidatorTest {
     private final PasswordPolicyValidator validador = new PasswordPolicyValidator();
 
     @Test
-    void rechazaSieteCaracteresBySerMenorQueElMinimo() {
+    void rejectsSevenCharactersByBeLessThatMinimum() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> validador.validate("Ab1cd2f")); // 7 caracteres, no está en la lista de comunes
         assertTrue(ex.getMessage().contains("8 caracteres"));
@@ -58,13 +58,13 @@ class PasswordPolicyValidatorTest {
     }
 
     @Test
-    void aceptaOchoCaracteresQueNoEstanEnLaListaDeCommon() {
+    void acceptsEightCharactersThatNotAreInListOfCommon() {
         assertDoesNotThrow(() -> validador.validate("Xq7#mZ9d"));
         assertTrue(validador.meets("Xq7#mZ9d"));
     }
 
     @Test
-    void rechazaUnaContrasenaDeLaListaAunqueTengaOchoCaracteresOMas() {
+    void rejectsPasswordOfListAlthoughHasEightCharactersOrMore() {
         // "password123" (11 caracteres) esta en common-passwords.txt: cumple la longitud
         // minima y aun asi debe rejectse por estar en la lista de comunes.
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
@@ -74,12 +74,12 @@ class PasswordPolicyValidatorTest {
     }
 
     @Test
-    void laComprobacionDeCommonEsInsensibleAMayusculas() {
+    void checkOfCommonIsInsensitiveToUppercase() {
         assertThrows(IllegalArgumentException.class, () -> validador.validate("Admin123"));
     }
 
     @Test
-    void meetsDevuelveFalsoWithoutLanzarExcepcion() {
+    void meetsReturnsFalseWithoutThrowException() {
         assertFalse(validador.meets("corto1"));
         assertFalse(validador.meets("password123"));
         assertTrue(validador.meets("Zk4#pQ8w"));
@@ -121,7 +121,7 @@ class PasswordPolicyValidatorTest {
         }
 
         @Test
-        void registerWithContrasenaDeLaListaDeCommonDevuelve400WithoutCreateAppUser() throws Exception {
+        void registerWithPasswordOfListOfCommonReturns400WithoutCreateAppUser() throws Exception {
             authenticateAsAdmin();
             String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                     "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"}"; // esta en common-passwords.txt
@@ -138,7 +138,7 @@ class PasswordPolicyValidatorTest {
         }
 
         @Test
-        void registerWithContrasenaCortaDevuelve400ByBeanValidationAntesDeLlegarAlValidador() throws Exception {
+        void registerWithPasswordShortReturns400ByBeanValidationBeforeOfReachToValidator() throws Exception {
             authenticateAsAdmin();
             String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                     "\"password\":\"Ab1cd2f\",\"rol\":\"ESTUDIANTE\"}"; // 7 caracteres
@@ -153,7 +153,7 @@ class PasswordPolicyValidatorTest {
         }
 
         @Test
-        void registerWithContrasenaQueMeetsLaPoliticaLlegaAAppUserService() throws Exception {
+        void registerWithPasswordThatMeetsPolicyArrivesToAppUserService() throws Exception {
             authenticateAsAdmin();
             String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
                     "\"password\":\"Xq7#mZ9d\",\"rol\":\"ESTUDIANTE\"}"; // 8 caracteres, no comun

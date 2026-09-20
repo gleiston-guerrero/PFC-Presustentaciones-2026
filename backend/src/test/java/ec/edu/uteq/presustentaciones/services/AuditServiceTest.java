@@ -64,7 +64,7 @@ class AuditServiceTest {
     }
 
     @Test
-    void markActorActualFijaCadenaVaciaWithoutAuthenticationEnElContexto() {
+    void markActorCurrentSetsStringEmptyWithoutAuthenticationInContext() {
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
         when(query.setParameter(eq("valor"), eq(""))).thenReturn(query);
 
@@ -74,7 +74,7 @@ class AuditServiceTest {
     }
 
     @Test
-    void markActorActualFijaCadenaVaciaSiNoIsAuthenticated() {
+    void markActorCurrentSetsStringEmptyIfNotIsAuthenticated() {
         Authentication auth = new UsernamePasswordAuthenticationToken("x@uteq.edu.ec", "pass");
         auth.setAuthenticated(false);
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -87,7 +87,7 @@ class AuditServiceTest {
     }
 
     @Test
-    void markActorActualFijaCadenaVaciaForAppUserAnonimo() {
+    void markActorCurrentSetsStringEmptyForAppUserAnonymous() {
         SecurityContextHolder.getContext().setAuthentication(
                 new AnonymousAuthenticationToken("key", "anonymousUser",
                         AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
@@ -100,7 +100,7 @@ class AuditServiceTest {
     }
 
     @Test
-    void markActorActualFijaCadenaVaciaSiElAuthenticatedNoIsEnLaBase() {
+    void markActorCurrentSetsStringEmptyIfAuthenticatedNotIsInBase() {
         authenticateAs("fantasma@uteq.edu.ec");
         when(appUserRepository.findByEmail("fantasma@uteq.edu.ec")).thenReturn(Optional.empty());
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
@@ -112,7 +112,7 @@ class AuditServiceTest {
     }
 
     @Test
-    void markActorActualFijaElIdDelAppUserAuthenticated() {
+    void markActorCurrentSetsIdOfAppUserAuthenticated() {
         authenticateAs("docente@uteq.edu.ec");
         AppUser u = new AppUser();
         u.setId(42L);
@@ -126,7 +126,7 @@ class AuditServiceTest {
     }
 
     @Test
-    void markActorActualNoPropagaLaExcepcionSiFallaLaQueryNativa() {
+    void markActorCurrentNotPropagatesExceptionIfFailsQueryNative() {
         authenticateAs("docente@uteq.edu.ec");
         AppUser u = new AppUser();
         u.setId(42L);

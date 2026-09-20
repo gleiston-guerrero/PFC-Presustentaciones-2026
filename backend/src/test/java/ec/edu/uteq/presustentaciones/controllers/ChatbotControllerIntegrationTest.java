@@ -85,7 +85,7 @@ class ChatbotControllerIntegrationTest {
     private ec.edu.uteq.presustentaciones.repositories.AppUserRepository appUserRepository;
 
     @Test
-    void sinTokenDevuelve401() throws Exception {
+    void withoutTokenReturns401() throws Exception {
         ChatRequest request = new ChatRequest();
         request.setMessage("hola");
 
@@ -96,7 +96,7 @@ class ChatbotControllerIntegrationTest {
     }
 
     @Test
-    void withTokenValidDevuelveLaRespuestaDelChatbot() throws Exception {
+    void withTokenValidReturnsResponseOfChatbot() throws Exception {
         String email = "estudiante@uteq.edu.ec";
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",
@@ -123,7 +123,7 @@ class ChatbotControllerIntegrationTest {
     }
 
     @Test
-    void mensajeSinPalabraConocidaDevuelveLaRespuestaPorDefectoReal() throws Exception {
+    void messageWithoutWordKnownReturnsResponseByDefaultReal() throws Exception {
         String email = "estudiante@uteq.edu.ec";
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",
@@ -145,7 +145,7 @@ class ChatbotControllerIntegrationTest {
     }
 
     @Test
-    void cadaPalabraClaveDelServicioRealDevuelveSuPropiaRespuesta() throws Exception {
+    void eachWordKeyOfServiceRealReturnsOwnResponse() throws Exception {
         String email = "estudiante@uteq.edu.ec";
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",
@@ -181,7 +181,7 @@ class ChatbotControllerIntegrationTest {
     }
 
     @Test
-    void messageMalFormadoDevuelve400() throws Exception {
+    void messageBadlyFormedReturns400() throws Exception {
         String email = "estudiante@uteq.edu.ec";
         String token = "token-" + email;
         UserDetails userDetails = new User(email, "x",

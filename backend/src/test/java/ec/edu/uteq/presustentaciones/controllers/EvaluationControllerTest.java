@@ -40,7 +40,7 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void evaluateWeightedDevuelveLaEvaluationCalculada() {
+    void evaluateWeightedReturnsEvaluationCalculated() {
         EvaluationFinal evaluation = EvaluationFinal.builder().id(1L).gradeFinal(8.6).build();
         when(evaluationService.evaluateSubmission(1L, 2L, 9.0, 8.0, "Buen trabajo", 60.0, 40.0))
                 .thenReturn(evaluation);
@@ -52,7 +52,7 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void evaluateWeightedWithPesosInvalidosDevuelve400WithElMessageDelServicio() {
+    void evaluateWeightedWithWeightsInvalidReturns400WithMessageOfService() {
         when(evaluationService.evaluateSubmission(1L, 2L, 9.0, 8.0, "obs", 70.0, 40.0))
                 .thenThrow(new RuntimeException("Los pesos deben sumar 100"));
 
@@ -63,7 +63,7 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void evaluateLegadoDelegaEnElServicioWithLaGradeFinalDirecta() {
+    void evaluateLegacyDelegatesInServiceWithGradeFinalDirect() {
         EvaluationFinal evaluation = EvaluationFinal.builder().id(1L).build();
         when(evaluationService.evaluateSubmission(1L, 2L, 7.5, "obs")).thenReturn(evaluation);
 
@@ -71,7 +71,7 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void listPropagaLaPaginacionRecibida() {
+    void listPropagatesPaginationReceived() {
         PageRequest pageable = PageRequest.of(0, 20);
         Page<EvaluationFinal> pagina = new PageImpl<>(List.of(EvaluationFinal.builder().id(1L).build()));
         when(evaluationService.listEvaluations(pageable)).thenReturn(pagina);
@@ -80,7 +80,7 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void listByStudentYByAppUserDeleganEnElServicio() {
+    void listByStudentAndByAppUserDelegateInService() {
         List<EvaluationFinal> byStudent = List.of(EvaluationFinal.builder().id(1L).build());
         List<EvaluationFinal> byAppUser = List.of(EvaluationFinal.builder().id(2L).build());
         when(evaluationService.listByStudent(7L)).thenReturn(byStudent);
@@ -91,14 +91,14 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void bySubmissionDevuelve404CuandoLaSubmissionNoTieneEvaluation() {
+    void bySubmissionReturns404WhenSubmissionNotHasEvaluation() {
         when(evaluationService.searchBySubmission(1L)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND, controller.bySubmission(1L).getStatusCode());
     }
 
     @Test
-    void bySubmissionDevuelveLaEvaluationCuandoExists() {
+    void bySubmissionReturnsEvaluationWhenExists() {
         EvaluationFinal evaluation = EvaluationFinal.builder().id(1L).build();
         when(evaluationService.searchBySubmission(1L)).thenReturn(Optional.of(evaluation));
 
@@ -108,7 +108,7 @@ class EvaluationControllerTest {
     // ── sp_calculate_promedio_evaluation ───────────────────────────────────────
 
     @Test
-    void calculateAverageDevuelveElResultDelProcedimientoAlmacenado() {
+    void calculateAverageReturnsResultOfProcedureStored() {
         Map<String, Object> result = Map.of(
                 "solicitudId", 1L, "notaFinal", 8.6, "estadoResultado", "APROBADO");
         when(evaluationService.calculateAverageSP(1L)).thenReturn(result);
@@ -120,7 +120,7 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void calculateAverageTraduceElErrorDelProcedimientoA400() {
+    void calculateAverageTranslatesErrorOfProcedureTo400() {
         when(evaluationService.calculateAverageSP(99L))
                 .thenThrow(new RuntimeException("La solicitud 99 no tiene evaluaciones por criterio"));
 

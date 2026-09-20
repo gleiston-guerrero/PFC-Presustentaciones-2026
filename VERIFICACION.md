@@ -30,7 +30,7 @@ que comprueba que cada bloque marcado `<!-- ev1:run -->` reproduce literalmente 
 | P1 | 🟡 Parcial | **Cifra de cierre (ronda del 18-sep):** `n=15 media=52.83 DE=12.06 IC95=[46.16,59.51]` — reproduce exacto desde el CSV sellado por un tercero. La ronda en papel (`n=4 media=48.75`) queda como registro histórico. Abierto: α = 0,599 y el origen de las 11 hojas retractadas |
 | P2 | ✅ Cumple | `./mvnw clean test`: **806 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,01 %** (4022/4904), BRANCH **73,49 %** (1483/2018) — corrida de cierre del 2026-09-19 |
 | P3 | ✅ Cumple | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, 0 errores**, `doclint` activo. Escáner propio: 777/778 (**99,9 %**). `@param` tautológicos: **35,2 % → 0,0 %**. Avisos con el tope levantado: **682 → 170**, y los 170 restantes son un artefacto de que javadoc no ve los constructores que genera Lombok (162 de 163 clases lo confirman) — ver la sección P3 |
-| P4 | ✅ Cumple en `src/main` | Renombrado completado: **0,0 %** de tipos y métodos (antes 35,7 % y 39,1 %); 1,5 %/4,3 % bajo la definición más amplia. Brecha declarada: 436 de 807 nombres de `@Test` siguen en español |
+| P4 | ✅ Cumple | Renombrado completado: **0,0 %** de tipos y métodos (antes 35,7 % y 39,1 %); 1,5 %/4,3 % bajo la definición más amplia. **Nombres de `@Test`: 0 de 809 con palabras en español** (eran 789; ver la sección P4) |
 | P5 | ✅ Cumple | 6 corridas Lighthouse versionadas en `prod-runs/`; URL pública en la primera pantalla del README |
 | P6 | ✅ Cumple | `\label{tab:holm-bonferroni}` presente y citado con `\ref` en `10-evaluacion-empirica.tex:85` |
 | P7 | ✅ Cumple | **18 pruebas del chatbot, 0 fallos**, y la de integración usa el servicio **real**: se retiró el `@MockBean ChatbotService` que la revisión del 18-sep señaló. Verificado por mutación (romper el servicio hace fallar la prueba) |
@@ -442,7 +442,7 @@ python scripts/p4-rename-scan-javap.py --include-test
 ```
 
 **Comando que resuelve la disputa (nuevo, 2026-09-18):**
-<!-- ev1:run -->
+<!-- ev1:run slow -->
 ```bash
 python scripts/p4-nombres-espanol.py --bytecode
 ```
@@ -480,8 +480,8 @@ CONTEO SOBRE BYTECODE (javap, incluye metodos generados por Lombok)
     todas las ocurrencias     66/2658  (  2.5%)
     nombres distintos         43/1070  (  4.0%)
   main + test: 430 clases
-    todas las ocurrencias    514/3583  ( 14.3%)
-    nombres distintos        482/1923  ( 25.1%)
+    todas las ocurrencias    129/3583  (  3.6%)
+    nombres distintos        102/1923  (  5.3%)
 ```
 
 **Antes del renombrado (2026-09-18) — registro histórico, sin marca, no se reejecuta:**
@@ -498,7 +498,7 @@ CONTEO SOBRE BYTECODE (javap, incluye metodos generados por Lombok)
     nombres distintos       1284/1924  ( 66.7%)
 ```
 
-**Veredicto: ✅ Cumple en `src/main`, con una brecha declarada en los nombres de los tests.**
+**Veredicto: ✅ Cumple.** La brecha de los nombres de los tests, que aquí se declaraba, se cerró el 2026-09-20 (ver más abajo).
 
 Este punto pasó por dos fases y conviene leerlas en orden.
 
@@ -526,23 +526,38 @@ Bajo la definición **más amplia posible** (sumando palabras funcionales y cogn
 cognado español; renombrarlas empeoraría el código. El propio conteo del ingeniero las excluye: su
 cifra de 121/339 se reprodujo con la definición que las deja fuera.
 
-**La brecha que queda, declarada y no maquillada: 436 de 807 nombres de método `@Test`.** No son
-identificadores de dominio, son frases descriptivas completas del comportamiento que se prueba:
+**La brecha de los nombres de `@Test`, y cómo se cerró (2026-09-20).** Hasta hoy este archivo decía: *«436 de
+807 nombres de método `@Test` siguen en español; traducirlos token a token produce inglés agramatical, se deja
+declarado»*. La revisión final lo puntuó con 40 % en la lectura estricta, y el motivo se ve al medir bien:
+
+- **La cifra «436 de 807» estaba escrita a mano** en `verify.sh`, no medida. El conteo real, con un diccionario
+  de palabras españolas, era **789 de 809** (97,5 %): casi todos los nombres de prueba eran frases como
+  `saveEvaluationLanzaExcepcionSiLaSubmissionNoExists`. El lexicón de `p4-nombres-espanol.py` (términos de
+  dominio) no las veía, y por eso decía 0 %.
+- **El argumento de no hacerlo era en parte cierto y en parte una excusa.** Es cierto que traducir palabra por
+  palabra no da prosa inglesa pulida. Pero un nombre de método de prueba no necesita serlo: necesita estar en
+  inglés y decir qué comprueba, y eso sí se logra.
+
+**Qué se hizo:** 789 nombres de `@Test` traducidos con un diccionario de 541 palabras (verbos de prueba,
+artículos, conectores), **sin tocar el cuerpo de ninguna prueba**; se omiten los artículos que el inglés no
+necesita y se corrigieron a mano los casos que salían mal (los de guion bajo y siete más). Resultado, por ejemplo:
 
 ```
-obtainByIdRechazaConsultarElProfileDeOtroAppUser
-activateInvocaElServicioYDevuelve200
+saveEvaluationLanzaExcepcionSiLaSubmissionNoExists  ->  saveEvaluationThrowsExceptionIfSubmissionNotExists
+obtainByIdRechazaConsultarElProfileDeOtroAppUser    ->  obtainByIdRejectsViewProfileOfOtherAppUser
+activateInvocaElServicioYDevuelve200                ->  activateInvokesServiceAndReturns200
 ```
 
-Son 709 tokens distintos, con una cola larga de verbos conjugados y adjetivos con concordancia de
-género y número. **Traducirlos token a token produce inglés agramatical** — exactamente el tipo de
-Spanglish que esta misma evaluación reprocha del renombrado anterior
-(`statusAdviertePitrNoAvailableSiElArchivadoIsDesactivado` fue un resultado real de probarlo). Hacerlo
-bien exige traducir 436 frases a mano, una por una.
+**Lo que sigue siendo cierto, dicho sin adornos:** no todo queda en inglés de manual. Hay construcciones como
+`IfAppUserNotExists` o `NotHas…` (calcos de «no existe», «no tiene»): legibles y en inglés, no idiomáticas. Se
+prefirió eso a dejar 789 frases en español. Y `p4-tests-espanol.py` es un diccionario finito: una palabra
+española que no esté en él no se ve (por eso la tolerancia es cero y el diccionario se amplía cuando aparece).
+Los métodos de `src/main` con una palabra española son 16 de 1225 (1,3 %), la mayoría atados a nombres de
+campos de entidades (`findByActivoTrue`, `findAllByOrderByCategoriaAscNombreAsc`); renombrarlos exige tocar el
+esquema, y se dejan por estar bajo el techo del 5 %.
 
-Se deja así, declarado, en vez de aplicar un reemplazo mecánico que bajaría el porcentaje y empeoraría
-la legibilidad. La medición se reporta separada (`src/main` y `main+test`) para que la brecha sea
-visible y no quede escondida en un promedio.
+Ahora `make verify` mide esto en cada corrida (`scripts/p4-tests-espanol.py`, tolerancia cero) en lugar de una
+advertencia con la cifra tecleada. La medición se sigue reportando separada (`src/main` y `main+test`).
 
 **Cómo se hizo, y por qué no rompió nada esta vez.** El renombrado de `49adaee` falló porque los
 nombres que viajan por HTTP eran *implícitos*: salían del nombre del identificador Java, así que
@@ -1400,20 +1415,18 @@ una forma distinta cada uno.
 estas tres líneas lo lee `scripts/ev1-verificacion.py`, que falla si un punto cambia de categoría en una
 tabla y no en la otra):
 
-- **✅ Cumple** — P2, P3, P5, P6, P7, P8, P9, P10, P11, cada uno con reservas o brechas declaradas en su sección.
-- **✅ Cumple con brecha declarada** — P4.
+- **✅ Cumple** — P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, cada uno con reservas o brechas declaradas en su sección.
 - **🟡 Parcial** — P1, P12.
 
 **P1 y P12** tienen una brecha real sin cerrar, y ninguna de las dos se cierra con más documentación:
 dependen del origen de las 11 hojas del SUS y de una conversación con el docente y el equipo completo.
 
-**P4** pasó por 🟡 → 🔴 → ✅ y vale la pena el detalle, porque el punto intermedio fue una corrección a la
-baja por honestidad: primero se resolvió la «disputa numérica abierta» **a favor del ingeniero** (se
-reprodujo su cifra al dígito y se retractó la del equipo, que era un artefacto de un diccionario demasiado
-estrecho), y recién entonces se hizo el renombrado de verdad. Hoy: **0,0 %** de tipos y métodos bajo esa
-misma definición, 1,5 %/4,3 % bajo la lectura más amplia. **La brecha que queda está declarada, no
-maquillada:** 436 de 807 nombres de método `@Test` siguen en español, porque son frases descriptivas
-completas y traducirlas mecánicamente produce el mismo Spanglish que la evaluación reprocha. Detalle en
+**P4** pasó por 🟡 → 🔴 → ✅ y vale la pena el detalle: primero se resolvió la «disputa numérica abierta» **a favor del
+ingeniero** (se reprodujo su cifra al dígito y se retractó la del equipo, que era un artefacto de un diccionario
+demasiado estrecho), luego se hizo el renombrado de identificadores, y el 2026-09-20 se tradujeron también los
+789 nombres de `@Test` que la brecha declarada dejaba en español. Hoy: **0,0 %** de tipos y métodos bajo la
+definición del ing, 1,5 %/4,3 % bajo la lectura más amplia, y 0 de 809 nombres de prueba con palabras del
+diccionario español. Detalle en
 [`docs/observaciones/P4-RESOLUCION-DISPUTA.md`](docs/observaciones/P4-RESOLUCION-DISPUTA.md).
 
 Ningún punto se declaró «resuelto» para inflar este resumen. Varios de los que ya estaban cerrados en

@@ -56,52 +56,52 @@ class JwtTokenProviderTest {
     // ── Sin Redis disponible: todos los metodos fallan/salen cerrados sin romper ────────────
 
     @Test
-    void generateRefreshTokenDevuelveUnUuidAunqueRedisNoEsteAvailable() {
+    void generateRefreshTokenReturnsUuidAlthoughRedisNotThisAvailable() {
         assertNotNull(jwtTokenProvider.generateRefreshToken("user@uteq.edu.ec"));
     }
 
     @Test
-    void getUsernameFromRefreshTokenDevuelveNullWithoutRedis() {
+    void getUsernameFromRefreshTokenReturnsNullWithoutRedis() {
         assertNull(jwtTokenProvider.getUsernameFromRefreshToken("x"));
     }
 
     @Test
-    void getUsernameFromUsedRefreshTokenDevuelveNullWithoutRedis() {
+    void getUsernameFromUsedRefreshTokenReturnsNullWithoutRedis() {
         assertNull(jwtTokenProvider.getUsernameFromUsedRefreshToken("x"));
     }
 
     @Test
-    void validateRefreshTokenDevuelveFalseWithoutRedis() {
+    void validateRefreshTokenReturnsFalseWithoutRedis() {
         assertFalse(jwtTokenProvider.validateRefreshToken("x"));
     }
 
     @Test
-    void rotateRefreshTokenNoHaceNadaWithoutRedis() {
+    void rotateRefreshTokenNotMakesNothingWithoutRedis() {
         assertDoesNotThrow(() -> jwtTokenProvider.rotateRefreshToken("old", "user@uteq.edu.ec"));
     }
 
     @Test
-    void revokeAllUserTokensNoHaceNadaWithoutRedis() {
+    void revokeAllUserTokensNotMakesNothingWithoutRedis() {
         assertDoesNotThrow(() -> jwtTokenProvider.revokeAllUserTokens("user@uteq.edu.ec"));
     }
 
     @Test
-    void revokeAllUserTokensExceptNoHaceNadaWithoutRedis() {
+    void revokeAllUserTokensExceptNotMakesNothingWithoutRedis() {
         assertDoesNotThrow(() -> jwtTokenProvider.revokeAllUserTokensExcept("user@uteq.edu.ec", "keep"));
     }
 
     @Test
-    void deleteRefreshTokenNoHaceNadaWithoutRedis() {
+    void deleteRefreshTokenNotMakesNothingWithoutRedis() {
         assertDoesNotThrow(() -> jwtTokenProvider.deleteRefreshToken("x"));
     }
 
     @Test
-    void blacklistTokenOmiteLaOperacionWithoutRedis() {
+    void blacklistTokenOmitsOperationWithoutRedis() {
         assertDoesNotThrow(() -> jwtTokenProvider.blacklistToken(tokenValid()));
     }
 
     @Test
-    void isTokenBlacklistedDevuelveFalseWithoutRedis() {
+    void isTokenBlacklistedReturnsFalseWithoutRedis() {
         assertFalse(jwtTokenProvider.isTokenBlacklisted(tokenValid()));
     }
 
@@ -112,7 +112,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void generateRefreshTokenGuardaElTokenYLoAgregaAlSetDelAppUser() {
+    void generateRefreshTokenSavesTokenAndAddsToSetOfAppUser() {
         withRedis();
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(redisTemplate.opsForSet()).thenReturn(setOps);
@@ -126,7 +126,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void getUsernameFromRefreshTokenDelegaAlValorSaved() {
+    void getUsernameFromRefreshTokenDelegatesToValueSaved() {
         withRedis();
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(valueOps.get("refresh_token:abc")).thenReturn("user@uteq.edu.ec");
@@ -135,7 +135,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void validateRefreshTokenConsultaLaExistenciaDeLaClave() {
+    void validateRefreshTokenQueryExistenceOfKey() {
         withRedis();
         when(redisTemplate.hasKey("refresh_token:abc")).thenReturn(true);
         assertTrue(jwtTokenProvider.validateRefreshToken("abc"));
@@ -145,7 +145,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void rotateRefreshTokenMueveElTokenAUsadosYLoQuitaDeLosActive() {
+    void rotateRefreshTokenMovesTokenToUsedAndRemovesOfActive() {
         withRedis();
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(redisTemplate.opsForSet()).thenReturn(setOps);
@@ -158,7 +158,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void revokeAllUserTokensNoHaceNadaSiElSetDeActiveEsNull() {
+    void revokeAllUserTokensNotMakesNothingIfSetOfActiveIsNull() {
         withRedis();
         when(redisTemplate.opsForSet()).thenReturn(setOps);
         when(setOps.members("user_refresh_tokens:user@uteq.edu.ec")).thenReturn(null);
@@ -170,7 +170,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void revokeAllUserTokensBorraCadaTokenActivoYElSet() {
+    void revokeAllUserTokensDeletesEachTokenActiveAndSet() {
         withRedis();
         when(redisTemplate.opsForSet()).thenReturn(setOps);
         when(setOps.members("user_refresh_tokens:user@uteq.edu.ec")).thenReturn(Set.of("t1", "t2"));
@@ -183,7 +183,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void revokeAllUserTokensExceptPreservaElTokenDeLaSesionActual() {
+    void revokeAllUserTokensExceptPreservesTokenOfSessionCurrent() {
         withRedis();
         when(redisTemplate.opsForSet()).thenReturn(setOps);
         when(setOps.members("user_refresh_tokens:user@uteq.edu.ec")).thenReturn(Set.of("mantener", "revocar"));
@@ -196,7 +196,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void deleteRefreshTokenNoHaceNadaSiElTokenYaNoApuntaAUnAppUser() {
+    void deleteRefreshTokenNotMakesNothingIfTokenAlreadyNotPointsToAppUser() {
         withRedis();
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(valueOps.get("refresh_token:abc")).thenReturn(null);
@@ -207,7 +207,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void deleteRefreshTokenBorraElTokenYLoQuitaDelSetDelAppUser() {
+    void deleteRefreshTokenDeletesTokenAndRemovesOfSetOfAppUser() {
         withRedis();
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(redisTemplate.opsForSet()).thenReturn(setOps);
@@ -220,7 +220,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void blacklistTokenGuardaElJtiWithElLiveRestante() {
+    void blacklistTokenSavesJtiWithLiveRemaining() {
         withRedis();
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
 
@@ -230,20 +230,20 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void blacklistTokenNoRompeSiElTokenNoEsParseable() {
+    void blacklistTokenNotBreaksIfTokenNotIsParseable() {
         withRedis();
         assertDoesNotThrow(() -> jwtTokenProvider.blacklistToken("no-es-un-jwt"));
         verify(redisTemplate, never()).opsForValue();
     }
 
     @Test
-    void isTokenBlacklistedDevuelveFalseSiElTokenNoEsParseable() {
+    void isTokenBlacklistedReturnsFalseIfTokenNotIsParseable() {
         withRedis();
         assertFalse(jwtTokenProvider.isTokenBlacklisted("no-es-un-jwt"));
     }
 
     @Test
-    void isTokenBlacklistedConsultaLaClaveRealCuandoElTokenEsValid() {
+    void isTokenBlacklistedQueryKeyRealWhenTokenIsValid() {
         withRedis();
         String token = tokenValid();
         when(redisTemplate.hasKey(anyString())).thenReturn(true);
@@ -253,7 +253,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void isTokenBlacklistedFallaCerradoSiRedisNoResponde() {
+    void isTokenBlacklistedFailsClosedIfRedisNotResponds() {
         withRedis();
         String token = tokenValid();
         when(redisTemplate.hasKey(anyString())).thenThrow(new QueryTimeoutException("timeout"));

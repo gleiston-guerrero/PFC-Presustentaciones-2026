@@ -48,7 +48,7 @@ class ResourceDegreeControllerTest {
     }
 
     @Test
-    void listWithProgramIdExplicitoNoConsultaAlStudentActual() {
+    void listWithProgramIdExplicitNotQueryToStudentCurrent() {
         when(resourceService.list(5)).thenReturn(List.of(resourceMock));
 
         ResponseEntity<List<ResourceDegreeDTO>> response = controller.list(5);
@@ -60,7 +60,7 @@ class ResourceDegreeControllerTest {
     }
 
     @Test
-    void listWithoutProgramIdResuelveLaProgramDelStudentAuthenticated() {
+    void listWithoutProgramIdResolvesProgramOfStudentAuthenticated() {
         Program program = Program.builder().id(3).build();
         Student student = Student.builder().id(7L).programEntidad(program).build();
         when(currentAppUser.studentIdOrNull()).thenReturn(7L);
@@ -74,7 +74,7 @@ class ResourceDegreeControllerTest {
     }
 
     @Test
-    void listWithoutProgramIdYWithoutProfileDeStudentListaAllWithoutFiltrar() {
+    void listWithoutProgramIdAndWithoutProfileOfStudentListAllWithoutFilter() {
         // Caller autenticado que no es student (ej. ADMIN/DOCENTE): sin id de student,
         // el filtro efectivo debe quedar en null (resources generales de todas las programs).
         when(currentAppUser.studentIdOrNull()).thenReturn(null);
@@ -88,7 +88,7 @@ class ResourceDegreeControllerTest {
     }
 
     @Test
-    void createDelegaYDevuelve201() {
+    void createDelegatesAndReturns201() {
         SaveResourceRequest req = new SaveResourceRequest();
         req.setTitulo("Guía de formato APA");
         req.setCategoria("GUIA");
@@ -103,7 +103,7 @@ class ResourceDegreeControllerTest {
     }
 
     @Test
-    void updateDelegaYDevuelve200() {
+    void updateDelegatesAndReturns200() {
         SaveResourceRequest req = new SaveResourceRequest();
         req.setTitulo("Guía actualizada");
         req.setCategoria("GUIA");
@@ -117,7 +117,7 @@ class ResourceDegreeControllerTest {
     }
 
     @Test
-    void deleteDelegaYDevuelve204() {
+    void deleteDelegatesAndReturns204() {
         ResponseEntity<Void> response = controller.delete(1);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());

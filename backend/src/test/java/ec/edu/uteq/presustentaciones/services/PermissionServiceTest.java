@@ -44,13 +44,13 @@ class PermissionServiceTest {
     private PermissionService permissionService;
 
     @Test
-    void hasPermissionRetornaFalseSiAuthenticationEsNull() {
+    void hasPermissionReturnsFalseIfAuthenticationIsNull() {
         assertFalse(permissionService.hasPermission(null, "USUARIOS_GESTIONAR"));
         verify(permissionRepository, never()).appUserTienePermission(anyString(), anyString());
     }
 
     @Test
-    void hasPermissionRetornaFalseSiNoIsAuthenticated() {
+    void hasPermissionReturnsFalseIfNotIsAuthenticated() {
         Authentication auth = new UsernamePasswordAuthenticationToken("user@uteq.edu.ec", "pass");
         auth.setAuthenticated(false);
 
@@ -59,7 +59,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    void hasPermissionRetornaFalseForAppUserAnonimo() {
+    void hasPermissionReturnsFalseForAppUserAnonymous() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "anonymousUser", null, AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
 
@@ -68,7 +68,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    void hasPermissionDelegaAlRepositorioWithElEmailDelAppUserAuthenticated() {
+    void hasPermissionDelegatesToRepositoryWithEmailOfAppUserAuthenticated() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "coordinador@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_COORDINADOR"));
         when(permissionRepository.appUserTienePermission("coordinador@uteq.edu.ec", "USUARIOS_GESTIONAR"))
@@ -79,7 +79,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    void hasPermissionRetornaFalseSiElRepositorioNoEncuentraElPermission() {
+    void hasPermissionReturnsFalseIfRepositoryNotFindsPermission() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "estudiante@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_ESTUDIANTE"));
         when(permissionRepository.appUserTienePermission("estudiante@uteq.edu.ec", "USUARIOS_GESTIONAR"))
@@ -91,13 +91,13 @@ class PermissionServiceTest {
     // ── permissionsDe ───────────────────────────────────────────────────────────
 
     @Test
-    void permissionsOfRetornaListaVaciaSiAuthenticationEsNull() {
+    void permissionsOfReturnsListEmptyIfAuthenticationIsNull() {
         assertEquals(List.of(), permissionService.permissionsOf(null));
         verify(permissionRepository, never()).findCodigosByEmail(anyString());
     }
 
     @Test
-    void permissionsOfRetornaListaVaciaSiNoIsAuthenticated() {
+    void permissionsOfReturnsListEmptyIfNotIsAuthenticated() {
         Authentication auth = new UsernamePasswordAuthenticationToken("user@uteq.edu.ec", "pass");
         auth.setAuthenticated(false);
 
@@ -105,7 +105,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    void permissionsOfRetornaListaVaciaForAppUserAnonimo() {
+    void permissionsOfReturnsListEmptyForAppUserAnonymous() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "anonymousUser", null, AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
 
@@ -113,7 +113,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    void permissionsOfDelegaAlRepositorioWithElEmailDelAppUserAuthenticated() {
+    void permissionsOfDelegatesToRepositoryWithEmailOfAppUserAuthenticated() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "docente@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_DOCENTE"));
         when(permissionRepository.findCodigosByEmail("docente@uteq.edu.ec"))
@@ -125,13 +125,13 @@ class PermissionServiceTest {
     // ── isOwnTeacher ──────────────────────────────────────────────────────
 
     @Test
-    void isOwnTeacherRetornaFalseSiAuthenticationEsNull() {
+    void isOwnTeacherReturnsFalseIfAuthenticationIsNull() {
         assertFalse(permissionService.isOwnTeacher(null, 1L));
         verify(teacherRepository, never()).findById(anyLong());
     }
 
     @Test
-    void isOwnTeacherRetornaFalseSiNoIsAuthenticated() {
+    void isOwnTeacherReturnsFalseIfNotIsAuthenticated() {
         Authentication auth = new UsernamePasswordAuthenticationToken("user@uteq.edu.ec", "pass");
         auth.setAuthenticated(false);
 
@@ -139,7 +139,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    void isOwnTeacherRetornaFalseForAppUserAnonimo() {
+    void isOwnTeacherReturnsFalseForAppUserAnonymous() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "anonymousUser", null, AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
 
@@ -147,7 +147,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    void isOwnTeacherRetornaFalseSiElTeacherNoExists() {
+    void isOwnTeacherReturnsFalseIfTeacherNotExists() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "docente@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_DOCENTE"));
         when(teacherRepository.findById(99L)).thenReturn(Optional.empty());
@@ -156,7 +156,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    void isOwnTeacherRetornaFalseSiElTeacherNoTieneAppUserAsociado() {
+    void isOwnTeacherReturnsFalseIfTeacherNotHasAppUserAssociated() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "docente@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_DOCENTE"));
         Teacher teacher = Teacher.builder().id(7L).appUser(null).build();
@@ -166,7 +166,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    void isOwnTeacherRetornaFalseSiElEmailNoCoincide() {
+    void isOwnTeacherReturnsFalseIfEmailNotMatches() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "docente@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_DOCENTE"));
         AppUser otroAppUser = new AppUser();
@@ -178,7 +178,7 @@ class PermissionServiceTest {
     }
 
     @Test
-    void isOwnTeacherRetornaTrueSiElEmailCoincide() {
+    void isOwnTeacherReturnsTrueIfEmailMatches() {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 "docente@uteq.edu.ec", null, AuthorityUtils.createAuthorityList("ROLE_DOCENTE"));
         AppUser mismoAppUser = new AppUser();

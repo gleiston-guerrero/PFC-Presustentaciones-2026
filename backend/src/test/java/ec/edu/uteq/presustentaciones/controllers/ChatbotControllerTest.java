@@ -31,7 +31,7 @@ class ChatbotControllerTest {
     private ChatbotController controller;
 
     @Test
-    void askChatbotDevuelveLaRespuestaDelServicioEnvueltaWithMessageDeExito() {
+    void askChatbotReturnsResponseOfServiceWrappedWithMessageOfSuccess() {
         ChatRequest request = new ChatRequest();
         request.setMessage("¿Cómo subo mi anteproyecto?");
         ChatResponse esperada = ChatResponse.builder()
@@ -52,7 +52,7 @@ class ChatbotControllerTest {
     }
 
     @Test
-    void askChatbotPropagaLaPreguntaTalCualWithoutReinterpretarla() {
+    void askChatbotPropagatesQuestionSuchWhichWithoutReinterpret() {
         ChatRequest request = new ChatRequest();
         request.setMessage("   ");
         when(chatbotService.processMessage(request))

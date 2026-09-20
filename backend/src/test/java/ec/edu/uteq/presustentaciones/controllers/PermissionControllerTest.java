@@ -51,7 +51,7 @@ class PermissionControllerTest {
     }
 
     @Test
-    void listDevuelveElCatalogOrdenadoByCategoriaYNombre() {
+    void listReturnsCatalogSortedByCategoryAndName() {
         List<Permission> catalog = List.of(permission((short) 1, "SOLICITUDES_REVISAR"));
         when(permissionRepository.findAllByOrderByCategoriaAscNombreAsc()).thenReturn(catalog);
 
@@ -59,7 +59,7 @@ class PermissionControllerTest {
     }
 
     @Test
-    void updatePermissionsOfRoleInexistenteDevuelve404() {
+    void updatePermissionsOfRoleNonexistentReturns404() {
         when(roleAppUserRepository.findById((short) 99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND,
@@ -68,7 +68,7 @@ class PermissionControllerTest {
     }
 
     @Test
-    void updatePermissionsRechazaCodigosQueNoExisten() {
+    void updatePermissionsRejectsCodesThatNotExist() {
         when(roleAppUserRepository.findById((short) 1))
                 .thenReturn(Optional.of(RoleAppUser.builder().id((short) 1).build()));
         // Se piden 2 códigos pero el repositorio solo resuelve 1: hay uno inventado
@@ -84,7 +84,7 @@ class PermissionControllerTest {
     }
 
     @Test
-    void updatePermissionsAceptaCodigosDuplicadosEnLaRequest() {
+    void updatePermissionsAcceptsCodesDuplicatesInRequest() {
         // El frontend puede mandar el mismo código repetido; el count se hace sobre
         // los distintos, así que no debe tratarse como "código inexistente".
         when(roleAppUserRepository.findById((short) 1))
@@ -99,7 +99,7 @@ class PermissionControllerTest {
     }
 
     @Test
-    void noSeCanRemoveLaManagementDePermissionsAlLastRoleQueLaTiene() {
+    void notCanRemoveManagementOfPermissionsToLastRoleThatHas() {
         when(roleAppUserRepository.findById((short) 1))
                 .thenReturn(Optional.of(RoleAppUser.builder().id((short) 1).build()));
         when(permissionRepository.findByCodeIn(List.of("SOLICITUDES_REVISAR")))
@@ -117,7 +117,7 @@ class PermissionControllerTest {
     }
 
     @Test
-    void siOtroRoleConservaLaManagementDePermissionsSiSeCanRemoveDeEste() {
+    void ifOtherRoleKeepsManagementOfPermissionsIfCanRemoveOfThis() {
         when(roleAppUserRepository.findById((short) 2))
                 .thenReturn(Optional.of(RoleAppUser.builder().id((short) 2).build()));
         when(permissionRepository.findByCodeIn(List.of("SOLICITUDES_REVISAR")))
@@ -136,7 +136,7 @@ class PermissionControllerTest {
     }
 
     @Test
-    void updatePermissionsReemplazaElConjuntoCompleteDelRole() {
+    void updatePermissionsReplacesSetCompleteOfRole() {
         when(roleAppUserRepository.findById((short) 1))
                 .thenReturn(Optional.of(RoleAppUser.builder().id((short) 1).build()));
         List<String> codigos = List.of(GESTION, "SOLICITUDES_REVISAR", "ACTAS_GESTIONAR");

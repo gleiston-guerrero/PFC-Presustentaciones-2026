@@ -81,7 +81,7 @@ class WalPitrServiceTest {
     // ── estado ───────────────────────────────────────────────────────────────
 
     @Test
-    void statusAdviertePitrNoAvailableSiElArchivadoIsDesactivado() {
+    void statusWarnsPitrNotAvailableIfArchivedIsDisabled() {
         when(jdbc.queryForMap(anyString())).thenReturn(rowArchiver("off"));
 
         StatusWalDTO dto = service.status();
@@ -92,7 +92,7 @@ class WalPitrServiceTest {
     }
 
     @Test
-    void statusAdviertePitrNoAvailableSiFaltaBasePhysicalAunWithArchivadoActivo() {
+    void statusWarnsPitrNotAvailableIfMissingBasePhysicalStillWithArchivedActive() {
         when(jdbc.queryForMap(anyString())).thenReturn(rowArchiver("on"));
 
         StatusWalDTO dto = service.status();
@@ -104,7 +104,7 @@ class WalPitrServiceTest {
     }
 
     @Test
-    void statusReportaPitrAvailableWithArchivadoActivoYBasePhysical() throws IOException {
+    void statusReportsPitrAvailableWithArchivedActiveAndBasePhysical() throws IOException {
         when(jdbc.queryForMap(anyString())).thenReturn(rowArchiver("on"));
         createBasePhysical("base_20260101_000000");
 
@@ -116,7 +116,7 @@ class WalPitrServiceTest {
     }
 
     @Test
-    void statusNoRompeSiLaConsultaAPostgresFalla() {
+    void statusNotBreaksIfQueryToPostgresFails() {
         when(jdbc.queryForMap(anyString())).thenThrow(new RuntimeException("conexión rechazada"));
 
         StatusWalDTO dto = service.status();
@@ -126,7 +126,7 @@ class WalPitrServiceTest {
     }
 
     @Test
-    void statusCuentaLosSegmentosWalRealesEnElDirectory() throws IOException {
+    void statusAccountSegmentsWalRealInDirectory() throws IOException {
         when(jdbc.queryForMap(anyString())).thenReturn(rowArchiver("on"));
         Files.writeString(walDir.resolve("0000000100000000000000A1"), "segmento-real");
         Files.writeString(walDir.resolve("no-es-un-segmento.txt"), "ignorar");
@@ -139,14 +139,14 @@ class WalPitrServiceTest {
     // ── forzarSwitchWal ──────────────────────────────────────────────────────
 
     @Test
-    void forceSwitchWalDevuelveElNombreDelSegmentoCerrado() {
+    void forceSwitchWalReturnsNameOfSegmentClosed() {
         when(jdbc.queryForObject(anyString(), (Class<String>) any())).thenReturn("000000010000000000000009");
 
         assertEquals("000000010000000000000009", service.forceSwitchWal());
     }
 
     @Test
-    void forceSwitchWalPropagaUnErrorClaroSiPostgresFalla() {
+    void forceSwitchWalPropagatesErrorPlainIfPostgresFails() {
         when(jdbc.queryForObject(anyString(), (Class<String>) any())).thenThrow(new RuntimeException("sin permisos"));
 
         assertThrows(RuntimeException.class, () -> service.forceSwitchWal());
@@ -155,13 +155,13 @@ class WalPitrServiceTest {
     // ── limpiarWal ───────────────────────────────────────────────────────────
 
     @Test
-    void cleanWalDevuelveCeroSiElDirectoryNoExists() {
+    void cleanWalReturnsZeroIfDirectoryNotExists() {
         ReflectionTestUtils.setField(service, "walDir", tempDir.resolve("no-existe").toString());
         assertEquals(0, service.cleanWal(7));
     }
 
     @Test
-    void cleanWalBorraSegmentosMasViejosQueElCorteYConservaLosRecientes() throws IOException {
+    void cleanWalDeletesSegmentsMoreOldThatCutoffAndKeepsRecent() throws IOException {
         Path viejo = walDir.resolve("0000000100000000000000A1");
         Path reciente = walDir.resolve("0000000100000000000000A2");
         Files.writeString(viejo, "x");
@@ -178,7 +178,7 @@ class WalPitrServiceTest {
     }
 
     @Test
-    void cleanWalIgnoraArchivosQueNoSonSegmentosNiBackupNiHistory() throws IOException {
+    void cleanWalIgnoresFilesThatNotAreSegmentsOrBackupOrHistory() throws IOException {
         Path ajeno = walDir.resolve("readme.txt");
         Files.writeString(ajeno, "no tocar");
         Files.setLastModifiedTime(ajeno, java.nio.file.attribute.FileTime.from(
@@ -191,12 +191,12 @@ class WalPitrServiceTest {
     // ── listBases / deleteBase ───────────────────────────────────────────
 
     @Test
-    void listBaseBackupsDevuelveListaVaciaSiNoHayNinguna() {
+    void listBaseBackupsReturnsEmptyListIfNoneExists() {
         assertEquals(List.of(), service.listBaseBackups());
     }
 
     @Test
-    void listBaseBackupsEncuentraLasCarpetasBaseOrdenadasByDateDescendente() throws IOException {
+    void listBaseBackupsFindsFoldersBaseSortedByDateDescending() throws IOException {
         // Las dos fechas se fijan a mano, con un mes de diferencia. Antes solo se
         // fijaba la de la segunda carpeta y la de la primera quedaba en su hora
         // real de creacion: las separaba ~1 ms, y bastaba con que la maquina
@@ -221,17 +221,17 @@ class WalPitrServiceTest {
     }
 
     @Test
-    void deleteBaseRechazaUnNombreInvalido() {
+    void deleteBaseRejectsNameInvalid() {
         assertThrows(IllegalArgumentException.class, () -> service.deleteBase("../etc/passwd"));
     }
 
     @Test
-    void deleteBaseRechazaUnaBaseQueNoExists() {
+    void deleteBaseRejectsBaseThatNotExists() {
         assertThrows(IllegalArgumentException.class, () -> service.deleteBase("base_20260101_000000"));
     }
 
     @Test
-    void deleteBaseBorraLaCarpetaComplete() throws IOException {
+    void deleteBaseDeletesFolderComplete() throws IOException {
         createBasePhysical("base_20260101_000000");
 
         service.deleteBase("base_20260101_000000");
@@ -242,7 +242,7 @@ class WalPitrServiceTest {
     // ── generateBaseFisica: solo la validacion previa al binario externo ──────
 
     @Test
-    void generateBasePhysicalFallaTempranoSiLaUrlDeConnectionNoEsInterpretable() {
+    void generateBasePhysicalFailsEarlyIfUrlOfConnectionNotIsInterpretable() {
         ReflectionTestUtils.setField(service, "datasourceUrl", "no-es-una-url-jdbc");
 
         assertThrows(IllegalStateException.class, () -> service.generateBasePhysical());

@@ -90,7 +90,7 @@ class PasswordRecoveryServiceTest {
     }
 
     @Test
-    void solicitarWithCuentaExistingGuardaUnTokenWithTtlDe30MinutosYEnviaElCorreo() {
+    void requestWithAccountExistingSavesTokenWithTtlOf30MinutesAndSendsEmail() {
         AppUser appUser = new AppUser();
         appUser.setId(7L);
         appUser.setEmail(EMAIL);
@@ -105,7 +105,7 @@ class PasswordRecoveryServiceTest {
     }
 
     @Test
-    void solicitarWithCuentaInexistenteNoEnviaCorreoPeroHaceUnTrabajoEquivalenteEnRedis() {
+    void requestWithAccountNonexistentNotSendsEmailButMakesWorkEquivalentInRedis() {
         when(appUserRepository.findByEmail("nadie@uteq.edu.ec")).thenReturn(Optional.empty());
 
         service.solicitarRecovery("nadie@uteq.edu.ec");
@@ -117,7 +117,7 @@ class PasswordRecoveryServiceTest {
     }
 
     @Test
-    void resetWithTokenValidAplicaLaNuevaContrasenaYRevocaAllLasSesionesWithoutExcepcion() {
+    void resetWithTokenValidAppliesNewPasswordAndRevokesAllSessionsWithoutException() {
         AppUser appUser = new AppUser();
         appUser.setId(7L);
         appUser.setEmail(EMAIL);
@@ -140,7 +140,7 @@ class PasswordRecoveryServiceTest {
     }
 
     @Test
-    void elTokenNoCanUsarseDosVeces() {
+    void tokenNotCanBeUsedTwoTimes() {
         AppUser appUser = new AppUser();
         appUser.setId(7L);
         appUser.setEmail(EMAIL);
@@ -158,7 +158,7 @@ class PasswordRecoveryServiceTest {
     }
 
     @Test
-    void unTokenQueNuncaExistioEsInvalido() {
+    void tokenThatNeverExistedIsInvalid() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> service.reset("token-inventado-por-un-atacante", "NuevaClave#2026"));
         assertFalse(ex.getMessage().contains("token-inventado-por-un-atacante"));
@@ -166,7 +166,7 @@ class PasswordRecoveryServiceTest {
     }
 
     @Test
-    void resetWithNuevaContrasenaQueIncumpleLaPoliticaNoGuardaNadaYPropagaElMessageDelValidador() {
+    void resetWithNewPasswordThatViolatesPolicyNotSavesNothingAndPropagatesMessageOfValidator() {
         AppUser appUser = new AppUser();
         appUser.setId(7L);
         appUser.setEmail(EMAIL);

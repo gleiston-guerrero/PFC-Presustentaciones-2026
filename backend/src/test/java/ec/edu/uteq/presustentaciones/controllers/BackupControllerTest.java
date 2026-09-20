@@ -106,12 +106,12 @@ class BackupControllerTest {
     }
 
     @Test
-    void listWithoutTokenDevuelve401() throws Exception {
+    void listWithoutTokenReturns401() throws Exception {
         mockMvc.perform(get("/api/v1/backups")).andExpect(status().isUnauthorized());
     }
 
     @Test
-    void listRechazaWithoutBackupsGestionar() throws Exception {
+    void listRejectsWithoutBackupsManage() throws Exception {
         authenticateAs("docente@uteq.edu.ec", "DOCENTE", false);
 
         mockMvc.perform(get("/api/v1/backups").header("Authorization", bearer("docente@uteq.edu.ec")))
@@ -121,7 +121,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void listPermiteAAdminWithBackupsGestionar() throws Exception {
+    void listAllowsToAdminWithBackupsManage() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(backupService.list()).thenReturn(List.of(BackupInfoDTO.builder().nombre("full-1.dump").build()));
 
@@ -130,7 +130,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void generateInvocaElServicioWithSourceManualByDefault() throws Exception {
+    void generateInvokesServiceWithSourceManualByDefault() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(backupService.generate(KindBackup.FULL, SourceBackup.MANUAL))
                 .thenReturn(BackupInfoDTO.builder().nombre("full-2.dump").build());
@@ -142,7 +142,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void generateDifferentialInvocaElServicio() throws Exception {
+    void generateDifferentialInvokesService() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(backupService.generateDifferential(SourceBackup.MANUAL))
                 .thenReturn(BackupInfoDTO.builder().nombre("diff-1.dump").build());
@@ -152,7 +152,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void downloadDevuelveElContenidoAsAdjunto() throws Exception {
+    void downloadReturnsContentAsAttachment() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(backupService.read("full-1.dump")).thenReturn(new byte[]{1, 2, 3});
 
@@ -161,7 +161,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void restoreInvocaElServicio() throws Exception {
+    void restoreInvokesService() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(post("/api/v1/backups/full-1.dump/restaurar").header("Authorization", bearer("admin@uteq.edu.ec")))
@@ -171,7 +171,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void deleteInvocaElServicio() throws Exception {
+    void deleteInvokesService() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(delete("/api/v1/backups/full-1.dump").header("Authorization", bearer("admin@uteq.edu.ec")))
@@ -181,7 +181,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void statusDevuelveElSummaryDelPanel() throws Exception {
+    void statusReturnsSummaryOfPanel() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(backupService.status()).thenReturn(new StatusBackupsDTO());
 
@@ -190,7 +190,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void obtainConfigDevuelveLaConfiguracionVigente() throws Exception {
+    void obtainConfigReturnsConfigurationCurrent() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(backupService.configDTO()).thenReturn(new BackupConfigDTO());
 
@@ -199,7 +199,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void updateConfigDelegaEnElServicio() throws Exception {
+    void updateConfigDelegatesInService() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         BackupConfigDTO dto = new BackupConfigDTO();
         dto.setActivo(true);
@@ -220,7 +220,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void applyRetentionDevuelveLosNombresEliminados() throws Exception {
+    void applyRetentionReturnsNamesRemoved() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(backupService.applyRetention()).thenReturn(List.of("full-viejo.dump"));
 
@@ -229,7 +229,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void listDrillsDevuelveLaLog() throws Exception {
+    void listDrillsReturnsLog() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(backupService.drills()).thenReturn(List.of(BackupDrillRestore.builder().build()));
 
@@ -238,7 +238,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void registerDrillDelegaEnElServicioWithLosCuatroCampos() throws Exception {
+    void registerDrillDelegatesInServiceWithFourFields() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         RegisterDrillRestoreRequest req = new RegisterDrillRestoreRequest();
         req.setBackupNombre("full-1.dump");
@@ -256,7 +256,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void statusWalDevuelveElStatusDelArchivado() throws Exception {
+    void statusWalReturnsStatusOfArchived() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(walPitrService.status()).thenReturn(new ec.edu.uteq.presustentaciones.dto.StatusWalDTO());
 
@@ -265,7 +265,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void switchWalCierraElSegmentoActual() throws Exception {
+    void switchWalClosesSegmentCurrent() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(walPitrService.forceSwitchWal()).thenReturn("000000010000000000000005");
 
@@ -274,7 +274,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void cleanWalUsaLaRetentionConfigurada() throws Exception {
+    void cleanWalUsesRetentionConfigured() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         BackupConfig config = BackupConfig.builder().retenerDiasWal((short) 7).build();
         when(backupService.config()).thenReturn(config);
@@ -287,7 +287,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void generateBasePhysicalInvocaElServicio() throws Exception {
+    void generateBasePhysicalInvokesService() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
         when(walPitrService.generateBasePhysical())
                 .thenReturn(ec.edu.uteq.presustentaciones.dto.BasePhysicalDTO.builder().nombre("base-1").build());
@@ -297,7 +297,7 @@ class BackupControllerTest {
     }
 
     @Test
-    void deleteBaseInvocaElServicio() throws Exception {
+    void deleteBaseInvokesService() throws Exception {
         authenticateAs("admin@uteq.edu.ec", "ADMIN", true);
 
         mockMvc.perform(delete("/api/v1/backups/bases/base-1").header("Authorization", bearer("admin@uteq.edu.ec")))

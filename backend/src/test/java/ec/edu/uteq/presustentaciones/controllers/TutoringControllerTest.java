@@ -77,7 +77,7 @@ class TutoringControllerTest {
     // ── resolveAppUserId: propiedad del resource ──────────────────────────────
 
     @Test
-    void unStudentNoCanConsultarLasTutoringsDeOtroAppUserAunqueLoPidaEnLaUrl() {
+    void studentNotCanViewTutoringsOfOtherAppUserAlthoughAsksInUrl() {
         authenticate(50L, "ESTUDIANTE");
         when(tutoringService.obtainTutoringsStudent(50L)).thenReturn(List.of());
 
@@ -89,7 +89,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void unCoordinatorSiCanConsultarLasTutoringsDeOtroAppUser() {
+    void coordinatorIfCanViewTutoringsOfOtherAppUser() {
         authenticate(1L, "COORDINADOR");
         when(tutoringService.obtainTutoringsTeacher(99L)).thenReturn(List.of());
 
@@ -100,7 +100,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void unAdminWithoutAppUserIdExplicitoConsultaLasSuyas() {
+    void adminWithoutAppUserIdExplicitQueryOwn() {
         authenticate(1L, "ADMIN");
         when(tutoringService.obtainSummary(5L, 1L)).thenReturn(mock(TutoringSummaryDTO.class));
 
@@ -109,7 +109,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void sinAutenticacionElEndpointDevuelve400EnVezDeReventar() {
+    void withoutAuthenticationEndpointReturns400InTimeOfBurst() {
         ResponseEntity<?> response = controller.obtainTutoringsStudent(1L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -118,7 +118,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void withAppUserAnonimoElEndpointDevuelve400() {
+    void withAppUserAnonymousEndpointReturns400() {
         SecurityContextHolder.getContext().setAuthentication(
                 new AnonymousAuthenticationToken("key", "anonymousUser",
                         List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
@@ -130,7 +130,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void withTokenDeAppUserYaBorradoElEndpointDevuelve400() {
+    void withTokenOfAppUserAlreadyDeletedEndpointReturns400() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("fantasma@uteq.edu.ec", null, List.of()));
         when(appUserRepository.findByEmail("fantasma@uteq.edu.ec")).thenReturn(Optional.empty());
@@ -144,7 +144,7 @@ class TutoringControllerTest {
     // ── Consultas ─────────────────────────────────────────────────────────────
 
     @Test
-    void obtainPhasesDevuelveLasPhasesDelServicio() {
+    void obtainPhasesReturnsPhasesOfService() {
         authenticate(50L, "ESTUDIANTE");
         List<TutoringPhaseDTO> phases = List.of(mock(TutoringPhaseDTO.class));
         when(tutoringService.obtainPhases(5L, 50L)).thenReturn(phases);
@@ -156,7 +156,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void obtainSummaryTraduceElErrorDelServicioA400() {
+    void obtainSummaryTranslatesErrorOfServiceTo400() {
         authenticate(50L, "ESTUDIANTE");
         when(tutoringService.obtainSummary(5L, 50L))
                 .thenThrow(new RuntimeException("No tienes acceso a esta tutoría"));
@@ -170,7 +170,7 @@ class TutoringControllerTest {
     // ── Operaciones sobre fases ───────────────────────────────────────────────
 
     @Test
-    void createPhaseUsaSiempreElAppUserAuthenticatedNoElDelParametro() {
+    void createPhaseUsesAlwaysAppUserAuthenticatedNotOfParameter() {
         authenticate(60L, "DOCENTE");
         TutoringPhaseDTO phase = mock(TutoringPhaseDTO.class);
         when(tutoringService.createPhaseWithObservation(5L, 60L, "Revisar capítulo 2")).thenReturn(phase);
@@ -183,7 +183,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void uploadPdfCorrectedDelegaWithElStudentAuthenticated() {
+    void uploadPdfCorrectedDelegatesWithStudentAuthenticated() {
         authenticate(50L, "ESTUDIANTE");
         MultipartFile file = new MockMultipartFile("archivo", "cap2.pdf",
                 MediaType.APPLICATION_PDF_VALUE, "contenido".getBytes());
@@ -197,7 +197,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void uploadPdfCorrectedTraduceElErrorDelServicioA400() {
+    void uploadPdfCorrectedTranslatesErrorOfServiceTo400() {
         authenticate(50L, "ESTUDIANTE");
         MultipartFile file = new MockMultipartFile("archivo", "malo.exe",
                 MediaType.APPLICATION_OCTET_STREAM_VALUE, new byte[]{1});
@@ -211,7 +211,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void approvePhaseDelegaWithElTutorAuthenticated() {
+    void approvePhaseDelegatesWithTutorAuthenticated() {
         authenticate(60L, "DOCENTE");
         TutoringPhaseDTO phase = mock(TutoringPhaseDTO.class);
         when(tutoringService.approvePhase(7L, 60L, "Buen avance")).thenReturn(phase);
@@ -223,7 +223,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void sendMessageUsaElSenderAuthenticatedYElCuerpoDelRequest() {
+    void sendMessageUsesSenderAuthenticatedAndBodyOfRequest() {
         authenticate(50L, "ESTUDIANTE");
         NewMessageRequest request = new NewMessageRequest();
         request.setContenido("¿Puede revisar el capítulo 3?");
@@ -240,7 +240,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void markMessagesReadDevuelveOkWithoutCuerpoDeData() {
+    void markMessagesReadReturnsOkWithoutBodyOfData() {
         authenticate(50L, "ESTUDIANTE");
 
         ResponseEntity<?> response = controller.markMessagesRead(7L, null);
@@ -251,7 +251,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void markMessagesReadTraduceElErrorDelServicioA400() {
+    void markMessagesReadTranslatesErrorOfServiceTo400() {
         authenticate(50L, "ESTUDIANTE");
         doThrow(new RuntimeException("Fase inexistente"))
                 .when(tutoringService).markMessagesRead(7L, 50L);
@@ -265,7 +265,7 @@ class TutoringControllerTest {
     // ── PDF ───────────────────────────────────────────────────────────────────
 
     @Test
-    void obtainPdfPhaseDevuelveElResourceWithCabeceraInline() {
+    void obtainPdfPhaseReturnsResourceWithHeaderInline() {
         authenticate(50L, "ESTUDIANTE");
         Resource resource = new ByteArrayResource("%PDF-1.4".getBytes()) {
             @Override public String getFilename() { return "fase-1.pdf"; }
@@ -281,7 +281,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void obtainPdfPhaseTraduceElErrorDelServicioA400() {
+    void obtainPdfPhaseTranslatesErrorOfServiceTo400() {
         authenticate(50L, "ESTUDIANTE");
         when(tutoringService.obtainPdfPhase(7L, 50L))
                 .thenThrow(new RuntimeException("La fase no tiene PDF cargado"));
@@ -295,7 +295,7 @@ class TutoringControllerTest {
     // ── sp_register_tutoring_avance ───────────────────────────────────────────
 
     @Test
-    void registerProgressConvierteElSizeNumericoYLlamaAlProcedimiento() {
+    void registerProgressConvertsSizeNumericAndCallsToProcedure() {
         authenticate(50L, "ESTUDIANTE");
 
         ResponseEntity<?> response = controller.registerProgressSP(5L, Map.of(
@@ -314,7 +314,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void registerProgressWithoutSizeNiSha256PasaNullsAlProcedimiento() {
+    void registerProgressWithoutSizeOrSha256PassesNullsToProcedure() {
         authenticate(50L, "ESTUDIANTE");
 
         ResponseEntity<?> response = controller.registerProgressSP(5L, Map.of(
@@ -325,7 +325,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void registerProgressRechazaElCuerpoIncompletoWithoutLlamarAlProcedimiento() {
+    void registerProgressRejectsBodyIncompleteWithoutCallToProcedure() {
         ResponseEntity<?> response = controller.registerProgressSP(5L, Map.of("numeroFase", 1));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -334,7 +334,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void registerProgressTraduceElErrorDelProcedimientoA400() {
+    void registerProgressTranslatesErrorOfProcedureTo400() {
         authenticate(50L, "ESTUDIANTE");
         doThrow(new RuntimeException("No se puede registrar la fase 3, la fase 2 debe estar APROBADA"))
                 .when(tutoringService).registerProgressSP(5L, 3, "capitulo3.pdf", null, null, 50L);

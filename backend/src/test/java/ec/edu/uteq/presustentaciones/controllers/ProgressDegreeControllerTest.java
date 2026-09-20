@@ -38,7 +38,7 @@ class ProgressDegreeControllerTest {
     }
 
     @Test
-    void myProgressUsaElStudentDelToken() {
+    void myProgressUsesStudentOfToken() {
         when(progressService.obtain(3L)).thenReturn(dto);
 
         ResponseEntity<ProgressDegreeDTO> r = controller.myProgress();
@@ -49,7 +49,7 @@ class ProgressDegreeControllerTest {
     }
 
     @Test
-    void updatePasaElMapaYResuelveElStudent() {
+    void updatePassesMapAndResolvesStudent() {
         UpdateProgressRequest req = new UpdateProgressRequest();
         req.setPasos(Map.of("tema_definido", true));
         when(progressService.update(3L, req.getPasos())).thenReturn(dto);

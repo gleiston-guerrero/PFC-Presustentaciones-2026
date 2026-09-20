@@ -106,7 +106,7 @@ class CatalogControllerTest {
     // ── Consultas de catálogo (abiertas a cualquier autenticado) ──────────────
 
     @Test
-    void listModalitiesDevuelveLoQueEntregaElRepositorio() {
+    void listModalitiesReturnsThatDeliveryRepository() {
         List<ModalityDegree> esperado = List.of(ModalityDegree.builder().id((short) 1).build());
         when(modalityRepo.findAll()).thenReturn(esperado);
 
@@ -114,7 +114,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void listLinesResearchDevuelveLoQueEntregaElRepositorio() {
+    void listLinesResearchReturnsThatDeliveryRepository() {
         List<ResearchLine> esperado = List.of(new ResearchLine());
         when(researchLineRepo.findAll()).thenReturn(esperado);
 
@@ -122,7 +122,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void listSubjectsWithoutLineIdDevuelveAll() {
+    void listSubjectsWithoutLineIdReturnsAll() {
         List<Subject> all = List.of(new Subject());
         when(subjectRepo.findAll()).thenReturn(all);
 
@@ -131,7 +131,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void listSubjectsWithLineIdFiltraByEsaLine() {
+    void listSubjectsWithLineIdFiltersByThatLine() {
         List<Subject> filtradas = List.of(new Subject());
         when(subjectRepo.findByResearchLineId(7)).thenReturn(filtradas);
 
@@ -140,7 +140,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void listAnnouncementsActiveDevuelveSoloLasActive() {
+    void listAnnouncementsActiveReturnsOnlyActive() {
         List<AnnouncementDegree> active = List.of(AnnouncementDegree.builder().id(1).build());
         when(announcementRepo.findByActiveTrue()).thenReturn(active);
 
@@ -148,7 +148,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void announcementActiveDevuelveLaAnnouncementCuandoExists() {
+    void announcementActiveReturnsAnnouncementWhenExists() {
         AnnouncementDegree active = AnnouncementDegree.builder().id(1).code("2026-1").build();
         when(announcementRepo.findFirstByActiveTrue()).thenReturn(Optional.of(active));
 
@@ -156,7 +156,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void announcementActiveDevuelve200WithMessageCuandoNoHayNinguna() {
+    void announcementActiveReturns200WithMessageWhenNoneExists() {
         when(announcementRepo.findFirstByActiveTrue()).thenReturn(Optional.empty());
 
         ResponseEntity<?> response = controller.announcementActive();
@@ -166,7 +166,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void listProgramsYPeriodsDeleganEnSusRepositorios() {
+    void listProgramsAndPeriodsDelegateInRepositories() {
         when(programRepo.findAll()).thenReturn(List.of(Program.builder().id(1).build()));
         when(periodAcademicRepo.findAll()).thenReturn(List.of(PeriodAcademic.builder().id(1).build()));
 
@@ -175,7 +175,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void listFacultiesDelegaEnElRepositorio() {
+    void listFacultiesDelegatesInRepository() {
         when(facultyRepo.findAll()).thenReturn(List.of(Faculty.builder().id(1).build()));
 
         assertEquals(1, controller.listFaculties().getBody().size());
@@ -184,7 +184,7 @@ class CatalogControllerTest {
     // ── Faculties ────────────────────────────────────────────────────────────
 
     @Test
-    void createFacultyNormalizaElCodeAMayusculasYLoGuarda() {
+    void createFacultyNormalizesCodeToUppercaseAndSaves() {
         when(facultyRepo.findByCode("FCI")).thenReturn(Optional.empty());
         when(facultyRepo.save(any(Faculty.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -198,7 +198,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void createFacultyRechazaCodeONombreVacios() {
+    void createFacultyRejectsCodeOrNameEmpty() {
         ResponseEntity<?> sinCode = controller.createFaculty(facultyReq("   ", "Ciencias"));
         ResponseEntity<?> sinNombre = controller.createFaculty(facultyReq("FCI", null));
 
@@ -209,7 +209,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void createFacultyRechazaCodeDuplicado() {
+    void createFacultyRejectsCodeDuplicate() {
         when(facultyRepo.findByCode("FCI")).thenReturn(Optional.of(Faculty.builder().id(1).build()));
 
         ResponseEntity<?> response = controller.createFaculty(facultyReq("FCI", "Ciencias"));
@@ -220,7 +220,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updateFacultyCambiaElNombre() {
+    void updateFacultyChangesName() {
         Faculty existing = Faculty.builder().id(1).code("FCI").nombre("Antiguo").build();
         when(facultyRepo.findById(1)).thenReturn(Optional.of(existing));
         when(facultyRepo.save(existing)).thenReturn(existing);
@@ -232,7 +232,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updateFacultyInexistenteDevuelve404() {
+    void updateFacultyNonexistentReturns404() {
         when(facultyRepo.findById(99)).thenReturn(Optional.empty());
 
         assertEquals(HttpStatus.NOT_FOUND,
@@ -240,7 +240,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updateFacultyRechazaNombreEmpty() {
+    void updateFacultyRejectsNameEmpty() {
         when(facultyRepo.findById(1)).thenReturn(Optional.of(Faculty.builder().id(1).build()));
 
         ResponseEntity<?> response = controller.updateFaculty(1, facultyReq(null, "   "));
@@ -251,7 +251,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void deleteFacultyDevuelve204CuandoExists() {
+    void deleteFacultyReturns204WhenExists() {
         when(facultyRepo.existsById(1)).thenReturn(true);
 
         assertEquals(HttpStatus.NO_CONTENT, controller.deleteFaculty(1).getStatusCode());
@@ -259,7 +259,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void deleteFacultyInexistenteDevuelve404() {
+    void deleteFacultyNonexistentReturns404() {
         when(facultyRepo.existsById(99)).thenReturn(false);
 
         assertEquals(HttpStatus.NOT_FOUND, controller.deleteFaculty(99).getStatusCode());
@@ -267,7 +267,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void deleteFacultyWithProgramsAsociadasDevuelveErrorLegible() {
+    void deleteFacultyWithProgramsAssociatedReturnsErrorReadable() {
         when(facultyRepo.existsById(1)).thenReturn(true);
         doThrow(new DataIntegrityViolationException("FK")).when(catalogAdminService).deleteFaculty(1);
 
@@ -280,7 +280,7 @@ class CatalogControllerTest {
     // ── Programs ──────────────────────────────────────────────────────────────
 
     @Test
-    void createProgramGuardaWithLaFacultyResuelta() {
+    void createProgramSavesWithFacultyResolved() {
         Faculty faculty = Faculty.builder().id(2).build();
         when(programRepo.findByCode("SW")).thenReturn(Optional.empty());
         when(facultyRepo.findById(2)).thenReturn(Optional.of(faculty));
@@ -296,7 +296,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void createProgramRechazaCamposObligatoriosFaltantes() {
+    void createProgramRejectsFieldsRequiredMissing() {
         ResponseEntity<?> sinFaculty = controller.createProgram(programReq("SW", "Software", null, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, sinFaculty.getStatusCode());
@@ -305,7 +305,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void createProgramRechazaCodeDuplicado() {
+    void createProgramRejectsCodeDuplicate() {
         when(programRepo.findByCode("SW")).thenReturn(Optional.of(Program.builder().id(1).build()));
 
         ResponseEntity<?> response = controller.createProgram(programReq("SW", "Software", 2, null));
@@ -315,7 +315,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void createProgramWithFacultyInexistenteEsRechazada() {
+    void createProgramWithFacultyNonexistentIsRejected() {
         when(programRepo.findByCode("SW")).thenReturn(Optional.empty());
         when(facultyRepo.findById(99)).thenReturn(Optional.empty());
 
@@ -327,7 +327,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updateProgramCambiaNombreModalityYFaculty() {
+    void updateProgramChangesNameModalityAndFaculty() {
         Program existing = Program.builder().id(1).nombre("Antiguo").build();
         Faculty nuevaFaculty = Faculty.builder().id(3).build();
         when(programRepo.findById(1)).thenReturn(Optional.of(existing));
@@ -343,7 +343,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updateProgramWithoutModalityNiFacultyConservaLosValoresPrevios() {
+    void updateProgramWithoutModalityOrFacultyKeepsValuesPrevious() {
         Faculty facultyPrevia = Faculty.builder().id(1).build();
         Program existing = Program.builder().id(1).nombre("Antiguo")
                 .modalityEstudio("PRESENCIAL").faculty(facultyPrevia).build();
@@ -358,7 +358,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updateProgramWithFacultyInexistenteEsRechazada() {
+    void updateProgramWithFacultyNonexistentIsRejected() {
         when(programRepo.findById(1)).thenReturn(Optional.of(Program.builder().id(1).build()));
         when(facultyRepo.findById(99)).thenReturn(Optional.empty());
 
@@ -370,7 +370,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updateProgramInexistenteDevuelve404YNombreEmptyEsRechazado() {
+    void updateProgramNonexistentReturns404AndNameEmptyIsRejected() {
         when(programRepo.findById(99)).thenReturn(Optional.empty());
         assertEquals(HttpStatus.NOT_FOUND,
                 controller.updateProgram(99, programReq(null, "X", null, null)).getStatusCode());
@@ -382,7 +382,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void deleteProgramCubreExitoNoEncontradaEIntegrity() {
+    void deleteProgramCoversSuccessNotFoundAndIntegrity() {
         when(programRepo.existsById(1)).thenReturn(true);
         assertEquals(HttpStatus.NO_CONTENT, controller.deleteProgram(1).getStatusCode());
 
@@ -399,7 +399,7 @@ class CatalogControllerTest {
     // ── Modalities ───────────────────────────────────────────────────────────
 
     @Test
-    void createModalityReemplazaEspaciosByGuionBajoEnElCode() {
+    void createModalityReplacesSpacesByHyphenUnderInCode() {
         when(modalityRepo.findByCode("PROYECTO_DE_TITULACION")).thenReturn(Optional.empty());
         when(modalityRepo.save(any(ModalityDegree.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -411,7 +411,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void createModalityRechazaVaciosYDuplicados() {
+    void createModalityRejectsEmptyAndDuplicates() {
         ResponseEntity<?> vacia = controller.createModality(modalityReq(null, "Proyecto"));
         assertEquals(HttpStatus.BAD_REQUEST, vacia.getStatusCode());
 
@@ -422,7 +422,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updateModalityCubreExitoNoEncontradaYNombreEmpty() {
+    void updateModalityCoversSuccessNotFoundAndNameEmpty() {
         ModalityDegree existing = ModalityDegree.builder().id((short) 1).nombre("Antiguo").build();
         when(modalityRepo.findById((short) 1)).thenReturn(Optional.of(existing));
         when(modalityRepo.save(existing)).thenReturn(existing);
@@ -439,7 +439,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void deleteModalityCubreExitoNoEncontradaEIntegrity() {
+    void deleteModalityCoversSuccessNotFoundAndIntegrity() {
         when(modalityRepo.existsById((short) 1)).thenReturn(true);
         assertEquals(HttpStatus.NO_CONTENT, controller.deleteModality((short) 1).getStatusCode());
 
@@ -456,7 +456,7 @@ class CatalogControllerTest {
     // ── Períodos académicos ───────────────────────────────────────────────────
 
     @Test
-    void createPeriodGuardaWithActivoExplicito() {
+    void createPeriodSavesWithActiveExplicit() {
         LocalDate start = LocalDate.of(2026, 1, 1);
         LocalDate end = LocalDate.of(2026, 6, 30);
         when(periodAcademicRepo.findByCode("2026-1")).thenReturn(Optional.empty());
@@ -472,7 +472,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void createPeriodWithActivoNuloLoGuardaAsInactivo() {
+    void createPeriodWithActiveNullSavesAsInactive() {
         when(periodAcademicRepo.findByCode("2026-2")).thenReturn(Optional.empty());
         when(periodAcademicRepo.save(any(PeriodAcademic.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -483,7 +483,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void createPeriodRechazaCamposFaltantesFechasInvalidasYDuplicados() {
+    void createPeriodRejectsFieldsMissingDatesInvalidAndDuplicates() {
         ResponseEntity<?> sinFechas = controller.createPeriod(periodReq("2026-1", "Primer", null, null, null));
         assertEquals(HttpStatus.BAD_REQUEST, sinFechas.getStatusCode());
         assertTrue(errorOf(sinFechas).contains("obligatorios"));
@@ -503,7 +503,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updatePeriodWithoutFechasNuevasConservaLasExistentes() {
+    void updatePeriodWithoutDatesNewKeepsExisting() {
         PeriodAcademic existing = PeriodAcademic.builder().id(1).nombre("Antiguo")
                 .dateStart(LocalDate.of(2026, 1, 1)).dateEnd(LocalDate.of(2026, 6, 30))
                 .activo(false).build();
@@ -521,7 +521,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updatePeriodWithRangeDeFechasInvalidoEsRechazado() {
+    void updatePeriodWithRangeOfDatesInvalidIsRejected() {
         PeriodAcademic existing = PeriodAcademic.builder().id(1)
                 .dateStart(LocalDate.of(2026, 1, 1)).dateEnd(LocalDate.of(2026, 6, 30)).build();
         when(periodAcademicRepo.findById(1)).thenReturn(Optional.of(existing));
@@ -535,7 +535,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void updatePeriodInexistenteDevuelve404YNombreEmptyEsRechazado() {
+    void updatePeriodNonexistentReturns404AndNameEmptyIsRejected() {
         when(periodAcademicRepo.findById(99)).thenReturn(Optional.empty());
         assertEquals(HttpStatus.NOT_FOUND,
                 controller.updatePeriod(99, periodReq(null, "X", null, null, null)).getStatusCode());
@@ -546,7 +546,7 @@ class CatalogControllerTest {
     }
 
     @Test
-    void deletePeriodCubreExitoNoEncontradoEIntegrity() {
+    void deletePeriodCoversSuccessNotFoundAndIntegrity() {
         when(periodAcademicRepo.existsById(1)).thenReturn(true);
         assertEquals(HttpStatus.NO_CONTENT, controller.deletePeriod(1).getStatusCode());
 
