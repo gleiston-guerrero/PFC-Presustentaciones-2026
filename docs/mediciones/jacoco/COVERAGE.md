@@ -5,7 +5,7 @@ conviviendo en los documentos vigentes tres cifras de cobertura distintas (82,10
 conteos de pruebas distintos (559 / 801 / 804). Ninguna era inventada — cada una era la cifra real de
 *alguna* corrida — pero publicadas a la vez son una contradicción, y es responsabilidad del equipo que
 el informe hable con una sola voz. Se corrió de nuevo desde cero (`cd backend && ./mvnw clean test`, una
-sola sesión, Postgres/Redis reales en Docker): **804/806 tests, 0 fallos, 0 errores — 82,01 % líneas
+sola sesión, Postgres/Redis reales en Docker): **809 tests, 0 fallos, 0 errores — 82,01 % líneas
 (4022/4904) / 73,49 % ramas (1483/2018)**, `jacoco:check` en verde. Reporte crudo versionado en
 [`2026-09-19-cierre-definitivo/`](2026-09-19-cierre-definitivo/). Esa es **la única cifra que se publica
 ahora** en el informe, el README y el SRS. La diferencia con el 82,03 % del 17 y 18 de septiembre son 4

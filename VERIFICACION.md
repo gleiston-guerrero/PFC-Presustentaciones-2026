@@ -28,7 +28,7 @@ que comprueba que cada bloque marcado `<!-- ev1:run -->` reproduce literalmente 
 | # | Estado | Qué se corrió hoy y qué dio |
 |---|---|---|
 | P1 | 🟡 Parcial | **Cifra de cierre (ronda del 18-sep):** `n=15 media=52.83 DE=12.06 IC95=[46.16,59.51]` — reproduce exacto desde el CSV sellado por un tercero. La ronda en papel (`n=4 media=48.75`) queda como registro histórico. Abierto: α = 0,599 y el origen de las 11 hojas retractadas |
-| P2 | ✅ Cumple | `./mvnw clean test`: **806 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,01 %** (4022/4904), BRANCH **73,49 %** (1483/2018) — corrida de cierre del 2026-09-19 |
+| P2 | ✅ Cumple | `./mvnw clean test`: **809 pruebas, 0 fallos** (todas las anotadas se ejecutan), `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,01 %** (4022/4904), BRANCH **73,49 %** (1483/2018) — corrida de cierre, regenerada el 2026-09-20 |
 | P3 | ✅ Cumple | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, 0 errores**, `doclint` activo. Escáner propio: 777/778 (**99,9 %**). `@param` tautológicos: **35,2 % → 0,0 %**. Avisos con el tope levantado: **682 → 170**, y los 170 restantes son un artefacto de que javadoc no ve los constructores que genera Lombok (162 de 163 clases lo confirman) — ver la sección P3 |
 | P4 | ✅ Cumple | Renombrado completado: **0,0 %** de tipos y **0,2 %** de métodos sobre el universo completo de 1838 (antes 35,7 % y 39,1 %); 1,5 %/3,4 % bajo la definición más amplia. **Nombres de `@Test`: 0 de 809 con palabras en español** (eran 789; ver la sección P4) |
 | P5 | ✅ Cumple | 6 corridas Lighthouse versionadas en `prod-runs/`; URL pública en la primera pantalla del README |
@@ -227,6 +227,35 @@ falso — el commit que la guía revisó (`f3d1ff4`, 13-sep) es anterior al comm
 (`2b9ba89`, 15-sep), verificado con `git merge-base --is-ancestor`. Corregido en el informe y en
 `OBSERVACIONES.md` (OBS-28).
 
+### Revisión final del 2026-09-19: 809 pruebas anotadas, 806 ejecutadas
+
+**Lo que se señaló:** *«Explicar la brecha entre los 809 `@Test` que cuenta el AST y las 806 pruebas de la
+corrida de cierre.»*
+
+**Verificado: no era un desajuste de conteo, era un defecto.** Comparando, clase por clase, los métodos
+`@Test` del código fuente con los casos que Surefire ejecutó, faltaban exactamente tres, los tres en
+`PasswordPolicyValidatorTest`: estaban dentro de una clase **`static` anidada sin `@Nested`**
+(`RegisterIntegrationTest`). JUnit 5 no descubre una clase estática anidada y Surefire excluye por defecto las
+clases internas, de modo que esas pruebas **existían, contaban como pruebas del proyecto y no se habían
+ejecutado nunca**: son las que comprueban `POST /api/v1/auth/register` con la política de contraseñas REAL
+activa (contraseña común → 400, contraseña corta → 400, contraseña válida → 201). Un conteo que incluye
+pruebas que no corren es una cifra que miente, aunque nadie la hubiera inventado.
+
+**Qué se hizo:**
+
+- Las tres pasaron a su propio archivo, `RegisterPasswordPolicyIntegrationTest`, y **ahora se ejecutan**:
+  **806 → 809 pruebas, 0 fallos, 0 errores**. Se corrió la suite completa contra PostgreSQL y Redis reales.
+- Como nunca se habían ejecutado, no había garantía de que **pudieran** fallar. Se comprobó por mutación: al
+  desactivar en `PasswordPolicyValidator` el rechazo de contraseñas comunes, la primera de las tres se cae.
+- **La cobertura no se movió** (LINE 4022/4904, BRANCH 1483/2018): el endpoint de registro ya lo ejercitaban otras
+  clases. Cambia el conteo de pruebas, y por eso se republicó la corrida canónica y todo lugar que decía 806.
+- `scripts/p2-pruebas-ejecutadas.py`, dentro de `make verify`, comprueba dos cosas: sin compilar, que ninguna
+  clase estática anidada contenga `@Test` sin `@Nested`; y, tras la suite, que **cada método anotado aparezca entre
+  los casos que Surefire ejecutó** (hoy 809 y 809). Se probó por mutación: reintroducir una clase estática con
+  un `@Test` hace salir 1.
+
+---
+
 ---
 
 ## P3 — Javadoc (peso 1,4)
@@ -294,7 +323,7 @@ $ cd backend && ./mvnw -q javadoc:javadoc
    `backend/src/main/java`: **200 bloques nuevos en 89 archivos**. Resultado bajo la metodología amplia
    del ing (métodos + constructores + interfaces): **95.2% (731/768)**, arriba del 90%
    (constructores 100%, interfaces 87.2%, métodos concretos 100%). Verificado que compila,
-   `mvn javadoc:javadoc` sigue en 0 errores con doclint activo, y los 806 tests siguen en verde.
+   `mvn javadoc:javadoc` sigue en 0 errores con doclint activo, y los 806 tests de entonces (2026-09-19) siguen en verde.
    El sub-hallazgo "164 comentarios son solo etiquetas" no se pudo reproducir con estas herramientas —
    no descartado, no verificado.
 
@@ -639,7 +668,7 @@ corregirlo el endpoint paginado de auditoría devolvía 400.
 ```bash
 python scripts/p4-nombres-espanol.py --bytecode   # la medicion
 python scripts/p4-contrato-json.py                # que el contrato sigue intacto
-cd backend && ./mvnw clean test                   # 806/806
+cd backend && ./mvnw clean test                   # 809/809
 cd backend && ./mvnw javadoc:javadoc              # 0 errores, doclint activo
 ```
 
@@ -1303,9 +1332,9 @@ reales que llevaban ahí desde antes:
 | Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
 | Bloques de este archivo | `ev1-verificacion.py` | Cada bloque marcado `ev1:run` reproduce su salida; la tabla coincide con el resumen |
 | Titularidad | `ev4-contribuciones.py --check` | Tramo **y** todo el historial: totales, reparto por persona, identidades sin dueño |
-| El propio verificador | `mutaciones-gate.py` | Inyecta 34 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 35 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
 
-**Resultado del arnés: 34 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
+**Resultado del arnés: 35 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
 

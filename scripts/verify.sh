@@ -147,6 +147,13 @@ assert a == b, 'la corrida de ahora no coincide con la cifra publicada'
     fail "P2: la suite de pruebas fallo -- ver $TMPV/verify-test.log"
   fi
 fi
+# La revision final contrasto los 809 @Test del AST con las 806 pruebas de la corrida: tres estaban en
+# una clase static anidada sin @Nested, que JUnit no descubre. Toda prueba anotada tiene que correr.
+if PYTHONIOENCODING=utf-8 python scripts/p2-pruebas-ejecutadas.py; then
+  ok "P2: toda prueba anotada @Test se ejecuta (y ninguna clase estatica anidada las esconde)"
+else
+  fail "P2: hay pruebas anotadas @Test que la suite no ejecuta -- ver arriba"
+fi
 warn "P2: ~2.4 de los 3.49 puntos de margen en ramas vienen de equals/hashCode de Lombok en security/dto/* (fuera de la exclusion de JaCoCo)"
 echo
 
@@ -340,7 +347,7 @@ if [ "$RAPIDO" = "1" ]; then
 elif [ ! -s "$NB_JSON" ]; then
   fail "EV-2: sin la salida del cuaderno no se puede correr el arnes de mutaciones"
 else
-  # El verificador se prueba a si mismo: inyecta defectos (34 hoy) y exige que cada uno
+  # El verificador se prueba a si mismo: inyecta defectos (35 hoy) y exige que cada uno
   # haga salir a algun detector distinto de 0. Restaura byte a byte.
   if PYTHONIOENCODING=utf-8 python scripts/mutaciones-gate.py --nb "$NB_JSON" > "$TMPV/mutaciones.txt" 2>&1; then
     ok "EV-2: $(tail -1 "$TMPV/mutaciones.txt")"

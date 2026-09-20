@@ -357,7 +357,7 @@ completo (las diez preguntas y la fórmula de cálculo) se documenta en el Anexo
 
 \textbf{Cifra de cierre definitiva (2026-09-19, la que aplica para el umbral del 70\,\%), corrida limpia
 de una sola sesión:} \textbf{82.01\,\% de líneas (4,022/4,904) y 73.49\,\% de ramas (1,483/2,018)} a
-nivel global, sobre 806 pruebas automatizadas reales (\texttt{mvn clean test} sobre Postgres/Redis reales
+nivel global, sobre 809 pruebas automatizadas reales (\texttt{mvn clean test} sobre Postgres/Redis reales
 en Docker, 0 fallos, 0 errores, una sola corrida desde cero, sin sesiones acumuladas), recalculado
 directamente desde
 \texttt{docs/mediciones/jacoco/2026-09-19-cierre-definitivo/jacoco.xml} (versionado en el
@@ -445,7 +445,7 @@ fail-closed de RNF-04 cuando Redis no responde). Esa primera pasada dejó 71.90\
 encima del umbral pero al filo para el gusto del equipo, así que se hizo una segunda pasada sobre lo
 que quedaba: \texttt{StatusLiveController} y \texttt{ProposalController} (0\,\% cada uno,
 sin ningún test), y \texttt{EmailService}/\texttt{AuditService} (0\,\% cada uno). Resultado:
-\textbf{82.01\,\% de líneas (4,022/4,904) y 73.49\,\% de ramas (1,483/2,018)} a nivel global (806
+\textbf{82.01\,\% de líneas (4,022/4,904) y 73.49\,\% de ramas (1,483/2,018)} a nivel global (809
 pruebas, 0 fallos).
 
 Una precisión metodológica sobre el alcance de la medición: el \texttt{jacoco-maven-plugin} excluye

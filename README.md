@@ -110,7 +110,7 @@ Ver [`docs/entorno/VIDEO-DEMO-SCRIPT.md`](docs/entorno/VIDEO-DEMO-SCRIPT.md) par
 siguió al grabarlo.
 
 `make all` está verificado con éxito de punta a punta (2026-08-31: 109/109 tests, k6, auditoría,
-trazabilidad y PDF final, exit 0; la suite creció desde entonces a 806 tests, ver
+trazabilidad y PDF final, exit 0; la suite creció desde entonces a 809 tests, ver
 [`COVERAGE.md`](docs/mediciones/jacoco/COVERAGE.md)) — detalle completo de la verificación y de un bug real de migración que encontró en el
 camino en [`docs/entorno/TROUBLESHOOTING.md`](docs/entorno/TROUBLESHOOTING.md).
 

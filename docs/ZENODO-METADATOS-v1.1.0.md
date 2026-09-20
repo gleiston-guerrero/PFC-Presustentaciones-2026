@@ -148,7 +148,7 @@ desplegada con Docker Compose y nginx.</p>
       arnés de 33 mutaciones que inyecta defectos y exige que cada uno sea detectado.</li>
 </ul>
 
-<p><strong>Estado verificado de esta versión:</strong> 806 pruebas automatizadas (0 fallos, 0
+<p><strong>Estado verificado de esta versión:</strong> 809 pruebas automatizadas (0 fallos, 0
 errores); cobertura de 82,01 % de líneas (4022/4904) y 73,49 % de ramas (1483/2018) medida con JaCoCo
 sobre PostgreSQL y Redis reales; informe final de 70 páginas compilado sin errores ni referencias sin
 resolver; integración continua en verde en sus tres trabajos.</p>

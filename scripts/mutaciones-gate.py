@@ -46,6 +46,7 @@ EV1 = ("ev1-verificacion", [PY, "scripts/ev1-verificacion.py", "--rapido"])
 EV4 = ("ev4-contribuciones", [PY, "scripts/ev4-contribuciones.py", "--check"])
 P4T = ("p4-tests-espanol", [PY, "scripts/p4-tests-espanol.py"])
 P4N = ("p4-nombres-espanol", [PY, "scripts/p4-nombres-espanol.py"])
+P2E = ("p2-pruebas-ejecutadas", [PY, "scripts/p2-pruebas-ejecutadas.py"])
 P3 = ("p3-param-tautologicos", [PY, "scripts/p3-param-tautologicos.py"])
 SCHED = "backend/src/main/java/ec/edu/uteq/presustentaciones/repositories/ScheduleRepository.java"
 
@@ -67,8 +68,8 @@ MUTACIONES = [
      "código llega a 82.01", "código llega a 85.01", [CIFRAS], False),
     ("M02", "informe: cobertura de ramas 73.49 -> 78.49", T10,
      "73.49\\,\\% de ramas (1,483/2,018)", "78.49\\,\\% de ramas (1,483/2,018)", [CIFRAS], False),
-    ("M03", "informe: numero de pruebas 806 -> 860", "Informe-Final/secciones/08-diseno-arquitectura.tex",
-     "806 pruebas automatizadas reales", "860 pruebas automatizadas reales", [CIFRAS], False),
+    ("M03", "informe: numero de pruebas 809 -> 860", "Informe-Final/secciones/08-diseno-arquitectura.tex",
+     "809 pruebas automatizadas reales", "860 pruebas automatizadas reales", [CIFRAS], False),
     ("M04", "README: badge de cobertura 82.01 -> 88.01", "README.md",
      "coverage-82.01%25_lines", "coverage-88.01%25_lines", [CIFRAS], False),
     ("M05", "informe: media del SUS 52.83 -> 55.83", T10,
@@ -133,6 +134,10 @@ MUTACIONES = [
     ("M34", "P4: el medidor vuelve a exigir public/private/protected y descarta los @Test", "scripts/p4-rename-scan-fuente.py",
      "    if len(partes) < 2:",
      "    if len(partes) < 2 or not any(m in previo for m in ('public', 'private', 'protected')):", [P4N], False),
+    ("M35", "P2: un @Test escondido en una clase static anidada sin @Nested (JUnit no lo descubre)",
+     "backend/src/test/java/ec/edu/uteq/presustentaciones/security/PasswordPolicyValidatorTest.java",
+     "class PasswordPolicyValidatorTest {" + chr(10),
+     "class PasswordPolicyValidatorTest {" + chr(10) + "    static class Oculta { @Test void neverRuns() { } }" + chr(10), [P2E], False),
     ("M22", "se retira el @PreAuthorize de un endpoint de escritura (POST)", CTRL,
      '    @PreAuthorize("' + PERM + '")\n    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")',
      '    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")', [AUTZ], False),
@@ -163,7 +168,7 @@ def main():
     solo = set(args[args.index("--solo") + 1].split(",")) if "--solo" in args else None
 
     print("Linea base: los detectores tienen que pasar SIN mutar")
-    for d in (CIFRAS, DOC, AUTZ, SPEL, P3, P4T, P4N, EV1, EV4, ETIQ):
+    for d in (CIFRAS, DOC, AUTZ, SPEL, P3, P4T, P4N, P2E, EV1, EV4, ETIQ):
         rc = correr(d, nb)
         print(f"  [{'OK  ' if rc == 0 else 'FAIL'}] {d[0]}")
         if rc != 0 and d is not ETIQ:

@@ -41,9 +41,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * RNF-06: longitud mínima de 8 y rechazo de contraseñas comunes
  * ({@code backend/src/main/resources/security/common-passwords.txt}). Casos de unidad sobre
  * {@link PasswordPolicyValidator} directamente (sin contexto de Spring, la lista se carga del
- * classpath real) más un caso de integración sobre {@code POST /api/v1/auth/register}, con la
- * política REAL activa -- a diferencia de {@code AuthControllerIntegrationTest}, que la
- * mockea a propósito para no acoplar sus fixtures a esta lista.
+ * classpath real) y el caso de integración sobre {@code POST /api/v1/auth/register} con la política REAL activa
+ * vive en {@link RegisterPasswordPolicyIntegrationTest}.
  */
 class PasswordPolicyValidatorTest {
 
@@ -83,91 +82,5 @@ class PasswordPolicyValidatorTest {
         assertFalse(validador.meets("corto1"));
         assertFalse(validador.meets("password123"));
         assertTrue(validador.meets("Zk4#pQ8w"));
-    }
-
-    // ── Caso de integración: POST /api/v1/auth/register con la política REAL activa ────────
-
-    @WebMvcTest(controllers = {AuthController.class, AppUserController.class})
-    @Import({SecurityConfig.class, PasswordPolicyValidator.class})
-    static class RegisterIntegrationTest {
-
-        @Autowired
-        private MockMvc mockMvc;
-
-        @Autowired
-        private ObjectMapper objectMapper;
-
-        @MockBean private AuthenticationManager authenticationManager;
-        @MockBean private AppUserRepository appUserRepository;
-        @MockBean private PasswordEncoder passwordEncoder;
-        @MockBean private JwtTokenProvider jwtTokenProvider;
-        @MockBean private UserDetailsService userDetailsService;
-        @MockBean private ec.edu.uteq.presustentaciones.security.RateLimiterService rateLimiterService;
-        @MockBean private ec.edu.uteq.presustentaciones.security.PasswordRecoveryService passwordRecoveryService;
-        @MockBean private ec.edu.uteq.presustentaciones.services.ErasureDataService erasureDataService;
-        @MockBean private IAppUserService appUserService;
-        @MockBean private JdbcTemplate jdbcTemplate;
-        @MockBean private RoleAppUserRepository roleAppUserRepository;
-        @MockBean(name = "permissionService") private PermissionService permissionService;
-
-        private void authenticateAsAdmin() {
-            String token = "adminToken";
-            UserDetails adminDetails = new User("admin@uteq.edu.ec", "x",
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
-            when(jwtTokenProvider.validateToken(token)).thenReturn(true);
-            when(jwtTokenProvider.getUsernameFromToken(token)).thenReturn("admin@uteq.edu.ec");
-            when(userDetailsService.loadUserByUsername("admin@uteq.edu.ec")).thenReturn(adminDetails);
-            when(permissionService.hasPermission(any(), any())).thenReturn(true);
-        }
-
-        @Test
-        void registerWithPasswordOfListOfCommonReturns400WithoutCreateAppUser() throws Exception {
-            authenticateAsAdmin();
-            String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
-                    "\"password\":\"password123\",\"rol\":\"ESTUDIANTE\"}"; // esta en common-passwords.txt
-
-            mockMvc.perform(post("/api/v1/auth/register")
-                            .header("Authorization", "Bearer adminToken")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(body))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("común")));
-
-            verify(appUserService, never()).create(any());
-        }
-
-        @Test
-        void registerWithPasswordShortReturns400ByBeanValidationBeforeOfReachToValidator() throws Exception {
-            authenticateAsAdmin();
-            String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
-                    "\"password\":\"Ab1cd2f\",\"rol\":\"ESTUDIANTE\"}"; // 7 caracteres
-
-            mockMvc.perform(post("/api/v1/auth/register")
-                            .header("Authorization", "Bearer adminToken")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(body))
-                    .andExpect(status().isBadRequest());
-
-            verify(appUserService, never()).create(any());
-        }
-
-        @Test
-        void registerWithPasswordThatMeetsPolicyArrivesToAppUserService() throws Exception {
-            authenticateAsAdmin();
-            String body = "{\"nombre\":\"Carlos\",\"apellido\":\"Mendoza\",\"email\":\"cmendoza@uteq.edu.ec\"," +
-                    "\"password\":\"Xq7#mZ9d\",\"rol\":\"ESTUDIANTE\"}"; // 8 caracteres, no comun
-
-            when(appUserService.create(any(AppUser.class))).thenReturn(new AppUser());
-
-            mockMvc.perform(post("/api/v1/auth/register")
-                            .header("Authorization", "Bearer adminToken")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(body))
-                    .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.success").value(true));
-
-            verify(appUserService).create(any(AppUser.class));
-        }
     }
 }

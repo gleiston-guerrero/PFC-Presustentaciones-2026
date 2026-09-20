@@ -23,12 +23,12 @@ que además aplica la regla `jacoco:check` (≥70 % en líneas y en ramas).
 | **Ramas (BRANCH)** | 1483 | 2018 | **73.49 %** |
 
 ```
-Tests run: 806, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 809, Failures: 0, Errors: 0, Skipped: 0
 jacoco:check (jacoco-check) --- All coverage checks have been met.
 BUILD SUCCESS
 ```
 
-- **Pruebas:** 806
+- **Pruebas:** 809
 - **Fallos:** 0
 - **Errores:** 0
 
@@ -64,3 +64,14 @@ desde cero, se unificó todo contra este XML, y se automatizó la comprobación 
 82,03 % / 73,49 % sobre **4897** líneas instrumentadas. Aquí son **4901**: las 4 líneas de diferencia
 son código que agregaron las correcciones posteriores al 18-sep. No cambió el método de medición, y esas
 carpetas se conservan sin borrar.
+
+## Regenerada tras descubrir tres pruebas que nunca se ejecutaban (2026-09-20)
+
+La revision final contrasto los **809** metodos `@Test` que cuenta el AST con las **806** pruebas de esta
+corrida. La brecha eran tres pruebas de `PasswordPolicyValidatorTest` dentro de una clase `static` anidada
+sin `@Nested`: JUnit no la descubre y Surefire excluye las clases internas, asi que **existian y no corrian**.
+Se sacaron a `RegisterPasswordPolicyIntegrationTest` y ahora se ejecutan: **806 -> 809 pruebas, 0 fallos**.
+La cobertura **no se movio** (`LINE` 4022/4904, `BRANCH` 1483/2018: el endpoint de registro ya lo ejercitaban
+otras clases); lo que cambia es el conteo de pruebas, y por eso se republica. Las tres pasan, y se comprobo
+que **pueden fallar**: al desactivar el rechazo de contrasenas comunes en `PasswordPolicyValidator`, la
+primera se cae. `scripts/p2-pruebas-ejecutadas.py` comprueba desde entonces que toda prueba anotada corre.
