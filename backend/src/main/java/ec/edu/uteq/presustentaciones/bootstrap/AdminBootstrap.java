@@ -46,7 +46,7 @@ public class AdminBootstrap implements CommandLineRunner {
 
     /**
      * Run.
-     * @param args args
+     * @param args argumentos de línea de comandos; la aplicación no los utiliza
      */
     @Override
     public void run(String... args) {

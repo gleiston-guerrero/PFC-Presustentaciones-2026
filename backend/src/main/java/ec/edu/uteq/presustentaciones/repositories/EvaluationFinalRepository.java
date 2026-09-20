@@ -17,14 +17,14 @@ import java.util.Optional;
 public interface EvaluationFinalRepository extends JpaRepository<EvaluationFinal, Long> {
     /**
      * Busca el/los registro(s) con submission id.
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el registro si existe, vacío si no
      */
     Optional<EvaluationFinal> findBySubmissionId(Long submissionId);
 
     /**
      * Busca el/los registro(s) con student id.
-     * @param studentId studentId
+     * @param studentId identificador del estudiante
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT ef FROM EvaluationFinal ef WHERE ef.submission.student.id = :studentId")
@@ -32,7 +32,7 @@ public interface EvaluationFinalRepository extends JpaRepository<EvaluationFinal
 
     /**
      * Busca el/los registro(s) con app user id.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT ef FROM EvaluationFinal ef WHERE ef.submission.student.appUser.id = :appUserId")
@@ -40,7 +40,7 @@ public interface EvaluationFinalRepository extends JpaRepository<EvaluationFinal
 
     /**
      * Calculate promedio evaluation sp.
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT * FROM presus.sp_calcular_promedio_evaluacion(:submissionId)", nativeQuery = true)

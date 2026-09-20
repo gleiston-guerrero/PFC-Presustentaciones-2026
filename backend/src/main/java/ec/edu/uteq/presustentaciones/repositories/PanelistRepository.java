@@ -24,9 +24,9 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * a partir del código de role. Se llama una vez por par submission/teacher
      * dentro de una transacción Spring (@Transactional en el servicio) para
      * que el lote completo se confirme o revierta como una unidad.
-     * @param submissionId submission id
-     * @param teacherId teacher id
-     * @param roleCode role code
+     * @param submissionId identificador de la solicitud de pre-sustentación
+     * @param teacherId identificador del docente
+     * @param roleCode código del rol con el que el docente integra el tribunal
      */
     @Procedure(procedureName = "sp_asignar_jurado_masivo")
     void spAssignPanelistBulk(@Param("p_solicitud_id") Long submissionId,
@@ -35,7 +35,7 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
 
     /**
      * Busca el/los registro(s) con submission id.
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE s.id = :submissionId")
@@ -45,11 +45,11 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
      * Invoca sp_validate_conflicto_panelist (FUNCTION scaler, categoría "validaciones
      * cruzadas" del Block A.2): true si el teacher NO tiene otra defensa asignada que se
      * solape con el horario dado.
-     * @param submissionId submission id
-     * @param teacherId teacher id
-     * @param dateStart date start
-     * @param duracionMin duracion min
-     * @param availableInicial available inicial
+     * @param submissionId identificador de la solicitud de pre-sustentación
+     * @param teacherId identificador del docente
+     * @param dateStart fecha y hora de inicio de la programación
+     * @param duracionMin duración de la programación, en minutos
+     * @param availableInicial inicio de la franja de disponibilidad del docente
      * @return el valor de tipo {@code los} correspondiente
      */
     @Procedure(name = "Jurado.validarConflictoJurado")
@@ -61,7 +61,7 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
 
     /**
      * Busca el/los registro(s) con teacher id.
-     * @param teacherId teacherId
+     * @param teacherId identificador del docente
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT j FROM Panelist j JOIN FETCH j.teacher d JOIN FETCH d.appUser u JOIN FETCH j.submission s JOIN FETCH j.rolePanelist r WHERE d.id = :teacherId")
@@ -69,7 +69,7 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
 
     /**
      * Count asignaciones activas by teacher.
-     * @param teacherId teacherId
+     * @param teacherId identificador del docente
      * @return la cantidad de registros
      */
     @Query("SELECT COUNT(j) FROM Panelist j WHERE j.teacher.id = :teacherId AND j.submission.status.code != 'RECHAZADA'")
@@ -77,8 +77,8 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
 
     /**
      * Busca el/los registro(s) con submission id y app user id.
-     * @param submissionId submissionId
-     * @param appUserId appUserId
+     * @param submissionId identificador de la solicitud de pre-sustentación
+     * @param appUserId identificador del usuario del sistema
      * @return el registro si existe, vacío si no
      */
     @Query("SELECT j FROM Panelist j JOIN j.teacher d JOIN d.appUser u " +
@@ -88,9 +88,9 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
 
     /**
      * Sp assign panelist masivo.
-     * @param submissionIds submissionIds
-     * @param teacherIds teacherIds
-     * @param role role
+     * @param submissionIds identificadores de las solicitudes a las que se asigna el tribunal
+     * @param teacherIds identificadores de los docentes que integran el tribunal
+     * @param role código del rol con el que el docente integra el tribunal
      */
     @org.springframework.data.jpa.repository.query.Procedure(procedureName = "presus.sp_asignar_jurado_masivo")
     void spAssignPanelistBulk(
@@ -120,8 +120,8 @@ public interface PanelistRepository extends JpaRepository<Panelist, Long> {
 
     /**
      * Indica si existe algún registro con submission id y teacher app user email.
-     * @param submissionId submissionId
-     * @param email email
+     * @param submissionId identificador de la solicitud de pre-sustentación
+     * @param email correo electrónico del usuario docente
      * @return true si se cumple la condición, false si no
      */
     boolean existsBySubmissionIdAndTeacherAppUserEmail(Long submissionId, String email);

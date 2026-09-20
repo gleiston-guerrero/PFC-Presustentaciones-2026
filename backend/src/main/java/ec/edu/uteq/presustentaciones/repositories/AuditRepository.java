@@ -22,7 +22,7 @@ public interface AuditRepository extends JpaRepository<Audit, Long> {
      * de JPA: no dispara ningún trigger ni evento de aplicación, es un {@code DELETE} directo,
      * y devuelve cuántas filas borró para que {@code CleanupLogScheduler} pueda dejar
      * traza exacta.
-     * @param dateCorte date corte
+     * @param dateCorte fecha límite: se borran los registros anteriores a ella
      * @return el valor numérico calculado
      */
     @Modifying
@@ -31,11 +31,11 @@ public interface AuditRepository extends JpaRepository<Audit, Long> {
 
     /**
      * Search con filtros.
-     * @param tabla tabla
-     * @param accion accion
-     * @param appUserId appUserId
-     * @param texto texto
-     * @param pageable pageable
+     * @param tabla nombre de la tabla auditada; nulo o vacío no filtra
+     * @param accion acción auditada (INSERT, UPDATE o DELETE); nulo o vacío no filtra
+     * @param appUserId identificador del usuario del sistema
+     * @param texto texto libre que se busca en el registro auditado; nulo o vacío no filtra
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT a FROM Audit a WHERE " +

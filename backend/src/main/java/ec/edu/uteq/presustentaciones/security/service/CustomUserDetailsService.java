@@ -26,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     /**
      * Load user by username.
-     * @param username username
+     * @param username nombre con el que la persona inicia sesión
      * @return el UserDetails correspondiente
      * @throws UsernameNotFoundException si ocurre un error real de ejecución
      */

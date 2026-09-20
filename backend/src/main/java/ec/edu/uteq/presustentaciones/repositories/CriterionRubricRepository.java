@@ -10,7 +10,7 @@ import java.util.List;
 public interface CriterionRubricRepository extends JpaRepository<CriterionRubric, Long> {
     /**
      * Busca el/los registro(s) con rubric id o der by o den asc.
-     * @param rubricId rubricId
+     * @param rubricId identificador de la rúbrica
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<CriterionRubric> findByRubricIdOrderByOrdenAsc(Long rubricId);

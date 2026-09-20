@@ -20,7 +20,7 @@ import java.util.Optional;
 public interface MinutesRepository extends JpaRepository<Minutes, Long> {
     /**
      * Busca el/los registro(s) con submission id.
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el registro si existe, vacío si no
      */
     @Query("SELECT a FROM Minutes a JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE s.id = :submissionId")
@@ -28,7 +28,7 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
 
     /**
      * Find all.
-     * @param pageable pageable
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT a FROM Minutes a JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u",
@@ -37,7 +37,7 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
 
     /**
      * Detalle de un minutes con submission + student + appUser + estado en un solo query.
-     * @param id id
+     * @param id identificador del registro
      * @return el registro si existe, vacío si no
      */
     @Query("SELECT a FROM Minutes a JOIN FETCH a.submission s JOIN FETCH s.student e JOIN FETCH e.appUser u JOIN FETCH a.status est WHERE a.id = :id")
@@ -47,8 +47,8 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
      * "Mis actas" del teacher: minutes de pre-sustentaciones en las que el appUser es
      * panelist (members_tribunal) o tutor (tutores). DISTINCT porque un teacher puede
      * ser panelist en más de un role de la misma submission.
-     * @param email email
-     * @param pageable pageable
+     * @param email correo electrónico del usuario cuya participación en el acta se comprueba
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT DISTINCT a FROM Minutes a " +
@@ -62,8 +62,8 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
 
     /**
      * ¿Es el appUser tutor o panelist de la submission de esta minutes? (control de acceso del teacher).
-     * @param minutesId minutesId
-     * @param email email
+     * @param minutesId identificador del acta
+     * @param email correo electrónico del usuario cuya participación en el acta se comprueba
      * @return true si se cumple la condición, false si no
      */
     @Query("SELECT (COUNT(a) > 0) FROM Minutes a JOIN a.submission s WHERE a.id = :minutesId AND (" +
@@ -82,15 +82,13 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
      * {@code :desde IS NULL} dejaba a Postgres sin tipo para el bind ("could not determine
      * data type of parameter") — mismo motivo por el que SubmissionRepository.searchConFiltros
      * usa sentinelas en vez de comprobar null.
-     */
-    /**
-     * Search con filtros.
-     * @param status status
-     * @param program program
-     * @param from from
-     * @param to to
-     * @param q q
-     * @param pageable pageable
+     *
+     * @param status código del estado del acta por el que se filtra; nulo o vacío no filtra
+     * @param program programa académico (carrera) por el que se filtra
+     * @param from inicio del rango de fechas, inclusive
+     * @param to fin del rango de fechas, inclusive
+     * @param q texto libre que se busca en el nombre, el apellido y el título del tema; nulo o vacío no filtra
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT a FROM Minutes a " +
@@ -118,7 +116,7 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
     // ── Agregados para reportes (COUNT en la base, nunca en memoria) ──────────
     /**
      * Cuenta los registros con estado codigo.
-     * @param code code
+     * @param code código de negocio único del registro buscado
      * @return la cantidad de registros
      */
     long countByStatusCode(String code);
@@ -131,8 +129,8 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
 
     /**
      * Count por estado.
-     * @param from from
-     * @param to to
+     * @param from inicio del rango de fechas, inclusive
+     * @param to fin del rango de fechas, inclusive
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT a.status.code AS code, COUNT(a) AS total FROM Minutes a " +
@@ -142,9 +140,9 @@ public interface MinutesRepository extends JpaRepository<Minutes, Long> {
 
     /**
      * Invoca sp_sign_minutes_digital (PROCEDURE). Fase 3 / Criterio P1.
-     * @param minutesId minutes id
-     * @param role role
-     * @param observation observation
+     * @param minutesId identificador del acta
+     * @param role rol con el que firma el acta
+     * @param observation observación que la persona deja junto a su firma
      */
     @Procedure(procedureName = "presus.sp_firmar_acta_digital")
     void signMinutesDigital(@Param("p_acta_id") Long minutesId,

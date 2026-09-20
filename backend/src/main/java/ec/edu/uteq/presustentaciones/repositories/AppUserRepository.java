@@ -20,14 +20,14 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     /**
      * Busca el/los registro(s) con email.
-     * @param email email
+     * @param email dirección de correo electrónico con la que se busca
      * @return el registro si existe, vacío si no
      */
     Optional<AppUser> findByEmail(String email);
 
     /**
      * Indica si existe algún registro con email.
-     * @param email email
+     * @param email dirección de correo electrónico con la que se busca
      * @return true si se cumple la condición, false si no
      */
     boolean existsByEmail(String email);
@@ -40,8 +40,8 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     /**
      * La tabla puede tener decenas de miles de filas (datos de carga k6) — el listado del panel de admin siempre pagina.
-     * @param q q
-     * @param pageable pageable
+     * @param q texto que se busca en el nombre, el apellido y el correo
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT u FROM AppUser u WHERE :q IS NULL OR :q = '' " +
@@ -53,9 +53,9 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     /**
      * Update perfil.
-     * @param id id
-     * @param emailNotifications emailNotifications
-     * @param phone phone
+     * @param id identificador del registro
+     * @param emailNotifications si el usuario quiere recibir notificaciones por correo
+     * @param phone teléfono de contacto del usuario
      * @return la cantidad de registros
      */
     @Modifying
@@ -66,7 +66,7 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     /**
      * Busca el/los registro(s) con role.
-     * @param role role
+     * @param role código del rol, por ejemplo ADMIN o DOCENTE
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<AppUser> findByRole(String role);

@@ -31,7 +31,7 @@ public interface NotificationService {
 
     /**
      * List by app user.
-     * @param appUserId id del appUser
+     * @param appUserId identificador del usuario del sistema
      * @param pageable  configuración de paginación
      * @return página de notifications de ese appUser, más recientes primero
      */
@@ -39,7 +39,7 @@ public interface NotificationService {
 
     /**
      * Cuenta los registros con unread.
-     * @param appUserId id del appUser
+     * @param appUserId identificador del usuario del sistema
      * @return cantidad de notifications no leídas de ese appUser
      */
     long countUnread(Long appUserId);

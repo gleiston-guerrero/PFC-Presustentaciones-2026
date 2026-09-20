@@ -13,7 +13,7 @@ import java.util.List;
 public interface SubjectRepository extends JpaRepository<Subject, Integer> {
     /**
      * Busca el/los registro(s) con line investigacion id.
-     * @param lineId lineId
+     * @param lineId identificador de la línea de investigación
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<Subject> findByResearchLineId(Integer lineId);

@@ -101,7 +101,7 @@ public interface SubmissionService {
 
     /**
      * List by student.
-     * @param studentId id del student
+     * @param studentId identificador del estudiante
      * @return todas las submissions registradas por ese student
      */
     List<Submission> listByStudent(Long studentId);
@@ -147,7 +147,7 @@ public interface SubmissionService {
 
     /**
      * Obtiene el tracking visual de la pre-sustentación.
-     * @param submissionId el ID de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return un DTO con el progress y etapas del process
      */
     ec.edu.uteq.presustentaciones.dto.TrackingDTO obtainTracking(Long submissionId);

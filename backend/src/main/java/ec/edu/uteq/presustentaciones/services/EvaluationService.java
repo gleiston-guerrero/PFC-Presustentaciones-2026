@@ -61,7 +61,7 @@ public interface EvaluationService {
 
     /**
      * List by student.
-     * @param studentId id del student
+     * @param studentId identificador del estudiante
      * @return las evaluations finales de las submissions de ese student
      */
     List<EvaluationFinal> listByStudent(Long studentId);
@@ -75,7 +75,7 @@ public interface EvaluationService {
 
     /**
      * Search by submission.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return la evaluación final de esa submission, si ya fue calificada
      */
     Optional<EvaluationFinal> searchBySubmission(Long submissionId);

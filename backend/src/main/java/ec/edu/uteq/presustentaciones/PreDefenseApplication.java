@@ -31,7 +31,7 @@ public class PreDefenseApplication {
 
     /**
      * Main.
-     * @param args args
+     * @param args argumentos de línea de comandos; la aplicación no los utiliza
      */
     public static void main(String[] args) {
         SpringApplication.run(PreDefenseApplication.class, args);

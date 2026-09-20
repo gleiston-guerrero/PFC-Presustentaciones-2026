@@ -21,12 +21,11 @@ public enum StatusSubmission {
     /** Con nota registrada por el tribunal. */
     CALIFICADA,
     /** Cerrada: el flujo termino y el acta esta firmada. */
-    /** Cerrada: el flujo termino y el acta esta firmada. */
     COMPLETADA;
 
     /**
      * Es suspendible.
-     * @param status status
+     * @param status estado de la solicitud que se evalúa
      * @return true si se cumple la condición, false si no
      */
     public static boolean isSuspendable(StatusSubmission status) {

@@ -40,26 +40,19 @@ public class TopicController {
 
     // ── Catálogo (cualquier appUser con permission ORIENTACION_TEMAS_VER) ────────
 
+    // "Quien puede gestionar el catálogo, puede verlo": la pantalla "Gestionar Temas
+    // Propuestos" necesita list para poder editar, así que ORIENTACION_CATALOGO_GESTIONAR
+    // también autoriza la lectura — de lo contrario ese permission por sí solo es inútil.
     /**
      * Explora el catalogo de topics propuestos con filtros combinables. Si quien consulta es
      * student, el resultado marca ademas cuales tiene ya guardados.
      *
      * @param programId            filtra por program, opcional
-     * @param researchLineId filtra por line de investigacion, opcional
+     * @param researchLineId       filtra por line de investigacion, opcional
      * @param areaId               filtra por area tematica, opcional
      * @param nivelDificultad      filtra por nivel (BASICO, INTERMEDIO, AVANZADO), opcional
      * @return 200 con los topics que cumplen los filtros
-     */
-    // "Quien puede gestionar el catálogo, puede verlo": la pantalla "Gestionar Temas
-    // Propuestos" necesita list para poder editar, así que ORIENTACION_CATALOGO_GESTIONAR
-    // también autoriza la lectura — de lo contrario ese permission por sí solo es inútil.
-    /**
-     * Explorar.
-     * @param programId programId
-     * @param researchLineId researchLineId
-     * @param areaId areaId
-     * @param nivelDificultad nivelDificultad
-     * @return el {@code ResponseEntity<List<TopicPropuestoDTO>>} correspondiente
+
      */
     @GetMapping
     @PreAuthorize("@permissionService.hasPermission(authentication, 'ORIENTACION_TEMAS_VER') " +

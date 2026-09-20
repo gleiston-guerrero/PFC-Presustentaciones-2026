@@ -17,34 +17,34 @@ public interface ReportService {
 
     /**
      * Resumen general del process de pre-sustentaciones (dashboard).
-     * @param from from
-     * @param to to
-     * @param program program
+     * @param from inicio del rango de fechas, inclusive
+     * @param to fin del rango de fechas, inclusive
+     * @param program programa académico (carrera) por el que se filtra
      * @return el valor de tipo {@code ReportSummaryDTO} correspondiente
      */
     ReportSummaryDTO summary(LocalDate from, LocalDate to, String program);
 
     /**
      * Cantidad de submissions/pre-sustentaciones por estado.
-     * @param from from
-     * @param to to
-     * @param program program
+     * @param from inicio del rango de fechas, inclusive
+     * @param to fin del rango de fechas, inclusive
+     * @param program programa académico (carrera) por el que se filtra
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<ReportCountDTO> submissionsByStatus(LocalDate from, LocalDate to, String program);
 
     /**
      * Cantidad de pre-sustentaciones por período académico.
-     * @param from from
-     * @param to to
+     * @param from inicio del rango de fechas, inclusive
+     * @param to fin del rango de fechas, inclusive
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<ReportCountDTO> defensesByPeriod(LocalDate from, LocalDate to);
 
     /**
      * Estado de las minutes: generadas, revisadas, observadas, finalizadas, anuladas, pendientes de firma.
-     * @param from from
-     * @param to to
+     * @param from inicio del rango de fechas, inclusive
+     * @param to fin del rango de fechas, inclusive
      * @return el valor de tipo {@code Long>} correspondiente
      */
     Map<String, Long> summaryMinutes(LocalDate from, LocalDate to);

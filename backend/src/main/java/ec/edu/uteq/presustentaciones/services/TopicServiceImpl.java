@@ -103,7 +103,7 @@ public class TopicServiceImpl implements TopicService {
     /**
      * Guarda un topic propuesto en la lista de favoritos del student.
      *
-     * @param studentId    id del student
+     * @param studentId    identificador del estudiante
      * @param topicProposedId id del topic propuesto a save
      * @throws IllegalStateException   si el student ya había guardado ese topic
      * @throws IllegalArgumentException si el student o el topic no existen
@@ -132,7 +132,7 @@ public class TopicServiceImpl implements TopicService {
     /**
      * Quita un topic de la lista de favoritos del student.
      *
-     * @param studentId    id del student
+     * @param studentId    identificador del estudiante
      * @param topicProposedId id del topic propuesto a remove
      * @throws IllegalArgumentException si el topic no estaba guardado por ese student
      */
@@ -147,7 +147,7 @@ public class TopicServiceImpl implements TopicService {
     }
 
     /**
-     * @param studentId id del student
+     * @param studentId identificador del estudiante
      * @return los topics que ese student tiene guardados, del más reciente al más antiguo
      */
     @Override

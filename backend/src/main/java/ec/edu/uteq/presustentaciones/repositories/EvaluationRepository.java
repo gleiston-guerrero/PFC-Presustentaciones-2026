@@ -17,7 +17,7 @@ import java.util.Optional;
 public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
     /**
      * Busca el/los registro(s) con student id.
-     * @param studentId studentId
+     * @param studentId identificador del estudiante
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT ev FROM Evaluation ev JOIN ev.submission s JOIN s.student e WHERE e.id = :studentId")
@@ -25,7 +25,7 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
 
     /**
      * Busca el/los registro(s) con app user id.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT ev FROM Evaluation ev JOIN ev.submission s JOIN s.student e JOIN e.appUser u WHERE u.id = :appUserId")
@@ -33,7 +33,7 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
 
     /**
      * Busca el/los registro(s) con submission id.
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el registro si existe, vacío si no
      */
     Optional<Evaluation> findBySubmissionId(Long submissionId);
@@ -42,7 +42,7 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
      * Invoca sp_calculate_promedio_evaluation (JPA 2.1 @NamedStoredProcedureQuery declarada
      * en Evaluation.java) -- agrega las notas de evaluations_criterio y persiste
      * nota_final/resultado en esta misma tabla. Fase 3 / Criterio P1.
-     * @param submissionId submission id
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Procedure(name = "Evaluacion.calcularPromedioEvaluacion")

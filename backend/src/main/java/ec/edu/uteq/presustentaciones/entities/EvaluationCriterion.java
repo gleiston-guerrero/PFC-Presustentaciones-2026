@@ -94,7 +94,7 @@ public class EvaluationCriterion {
 
     /**
      * Get observacion por rango.
-     * @param scale scale
+     * @param scale valor de la escala de la rúbrica cuya observación estándar se busca
      * @return el valor encontrado, o null si no existe
      */
     public static String getObservationByRange(int scale) {
@@ -109,7 +109,7 @@ public class EvaluationCriterion {
 
     /**
      * Get rango descripcion.
-     * @param scale scale
+     * @param scale valor de la escala de la rúbrica cuya observación estándar se busca
      * @return el valor encontrado, o null si no existe
      */
     public static String getRangeDescription(int scale) {

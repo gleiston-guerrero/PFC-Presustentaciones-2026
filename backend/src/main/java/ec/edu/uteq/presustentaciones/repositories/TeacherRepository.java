@@ -25,7 +25,7 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 
     /**
      * Busca el/los registro(s) con app user id.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return el registro si existe, vacío si no
      */
     Optional<Teacher> findByAppUserId(Long appUserId);
@@ -36,8 +36,8 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
      * navegador al abrirlo. Búsqueda de texto libre (nombre/apellido/área de especialidad) +
      * paginado, mismo patrón que AppUserRepository.searchPaginado, para alimentar un combobox
      * con typeahead en vez del {@code <select>} nativo.
-     * @param q q
-     * @param pageable pageable
+     * @param q texto que se busca en el nombre, el apellido y el correo del docente
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT d FROM Teacher d JOIN FETCH d.appUser u " +
@@ -68,7 +68,7 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 
     /**
      * Reportes: nombre de un conjunto acotado de teachers (los que participan en el process).
-     * @param ids ids
+     * @param ids identificadores de los docentes cuyo nombre se consulta
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT d.id, u.nombre, u.apellido FROM Teacher d JOIN d.appUser u WHERE d.id IN :ids")

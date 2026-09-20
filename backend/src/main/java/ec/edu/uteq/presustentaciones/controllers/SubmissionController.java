@@ -30,9 +30,9 @@ public class SubmissionController {
 
     /**
      * Construye SubmissionController, inyectando submissionService, appUserRepository, permissionService.
-     * @param submissionService submissionService
-     * @param appUserRepository appUserRepository
-     * @param permissionService permissionService
+     * @param submissionService servicio de negocio de solicitudes de pre-sustentación, inyectado por constructor
+     * @param appUserRepository repositorio de acceso a datos de usuarios, inyectado por constructor
+     * @param permissionService servicio de negocio de permisos, inyectado por constructor
      */
     public SubmissionController(SubmissionService submissionService, AppUserRepository appUserRepository,
                                PermissionService permissionService) {

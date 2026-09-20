@@ -14,37 +14,37 @@ public interface EvaluationCriterionRepository extends JpaRepository<EvaluationC
 
     /**
      * Busca el/los registro(s) con submission id.
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<EvaluationCriterion> findBySubmissionId(Long submissionId);
 
     /**
      * Busca el/los registro(s) con submission id y evaluator id.
-     * @param submissionId submissionId
-     * @param evaluatorId evaluatorId
+     * @param submissionId identificador de la solicitud de pre-sustentación
+     * @param evaluatorId identificador del evaluador asignado a la solicitud
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<EvaluationCriterion> findBySubmissionIdAndEvaluatorId(Long submissionId, Long evaluatorId);
 
     /**
      * Indica si existe algún registro con submission id y evaluator id.
-     * @param submissionId submissionId
-     * @param evaluatorId evaluatorId
+     * @param submissionId identificador de la solicitud de pre-sustentación
+     * @param evaluatorId identificador del evaluador asignado a la solicitud
      * @return true si se cumple la condición, false si no
      */
     boolean existsBySubmissionIdAndEvaluatorId(Long submissionId, Long evaluatorId);
 
     /**
      * Elimina los registros con submission id y evaluator id.
-     * @param submissionId submissionId
-     * @param evaluatorId evaluatorId
+     * @param submissionId identificador de la solicitud de pre-sustentación
+     * @param evaluatorId identificador del evaluador asignado a la solicitud
      */
     void deleteBySubmissionIdAndEvaluatorId(Long submissionId, Long evaluatorId);
 
     /**
      * Promedio de notas de todos los panelists para una submission por criterio
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT ec.criterion.id, AVG(ec.gradeObtenida) FROM EvaluationCriterion ec " +
@@ -53,7 +53,7 @@ public interface EvaluationCriterionRepository extends JpaRepository<EvaluationC
 
     /**
      * Nota total promedio del tribunal: promedio de (suma por panelist) usando dos pasos en Java
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT ec.evaluator.id, SUM(ec.gradeObtenida) " +

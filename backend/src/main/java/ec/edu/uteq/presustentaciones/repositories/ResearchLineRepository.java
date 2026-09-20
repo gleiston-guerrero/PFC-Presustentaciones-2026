@@ -14,13 +14,13 @@ import java.util.Optional;
 public interface ResearchLineRepository extends JpaRepository<ResearchLine, Integer> {
     /**
      * Busca el/los registro(s) con codigo.
-     * @param code code
+     * @param code código de negocio único del registro buscado
      * @return el registro si existe, vacío si no
      */
     Optional<ResearchLine> findByCode(String code);
     /**
      * Busca el/los registro(s) con faculty id.
-     * @param facultyId facultyId
+     * @param facultyId identificador de la facultad
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<ResearchLine> findByFacultyId(Integer facultyId);

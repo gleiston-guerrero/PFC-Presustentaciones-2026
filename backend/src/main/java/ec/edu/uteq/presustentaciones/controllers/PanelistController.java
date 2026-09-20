@@ -29,7 +29,7 @@ public class PanelistController {
 
     /**
      * Construye PanelistController, inyectando panelistService.
-     * @param panelistService panelistService
+     * @param panelistService servicio de negocio de panelistas, inyectado por constructor
      */
     public PanelistController(PanelistService panelistService) {
         this.panelistService = panelistService;

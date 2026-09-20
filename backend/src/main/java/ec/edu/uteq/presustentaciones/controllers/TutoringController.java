@@ -34,8 +34,8 @@ public class TutoringController {
 
     /**
      * Construye TutoringController, inyectando tutoringService, appUserRepository.
-     * @param tutoringService tutoringService
-     * @param appUserRepository appUserRepository
+     * @param tutoringService servicio de negocio de tutorías, inyectado por constructor
+     * @param appUserRepository repositorio de acceso a datos de usuarios, inyectado por constructor
      */
     public TutoringController(TutoringService tutoringService, AppUserRepository appUserRepository) {
         this.tutoringService = tutoringService;

@@ -14,7 +14,7 @@ public interface ProgressStudentRepository extends JpaRepository<ProgressStudent
 
     /**
      * Busca el/los registro(s) con student id.
-     * @param studentId studentId
+     * @param studentId identificador del estudiante
      * @return el registro si existe, vacío si no
      */
     Optional<ProgressStudent> findByStudentId(Long studentId);

@@ -16,7 +16,7 @@ public interface ResourceDegreeRepository extends JpaRepository<ResourceDegree, 
 
     /**
      * List visibles para program.
-     * @param programId programId
+     * @param programId identificador del programa académico (carrera)
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("""

@@ -36,7 +36,7 @@ public interface MinutesService {
     Minutes signMinutes(Long minutesId, String role, String observation);
 
     /** Retorna el path del PDF generado para descarga
-     * @param minutesId id del minutes
+     * @param minutesId identificador del acta
      * @return los bytes del PDF generado para esa minutes
      * @throws RuntimeException si el minutes no existe, o si todavía no tiene PDF generado
      */
@@ -51,14 +51,14 @@ public interface MinutesService {
 
     /**
      * Search by submission.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el minutes de esa submission, si ya fue generada
      */
     Optional<Minutes> searchBySubmission(Long submissionId);
 
     /**
      * Elimina un minutes si el appUser tiene permission.
-     * @param minutesId id del minutes
+     * @param minutesId identificador del acta
      */
     void deleteMinutes(Long minutesId);
 
@@ -67,15 +67,15 @@ public interface MinutesService {
     /**
      * "Mis actas" del teacher: minutes de las pre-sustentaciones en las que es tutor o panelist.
      * @param email email del appUser autenticado
-     * @param pageable pageable
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     Page<MinutesSummaryDTO> listMyMinutes(String email, Pageable pageable);
 
     /**
      * Búsqueda/filtrado administrativo de minutes. Parámetros nulos/vacíos no filtran.
-     * @param status status
-     * @param program program
+     * @param status código del estado del acta por el que se filtra
+     * @param program programa académico (carrera) por el que se filtra
      * @param from fecha minima a incluir, o {@code null} para no acotar
      * @param to fecha maxima a incluir, o {@code null} para no acotar
      * @param q texto libre de busqueda, o {@code null}
@@ -89,7 +89,7 @@ public interface MinutesService {
      * Detalle de un minutes. Aplica control de acceso: ADMIN/COORDINADOR (permission ACTAS_VER),
      * o el student dueño / panelist / tutor de la submission. Lanza excepción si el appUser
      * no participa en esa minutes (previene IDOR/BOLA).
-     * @param minutesId minutes id
+     * @param minutesId identificador del acta
      * @return el valor de tipo {@code MinutesDetailDTO} correspondiente
      */
     MinutesDetailDTO obtainDetail(Long minutesId);
@@ -97,7 +97,7 @@ public interface MinutesService {
     /**
      * History de trazabilidad (timeline) del minutes, más reciente primero. Mismo control
      * de acceso que {@link #obtainDetail(Long)}.
-     * @param minutesId minutes id
+     * @param minutesId identificador del acta
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<HistoryMinutesDTO> obtainHistory(Long minutesId);
@@ -106,7 +106,7 @@ public interface MinutesService {
      * Cambia el estado del minutes (GENERADA -> REVISADA -> FINALIZADA, u OBSERVADA/ANULADA)
      * validando la transición y registrando el cambio en history_estados_minutes con el
      * appUser, su role, el estado anterior/nuevo y el motivo.
-     * @param minutesId            id del minutes
+     * @param minutesId            identificador del acta
      * @param targetStatusCode código del catálogo estados_minutes
      * @param motivo            motivo/observación (obligatorio para OBSERVADA y ANULADA)
      * @return el valor de tipo {@code Minutes} correspondiente

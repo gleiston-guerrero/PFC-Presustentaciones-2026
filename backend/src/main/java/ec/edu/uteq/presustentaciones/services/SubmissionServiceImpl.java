@@ -436,7 +436,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     /**
-     * @param studentId id del student
+     * @param studentId identificador del estudiante
      * @return todas las submissions registradas por ese student
      */
     @Override
@@ -524,7 +524,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     /**
-     * @param submissionId el ID de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return un DTO con el progress y etapas del process
      */
     @Override

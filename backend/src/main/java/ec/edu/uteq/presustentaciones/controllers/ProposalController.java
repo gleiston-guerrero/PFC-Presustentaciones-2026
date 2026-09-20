@@ -31,7 +31,7 @@ public class ProposalController {
 
     /**
      * Construye ProposalController, inyectando s.
-     * @param s s
+     * @param s servicio de negocio de propuestas de tema, inyectado por constructor
      */
     public ProposalController(ProposalService s) {
         this.proposalService = s;

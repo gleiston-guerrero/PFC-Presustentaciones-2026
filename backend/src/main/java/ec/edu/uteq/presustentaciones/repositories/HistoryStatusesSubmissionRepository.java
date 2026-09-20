@@ -13,7 +13,7 @@ import java.util.List;
 public interface HistoryStatusesSubmissionRepository extends JpaRepository<HistoryStatusesSubmission, Long> {
     /**
      * Busca el/los registro(s) con submission id o der by fecha cambio desc.
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<HistoryStatusesSubmission> findBySubmissionIdOrderByDateCambioDesc(Long submissionId);

@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface PeriodAcademicRepository extends JpaRepository<PeriodAcademic, Integer> {
     /**
      * Busca el/los registro(s) con codigo.
-     * @param code code
+     * @param code código de negocio único del registro buscado
      * @return el registro si existe, vacío si no
      */
     Optional<PeriodAcademic> findByCode(String code);

@@ -20,8 +20,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     /** Listado del panel de admin -- 41,000+ filas, siempre pagina. Busca por nombre,
      * apellido, email, expediente o nombre de program.
-     * @param q q
-     * @param pageable pageable
+     * @param q texto que se busca en el nombre, el apellido y el correo del estudiante
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT e FROM Student e JOIN FETCH e.appUser u JOIN FETCH e.programEntidad c " +
@@ -35,7 +35,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     /** Última submission (el "proyecto" vigente) de cada student de la página actual,
      * en un solo query -- evita N+1 al pedir el proyecto por separado por cada fila.
-     * @param ids ids
+     * @param ids identificadores de los estudiantes cuyas solicitudes se consultan
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT DISTINCT ON (s.estudiante_id) s.estudiante_id, s.titulo_tema, s.estado " +
@@ -47,8 +47,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      * Invoca sp_generate_codigo_expediente (FUNCTION scaler, categoría "generación de
      * códigos secuenciales" del Block A.2): usa nextval() sobre una secuencia dedicada,
      * atómico a nivel de motor -- sin condiciones de program entre altas concurrentes.
-     * @param anio anio
-     * @param codeInicial code inicial
+     * @param anio año con el que se numera el expediente
+     * @param codeInicial código con el que arranca la numeración del expediente
      * @return el valor encontrado, o null si no existe
      */
     @Procedure(name = "Estudiante.generarCodigoExpediente")
@@ -56,28 +56,28 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     /**
      * Busca el/los registro(s) con expediente codigo.
-     * @param expedienteCode expedienteCode
+     * @param expedienteCode código del expediente del estudiante
      * @return el registro si existe, vacío si no
      */
     Optional<Student> findByExpedienteCode(String expedienteCode);
     
     /**
      * Busca el/los registro(s) con app user id.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return el registro si existe, vacío si no
      */
     Optional<Student> findByAppUserId(Long appUserId);
     
     /**
      * Busca el/los registro(s) con program.
-     * @param program program
+     * @param program programa académico (carrera) por el que se filtra
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<Student> findByProgram(String program);
     
     /**
      * Busca el/los registro(s) con id with app user.
-     * @param id id
+     * @param id identificador del registro
      * @return el registro si existe, vacío si no
      */
     @Query("SELECT e FROM Student e JOIN FETCH e.appUser WHERE e.id = :id")

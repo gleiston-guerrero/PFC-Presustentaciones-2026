@@ -19,7 +19,7 @@ public interface PanelistService {
     /**
      * Asigna (upsert) un teacher como panelist de una submission con el role indicado.
      *
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @param teacherId   id del teacher a assign
      * @param role         código de role de panelist ({@code PRESIDENTE}, {@code VOCAL_1} o
      *                    {@code VOCAL_2})
@@ -30,7 +30,7 @@ public interface PanelistService {
 
     /**
      * List by submission.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return los panelists asignados a esa submission (0 a 3 registros)
      */
     List<Panelist> listBySubmission(Long submissionId);
@@ -52,7 +52,7 @@ public interface PanelistService {
 
     /**
      * Assign tutor.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @param teacherId   id del teacher que actuará como tutor
      * @return el registro de tutoría creado
      */
@@ -60,7 +60,7 @@ public interface PanelistService {
 
     /**
      * Obtain tutor of submission.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el tutor asignado, si existe
      */
     Optional<Tutor> obtainTutorOfSubmission(Long submissionId);
@@ -77,7 +77,7 @@ public interface PanelistService {
      * Sugiere teachers candidatos a panelist para una submission (excluyendo al tutor asignado y a
      * quienes ya tengan conflicto de horario), sin asignarlos todavía.
      *
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @param cantidad    número máximo de teachers a sugerir
      * @return lista de teachers candidatos, tamaño ≤ {@code cantidad}
      */
@@ -87,7 +87,7 @@ public interface PanelistService {
      * Asigna automáticamente los 3 roles de tribunal (PRESIDENTE, VOCAL_1, VOCAL_2) para una
      * submission, usando la misma lógica de sugerencia que {@link #suggestTeachers}.
      *
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @throws RuntimeException si no hay suficientes teachers disponibles para completar el
      *                          tribunal
      */
@@ -114,21 +114,21 @@ public interface PanelistService {
 
     /**
      * List by teacher.
-     * @param teacherId id del teacher
+     * @param teacherId identificador del docente
      * @return las asignaciones de panelist de ese teacher, en cualquier submission
      */
     List<Panelist> listByTeacher(Long teacherId);
 
     /**
      * List tutorings by teacher.
-     * @param teacherId id del teacher
+     * @param teacherId identificador del docente
      * @return las tutorías activas de ese teacher
      */
     List<Tutor> listTutoringsByTeacher(Long teacherId);
 
     /**
      * Obtain info panelist.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @param appUserId   id del appUser autenticado (se resuelve contra el teacher vinculado)
      * @return la asignación de panelist de ese appUser en esa submission, si existe
      */

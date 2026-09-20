@@ -111,8 +111,8 @@ public class EvaluationPanelistService {
 
     /**
      * Obtain evaluation.
-     * @param submissionId id de la submission
-     * @param panelistId    id del panelist
+     * @param submissionId identificador de la solicitud de pre-sustentación
+     * @param panelistId    identificador del panelista (miembro del tribunal)
      * @return la evaluación de ese panelist para esa submission, o {@code null} si aún no evaluó
      */
     @Transactional(readOnly = true)
@@ -127,7 +127,7 @@ public class EvaluationPanelistService {
 
     /**
      * Obtain panel.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return las evaluations registradas por todos los panelists de esa submission
      */
     @Transactional(readOnly = true)

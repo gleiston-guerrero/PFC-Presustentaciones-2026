@@ -16,33 +16,33 @@ import java.util.Optional;
 public interface TutorRepository extends JpaRepository<Tutor, Long> {
     /**
      * Busca el/los registro(s) con submission id.
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el registro si existe, vacío si no
      */
     Optional<Tutor> findBySubmissionId(Long submissionId);
     /**
      * Busca el/los registro(s) con teacher id.
-     * @param teacherId teacherId
+     * @param teacherId identificador del docente
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<Tutor> findByTeacherId(Long teacherId);
     /**
      * Cuenta los registros con teacher id y estado.
-     * @param teacherId teacherId
-     * @param status status
+     * @param teacherId identificador del docente
+     * @param status estado de la tutoría por el que se cuentan las asignaciones del docente
      * @return la cantidad de registros
      */
     long countByTeacherIdAndStatus(Long teacherId, String status);
 
     /**
      * Busca el/los registro(s) con submission student app user id.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<Tutor> findBySubmissionStudentAppUserId(Long appUserId);
     /**
      * Busca el/los registro(s) con teacher app user id.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<Tutor> findByTeacherAppUserId(Long appUserId);
@@ -63,8 +63,8 @@ public interface TutorRepository extends JpaRepository<Tutor, Long> {
 
     /**
      * Indica si existe algún registro con submission id y teacher app user email.
-     * @param submissionId submissionId
-     * @param email email
+     * @param submissionId identificador de la solicitud de pre-sustentación
+     * @param email correo electrónico del usuario docente
      * @return true si se cumple la condición, false si no
      */
     boolean existsBySubmissionIdAndTeacherAppUserEmail(Long submissionId, String email);

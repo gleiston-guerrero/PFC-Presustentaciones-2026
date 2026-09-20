@@ -36,7 +36,7 @@ public class RedisConfig {
 
     /**
      * Cache manager.
-     * @param connectionFactory connectionFactory
+     * @param connectionFactory fábrica de conexiones a Redis con la que se construye el gestor de caché
      * @return el CacheManager correspondiente
      */
     @Bean

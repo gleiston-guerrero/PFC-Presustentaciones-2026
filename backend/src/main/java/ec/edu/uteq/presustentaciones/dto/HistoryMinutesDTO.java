@@ -43,7 +43,7 @@ public class HistoryMinutesDTO {
 
     /**
      * De.
-     * @param h h
+     * @param h registro del historial de cambios de estado del acta
      * @return el HistoryMinutesDTO correspondiente
      */
     public static HistoryMinutesDTO from(HistoryStatusMinutes h) {

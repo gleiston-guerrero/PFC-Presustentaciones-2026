@@ -289,7 +289,7 @@ public class MinutesServiceImpl implements MinutesService {
     }
 
     /**
-     * @param minutesId id del minutes
+     * @param minutesId identificador del acta
      * @return los bytes del PDF generado para esa minutes
      * @throws RuntimeException si el minutes no existe, el appUser no tiene acceso a ella, o
      *                          todavía no tiene PDF generado
@@ -320,7 +320,7 @@ public class MinutesServiceImpl implements MinutesService {
     }
 
     /**
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el minutes de esa submission, si ya fue generada
      */
     @Override
@@ -373,7 +373,7 @@ public class MinutesServiceImpl implements MinutesService {
      * Detalle de un minutes. Aplica control de acceso: ADMIN/COORDINADOR (permission ACTAS_VER),
      * o el student dueño / panelist / tutor de la submission.
      *
-     * @param minutesId id del minutes
+     * @param minutesId identificador del acta
      * @return el detalle del minutes junto con su tribunal
      * @throws RuntimeException si el minutes no existe, o el appUser no participa en ella
      *                          (previene IDOR/BOLA)
@@ -392,7 +392,7 @@ public class MinutesServiceImpl implements MinutesService {
      * History de trazabilidad (timeline) del minutes, más reciente primero. Mismo control
      * de acceso que {@link #obtainDetail(Long)}.
      *
-     * @param minutesId id del minutes
+     * @param minutesId identificador del acta
      * @return los cambios de estado del minutes, del más reciente al más antiguo
      * @throws RuntimeException si el minutes no existe, o el appUser no participa en ella
      */
@@ -412,7 +412,7 @@ public class MinutesServiceImpl implements MinutesService {
      * validando la transición y registrando el cambio en history_estados_minutes con el
      * appUser, su role, el estado anterior/nuevo y el motivo.
      *
-     * @param minutesId            id del minutes
+     * @param minutesId            identificador del acta
      * @param targetStatusCode código del catálogo estados_minutes
      * @param motivo            motivo/observación (obligatorio para OBSERVADA y ANULADA)
      * @return el minutes con el nuevo estado aplicado
@@ -762,7 +762,7 @@ public class MinutesServiceImpl implements MinutesService {
     /**
      * Elimina un minutes si el appUser tiene permission, incluido su archivo PDF en disco si existe.
      *
-     * @param minutesId id del minutes
+     * @param minutesId identificador del acta
      * @throws RuntimeException si el minutes no existe, o el appUser no tiene acceso a ella
      */
     @Override

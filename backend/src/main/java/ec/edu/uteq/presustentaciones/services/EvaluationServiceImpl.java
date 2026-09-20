@@ -231,7 +231,7 @@ public class EvaluationServiceImpl implements EvaluationService {
     }
 
     /**
-     * @param studentId id del student
+     * @param studentId identificador del estudiante
      * @return las evaluations finales de las submissions de ese student
      */
     @Override
@@ -251,7 +251,7 @@ public class EvaluationServiceImpl implements EvaluationService {
     }
 
     /**
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return la evaluación final de esa submission, si ya fue calificada
      */
     @Override

@@ -24,14 +24,14 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
 
     /**
      * Busca el/los registro(s) con codigo in.
-     * @param codigos codigos
+     * @param codigos códigos de los permisos que se buscan
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<Permission> findByCodeIn(List<String> codigos);
 
     /**
      * Find role ids con permission.
-     * @param code code
+     * @param code código de negocio único del registro buscado
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT rp.rol_id FROM presus.rol_permisos rp " +
@@ -45,8 +45,8 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
      * a role_permissions, así que un cambio en "Gestionar Permisos" aplica de inmediato, sin
      * esperar a que el appUser vuelva a iniciar sesión (el JWT no lleva permissions, solo
      * identidad -- por diseño, para que esto sea realmente dinámico).
-     * @param email email
-     * @param code code
+     * @param email correo electrónico del usuario cuyos permisos se consultan
+     * @param code código de negocio único del registro buscado
      * @return true si se cumple la condición, false si no
      */
     @Query(value = "SELECT EXISTS (" +
@@ -59,7 +59,7 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
 
     /**
      * Find codigos por role.
-     * @param roleId roleId
+     * @param roleId identificador del rol
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT p.codigo FROM presus.permisos p " +
@@ -72,7 +72,7 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
      * mostrar/ocultar módulos: al remove un permission a un role, el módulo desaparece del
      * panel sin necesidad de que el appUser vuelva a iniciar sesión. Misma unión que
      * {@link #appUserTienePermission}, pero devolviendo la lista completa.
-     * @param email email
+     * @param email correo electrónico del usuario cuyos permisos se consultan
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT p.codigo FROM presus.permisos p " +
@@ -83,7 +83,7 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
 
     /**
      * Delete permissions de role.
-     * @param roleId roleId
+     * @param roleId identificador del rol
      */
     @Modifying
     @Transactional
@@ -92,8 +92,8 @@ public interface PermissionRepository extends JpaRepository<Permission, Short> {
 
     /**
      * Assign permission.
-     * @param roleId roleId
-     * @param permissionId permissionId
+     * @param roleId identificador del rol
+     * @param permissionId identificador del permiso
      */
     @Modifying
     @Transactional

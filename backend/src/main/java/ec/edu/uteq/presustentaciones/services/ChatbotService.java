@@ -26,7 +26,7 @@ public class ChatbotService {
 
     /**
      * Process message.
-     * @param request request
+     * @param request mensaje del usuario que se envía al chatbot
      * @return el ChatResponse correspondiente
      */
     public ChatResponse processMessage(ChatRequest request) {

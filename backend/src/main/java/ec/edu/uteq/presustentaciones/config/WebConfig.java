@@ -21,7 +21,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     /**
      * Add cors mappings.
-     * @param registry registry
+     * @param registry registro de mapeos CORS al que se agregan las reglas
      */
     @Override
     public void addCorsMappings(CorsRegistry registry) {

@@ -86,8 +86,8 @@ public class MinutesDetailDTO {
 
     /**
      * De.
-     * @param a a
-     * @param panelists panelists
+     * @param a acta de la que se toman los datos
+     * @param panelists panelistas asignados al acta
      * @return el MinutesDetalleDTO correspondiente
      */
     public static MinutesDetailDTO from(Minutes a, List<Panelist> panelists) {

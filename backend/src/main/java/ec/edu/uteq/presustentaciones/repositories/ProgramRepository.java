@@ -14,13 +14,13 @@ import java.util.Optional;
 public interface ProgramRepository extends JpaRepository<Program, Integer> {
     /**
      * Busca el/los registro(s) con codigo.
-     * @param code code
+     * @param code código de negocio único del registro buscado
      * @return el registro si existe, vacío si no
      */
     Optional<Program> findByCode(String code);
     /**
      * Busca el/los registro(s) con faculty id.
-     * @param facultyId facultyId
+     * @param facultyId identificador de la facultad
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<Program> findByFacultyId(Integer facultyId);

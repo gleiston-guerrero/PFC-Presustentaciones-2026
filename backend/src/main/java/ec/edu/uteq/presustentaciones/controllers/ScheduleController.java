@@ -24,7 +24,7 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
     /**
      * Construye ScheduleController, inyectando s.
-     * @param s s
+     * @param s servicio de negocio de programaciones de sustentación, inyectado por constructor
      */
     public ScheduleController(ScheduleService s) { this.scheduleService = s; }
 

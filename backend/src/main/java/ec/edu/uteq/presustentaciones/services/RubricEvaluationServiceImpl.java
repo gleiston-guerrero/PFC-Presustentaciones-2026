@@ -143,8 +143,8 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
     /**
      * Estado de la evaluación de un panelist para una submission.
      *
-     * @param submissionId id de la submission
-     * @param panelistId    id del panelist
+     * @param submissionId identificador de la solicitud de pre-sustentación
+     * @param panelistId    identificador del panelista (miembro del tribunal)
      * @return la evaluación de ese panelist para esa submission, si ya la registró
      */
     @Override
@@ -164,7 +164,7 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
     /**
      * Resumen de todos los panelists para una submission.
      *
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return las evaluations registradas por cada panelist de esa submission
      */
     @Override
@@ -189,7 +189,7 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
     /**
      * Nota promedio del tribunal (40%) lista para usar en la evaluación final.
      *
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el promedio, redondeado a 2 decimales, de las notas de los panelists que ya
      *         evaluaron; {@code 0.0} si ninguno ha evaluado todavía
      */
@@ -277,7 +277,7 @@ public class RubricEvaluationServiceImpl implements RubricEvaluationService {
     /**
      * Obtain todas las observaciones de una submission (tutor, panelists, coordinador).
      *
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return observaciones consolidadas de todos los actores que han evaluado la submission
      */
     @Override

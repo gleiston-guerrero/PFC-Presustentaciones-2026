@@ -29,8 +29,8 @@ public class ResponseWrappingAdvice implements ResponseBodyAdvice<Object> {
 
     /**
      * Supports.
-     * @param returnType returnType
-     * @param converterType converterType
+     * @param returnType tipo de retorno del método del controlador que se intercepta
+     * @param converterType tipo de conversor de mensajes HTTP que se usaría para el cuerpo
      * @return true si se cumple la condición, false si no
      */
     @Override
@@ -41,12 +41,12 @@ public class ResponseWrappingAdvice implements ResponseBodyAdvice<Object> {
 
     /**
      * Before body write.
-     * @param body body
-     * @param returnType returnType
-     * @param selectedContentType selectedContentType
-     * @param selectedConverterType selectedConverterType
-     * @param request request
-     * @param response response
+     * @param body cuerpo original que devolvió el controlador, antes de envolverlo
+     * @param returnType tipo de retorno del método del controlador que se intercepta
+     * @param selectedContentType tipo de contenido negociado para la respuesta
+     * @param selectedConverterType tipo de conversor de mensajes elegido para escribir el cuerpo
+     * @param request petición HTTP que se está atendiendo
+     * @param response respuesta HTTP que se está escribiendo
      * @return el Object correspondiente
      */
     @Override

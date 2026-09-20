@@ -53,7 +53,7 @@ public class ProgressDegreeServiceImpl implements ProgressDegreeService {
 
     /**
      * Obtain.
-     * @param studentId studentId
+     * @param studentId identificador del estudiante
      * @return el ProgressTitulacionDTO correspondiente
      */
     @Override
@@ -67,8 +67,8 @@ public class ProgressDegreeServiceImpl implements ProgressDegreeService {
 
     /**
      * Update.
-     * @param studentId studentId
-     * @param cambios cambios
+     * @param studentId identificador del estudiante
+     * @param cambios mapa con las casillas de avance a modificar y su nuevo valor
      * @return el ProgressTitulacionDTO correspondiente
      */
     @Override

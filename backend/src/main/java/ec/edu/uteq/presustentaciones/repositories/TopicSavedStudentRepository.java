@@ -17,7 +17,7 @@ public interface TopicSavedStudentRepository extends JpaRepository<TopicSavedStu
 
     /**
      * Busca el/los registro(s) con student id o der by fecha guardado desc.
-     * @param studentId studentId
+     * @param studentId identificador del estudiante
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("""
@@ -33,23 +33,23 @@ public interface TopicSavedStudentRepository extends JpaRepository<TopicSavedStu
 
     /**
      * Busca el/los registro(s) con student id.
-     * @param studentId studentId
+     * @param studentId identificador del estudiante
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<TopicSavedStudent> findByStudentId(Long studentId);
 
     /**
      * Indica si existe algún registro con student id y topic propuesto id.
-     * @param studentId studentId
-     * @param topicProposedId topicProposedId
+     * @param studentId identificador del estudiante
+     * @param topicProposedId identificador del tema propuesto
      * @return true si se cumple la condición, false si no
      */
     boolean existsByStudentIdAndTopicProposedId(Long studentId, Integer topicProposedId);
 
     /**
      * Elimina los registros con student id y topic propuesto id.
-     * @param studentId studentId
-     * @param topicProposedId topicProposedId
+     * @param studentId identificador del estudiante
+     * @param topicProposedId identificador del tema propuesto
      * @return la cantidad de registros
      */
     @Modifying
@@ -57,7 +57,7 @@ public interface TopicSavedStudentRepository extends JpaRepository<TopicSavedStu
 
     /**
      * Find topic ids by student id.
-     * @param studentId studentId
+     * @param studentId identificador del estudiante
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT g.topicProposed.id FROM TopicSavedStudent g WHERE g.student.id = :studentId")

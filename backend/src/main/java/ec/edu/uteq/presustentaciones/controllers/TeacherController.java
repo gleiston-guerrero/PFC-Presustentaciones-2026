@@ -28,8 +28,8 @@ public class TeacherController {
 
     /**
      * Construye TeacherController, inyectando teacherRepository, appUserActualService.
-     * @param teacherRepository teacherRepository
-     * @param currentAppUserService currentAppUserService
+     * @param teacherRepository repositorio de acceso a datos de docentes, inyectado por constructor
+     * @param currentAppUserService servicio que resuelve al usuario autenticado en la petición en curso, inyectado por constructor
      */
     public TeacherController(TeacherRepository teacherRepository, CurrentAppUserService currentAppUserService) {
         this.teacherRepository = teacherRepository;

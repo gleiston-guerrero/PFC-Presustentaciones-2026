@@ -116,7 +116,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     /**
-     * @param appUserId id del appUser
+     * @param appUserId identificador del usuario del sistema
      * @param pageable  configuración de paginación
      * @return página de notifications de ese appUser, más recientes primero
      */
@@ -127,7 +127,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     /**
-     * @param appUserId id del appUser
+     * @param appUserId identificador del usuario del sistema
      * @return cantidad de notifications no leídas de ese appUser
      */
     @Override

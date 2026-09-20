@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface ProposalRepository extends JpaRepository<Proposal, Long> {
     /**
      * Busca el/los registro(s) con submission id.
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el registro si existe, vacío si no
      */
     Optional<Proposal> findBySubmissionId(Long submissionId);

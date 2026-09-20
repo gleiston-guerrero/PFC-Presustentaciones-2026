@@ -30,7 +30,7 @@ public class MinutesController {
 
     /**
      * Construye MinutesController, inyectando minutesService.
-     * @param minutesService minutesService
+     * @param minutesService servicio de negocio de actas, inyectado por constructor
      */
     public MinutesController(MinutesService minutesService) {
         this.minutesService = minutesService;

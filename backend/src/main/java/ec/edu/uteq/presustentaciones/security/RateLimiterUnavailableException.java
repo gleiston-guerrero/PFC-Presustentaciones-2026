@@ -8,8 +8,8 @@ package ec.edu.uteq.presustentaciones.security;
 public class RateLimiterUnavailableException extends RuntimeException {
     /**
      * Construye RateLimiterUnavailableException, inyectando message, cause.
-     * @param message message
-     * @param cause cause
+     * @param message mensaje que describe el error
+     * @param cause excepción original que provocó el fallo
      */
     public RateLimiterUnavailableException(String message, Throwable cause) {
         super(message, cause);

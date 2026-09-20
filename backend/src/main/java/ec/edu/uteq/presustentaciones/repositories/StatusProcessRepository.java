@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface StatusProcessRepository extends JpaRepository<StatusProcess, Short> {
     /**
      * Busca el/los registro(s) con codigo.
-     * @param code code
+     * @param code código de negocio único del registro buscado
      * @return el registro si existe, vacío si no
      */
     Optional<StatusProcess> findByCode(String code);

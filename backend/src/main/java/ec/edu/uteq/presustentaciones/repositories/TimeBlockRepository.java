@@ -13,13 +13,13 @@ import java.util.List;
 public interface TimeBlockRepository extends JpaRepository<TimeBlock, Short> {
     /**
      * Busca el/los registro(s) con shift id.
-     * @param shiftId shiftId
+     * @param shiftId identificador de la jornada
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<TimeBlock> findByShiftId(Short shiftId);
     /**
      * Busca el/los registro(s) con shift codigo.
-     * @param shiftCode shiftCode
+     * @param shiftCode código de la jornada
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<TimeBlock> findByShiftCode(String shiftCode);

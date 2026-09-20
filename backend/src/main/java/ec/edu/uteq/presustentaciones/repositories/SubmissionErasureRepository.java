@@ -13,7 +13,7 @@ import java.util.List;
 public interface SubmissionErasureRepository extends JpaRepository<SubmissionErasure, Long> {
     /**
      * Busca el/los registro(s) con app user id.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<SubmissionErasure> findByAppUserId(Long appUserId);
@@ -24,8 +24,8 @@ public interface SubmissionErasureRepository extends JpaRepository<SubmissionEra
     List<SubmissionErasure> findAllByOrderByDateSubmissionDesc();
     /**
      * Indica si existe algún registro con app user id y estado.
-     * @param appUserId appUserId
-     * @param status status
+     * @param appUserId identificador del usuario del sistema
+     * @param status estado del registro de la solicitud eliminada
      * @return true si se cumple la condición, false si no
      */
     boolean existsByAppUserIdAndStatus(Long appUserId, String status);

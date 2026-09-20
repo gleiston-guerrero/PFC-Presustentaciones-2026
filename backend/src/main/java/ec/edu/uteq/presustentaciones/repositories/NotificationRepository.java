@@ -18,7 +18,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     /**
      * Find all.
-     * @param pageable pageable
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT n FROM Notification n JOIN FETCH n.appUser", countQuery = "SELECT COUNT(n) FROM Notification n")
@@ -26,7 +26,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     /**
      * Busca el/los registro(s) con app user id o der by fecha desc.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.date DESC")
@@ -34,8 +34,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     /**
      * Busca el/los registro(s) con app user id o der by fecha desc.
-     * @param appUserId appUserId
-     * @param pageable pageable
+     * @param appUserId identificador del usuario del sistema
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT n FROM Notification n JOIN FETCH n.appUser WHERE n.appUser.id = :appUserId ORDER BY n.date DESC",
@@ -44,7 +44,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     /**
      * Cuenta los registros con app user id y leida false.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return la cantidad de registros
      */
     long countByAppUserIdAndReadFalse(Long appUserId);
@@ -52,7 +52,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     /**
      * UPDATE en block en vez de traer + iterar + volver a save cada fila -- marcarTodasLeidas
      * antes cargaba TODAS las notifications del appUser (leídas incluidas) solo para reescribirlas.
-     * @param appUserId app user id
+     * @param appUserId identificador del usuario del sistema
      * @return el valor numérico calculado
      */
     @Modifying

@@ -35,7 +35,7 @@ public class TutorServiceImpl implements TutorService {
     private final ec.edu.uteq.presustentaciones.repositories.StatusSubmissionRepository statusSubmissionRepository;
 
     /**
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @param teacherId   id del teacher que actuará como tutor
      * @return el registro de tutoría creado
      */
@@ -90,7 +90,7 @@ public class TutorServiceImpl implements TutorService {
     }
 
     /**
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el tutor asignado, si existe
      */
     @Override
@@ -114,7 +114,7 @@ public class TutorServiceImpl implements TutorService {
     }
 
     /**
-     * @param appUserIdTeacher id del appUser teacher
+     * @param appUserIdTeacher identificador del usuario (AppUser) asociado al docente
      * @return los students tutorados actualmente por ese teacher
      */
     @Override

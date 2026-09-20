@@ -14,13 +14,13 @@ import java.util.Optional;
 public interface AnnouncementDegreeRepository extends JpaRepository<AnnouncementDegree, Integer> {
     /**
      * Busca el/los registro(s) con codigo.
-     * @param code code
+     * @param code código de negocio único del registro buscado
      * @return el registro si existe, vacío si no
      */
     Optional<AnnouncementDegree> findByCode(String code);
     /**
      * Busca el/los registro(s) con period academico id.
-     * @param periodId periodId
+     * @param periodId identificador del periodo académico
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<AnnouncementDegree> findByPeriodAcademicId(Integer periodId);

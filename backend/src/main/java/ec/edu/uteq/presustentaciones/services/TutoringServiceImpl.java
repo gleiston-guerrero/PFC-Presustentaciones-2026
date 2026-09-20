@@ -52,12 +52,12 @@ public class TutoringServiceImpl implements TutoringService {
 
     /**
      * Construye TutoringServiceImpl, inyectando tutorRepository, tutoringFaseRepository, tutoringMensajeRepository, appUserRepository, proposalRepository, notificationService.
-     * @param tutorRepository tutorRepository
-     * @param tutoringPhaseRepository tutoringPhaseRepository
-     * @param tutoringMessageRepository tutoringMessageRepository
-     * @param appUserRepository appUserRepository
-     * @param proposalRepository proposalRepository
-     * @param notificationService notificationService
+     * @param tutorRepository repositorio de acceso a datos de tutores, inyectado por constructor
+     * @param tutoringPhaseRepository repositorio de acceso a datos de fases de tutoría, inyectado por constructor
+     * @param tutoringMessageRepository repositorio de acceso a datos de mensajes de tutoría, inyectado por constructor
+     * @param appUserRepository repositorio de acceso a datos de usuarios, inyectado por constructor
+     * @param proposalRepository repositorio de acceso a datos de propuestas de tema, inyectado por constructor
+     * @param notificationService servicio de negocio de notificaciones, inyectado por constructor
      */
     public TutoringServiceImpl(TutorRepository tutorRepository,
                               TutoringPhaseRepository tutoringPhaseRepository,
@@ -426,7 +426,7 @@ public class TutoringServiceImpl implements TutoringService {
     // ── Listados por appUser ──────────────────────────────────────────────────
 
     /**
-     * @param studentAppUserId id del appUser student
+     * @param studentAppUserId identificador del usuario (AppUser) asociado al estudiante
      * @return resúmenes de todas las tutorías de ese student
      */
     @Override
@@ -437,7 +437,7 @@ public class TutoringServiceImpl implements TutoringService {
     }
 
     /**
-     * @param teacherAppUserId id del appUser teacher
+     * @param teacherAppUserId identificador del usuario (AppUser) asociado al docente
      * @return resúmenes de todas las tutorías a cargo de ese teacher
      */
     @Override

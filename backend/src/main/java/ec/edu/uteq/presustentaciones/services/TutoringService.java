@@ -89,14 +89,14 @@ public interface TutoringService {
 
     /**
      * Obtain tutorings student.
-     * @param studentAppUserId id del appUser student
+     * @param studentAppUserId identificador del usuario (AppUser) asociado al estudiante
      * @return resúmenes de todas las tutorías de ese student
      */
     List<TutoringSummaryDTO> obtainTutoringsStudent(Long studentAppUserId);
 
     /**
      * Obtain tutorings teacher.
-     * @param teacherAppUserId id del appUser teacher
+     * @param teacherAppUserId identificador del usuario (AppUser) asociado al docente
      * @return resúmenes de todas las tutorías a cargo de ese teacher
      */
     List<TutoringSummaryDTO> obtainTutoringsTeacher(Long teacherAppUserId);

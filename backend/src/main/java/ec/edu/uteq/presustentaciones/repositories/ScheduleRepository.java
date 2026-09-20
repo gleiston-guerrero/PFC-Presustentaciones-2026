@@ -17,7 +17,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     /**
      * Busca el/los registro(s) con student id.
-     * @param studentId studentId
+     * @param studentId identificador del estudiante
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT c FROM Schedule c JOIN c.submission s JOIN s.student e WHERE e.id = :studentId")
@@ -25,7 +25,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     /**
      * Busca el/los registro(s) con app user id.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT c FROM Schedule c JOIN c.submission s JOIN s.student e JOIN e.appUser u WHERE u.id = :appUserId")
@@ -33,16 +33,16 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     /**
      * Busca el/los registro(s) con submission id.
-     * @param submissionId submissionId
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el registro si existe, vacío si no
      */
     Optional<Schedule> findBySubmissionId(Long submissionId);
 
     /**
      * RF-04: Conflictos en room: cualquier schedule que se solape con la franja propuesta
-     * @param roomId room id
-     * @param start start
-     * @param end end
+     * @param roomId identificador de la sala
+     * @param start instante de inicio del intervalo que se consulta
+     * @param end instante de fin del intervalo que se consulta
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("""
@@ -50,15 +50,6 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
         WHERE c.room.id = :roomId
           AND c.status.code = 'PROGRAMADO'
           AND c.dateStart < :fin
-          /**
-           * F u n c t i o n.
-           * @param 'TIMESTAMPADD' 'TIMESTAMPADD'
-           * @param MINUTE MINUTE
-           * @param c.duracionMin c.duracionMin
-           * @param end end
-           * @return el AND correspondiente
-           * @param start start
-           */
           AND FUNCTION('TIMESTAMPADD', MINUTE, c.duracionMin, c.dateStart) > :inicio
     """)
     List<Schedule> findConflictos(@Param("roomId") Long roomId,
@@ -67,7 +58,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     /**
      * Todos los schedules activos de una fecha
-     * @param date date
+     * @param date día cuyas programaciones activas se consultan
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT c FROM Schedule c WHERE c.status.code = 'PROGRAMADO' AND CAST(c.dateStart AS date) = CAST(:fecha AS date)")

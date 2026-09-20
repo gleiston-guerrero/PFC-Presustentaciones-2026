@@ -48,11 +48,11 @@ public class ProposalServiceImpl implements ProposalService {
 
     /**
      * Construye ProposalServiceImpl, inyectando ar, sr, ns, ur, sas.
-     * @param ar ar
-     * @param sr sr
-     * @param ns ns
-     * @param ur ur
-     * @param sas sas
+     * @param ar repositorio de acceso a datos de propuestas de tema, inyectado por constructor
+     * @param sr repositorio de acceso a datos de solicitudes de pre-sustentación, inyectado por constructor
+     * @param ns servicio de negocio de notificaciones, inyectado por constructor
+     * @param ur repositorio de acceso a datos de usuarios, inyectado por constructor
+     * @param sas servicio que decide si el usuario puede acceder a una solicitud, inyectado por constructor
      */
     public ProposalServiceImpl(ProposalRepository ar, SubmissionRepository sr,
                                    NotificationService ns, AppUserRepository ur,
@@ -234,7 +234,7 @@ public class ProposalServiceImpl implements ProposalService {
     }
 
     /**
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el proposal de esa submission, si ya fue enviado
      */
     @Override

@@ -14,7 +14,7 @@ public interface TutoringMessageRepository extends JpaRepository<TutoringMessage
 
     /**
      * Busca el/los registro(s) con fase id o der by fecha envio asc.
-     * @param phaseId phaseId
+     * @param phaseId identificador de la fase de tutoría
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @org.springframework.data.jpa.repository.Query("SELECT m FROM TutoringMessage m JOIN FETCH m.sender WHERE m.phase.id = :faseId ORDER BY m.dateEnvio ASC")
@@ -22,16 +22,16 @@ public interface TutoringMessageRepository extends JpaRepository<TutoringMessage
 
     /**
      * Cuenta los registros con fase id y leido false y remitente id not.
-     * @param phaseId phaseId
-     * @param senderId senderId
+     * @param phaseId identificador de la fase de tutoría
+     * @param senderId identificador del usuario emisor cuyos mensajes se excluyen
      * @return la cantidad de registros
      */
     long countByPhaseIdAndLeidoFalseAndSenderIdNot(Long phaseId, Long senderId);
 
     /**
      * Busca el/los registro(s) con fase id y leido false y remitente id not.
-     * @param phaseId phaseId
-     * @param senderId senderId
+     * @param phaseId identificador de la fase de tutoría
+     * @param senderId identificador del usuario emisor cuyos mensajes se excluyen
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @org.springframework.data.jpa.repository.Query("SELECT m FROM TutoringMessage m JOIN FETCH m.sender WHERE m.phase.id = :faseId AND m.leido = false AND m.sender.id != :remitenteId")

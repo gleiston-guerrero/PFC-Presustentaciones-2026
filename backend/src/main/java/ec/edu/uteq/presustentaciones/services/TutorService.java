@@ -15,7 +15,7 @@ public interface TutorService {
 
     /**
      * Assign tutor.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @param teacherId   id del teacher que actuará como tutor
      * @return el registro de tutoría creado
      */
@@ -23,7 +23,7 @@ public interface TutorService {
 
     /**
      * Search by submission.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el tutor asignado, si existe
      */
     Optional<Tutor> searchBySubmission(Long submissionId);
@@ -50,7 +50,7 @@ public interface TutorService {
 
     /**
      * My students.
-     * @param appUserIdTeacher id del appUser teacher
+     * @param appUserIdTeacher identificador del usuario (AppUser) asociado al docente
      * @return los students tutorados actualmente por ese teacher
      */
     List<MyStudentTuteeDTO> myStudents(Long appUserIdTeacher);

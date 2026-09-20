@@ -43,7 +43,7 @@ public class MinutesSummaryDTO {
 
     /**
      * De.
-     * @param a a
+     * @param a acta de la que se toman los datos
      * @return el MinutesResumenDTO correspondiente
      */
     public static MinutesSummaryDTO from(Minutes a) {

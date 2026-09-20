@@ -23,7 +23,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     /**
      * Invoca sp_generate_reporte_defensas (JPA 2.1 @NamedStoredProcedureQuery declarada en
      * Submission.java) -- reporte consolidado multi-tabla por program. Fase 3 / Criterio P1.
-     * @param program program
+     * @param program programa académico (carrera) por el que se filtra
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Procedure(name = "Solicitud.generarReporteDefensas")
@@ -43,7 +43,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      * está cacheada). El listado completo navegable es {@code GET /api/v1/submissions/paginado}.
      * Como {@code student} y {@code appUser} son asociaciones @ManyToOne (a-uno), Hibernate
      * pagina en SQL sin el warning de "collection fetch + firstResult/maxResults en memoria".
-     * @param pageable pageable
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u ORDER BY s.dateRecord DESC")
@@ -56,14 +56,12 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      * filtraba por estado, sin buscador), y un rango de fechaRegistro (para poder acotar a
      * "hoy" o a un día concreto desde el frontend). Todos los parámetros son opcionales e
      * independientes entre sí -- mismo patrón que AppUserRepository.searchPaginado.
-     */
-    /**
-     * Search con filtros.
-     * @param status status
-     * @param texto texto
-     * @param dateFrom dateFrom
-     * @param dateTo dateTo
-     * @param pageable pageable
+     *
+     * @param status código del estado de la solicitud por el que se filtra; nulo o vacío no filtra
+     * @param texto texto libre que se busca en el título del tema y en el nombre y apellido del estudiante; nulo o vacío no filtra
+     * @param dateFrom inicio del rango de fecha de registro, inclusive
+     * @param dateTo fin del rango de fecha de registro, inclusive
+     * @param pageable página, tamaño y ordenamiento solicitados
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u " +
@@ -87,7 +85,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     /**
      * Busca el/los registro(s) con student id.
-     * @param studentId studentId
+     * @param studentId identificador del estudiante
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE e.id = :studentId ORDER BY s.dateRecord DESC")
@@ -95,7 +93,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     /**
      * Busca el/los registro(s) con app user id.
-     * @param appUserId appUserId
+     * @param appUserId identificador del usuario del sistema
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE u.id = :appUserId ORDER BY s.dateRecord DESC")
@@ -103,7 +101,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     /**
      * Busca el/los registro(s) con id with student.
-     * @param id id
+     * @param id identificador del registro
      * @return el registro si existe, vacío si no
      */
     @Query("SELECT s FROM Submission s JOIN FETCH s.student e JOIN FETCH e.appUser u WHERE s.id = :id")
@@ -111,7 +109,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     /**
      * Cuenta los registros con estado codigo.
-     * @param code code
+     * @param code código de negocio único del registro buscado
      * @return la cantidad de registros
      */
     long countByStatusCode(String code);
@@ -148,12 +146,10 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
      * searchConFiltros): el service pasa sentinelas MIN/MAX cuando el appUser no filtra --
      * un {@code :fecha IS NULL} deja a Postgres sin tipo para el bind ("could not determine
      * data type of parameter").
-     */
-    /**
-     * Count por estado.
-     * @param from from
-     * @param to to
-     * @param program program
+     *
+     * @param from inicio del rango de fechas, inclusive
+     * @param to fin del rango de fechas, inclusive
+     * @param program programa académico (carrera) por el que se filtra
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT s.status.code, COUNT(s) FROM Submission s " +
@@ -166,8 +162,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     /**
      * Cantidad de pre-sustentaciones (submissions) por período académico de su announcement.
-     * @param from from
-     * @param to to
+     * @param from inicio del rango de fechas, inclusive
+     * @param to fin del rango de fechas, inclusive
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT p.code, COUNT(s) FROM Submission s JOIN s.announcement c JOIN c.periodAcademic p " +
@@ -187,15 +183,15 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     /**
      * Cuenta los registros con fecha registro between.
-     * @param from from
-     * @param to to
+     * @param from inicio del rango de fechas, inclusive
+     * @param to fin del rango de fechas, inclusive
      * @return la cantidad de registros
      */
     long countByDateRecordBetween(LocalDateTime from, LocalDateTime to);
 
     /**
      * Generate reporte defensas sp.
-     * @param program program
+     * @param program programa académico (carrera) por el que se filtra
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query(value = "SELECT * FROM presus.sp_generar_reporte_defensas(:program)", nativeQuery = true)

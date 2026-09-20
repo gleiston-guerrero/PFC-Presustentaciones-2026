@@ -44,7 +44,7 @@ public interface ScheduleService {
 
     /**
      * List by student.
-     * @param studentId id del student
+     * @param studentId identificador del estudiante
      * @return los schedules de las submissions de ese student
      */
     List<Schedule> listByStudent(Long studentId);
@@ -58,7 +58,7 @@ public interface ScheduleService {
 
     /**
      * Search by submission.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el schedule de esa submission, si ya fue programada
      */
     Optional<Schedule> searchBySubmission(Long submissionId);

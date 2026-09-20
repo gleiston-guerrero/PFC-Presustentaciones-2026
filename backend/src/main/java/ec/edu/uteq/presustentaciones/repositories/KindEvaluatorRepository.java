@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface KindEvaluatorRepository extends JpaRepository<KindEvaluator, Short> {
     /**
      * Busca el/los registro(s) con codigo.
-     * @param code code
+     * @param code código de negocio único del registro buscado
      * @return el registro si existe, vacío si no
      */
     Optional<KindEvaluator> findByCode(String code);

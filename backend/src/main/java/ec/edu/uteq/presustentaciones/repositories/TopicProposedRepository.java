@@ -16,15 +16,15 @@ public interface TopicProposedRepository extends JpaRepository<TopicProposed, In
 
     /**
      * Busca el/los registro(s) con program id.
-     * @param programId programId
+     * @param programId identificador del programa académico (carrera)
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<TopicProposed> findByProgramId(Integer programId);
 
     /**
      * Busca el/los registro(s) con program id y line investigacion id.
-     * @param programId programId
-     * @param researchLineId researchLineId
+     * @param programId identificador del programa académico (carrera)
+     * @param researchLineId identificador de la línea de investigación
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     List<TopicProposed> findByProgramIdAndResearchLineId(Integer programId, Integer researchLineId);
@@ -39,13 +39,11 @@ public interface TopicProposedRepository extends JpaRepository<TopicProposed, In
      * bytea sin tipo, y "function lower(bytea) does not exist" -- hallazgo real al probar
      * el endpoint contra Postgres de verdad (los tests con repositorio mockeado nunca
      * ejecutan el SQL real y no lo detectan).
-     */
-    /**
-     * Search con filtros.
-     * @param programId programId
-     * @param lineId lineId
-     * @param areaId areaId
-     * @param nivelDificultad nivelDificultad
+     *
+     * @param programId identificador del programa académico (carrera)
+     * @param lineId identificador de la línea de investigación
+     * @param areaId identificador del área temática
+     * @param nivelDificultad nivel de dificultad del tema; nulo no filtra
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("""
@@ -66,7 +64,7 @@ public interface TopicProposedRepository extends JpaRepository<TopicProposed, In
 
     /**
      * Busca el/los registro(s) con id con catalogos.
-     * @param id id
+     * @param id identificador del registro
      * @return el {@code java.util.Optional<TopicPropuesto>} correspondiente
      */
     @Query("""

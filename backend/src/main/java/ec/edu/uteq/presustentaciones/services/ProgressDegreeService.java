@@ -11,15 +11,15 @@ public interface ProgressDegreeService {
 
     /**
      * Estado actual de la ruta de titulación del student (todos los pasos en falso si aún no guardó nada).
-     * @param studentId student id
+     * @param studentId identificador del estudiante
      * @return el valor de tipo {@code ProgressDegreeDTO} correspondiente
      */
     ProgressDegreeDTO obtain(Long studentId);
 
     /**
      * Fusiona los cambios recibidos con el estado guardado y devuelve el progress actualizado.
-     * @param studentId student id
-     * @param cambios cambios
+     * @param studentId identificador del estudiante
+     * @param cambios mapa con las casillas de avance a modificar y su nuevo valor
      * @return el valor de tipo {@code ProgressDegreeDTO} correspondiente
      */
     ProgressDegreeDTO update(Long studentId, Map<String, Boolean> cambios);

@@ -23,7 +23,7 @@ public class EvaluationController {
 
     /**
      * Construye EvaluationController, inyectando evaluationService.
-     * @param evaluationService evaluationService
+     * @param evaluationService servicio de negocio de evaluaciones, inyectado por constructor
      */
     public EvaluationController(EvaluationService evaluationService) {
         this.evaluationService = evaluationService;

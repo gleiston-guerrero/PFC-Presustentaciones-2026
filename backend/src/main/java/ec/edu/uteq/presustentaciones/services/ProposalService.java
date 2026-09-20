@@ -40,7 +40,7 @@ public interface ProposalService {
 
     /**
      * Search by submission.
-     * @param submissionId id de la submission
+     * @param submissionId identificador de la solicitud de pre-sustentación
      * @return el proposal de esa submission, si ya fue enviado
      */
     Optional<Proposal> searchBySubmission(Long submissionId);

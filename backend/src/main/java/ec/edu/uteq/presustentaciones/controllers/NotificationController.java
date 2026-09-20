@@ -22,7 +22,7 @@ public class NotificationController {
 
     /**
      * Construye NotificationController, inyectando notificationService.
-     * @param notificationService notificationService
+     * @param notificationService servicio de negocio de notificaciones, inyectado por constructor
      */
     public NotificationController(NotificationService notificationService) {
         this.notificationService = notificationService;

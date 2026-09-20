@@ -16,7 +16,7 @@ public interface HistoryStatusMinutesRepository extends JpaRepository<HistorySta
 
     /**
      * Busca el/los registro(s) con minutes id o der by fecha cambio desc.
-     * @param minutesId minutesId
+     * @param minutesId identificador del acta
      * @return los resultados encontrados (vacío si no hay coincidencias)
      */
     @Query("SELECT h FROM HistoryStatusMinutes h " +
@@ -28,7 +28,7 @@ public interface HistoryStatusMinutesRepository extends JpaRepository<HistorySta
 
     /**
      * Cuenta los registros con minutes id.
-     * @param minutesId minutesId
+     * @param minutesId identificador del acta
      * @return la cantidad de registros
      */
     long countByMinutesId(Long minutesId);
