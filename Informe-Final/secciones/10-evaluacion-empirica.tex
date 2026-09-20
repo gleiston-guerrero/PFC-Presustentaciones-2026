@@ -373,7 +373,7 @@ cifra que aplica es la de arriba. Nota real sobre el margen de ramas: unos 2.4 d
 encima del umbral vienen de que \texttt{equals}/\texttt{hashCode} generados por Lombok en
 \texttt{security/dto/*} (un paquete que la exclusión de JaCoCo del \texttt{pom.xml} no cubre, solo
 excluye \texttt{ec/edu/uteq/presustentaciones/dto/**}) están bien probados --- sin ese efecto, la
-cobertura de ramas sería 71.09\,\%, todavía por encima del umbral pero con un margen mucho más ajustado
+cobertura de ramas sería 71.09\,\% (cálculo sobre la corrida del 2026-09-19), todavía por encima del umbral pero con un margen mucho más ajustado
 (ver \texttt{docs/observaciones/OBSERVACIONES.md}, OBS-28, para el cálculo completo). Supera el umbral
 del 70\,\% en líneas \emph{y} en ramas, con margen real (más de 12 y 1 puntos respectivamente, siendo
 conservadores sobre el efecto de Lombok). El resto de esta sección documenta el historial de cómo se
@@ -400,7 +400,7 @@ corrida de cierre, no la más favorable de las dos.
 
 El foco de esta corrida fue el único paquete que había quedado bajo el umbral tras ese retroceso: los
 controladores, que habían llegado a 72.00\,\%/77.41\,\% (líneas/ramas) el 06-09, cayeron a 69.47\,\% de
-líneas para el 11-09 (0.53 puntos bajo el umbral, ramas sin cambio en 75.00\,\%) por el mismo efecto de
+líneas para el 11-09 (0.53 puntos bajo el umbral, ramas sin cambio en 75\,\%) por el mismo efecto de
 denominador. Se cerró con 5 pruebas nuevas dirigidas a los dos controladores que seguían sin ninguna
 prueba (\texttt{MeController}, \texttt{ExternalApiController}) y a tres endpoints sin ejercitar en otros
 dos (\texttt{AuditController\#/tablas}, \texttt{TeacherController\#/disponibles} y \texttt{\#/paginado}).

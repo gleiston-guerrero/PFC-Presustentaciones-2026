@@ -11,7 +11,7 @@ podía crear, alterar o borrar cualquier tabla del esquema `presus`.
 
 ## Qué agrega esta migración
 
-[`V5__roles_y_privilegios.sql`](../../backend/src/main/resources/db/migration/V5__roles_y_privilegios.sql)
+[`V11__roles_y_privilegios.sql`](../../backend/src/main/resources/db/migration/V11__roles_y_privilegios.sql)
 crea dos roles de PostgreSQL con privilegios distintos según responsabilidad:
 
 | Rol | Uso previsto | Privilegios |
@@ -21,7 +21,7 @@ crea dos roles de PostgreSQL con privilegios distintos según responsabilidad:
 | (el rol de `DB_USERNAME` actual, ej. superusuario) | Migraciones de Flyway / administración de esquema | Sin cambios — sigue siendo el único con privilegios de DDL, ya que es quien ejecuta `V1`...`V5` al arrancar la aplicación. |
 
 `ALTER DEFAULT PRIVILEGES` garantiza que las tablas/funciones creadas por migraciones
-**futuras** (V6+) hereden automáticamente estos mismos privilegios para `presus_app` y
+**futuras** (V12+) hereden automáticamente estos mismos privilegios para `presus_app` y
 `presus_readonly`, sin necesidad de volver a otorgar permisos a mano.
 
 Las contraseñas del archivo de migración (`presusAppDemo2026`, `presusReadonlyDemo2026`)

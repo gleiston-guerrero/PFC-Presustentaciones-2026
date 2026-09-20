@@ -9,7 +9,7 @@ Acotado).
 tras reescribir las historias de usuario en formato Connextra+INVEST+Gherkin
 ([`../requisitos/historias/`](../requisitos/historias/)) y los casos de uso Cockburn
 ([`../requisitos/casos-de-uso/`](../requisitos/casos-de-uso/)). Este archivo se anexa al SRS final
-([`../requisitos/SRS-v1.0.0.pdf`](../requisitos/SRS-v1.0.0.pdf)) como exige el criterio D0R.
+([`../requisitos/historico/SRS-v1.0.0-2026-09-08.pdf`](../requisitos/historico/SRS-v1.0.0-2026-09-08.pdf)) como exige el criterio D0R.
 
 ## Parte 1 — 9 características individuales, los 12 requisitos
 

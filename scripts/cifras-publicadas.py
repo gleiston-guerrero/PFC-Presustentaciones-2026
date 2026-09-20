@@ -67,7 +67,10 @@ HISTORICOS = (
 RE_CORRIDA = re.compile(r"docs/mediciones/jacoco/\d{4}-\d{2}-\d{2}")
 
 # Cifra global: dos decimales. Un decimal es desglose por paquete, no compite.
-RE_PCT = re.compile(r"(?<![\d.,])(\d{2})[.,](\d{2})\s*(?:\\,)?\s*%")
+# En LaTeX el porcentaje se escribe "82.01\,\%": hasta la revision del 19-sep esta
+# expresion no admitia la barra invertida antes del %, asi que NINGUNA cifra del
+# informe se revisaba (cambiar 82.01 por 85.01 en el .tex no lo veia nadie).
+RE_PCT = re.compile(r"(?<![\d.,])(\d{2})[.,](\d{2})\s*(?:\\,)?\s*\\?%")
 RE_PRUEBAS = re.compile(
     r"(?<![\d.,])(\d{3,4})\s*(?:/\s*\d{3,4}\s*)?(?:pruebas|tests|Tests run)", re.I)
 
@@ -82,7 +85,8 @@ RE_PROCEDENCIA = re.compile(
     r"|\d{1,2}[-/\s](?:ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)"
     r"|\d{1,2}\s+de\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|"
     r"septiembre|octubre|noviembre|diciembre)"
-    r"|\bv\d+\.\d+\.\d+\b",
+    r"|\bv\d+\.\d+\.\d+\b"
+    r"|(?<![\d.])\d{1,2}-(?:0[1-9]|1[0-2])(?![\d-])",   # "13-09": dd-mm sin año
     re.I)
 
 # Frases con las que un texto declara que esa cifra es la que rige AHORA. Una
@@ -180,6 +184,11 @@ def corridas_archivadas():
 
 def revisar_fracciones(archivos, pares):
     totales = {tot for _, tot in pares}
+    # Un total "casi igual" al de cierre (4901 frente a 4904) es la firma de una cifra
+    # vencida, y no lo registra ninguna corrida, asi que el filtro de arriba lo
+    # dejaba pasar: asi se colo 4019/4901 en VERIFICACION.md junto a "corrida de cierre".
+    datos = canonica()
+    cierre = {t for _, t, _ in datos[0].values()} if datos else set()
     malas = []
     for f in archivos:
         try:
@@ -197,7 +206,7 @@ def revisar_fracciones(archivos, pares):
             # como globales. Sin este filtro se marcaban los desgloses por
             # paquete (2245/3197) y numeros sin relacion (205871/205871), y una
             # salida llena de ruido no la lee nadie.
-            if tot not in totales:
+            if tot not in totales and not any(abs(tot - c) <= 15 for c in cierre):
                 continue
             ventana = txt[max(0, m.start() - 160): m.end() + 160]
             if not CTX_COBERTURA.search(ventana):
@@ -208,11 +217,46 @@ def revisar_fracciones(archivos, pares):
     return malas
 
 
+def conocidos():
+    """Porcentajes y conteos de pruebas que ALGUNA fuente historica del expediente registra.
+
+    La procedencia (una fecha en el parrafo) exime a una cifra de ser la de
+    cierre, pero no de existir: "85.01 % (2026-09-18)" lleva fecha y no lo
+    respalda ninguna corrida. Se acepta una cifra fechada solo si el expediente
+    la registra en algun sitio --- las carpetas de corridas y los documentos
+    historicos, que documentan lo que era cierto cuando se escribieron.
+    """
+    pct, cnt = set(), set()
+    fuentes = [f for pat in ("**/*.md", "**/*.tex")
+               for f in glob.glob(pat, recursive=True)
+               if "node_modules" not in f
+               and (not vigente(f) or RE_CORRIDA.search(f.replace("\\", "/")))]
+    for f in fuentes:
+        try:
+            txt = io.open(f, encoding="utf-8", errors="replace").read()
+        except OSError:
+            continue
+        for m in RE_PCT.finditer(txt):
+            pct.add(f"{m.group(1)}.{m.group(2)}")
+        for m in RE_PRUEBAS.finditer(txt):
+            cnt.add(m.group(1))
+    for x in glob.glob("docs/mediciones/jacoco/*/jacoco.xml"):
+        try:
+            for c in ET.parse(x).getroot().findall("counter"):
+                if c.get("type") in ("LINE", "BRANCH"):
+                    co, mi = int(c.get("covered")), int(c.get("missed"))
+                    pct.add(f"{co / (co + mi) * 100:.2f}")
+        except ET.ParseError:
+            pass
+    return pct, cnt
+
+
 def revisar(archivos, cob, pruebas):
     linea_pct = f"{cob['LINE'][2]:.2f}"
     rama_pct = f"{cob['BRANCH'][2]:.2f}"
     validos = {linea_pct, rama_pct}
 
+    pct_conocidos, cnt_conocidos = conocidos()
     malas, conteos = [], []
     for f in archivos:
         try:
@@ -233,12 +277,34 @@ def revisar(archivos, cob, pruebas):
                 if val in validos:
                     continue
                 # Si el texto dice que es la cifra vigente, la fecha no la salva.
-                if tiene_fecha and not RE_VIGENTE.search(ctx):
-                    continue
+                if val in pct_conocidos:
+                    if tiene_fecha and not RE_VIGENTE.search(ctx):
+                        continue
+                    # Un parrafo que declara la cifra de cierre y ademas narra las
+                    # corridas anteriores (como el de cobertura del informe) no puede
+                    # eximirlas a todas por llevar una fecha: se mira el entorno
+                    # inmediato de ESA cifra.
+                    cerca = bloque[max(0, m.start() - 200): m.end() + 200]
+                    pegado = bloque[max(0, m.start() - 80): m.end() + 80]
+                    if RE_PROCEDENCIA.search(cerca) and not RE_VIGENTE.search(pegado):
+                        continue
                 malas.append((rel, val + " %", " ".join(ctx.split())[:140]))
             if pruebas:
                 for m in RE_PRUEBAS.finditer(bloque):
-                    if m.group(1) == pruebas or tiene_fecha:
+                    if m.group(1) == pruebas:
+                        continue
+                    # Solo cuentan como "el numero de pruebas de la suite" las cifras
+                    # de ese orden de magnitud: 140 o 106 son las pruebas de un modulo.
+                    if not 500 <= int(m.group(1)) <= 1200:
+                        continue
+                    if tiene_fecha and m.group(1) in cnt_conocidos:
+                        continue
+                    # Un conteo historico que ningun archivo registra (el de una
+                    # corrida vieja) se acepta si dice de que dia es JUNTO a la cifra.
+                    # Una fecha en algun otro punto del bloque no basta: es como se
+                    # colaba "860 pruebas" en una tabla que ademas hablaba del 18-sep.
+                    cerca = bloque[max(0, m.start() - 120): m.end() + 120]
+                    if RE_PROCEDENCIA.search(cerca) and not RE_VIGENTE.search(cerca):
                         continue
                     conteos.append(
                         (rel, m.group(1) + " pruebas", " ".join(ctx.split())[:140]))

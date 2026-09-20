@@ -5,7 +5,7 @@
 
 | Criterio | Cumple | Evidencia / justificación |
 |---|---|---|
-| El problema/necesidad que motiva el artefacto está claramente definido | ✅ Sí | `docs/requisitos/SRS-v1.0.0.tex` sección 1.1 (Propósito) y 2.1 (Perspectiva del Producto) |
+| El problema/necesidad que motiva el artefacto está claramente definido | ✅ Sí | `docs/requisitos/historico/SRS-v1.0.0-2026-09-08.tex` sección 1.1 (Propósito) y 2.1 (Perspectiva del Producto) |
 | Los requisitos del artefacto están documentados de forma verificable | 🟡 Parcial | 12 HU/RF y 4 RNF documentados en el SRS v1.0.0, con criterios de aceptación en Gherkin; ver [`INCOSE-REQUIREMENTS.md`](INCOSE-REQUIREMENTS.md) para hallazgos sobre la calidad de la redacción y [`../trazabilidad/matriz.csv`](../trazabilidad/matriz.csv) para qué porcentaje tiene evidencia automatizada real (100% de los Must; 86.7% general (13/15), actualizado 2026-09-06 — RF-09/RF-10 de prioridad Could/Should siguen sin test, RF-08 ya se cerró) |
 | El artefacto se evaluó contra los requisitos declarados, no solo se construyó | ✅ Sí | `docs/trazabilidad/matriz.csv` conecta Requisito → HU → Módulo → Endpoint → Test → Evidencia empírica |
 | Se documentan las decisiones de diseño y sus alternativas consideradas | ✅ Sí | 7 ADRs en `docs/adr/` (arquitectura general, JWT, estrategia de BD, frontend, seguridad, despliegue, permisos dinámicos) |

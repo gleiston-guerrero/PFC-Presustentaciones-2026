@@ -27,8 +27,8 @@ commits, para comprobar que ninguna afirmación de este archivo quedó desactual
 | # | Estado | Qué se corrió hoy y qué dio |
 |---|---|---|
 | P1 | 🟡 Parcial | **Cifra de cierre (ronda del 18-sep):** `n=15 media=52.83 DE=12.06 IC95=[46.16,59.51]` — reproduce exacto desde el CSV sellado por un tercero. La ronda en papel (`n=4 media=48.75`) queda como registro histórico. Abierto: α = 0,599 y el origen de las 11 hojas retractadas |
-| P2 | ✅ Cumple | `./mvnw clean test`: **806 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,01 %** (4019/4901), BRANCH **73,49 %** (1483/2018) — corrida de cierre del 2026-09-19 |
-| P3 | ✅ Cumple | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, 0 errores**, `doclint` activo. Escáner propio: 734/768 (**95,6 %**). Avisos con el tope levantado: **682 → 170**, y los 170 restantes son un artefacto de que javadoc no ve los constructores que genera Lombok (162 de 163 clases lo confirman) — ver la sección P3 |
+| P2 | ✅ Cumple | `./mvnw clean test`: **806 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,01 %** (4022/4904), BRANCH **73,49 %** (1483/2018) — corrida de cierre del 2026-09-19 |
+| P3 | ✅ Cumple | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, 0 errores**, `doclint` activo. Escáner propio: 777/778 (**99,9 %**). `@param` tautológicos: **35,2 % → 0,0 %**. Avisos con el tope levantado: **682 → 170**, y los 170 restantes son un artefacto de que javadoc no ve los constructores que genera Lombok (162 de 163 clases lo confirman) — ver la sección P3 |
 | P4 | ✅ Cumple en `src/main` | Renombrado completado: **0,0 %** de tipos y métodos (antes 35,7 % y 39,1 %); 1,5 %/4,3 % bajo la definición más amplia. Brecha declarada: 436 de 807 nombres de `@Test` siguen en español |
 | P5 | ✅ Cumple | 6 corridas Lighthouse versionadas en `prod-runs/`; URL pública en la primera pantalla del README |
 | P6 | ✅ Cumple | `\label{tab:holm-bonferroni}` presente y citado con `\ref` en `10-evaluacion-empirica.tex:85` |
@@ -340,13 +340,56 @@ mejorar un número, así que se declara en vez de maquillarse.
 | | |
 |---|---|
 | `mvn javadoc:javadoc` con `doclint` activo | ✅ BUILD SUCCESS, **0 errores** |
-| Escáner propio, metodología amplia | **95,6 %** (734/768), sobre el umbral del 90 % |
+| Escáner propio, metodología amplia | **99,9 %** (777/778), sobre el umbral del 90 % |
 | Bloques huérfanos bajo una anotación | ✅ **0** (eran 75, más 5 que el detector no veía) |
 | Avisos de `javadoc` sin tope | **170**, todos de la misma causa declarada |
 | Avisos que señalan documentación ausente | ✅ **0** (eran 502) |
 
 Nota de trazabilidad: los 10 constructores explícitos son código, están cubiertos por las pruebas, y
-por eso la cobertura de cierre pasó de 4019/4901 a **4022/4904 (82,01 %)** en la misma corrida.
+por eso la cobertura de cierre pasó de 82,03 % (4017/4897, corrida limpia del 2026-09-18) a **4022/4904 (82,01 %)** en la corrida de cierre.
+
+### Revisión del 2026-09-19 (tarde): el contenido era de plantilla
+
+La revisión final dio P3 por «cumple con reservas»: por AST el Javadoc está completo, pero
+*«el contenido es de plantilla: el 29 % de los `@param` son tautológicos»*. Es exacto, y es el mismo
+defecto visto desde otro lado: un bloque que `javadoc` da por bueno y un lector no aprovecha.
+
+**Medida.** No conocemos el criterio exacto del evaluador; usamos uno mecánico y estricto
+(`scripts/p3-param-tautologicos.py`): un `@param` es tautológico si su descripción, quitadas las
+palabras vacías, no aporta ninguna palabra que el nombre del parámetro no tenga ya (`@param submissionId
+submissionId`, o `id de la submission`). Sobre el commit evaluado da **376 de 1068 = 35,2 %** — más
+alto que el 29 % del evaluador, así que lo que baje con esta medida baja con la suya.
+
+| | Antes | Ahora |
+|---|---|---|
+| `@param` tautológicos | **376 / 1068 (35,2 %)** | **0 / 1059 (0,0 %)** |
+| Umbral que impone `make verify` | — | ≤ 5 % |
+| Javadoc apilados (prosa real perdida) | 5 | **0** |
+| Javadoc dentro de una consulta JPQL | 1 | **0** |
+
+**Lo que se descubrió al reescribirlos, y no estaba en ninguna revisión:**
+
+1. **Cinco Javadoc apilados.** Un bloque de prosa real —con la explicación de por qué la consulta usa
+   sentinelas de fecha, o de por qué hace `CAST(:nivel AS string)`— seguido de otro generado.
+   `javadoc` solo enlaza el último, así que **la prosa del primero se perdía sin que nada avisara**
+   (`MinutesRepository`, `SubmissionRepository` ×2, `TopicProposedRepository`, `TopicController`). Se
+   fusionaron: ahora esa explicación sí aparece en el Javadoc publicado.
+2. **Un comentario Javadoc metido dentro de una consulta JPQL** (`ScheduleRepository.findConflictos`,
+   desde el commit `6aea088`, 2026-09-17, y por tanto dentro de `v1.1.0`). Un generador automático lo
+   insertó en mitad del bloque de texto de la consulta, con un resumen sin sentido («F u n c t i o n.»).
+   Hibernate lo tolera como comentario, por eso ninguna prueba falló; pero era basura dentro de una
+   consulta, y `javadoc` tampoco lo ve. **Se quitó y la consulta volvió a su forma original.**
+3. Una constante de `enum` con su Javadoc duplicado.
+
+Los tres los detecta ahora `make verify`, y se comprobó que los detecta: contra el estado de `HEAD` antes
+de arreglarlos, el script marca los 7 (5 apilados, 1 en la consulta, 1 duplicado).
+
+**Lo que sigue siendo de plantilla, dicho sin adornos.** El resumen de muchos bloques es genérico
+(«Search con filtros.», «Main.»), y 100 de los 680 `@return` son la misma frase («los resultados
+encontrados (vacío si no hay coincidencias)»). No es tautológico —dice algo, y es cierto— pero no es
+prosa escrita para el método. Los 170 avisos de `javadoc` (artefacto de Lombok) tampoco cambian.
+**Esto no cierra P3 por completo; lo deja donde el evaluador dijo: «cumple con reservas», con una
+reserva menos.**
 
 ---
 
@@ -1052,6 +1095,62 @@ con el detalle exacto de la imprecisión, y esta vez sí se corrigió lo que sí
   debían tener — la recuperación, tal como está planteada, ya no es un trabajo de equipo activo, así
   que una "conversación con el equipo completo" no es estructuralmente posible en este momento. Anotado
   también en `BITACORA-COMMITS-2026-09-02.md`.
+
+---
+
+## EV-2 — El verificador, probado con mutaciones (revisión final del 2026-09-19)
+
+**Lo que se señaló:** el evaluador probó `make verify` con **15 mutaciones: detecta 5 y sobreviven 10**.
+*«Es fuerte comparando código contra código y ciego comparando documento contra medición.»* Nombró las
+que sobreviven: cambiar una cifra de cobertura o del SUS en el informe, invertir la conclusión de una
+prueba estadística, apuntar Lighthouse a `localhost`, borrar un archivo de evidencia citado, y mover la
+etiqueta (que solo avisaba).
+
+**Verificado: es cierto.** Antes de esta revisión ningún detector contrastaba un documento contra su
+dato (P1 comprobaba el CSV, no lo que el informe decía de él), así que esas mutaciones sobrevivían por
+construcción. Se escribió un arnés que inyecta el defecto, corre los detectores y restaura el archivo.
+Incluso con los detectores nuevos, la primera ejecución dejó **6 de 23 vivas** (las cifras de cobertura
+del informe ×3, el alfa de Cronbach y dos conclusiones estadísticas). Arreglarlas destapó tres defectos
+reales que llevaban ahí desde antes:
+
+1. **`cifras-publicadas.py` nunca revisó una sola cifra del informe.** Su expresión regular para el
+   porcentaje no admitía la forma de LaTeX (`82.01\,\%`), así que cambiar 82.01 por 85.01 en el `.tex` no
+   lo veía nadie. Corregida; al revisar por primera vez el informe apareció narrativa histórica con
+   cifras sin fecha pegada, que ahora la lleva.
+2. **Una fracción vencida (`4019/4901`) seguía publicada en `VERIFICACION.md`** junto a «corrida de
+   cierre», cuando la cifra es `4022/4904`. El detector la ignoraba porque su total (4901) no lo registra
+   ninguna corrida. Ahora se revisan también los totales casi iguales al de cierre.
+3. **Cinco citas a archivos que ya no existen**, en documentos vigentes: `V5__roles_y_privilegios.sql` y
+   `V6__indices_optimizacion_consultas.sql` (se renumeraron a V11 y V12 al fusionar 54 commits) y tres
+   enlaces a `SRS-v1.0.0.pdf`/`.tex` (movidos a `docs/requisitos/historico/`). Los enlaces rotos estaban
+   ahí; nada comprobaba que lo citado existiera.
+
+**Lo que hay ahora** (`make verify`, sección «EV-2 — Documentos contra sus datos»):
+
+| Comprobación | Script | Qué contrasta |
+|---|---|---|
+| Lighthouse | `ev2-documental.py` | Las 6 corridas miden la URL pública (nunca `localhost`), todas la misma; el reporte, el informe y `make bench-lh` declaran esa misma; la figura del informe es la generada |
+| Evidencia citada | `ev2-documental.py` | Todo archivo del repositorio que un documento vigente cita existe |
+| SUS | `ev2-documental.py` | Media, DE, IC 95 % y α publicados == recalculados del CSV; p ajustados y decisión de Holm == calculados, y la frase junto al p no afirma lo contrario |
+| Rendimiento (P6) | `ev2-documental.py --nb` | Los p ajustados de la familia de 3 pruebas, en informe y `k6/README.md`, == los que imprime el cuaderno al ejecutarse |
+| Cobertura y pruebas | `cifras-publicadas.py` | Porcentajes, conteos y fracciones publicados son los de cierre, o de una corrida que el expediente registra y que se nombra junto a la cifra |
+| Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 26 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+
+**Resultado del arnés: 26 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
+vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
+tres defectos de Javadoc de P3.
+
+**Límites, dichos sin adornos:**
+
+- Las 15 mutaciones del evaluador no las tenemos; nombró 6 clases de las 10 que sobreviven. Se cubren
+  esas seis y otras, **pero no se puede afirmar que sean las mismas 10**.
+- Es un contraste de cifras *ancladas* a una frase. Quien reescriba una cifra con una redacción que
+  ninguna regla reconoce, no la ve. Por eso cada regla exige encontrar un mínimo de casos (si la
+  expresión deja de casar, falla en vez de pasar en silencio) y por eso existe el arnés.
+- No se comprueba que el texto que rodea a una cifra *diga lo correcto*, solo que la cifra coincida.
+- La mutación de la etiqueta exige que `make verify` se corra **con la etiqueta en `HEAD`**: mover la
+  etiqueta es siempre el último paso.
 
 ---
 

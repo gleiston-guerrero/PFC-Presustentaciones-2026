@@ -178,6 +178,16 @@ else
   fail "P3: hay Javadoc que javac no asocia -- corrige con scripts/ev2-javadoc-recolocar.py --aplicar"
 fi
 
+# La revision del 19-sep dio P3 "con reservas": el Javadoc estaba completo por AST
+# pero "el 29 % de los @param son tautologicos". Se mide, con el mismo criterio, y
+# se comprueban dos defectos estructurales que doclint no ve (bloques apilados y
+# Javadoc metido dentro de una consulta).
+if python scripts/p3-param-tautologicos.py; then
+  ok "P3: los @param dicen algo mas que el nombre del parametro, y no hay Javadoc apilado ni dentro de una consulta"
+else
+  fail "P3: hay @param tautologicos por encima del umbral, o Javadoc mal colocado -- ver arriba"
+fi
+
 # El arbitro de P3 no es un contador propio, es javadoc. Se corre de verdad y se
 # levanta el tope de avisos: por defecto javadoc corta en 100, que es justo la
 # cifra que vio la revision del 18-sep ("100 avisos, el tope") y que por eso no
@@ -303,6 +313,37 @@ else
 fi
 echo
 
+echo "=== EV-2 -- Documentos contra sus datos (cifras, p-valores, Lighthouse, evidencia citada) ==="
+# La revision del 19-sep probo el verificador con 15 mutaciones y sobrevivieron 10:
+# era fuerte comparando codigo contra codigo y ciego comparando documento contra
+# medicion. Esto cierra ese lado: recalcula y contrasta lo que los documentos publican.
+NB_JSON="$TMPV/verify-nb.json"
+if [ -s "$NB_JSON" ]; then
+  ARG_NB="--nb $NB_JSON"
+else
+  ARG_NB=""
+  warn "EV-2: la familia de p-valores de rendimiento no se contrasto con el cuaderno (no se ejecuto)"
+fi
+if PYTHONIOENCODING=utf-8 python scripts/ev2-documental.py $ARG_NB; then
+  ok "EV-2: ningun documento vigente contradice a su dato (SUS, Holm, Lighthouse, evidencia citada)"
+else
+  fail "EV-2: un documento publica algo que su dato no respalda -- ver arriba"
+fi
+if [ "$RAPIDO" = "1" ]; then
+  warn "EV-2: arnes de mutaciones omitido por --rapido (python scripts/mutaciones-gate.py)"
+elif [ ! -s "$NB_JSON" ]; then
+  fail "EV-2: sin la salida del cuaderno no se puede correr el arnes de mutaciones"
+else
+  # El verificador se prueba a si mismo: inyecta defectos y exige que cada uno
+  # haga salir a algun detector distinto de 0. Restaura byte a byte.
+  if PYTHONIOENCODING=utf-8 python scripts/mutaciones-gate.py --nb "$NB_JSON" > "$TMPV/mutaciones.txt" 2>&1; then
+    ok "EV-2: $(tail -1 "$TMPV/mutaciones.txt")"
+  else
+    cat "$TMPV/mutaciones.txt"; fail "EV-2: sobrevive alguna mutacion -- el verificador no ve un defecto que deberia ver"
+  fi
+fi
+echo
+
 echo "=== P8 -- Autorizacion de endpoints de escritura ==="
 python docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py || fail "P8: audit-endpoints-autorizacion.py fallo"
 # Lo anterior comprueba que la anotacion ESTE. Esto comprueba que lo que hay
@@ -320,12 +361,17 @@ echo
 echo "=== P9 -- Etiqueta v1.1.0 ==="
 if git rev-parse v1.1.0 >/dev/null 2>&1; then
   ok "tag v1.1.0 existe -> $(git rev-list -n1 v1.1.0)"
-  DESFASE=$(git rev-list --count v1.1.0..HEAD)
-  if [ "$DESFASE" = "0" ]; then
-    ok "la etiqueta apunta a HEAD: lo que se defiende es lo que esta etiquetado"
-  else
-    warn "P9: la etiqueta va $DESFASE commit(s) por detras de HEAD -- hay que reubicarla antes del cierre"
-  fi
+  # Antes esto solo avisaba: el evaluador movio la etiqueta y el verificador siguio
+  # en verde. Ahora es [FAIL] salvo en --rapido (trabajo local, donde ir por delante
+  # de la etiqueta es lo normal hasta el ultimo paso).
+  if [ "$RAPIDO" = "1" ]; then ARG_TAG="--rapido"; else ARG_TAG=""; fi
+  ETQ=$(python scripts/p9-etiqueta.py $ARG_TAG) && RC=0 || RC=$?
+  echo "$ETQ"
+  case "$ETQ" in
+    *"[WARN]"*) warn "P9: la etiqueta no esta en HEAD -- hay que reubicarla antes del cierre" ;;
+    *"[OK]"*)   ok "P9: la etiqueta anotada apunta a HEAD" ;;
+    *)          fail "P9: la etiqueta v1.1.0 no esta en HEAD o no es anotada (esto ya no solo avisa)" ;;
+  esac
 else
   fail "P9: no existe el tag v1.1.0"
 fi
