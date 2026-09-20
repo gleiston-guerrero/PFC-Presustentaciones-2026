@@ -388,6 +388,18 @@ else
 fi
 echo
 
+# La revision final dio P9 "con reservas": el tarball es bit a bit el del commit, pero los
+# metadatos del REGISTRO estaban mal en tres ejes (cuenta antigua, v1.0.0, sin dataset).
+# Se comprueba contra la API publica de Zenodo, no contra lo que el repositorio dice
+# haber puesto en el formulario.
+if [ "$RAPIDO" = "1" ]; then ARG_ZEN="--rapido"; else ARG_ZEN=""; fi
+if PYTHONIOENCODING=utf-8 python scripts/p9-zenodo-registro.py $ARG_ZEN; then
+  ok "P9: los metadatos del registro de Zenodo coinciden con el repositorio (cuenta vigente, v1.1.0, dataset enlazado)"
+else
+  fail "P9: el registro de Zenodo contradice al repositorio -- ver arriba (se corrige en zenodo.org > Editar)"
+fi
+echo
+
 echo "=== P10 -- Caratula solo con identificacion + URL ==="
 PORT=Informe-Final/secciones/00-portada.tex
 PORT_DOI=$(grep -c "zenodo\|doi.org" "$PORT" || true)

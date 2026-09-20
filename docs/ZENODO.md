@@ -45,25 +45,39 @@ pública del registro, no dando por buena la edición:
 | `Description` | ✅ Describe los cambios de v1.1.0 y su estado medido. Al publicar se arrastró la de v1.0.1 |
 | `Version` en la cadena | ✅ `v1.0.0 → v1.0.1 → v1.1.0` bajo el mismo DOI de concepto |
 
-**Lo que queda, declarado en vez de corregido en silencio:**
+### Lo que la revisión final del 2026-09-19 pidió corregir (P9), y cómo se comprueba
 
-| Campo | Cómo está | Por qué no es un enlace roto |
-|---|---|---|
-| *Related works* → **Is supplement to** | `github.com/carla22072004/…/tree/v1.0.0` | Apunta al **tag v1.0.0** en un registro que archiva v1.1.0. Es la incoherencia real que queda |
-| **Repository URL** | `github.com/carla22072004/PFC-Presustentaciones-2026` | Cuenta anterior a la transferencia |
-| *External resources* → **Available in** | `carla22072004/…`, *Release: v1.0.0* | Residuo de la integración GitHub↔Zenodo que creó la v1.0.0; no es editable desde el formulario |
+Dio P9 «cumple con reservas»: el tarball depositado es bit a bit el `git archive` del commit
+declarado (1153 de 1153 archivos), **pero los metadatos del registro están mal en tres ejes**. Es
+exacto; la API pública del registro lo confirma:
 
-Los tres nombran la cuenta `carla22072004`, anterior a la transferencia del repositorio. **No están
-rotos:** GitHub conserva la redirección, comprobado con `curl`:
+| Eje | Cómo está en el registro | Qué tiene que decir | Dónde se edita |
+|---|---|---|---|
+| 1. Cuenta antigua | *Repository URL* = `github.com/carla22072004/PFC-Presustentaciones-2026` | `https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026` | Editar → sección *Software* → *Repository URL* |
+| 2. Versión anterior | *Related works* → **Is supplement to** = `github.com/carla22072004/…/tree/v1.0.0` | `https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026/tree/v1.1.0` (URL, relación *Is supplement to*, tipo *Software*) | Editar → *Related works* → cambiar ese identificador |
+| 3. Sin dataset | No hay ningún identificador que apunte al conjunto de datos | Agregar `10.5281/zenodo.22398713` (DOI), relación **Is supplemented by**, tipo *Dataset* | Editar → *Related works* → agregar |
 
+Una corrección que este archivo dijo antes —que el bloque *External resources* «no es editable»— era
+una conclusión sin comprobar: los tres datos salen de campos del formulario (`code:codeRepository` y
+`related_identifiers` en la API), y los tres son editables. El bloque de la página es lo que el registro
+muestra a partir de ellos.
+
+**Comprobación, sin fiarse de lo que uno recuerde haber guardado:**
+
+```bash
+python scripts/p9-zenodo-registro.py
 ```
-$ curl -sI https://github.com/carla22072004/PFC-Presustentaciones-2026
-HTTP 301 -> https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026
-```
 
-De modo que resuelven al repositorio correcto. La única incoherencia de contenido es que el
-*supplement to* cita `tree/v1.0.0` en vez de `tree/v1.1.0`; se deja anotada aquí porque declararla
-cuesta menos que descubrirla después.  
+Lee `https://zenodo.org/api/records/22839517` y falla mientras alguno de los tres ejes siga mal (además
+de exigir `Version = v1.1.0` y que la descripción no lleve texto de instrucción pegado). Corre dentro de
+`make verify`. Los datos esperados salen de `CITATION.cff` y de `ZENODO-DATASET.md`, no de constantes.
+
+**El dataset, una precisión que conviene saber antes de que la haga otro:** el depósito enlazado
+(`10.5281/zenodo.22398713`) es de **2026-09-05** y contiene las mediciones de rendimiento, seguridad y
+calidad web (35 archivos: k6, ZAP, Lighthouse, JaCoCo; se listó el `.zip` público). **No incluye ningún
+dato del SUS**, ni la ronda en papel ni la del 18-sep (n=15): esos viven en el repositorio. Enlazarlo
+cierra lo que se pidió; incorporar esa ronda al dataset sería una versión nueva de *ese* depósito, y
+no se hizo.  
 **Licencia:** MIT Open Source License  
 **Alcance de este documento:** el DOI del **software** (el código de este repositorio). El
 conjunto de datos de mediciones (k6, ZAP, Lighthouse, JaCoCo) se deposita por separado, con su
