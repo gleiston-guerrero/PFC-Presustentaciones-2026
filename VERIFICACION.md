@@ -1192,7 +1192,7 @@ con el detalle exacto de la imprecisión, y esta vez sí se corrigió lo que sí
 - **Aclaración importante (misma fecha, tras confirmar con el autor de este examen):** el correo es de
   un solo integrante porque este examen suspenso lo está cursando y sustentando Alava Alvarado **en
   solitario**. Los otros tres integrantes originales del equipo (Moncayo Loor, Zamora Arias, Barreto
-  Rosado) no cursan esta ronda de recuperación y no tienen commits en el tramo `f3d1ff4..HEAD`, lo que
+  Rosado) no participan en esta ronda de recuperación y no tienen commits en el tramo `f3d1ff4..HEAD`, lo que
   es verificable con `git log`. *(Redacción corregida el 2026-09-19: aquí se explicaba la ausencia con
   la situación académica de cada uno. La revisión del 18-sep observó en P10 que el juicio sobre los
   compañeros retirado de la carátula había reaparecido en otros archivos, y tenía razón: lo que este
@@ -1244,9 +1244,9 @@ reales que llevaban ahí desde antes:
 | Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
 | Bloques de este archivo | `ev1-verificacion.py` | Cada bloque marcado `ev1:run` reproduce su salida; la tabla coincide con el resumen |
 | Titularidad | `ev4-contribuciones.py --check` | Tramo **y** todo el historial: totales, reparto por persona, identidades sin dueño |
-| El propio verificador | `mutaciones-gate.py` | Inyecta 29 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 32 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
 
-**Resultado del arnés: 29 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
+**Resultado del arnés: 32 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
 
@@ -1322,6 +1322,36 @@ explícita y explicada; si el docente necesita esas firmas, hay que pedírselas 
 
 **Sigue abierto, declarado:** los 92 commits con correo personal de esta ronda no se pueden reescribir sin
 cambiar todos los hashes que este expediente cita como evidencia (ver `CONTRIBUCIONES.md`).
+
+---
+
+## Personas del equipo — juicio académico en archivos públicos (revisión final, corrección 7.4)
+
+**Lo que se señaló:** retirar de **cuatro archivos públicos** el juicio académico sobre los compañeros.
+
+**Verificado: eran cuatro, y por eso el arreglo de P10 no bastó.** El 2026-09-16 se retiró de la carátula;
+pero la misma frase había sido copiada en otros sitios, y arreglar el sitio que el evaluador vio no
+arregla las copias:
+
+| Archivo | Qué decía |
+|---|---|
+| `CITATION.cff` (2 comentarios) | Daba como razón de la falta de ORCID de un integrante su situación en el programa |
+| `CONTRIBUTORS.md` | Lo mismo, para el mismo integrante |
+| `docs/observaciones/BITACORA-COMMITS-2026-09-02.md` | Explicaba la ausencia de tres integrantes en esta ronda con su resultado en la materia |
+| `docs/observaciones/OBSERVACIONES.md` (OBS-23 y OBS-47) | Repetía las dos explicaciones anteriores |
+
+**Corregido:** esos textos dicen ahora lo único que este expediente puede sostener con `git log` y con la
+API de ORCID —quién ejecutó los commits y qué identificadores están registrados—, sin razón adjunta. En los
+dos archivos que son bitácora (que por regla no se reescribe) se dejó una nota fechada del cambio en vez de
+borrar sin dejar rastro. Sobre por qué esto no debe reaparecer, ver `CONTRIBUCIONES.md`: el expediente
+académico de un tercero no es del equipo publicarlo, y menos en un repositorio público y en un documento que
+esas personas no han firmado.
+
+**Y para que no vuelva:** `scripts/ev2-documental.py` revisa **todos** los archivos de texto que `git`
+rastrea —no solo los «vigentes»— buscando esas fórmulas, y falla si aparece alguna. Se probó con tres
+mutaciones (una por archivo tipo), que se detectan. Advertencia honesta: es una lista de fórmulas conocidas;
+una redacción distinta del mismo juicio no la vería. Cubre exactamente lo que se encontró, y por eso este
+propio archivo describe el asunto sin citar las frases.
 
 ---
 

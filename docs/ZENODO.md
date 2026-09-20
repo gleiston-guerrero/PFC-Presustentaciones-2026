@@ -62,6 +62,11 @@ una conclusión sin comprobar: los tres datos salen de campos del formulario (`c
 `related_identifiers` en la API), y los tres son editables. El bloque de la página es lo que el registro
 muestra a partir de ellos.
 
+**Estado: corregido y comprobado el 2026-09-19.** Los tres ejes se editaron desde «Editar» y `python
+scripts/p9-zenodo-registro.py` los lee de la API pública: cuenta vigente, `tree/v1.1.0`, dataset enlazado. El
+bloque *External resources* de la página pasó a mostrar `gleiston-guerrero/PFC-Presustentaciones-2026`, *Release:
+v1.1.0*.
+
 **Comprobación, sin fiarse de lo que uno recuerde haber guardado:**
 
 ```bash

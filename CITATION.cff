@@ -1,8 +1,8 @@
 # ORCID: 3 de 4 integrantes registrados (Alava Alvarado, Zamora Arias, Barreto Rosado -- los tres
 # verificados contra la API publica de ORCID, https://pub.orcid.org/v3.0/{id}/person, antes de
 # agregarlos aqui: Barreto el 2026-09-06, Zamora el 2026-09-11). Moncayo Loor no tiene ORCID
-# registrado porque se retiro de la carrera; no es un tramite pendiente de su parte, es un
-# integrante que ya no forma parte del programa (ver Informe-Final/secciones/00-portada.tex).
+# registrado a la fecha de esta version. El ORCID es un registro personal e intransferible: no
+# es algo que el equipo pueda generar por otra persona.
 # Es un registro gratuito, personal e intransferible en https://orcid.org/register -- no es algo
 # que se pueda generar por fuera, cada integrante debe crear el suyo.
 cff-version: 1.2.0
@@ -15,7 +15,7 @@ authors:
   - family-names: "Moncayo Loor"
     given-names: "Xavier Alejandro"
     affiliation: "Universidad Técnica Estatal de Quevedo"
-    # orcid: no registrado -- se retiró de la carrera, ya no forma parte del programa
+    # orcid: no registrado a la fecha de esta version
   - family-names: "Zamora Arias"
     given-names: "Carla Esthefania"
     affiliation: "Universidad Técnica Estatal de Quevedo"

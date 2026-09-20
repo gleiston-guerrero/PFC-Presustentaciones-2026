@@ -27,6 +27,9 @@ QUE COMPRUEBA
   sus         media, DE, IC 95 % y alfa publicados == recalculados del CSV.
               p ajustados y decision de Holm publicados == recalculados; y el
               parrafo que los publica no afirma lo contrario de la decision.
+  juicios     ningun archivo publico juzga la situacion academica de los companeros
+              (reprobaron, se retiro de la carrera...); es el hecho que el expediente
+              necesita declarar el que importa: quien ejecuto los commits.
   rendimiento (solo con --nb) los p ajustados de la familia de 3 pruebas de
               caché fria vs caliente, publicados en el informe y en k6/README,
               == los que imprime el cuaderno perf-analysis.ipynb al ejecutarse.
@@ -458,11 +461,55 @@ def comprobar_rendimiento(ruta_json):
             ok(f"{doc}: las 3 filas (p crudo, ajustado y decision) coinciden con el cuaderno")
 
 
+# ------------------------------------------------ juicios sobre las personas del equipo
+# La revision final (7.4) encontro, en cuatro archivos publicos, el juicio academico sobre los
+# companeros que ya se habia retirado de la caratula ("reprobaron la materia", "se retiro de la
+# carrera"). Reaparecio por copia en otros archivos: la correccion a mano no bastaba. El hecho que
+# el expediente necesita declarar es quien ejecuto los commits, no la situacion academica de un
+# tercero, y menos en un repositorio publico y sin su firma.
+JUICIOS = [
+    re.compile(r"reprob(?:aron|[oó])\s+(?:la\s+)?materia", re.I),
+    re.compile(r"(?:se\s+)?retir(?:aron|[oó])\s+de\s+la\s+carrera", re.I),
+    re.compile(r"ya\s+no\s+forma(?:n)?\s+parte\s+del\s+programa", re.I),
+    re.compile(r"(?:Moncayo|Zamora|Barreto|Xavier|Heider|Dominick|Carla)[^.\n]{0,120}\breprob", re.I),
+    re.compile(r"no\s+est[aá]n\s+trabajando\s+en\s+las\s+observaciones", re.I),
+    re.compile(r"per[ií]odo\s+regular[^.\n]{0,80}(?:reprob|integrantes)", re.I),
+]
+# El propio detector y sus mutaciones nombran las frases; no son un juicio.
+EXENTOS_JUICIOS = ("scripts/ev2-documental.py", "scripts/mutaciones-gate.py")
+
+
+def comprobar_juicios():
+    print("--- Personas del equipo: ningun juicio academico en archivos publicos ---")
+    r = subprocess.run(["git", "ls-files"], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    revisados, hallados = 0, []
+    for f in r.stdout.splitlines():
+        if f in EXENTOS_JUICIOS or not f.endswith((".md", ".tex", ".cff", ".txt", ".yml", ".yaml", ".py", ".sh")):
+            continue
+        if f.startswith(("Frontend/", "backend/src/", "node_modules/")):
+            continue
+        revisados += 1
+        for i, linea in enumerate(leer(f).splitlines(), 1):
+            for rx in JUICIOS:
+                if rx.search(linea):
+                    hallados.append((f, i, " ".join(linea.split())[:110]))
+                    break
+    if revisados < 100:
+        fail(f"solo se revisaron {revisados} archivos: la lista de archivos dejo de casar")
+        return
+    for f, i, l in hallados:
+        fail(f"{f}:{i}: juicio sobre la situacion academica de una persona del equipo: '{l}'")
+    if not hallados:
+        ok(f"{revisados} archivos publicos revisados, ningun juicio sobre la situacion academica de los companeros")
+
+
 def main():
     args = sys.argv[1:]
     comprobar_lighthouse()
     comprobar_evidencia()
     comprobar_sus()
+    comprobar_juicios()
     if "--nb" in args:
         comprobar_rendimiento(args[args.index("--nb") + 1])
     print()

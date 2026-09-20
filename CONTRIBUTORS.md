@@ -39,9 +39,8 @@ revisión de código y documentación que aplica a los cuatro):
   colaboradora de GitHub con un único commit sin contenido —
   [`docs/observaciones/BITACORA-COMMITS-2026-09-09.md`](docs/observaciones/BITACORA-COMMITS-2026-09-09.md)).
   Ambas identidades corresponden a la misma persona.
-- **Moncayo Loor, Xavier Alejandro:** Desarrollo frontend (Angular), diseño de interfaz. Se retiró de
-  la carrera durante el desarrollo del proyecto; no registró ORCID por esa misma razón, no por un
-  trámite pendiente.
+- **Moncayo Loor, Xavier Alejandro:** Desarrollo frontend (Angular), diseño de interfaz. No tiene ORCID
+  registrado a la fecha de esta versión.
 - **Zamora Arias, Carla Esthefania** ([ORCID: 0009-0000-7556-0457](https://orcid.org/0009-0000-7556-0457)): Diseño de base de datos, curación de datos de prueba,
   documentación técnica, redacción del primer borrador de varios documentos.
 - **Barreto Rosado, Heider Dominick** ([ORCID: 0009-0004-5561-1391](https://orcid.org/0009-0004-5561-1391)): Pruebas, infraestructura Docker, análisis formal de resultados
