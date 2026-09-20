@@ -76,7 +76,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void assignPanelistTranslatesErrorOfServiceTo400() {
+    void assignPanelistTranslatesFailureOfServiceTo400() {
         when(panelistService.assignPanelist(1L, 2L, "PRESIDENTE"))
                 .thenThrow(new RuntimeException("El docente ya es jurado de esta solicitud"));
 
@@ -100,7 +100,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void assignAutomaticallyTranslatesErrorOfServiceTo400() {
+    void assignAutomaticallyTranslatesFailureOfServiceTo400() {
         doThrow(new RuntimeException("No hay suficientes docentes disponibles"))
                 .when(panelistService).assignPanelistsAutomatically(1L);
 
@@ -167,7 +167,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void assignTutorTranslatesErrorOfServiceTo400() {
+    void assignTutorTranslatesFailureOfServiceTo400() {
         when(panelistService.assignTutor(1L, 2L)).thenThrow(new RuntimeException("La solicitud ya tiene tutor"));
 
         ResponseEntity<?> response = controller.assignTutor(1L, 2L);
@@ -282,7 +282,7 @@ class PanelistControllerTest {
     }
 
     @Test
-    void assignBulkTranslatesErrorOfProcedureTo400() {
+    void assignBulkTranslatesFailureOfProcedureTo400() {
         doThrow(new RuntimeException("rol_jurado inexistente"))
                 .when(panelistService).assignPanelistBulkSP(any(), any(), eq("INVENTADO"));
 

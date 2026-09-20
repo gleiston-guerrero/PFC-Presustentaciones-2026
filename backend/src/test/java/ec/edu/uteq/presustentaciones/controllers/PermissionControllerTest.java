@@ -42,7 +42,7 @@ class PermissionControllerTest {
     private PermissionController controller;
 
     @SuppressWarnings("unchecked")
-    private String errorOf(ResponseEntity<?> response) {
+    private String failureOf(ResponseEntity<?> response) {
         return ((Map<String, String>) response.getBody()).get("error");
     }
 
@@ -79,7 +79,7 @@ class PermissionControllerTest {
                 (short) 1, List.of("SOLICITUDES_REVISAR", "INVENTADO"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Uno o más códigos de permiso no existen.", errorOf(response));
+        assertEquals("Uno o más códigos de permiso no existen.", failureOf(response));
         verify(permissionRepository, never()).deletePermissionsDeRole(any());
     }
 
@@ -111,7 +111,7 @@ class PermissionControllerTest {
                 (short) 1, List.of("SOLICITUDES_REVISAR"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(errorOf(response).contains("ningún otro rol lo tendría"));
+        assertTrue(failureOf(response).contains("ningún otro rol lo tendría"));
         verify(permissionRepository, never()).deletePermissionsDeRole(any());
         verify(auditService, never()).markActorActual();
     }

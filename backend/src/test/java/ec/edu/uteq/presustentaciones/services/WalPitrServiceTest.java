@@ -146,7 +146,7 @@ class WalPitrServiceTest {
     }
 
     @Test
-    void forceSwitchWalPropagatesErrorPlainIfPostgresFails() {
+    void forceSwitchWalPropagatesFailurePlainIfPostgresFails() {
         when(jdbc.queryForObject(anyString(), (Class<String>) any())).thenThrow(new RuntimeException("sin permisos"));
 
         assertThrows(RuntimeException.class, () -> service.forceSwitchWal());

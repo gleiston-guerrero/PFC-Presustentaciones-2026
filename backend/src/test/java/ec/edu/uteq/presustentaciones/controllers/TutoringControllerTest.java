@@ -156,7 +156,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void obtainSummaryTranslatesErrorOfServiceTo400() {
+    void obtainSummaryTranslatesFailureOfServiceTo400() {
         authenticate(50L, "ESTUDIANTE");
         when(tutoringService.obtainSummary(5L, 50L))
                 .thenThrow(new RuntimeException("No tienes acceso a esta tutoría"));
@@ -197,7 +197,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void uploadPdfCorrectedTranslatesErrorOfServiceTo400() {
+    void uploadPdfCorrectedTranslatesFailureOfServiceTo400() {
         authenticate(50L, "ESTUDIANTE");
         MultipartFile file = new MockMultipartFile("archivo", "malo.exe",
                 MediaType.APPLICATION_OCTET_STREAM_VALUE, new byte[]{1});
@@ -251,7 +251,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void markMessagesReadTranslatesErrorOfServiceTo400() {
+    void markMessagesReadTranslatesFailureOfServiceTo400() {
         authenticate(50L, "ESTUDIANTE");
         doThrow(new RuntimeException("Fase inexistente"))
                 .when(tutoringService).markMessagesRead(7L, 50L);
@@ -281,7 +281,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void obtainPdfPhaseTranslatesErrorOfServiceTo400() {
+    void obtainPdfPhaseTranslatesFailureOfServiceTo400() {
         authenticate(50L, "ESTUDIANTE");
         when(tutoringService.obtainPdfPhase(7L, 50L))
                 .thenThrow(new RuntimeException("La fase no tiene PDF cargado"));
@@ -334,7 +334,7 @@ class TutoringControllerTest {
     }
 
     @Test
-    void registerProgressTranslatesErrorOfProcedureTo400() {
+    void registerProgressTranslatesFailureOfProcedureTo400() {
         authenticate(50L, "ESTUDIANTE");
         doThrow(new RuntimeException("No se puede registrar la fase 3, la fase 2 debe estar APROBADA"))
                 .when(tutoringService).registerProgressSP(5L, 3, "capitulo3.pdf", null, null, 50L);

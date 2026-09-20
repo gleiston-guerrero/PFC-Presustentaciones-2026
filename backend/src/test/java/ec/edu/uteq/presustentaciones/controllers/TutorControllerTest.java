@@ -143,7 +143,7 @@ class TutorControllerTest {
     }
 
     @Test
-    void statsTranslatesErrorOfProcedureTo400() {
+    void statsTranslatesFailureOfProcedureTo400() {
         when(tutorService.obtainStatsTutorsSP())
                 .thenThrow(new RuntimeException("function presus.sp_obtener_estadisticas_tutores() does not exist"));
 

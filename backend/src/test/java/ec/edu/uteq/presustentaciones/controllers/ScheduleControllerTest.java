@@ -41,7 +41,7 @@ class ScheduleControllerTest {
     private ScheduleController controller;
 
     @SuppressWarnings("unchecked")
-    private String errorOf(ResponseEntity<?> response) {
+    private String failureOf(ResponseEntity<?> response) {
         return ((Map<String, String>) response.getBody()).get("error");
     }
 
@@ -68,7 +68,7 @@ class ScheduleControllerTest {
         ResponseEntity<?> response = controller.create(1L, 2L, date, hora);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("El docente Ana Pérez ya tiene una defensa en ese horario", errorOf(response));
+        assertEquals("El docente Ana Pérez ya tiene una defensa en ese horario", failureOf(response));
     }
 
     @Test
@@ -81,7 +81,7 @@ class ScheduleControllerTest {
                 .thenThrow(new RuntimeException("No hay franjas disponibles esta semana"));
         ResponseEntity<?> error = controller.assignAutomatic(2L);
         assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
-        assertEquals("No hay franjas disponibles esta semana", errorOf(error));
+        assertEquals("No hay franjas disponibles esta semana", failureOf(error));
     }
 
     @Test

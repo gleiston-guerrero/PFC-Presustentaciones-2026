@@ -35,7 +35,7 @@ class EvaluationControllerTest {
     private EvaluationController controller;
 
     @SuppressWarnings("unchecked")
-    private String errorOf(ResponseEntity<?> response) {
+    private String failureOf(ResponseEntity<?> response) {
         return ((Map<String, String>) response.getBody()).get("error");
     }
 
@@ -59,7 +59,7 @@ class EvaluationControllerTest {
         ResponseEntity<?> response = controller.evaluateWeighted(1L, 2L, 9.0, 8.0, "obs", 70.0, 40.0);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Los pesos deben sumar 100", errorOf(response));
+        assertEquals("Los pesos deben sumar 100", failureOf(response));
     }
 
     @Test
@@ -120,13 +120,13 @@ class EvaluationControllerTest {
     }
 
     @Test
-    void calculateAverageTranslatesErrorOfProcedureTo400() {
+    void calculateAverageTranslatesFailureOfProcedureTo400() {
         when(evaluationService.calculateAverageSP(99L))
                 .thenThrow(new RuntimeException("La solicitud 99 no tiene evaluaciones por criterio"));
 
         ResponseEntity<?> response = controller.calculateAverage(99L);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("La solicitud 99 no tiene evaluaciones por criterio", errorOf(response));
+        assertEquals("La solicitud 99 no tiene evaluaciones por criterio", failureOf(response));
     }
 }

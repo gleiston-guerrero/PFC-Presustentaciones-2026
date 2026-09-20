@@ -66,7 +66,7 @@ class CatalogControllerTest {
     private CatalogController controller;
 
     @SuppressWarnings("unchecked")
-    private String errorOf(ResponseEntity<?> response) {
+    private String failureOf(ResponseEntity<?> response) {
         return ((Map<String, String>) response.getBody()).get("error");
     }
 
@@ -162,7 +162,7 @@ class CatalogControllerTest {
         ResponseEntity<?> response = controller.announcementActive();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("No hay convocatoria activa", errorOf(response));
+        assertEquals("No hay convocatoria activa", failureOf(response));
     }
 
     @Test
@@ -204,7 +204,7 @@ class CatalogControllerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, sinCode.getStatusCode());
         assertEquals(HttpStatus.BAD_REQUEST, sinNombre.getStatusCode());
-        assertEquals("Código y nombre son obligatorios.", errorOf(sinNombre));
+        assertEquals("Código y nombre son obligatorios.", failureOf(sinNombre));
         verify(facultyRepo, never()).save(any());
     }
 
@@ -215,7 +215,7 @@ class CatalogControllerTest {
         ResponseEntity<?> response = controller.createFaculty(facultyReq("FCI", "Ciencias"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Ya existe una facultad con ese código.", errorOf(response));
+        assertEquals("Ya existe una facultad con ese código.", failureOf(response));
         verify(facultyRepo, never()).save(any());
     }
 
@@ -246,7 +246,7 @@ class CatalogControllerTest {
         ResponseEntity<?> response = controller.updateFaculty(1, facultyReq(null, "   "));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("El nombre no puede estar vacío.", errorOf(response));
+        assertEquals("El nombre no puede estar vacío.", failureOf(response));
         verify(facultyRepo, never()).save(any());
     }
 
@@ -267,14 +267,14 @@ class CatalogControllerTest {
     }
 
     @Test
-    void deleteFacultyWithProgramsAssociatedReturnsErrorReadable() {
+    void deleteFacultyWithProgramsAssociatedReturnsFailureReadable() {
         when(facultyRepo.existsById(1)).thenReturn(true);
         doThrow(new DataIntegrityViolationException("FK")).when(catalogAdminService).deleteFaculty(1);
 
         ResponseEntity<?> response = controller.deleteFaculty(1);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(errorOf(response).contains("carreras u otros registros asociados"));
+        assertTrue(failureOf(response).contains("carreras u otros registros asociados"));
     }
 
     // ── Programs ──────────────────────────────────────────────────────────────
@@ -300,7 +300,7 @@ class CatalogControllerTest {
         ResponseEntity<?> sinFaculty = controller.createProgram(programReq("SW", "Software", null, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, sinFaculty.getStatusCode());
-        assertEquals("Código, nombre y facultad son obligatorios.", errorOf(sinFaculty));
+        assertEquals("Código, nombre y facultad son obligatorios.", failureOf(sinFaculty));
         verify(programRepo, never()).save(any());
     }
 
@@ -311,7 +311,7 @@ class CatalogControllerTest {
         ResponseEntity<?> response = controller.createProgram(programReq("SW", "Software", 2, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Ya existe una carrera con ese código.", errorOf(response));
+        assertEquals("Ya existe una carrera con ese código.", failureOf(response));
     }
 
     @Test
@@ -322,7 +322,7 @@ class CatalogControllerTest {
         ResponseEntity<?> response = controller.createProgram(programReq("SW", "Software", 99, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Facultad no encontrada.", errorOf(response));
+        assertEquals("Facultad no encontrada.", failureOf(response));
         verify(programRepo, never()).save(any());
     }
 
@@ -365,7 +365,7 @@ class CatalogControllerTest {
         ResponseEntity<?> response = controller.updateProgram(1, programReq(null, "Software", 99, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Facultad no encontrada.", errorOf(response));
+        assertEquals("Facultad no encontrada.", failureOf(response));
         verify(programRepo, never()).save(any());
     }
 
@@ -378,7 +378,7 @@ class CatalogControllerTest {
         when(programRepo.findById(1)).thenReturn(Optional.of(Program.builder().id(1).build()));
         ResponseEntity<?> empty = controller.updateProgram(1, programReq(null, null, null, null));
         assertEquals(HttpStatus.BAD_REQUEST, empty.getStatusCode());
-        assertEquals("El nombre no puede estar vacío.", errorOf(empty));
+        assertEquals("El nombre no puede estar vacío.", failureOf(empty));
     }
 
     @Test
@@ -393,7 +393,7 @@ class CatalogControllerTest {
         doThrow(new DataIntegrityViolationException("FK")).when(catalogAdminService).deleteProgram(2);
         ResponseEntity<?> conflicto = controller.deleteProgram(2);
         assertEquals(HttpStatus.BAD_REQUEST, conflicto.getStatusCode());
-        assertTrue(errorOf(conflicto).contains("estudiantes u otros registros asociados"));
+        assertTrue(failureOf(conflicto).contains("estudiantes u otros registros asociados"));
     }
 
     // ── Modalities ───────────────────────────────────────────────────────────
@@ -418,7 +418,7 @@ class CatalogControllerTest {
         when(modalityRepo.findByCode("EXAMEN")).thenReturn(Optional.of(ModalityDegree.builder().id((short) 1).build()));
         ResponseEntity<?> duplicada = controller.createModality(modalityReq("examen", "Examen"));
         assertEquals(HttpStatus.BAD_REQUEST, duplicada.getStatusCode());
-        assertEquals("Ya existe una modalidad con ese código.", errorOf(duplicada));
+        assertEquals("Ya existe una modalidad con ese código.", failureOf(duplicada));
     }
 
     @Test
@@ -450,7 +450,7 @@ class CatalogControllerTest {
         doThrow(new DataIntegrityViolationException("FK")).when(catalogAdminService).deleteModality((short) 2);
         ResponseEntity<?> conflicto = controller.deleteModality((short) 2);
         assertEquals(HttpStatus.BAD_REQUEST, conflicto.getStatusCode());
-        assertTrue(errorOf(conflicto).contains("solicitudes u otros registros asociados"));
+        assertTrue(failureOf(conflicto).contains("solicitudes u otros registros asociados"));
     }
 
     // ── Períodos académicos ───────────────────────────────────────────────────
@@ -486,20 +486,20 @@ class CatalogControllerTest {
     void createPeriodRejectsFieldsMissingDatesInvalidAndDuplicates() {
         ResponseEntity<?> sinFechas = controller.createPeriod(periodReq("2026-1", "Primer", null, null, null));
         assertEquals(HttpStatus.BAD_REQUEST, sinFechas.getStatusCode());
-        assertTrue(errorOf(sinFechas).contains("obligatorios"));
+        assertTrue(failureOf(sinFechas).contains("obligatorios"));
 
         LocalDate start = LocalDate.of(2026, 6, 30);
         LocalDate endAnterior = LocalDate.of(2026, 1, 1);
         ResponseEntity<?> fechasInvertidas = controller.createPeriod(
                 periodReq("2026-1", "Primer", start, endAnterior, null));
         assertEquals(HttpStatus.BAD_REQUEST, fechasInvertidas.getStatusCode());
-        assertEquals("La fecha de fin debe ser posterior a la fecha de inicio.", errorOf(fechasInvertidas));
+        assertEquals("La fecha de fin debe ser posterior a la fecha de inicio.", failureOf(fechasInvertidas));
 
         when(periodAcademicRepo.findByCode("2026-1")).thenReturn(Optional.of(PeriodAcademic.builder().id(1).build()));
         ResponseEntity<?> duplicado = controller.createPeriod(
                 periodReq("2026-1", "Primer", endAnterior, start, null));
         assertEquals(HttpStatus.BAD_REQUEST, duplicado.getStatusCode());
-        assertEquals("Ya existe un período académico con ese código.", errorOf(duplicado));
+        assertEquals("Ya existe un período académico con ese código.", failureOf(duplicado));
     }
 
     @Test
@@ -530,7 +530,7 @@ class CatalogControllerTest {
                 periodReq(null, "Nombre", LocalDate.of(2026, 12, 1), null, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("La fecha de fin debe ser posterior a la fecha de inicio.", errorOf(response));
+        assertEquals("La fecha de fin debe ser posterior a la fecha de inicio.", failureOf(response));
         verify(periodAcademicRepo, never()).save(any());
     }
 
@@ -557,6 +557,6 @@ class CatalogControllerTest {
         doThrow(new DataIntegrityViolationException("FK")).when(catalogAdminService).deletePeriod(2);
         ResponseEntity<?> conflicto = controller.deletePeriod(2);
         assertEquals(HttpStatus.BAD_REQUEST, conflicto.getStatusCode());
-        assertTrue(errorOf(conflicto).contains("estudiantes o convocatorias asociadas"));
+        assertTrue(failureOf(conflicto).contains("estudiantes o convocatorias asociadas"));
     }
 }

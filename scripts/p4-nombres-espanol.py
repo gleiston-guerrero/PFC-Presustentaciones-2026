@@ -163,6 +163,21 @@ def bytecode(lexico):
     nombre del campo (getEstado, setTitulacion, getObservaciones...), y los
     campos del dominio si estan en espanol, asi que el porcentaje sube respecto
     del conteo por texto fuente en vez de bajar.
+
+    REVISION FINAL DEL 19-SEP (bloque de VERIFICACION.md que "ya no imprime lo que dice")
+    ------------------------------------------------------------------------------------
+    Este bloque publicaba UNA cifra: `nombres distintos 102/1923 (5.3 %)`, sobre la
+    definicion AMPLIA. Esa definicion suma las palabras ambiguas (actual, base, error,
+    final, me, real), que el propio expediente declara palabras INGLESAS y no renombra;
+    contarlas como espanolas infla el resultado, y la cifra quedaba por encima del techo
+    del 5 % en un punto que el criterio de la guia mide con el nucleo. Ahora se
+    informan las tres definiciones por separado, con el criterio marcado, para que
+    ninguna cifra tenga que leerse fuera de su definicion.
+
+    Y depende del entorno: los accesores existen en el bytecode solo si Lombok estuvo
+    activo al compilar. En una maquina donde no compila (JDK 25), los .class no los
+    traen, el universo es otro y las cifras dejan de ser comparables: por eso, sin
+    Lombok, se avisa y no se imprime ningun porcentaje.
     """
     _js = importlib.util.spec_from_file_location(
         "p4_javap", HERE / "p4-rename-scan-javap.py"
@@ -175,6 +190,12 @@ def bytecode(lexico):
         "solo main": [backend / "target/classes"],
         "main + test": [backend / "target/classes", backend / "target/test-classes"],
     }
+    definiciones = (
+        ("NUCLEO (dominio: el criterio de la guia)", NUCLEO),
+        ("+ funcionales (de, con, no, por...)", NUCLEO | FUNCIONALES),
+        ("+ ambiguas (" + ", ".join(sorted(AMBIGUOS)) + "): tambien son palabras inglesas, cota superior",
+         lexico),
+    )
     print("CONTEO SOBRE BYTECODE (javap, incluye metodos generados por Lombok)")
     for etiqueta, roots in variantes.items():
         classfiles = []
@@ -184,21 +205,23 @@ def bytecode(lexico):
             print(f"  {etiqueta}: sin clases compiladas"
                   " (corre 'cd backend && ./mvnw -q test-compile')")
             continue
-        total = es = 0
-        unicos = set()
-        unicos_es = set()
+        nombres = []
         for cf in classfiles:
-            for name in _javap.methods_in_class(cf):
-                total += 1
-                unicos.add(name)
-                if clasificar(name, lexico):
-                    es += 1
-                    unicos_es.add(name)
+            nombres.extend(_javap.methods_in_class(cf))
+        # Sin Lombok activo no existe canEqual(): solo lo genera @Data/@EqualsAndHashCode.
+        if "canEqual" not in set(nombres):
+            print(f"  {etiqueta}: AVISO -- las clases compiladas no traen los metodos de Lombok"
+                  " (sin canEqual()); las cifras no serian comparables y no se imprimen."
+                  " Se necesita un JDK con el que Lombok compile (el proyecto usa 21).")
+            continue
+        unicos = set(nombres)
         print(f"  {etiqueta}: {len(classfiles)} clases")
-        print(f"    todas las ocurrencias  {es:5d}/{total:<5d}"
-              f" ({pct(es, total):5.1f}%)")
-        print(f"    nombres distintos      {len(unicos_es):5d}/{len(unicos):<5d}"
-              f" ({pct(len(unicos_es), len(unicos)):5.1f}%)")
+        for titulo, lex in definiciones:
+            ocurr = sum(1 for n in nombres if clasificar(n, lex))
+            dist = sum(1 for n in unicos if clasificar(n, lex))
+            print(f"    {titulo}")
+            print(f"      nombres distintos {dist:5d}/{len(unicos):<5d} ({pct(dist, len(unicos)):5.1f}%)"
+                  f"   ocurrencias {ocurr:5d}/{len(nombres):<5d} ({pct(ocurr, len(nombres)):5.1f}%)")
     print()
 
 

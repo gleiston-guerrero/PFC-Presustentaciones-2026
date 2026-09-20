@@ -54,7 +54,7 @@ class Phase4FeaturesTest {
     }
 
     @Test
-    void testResponseWrapperError() {
+    void testResponseWrapperFailure() {
         ResponseWrapper<Void> wrapper = ResponseWrapper.error("Error Message", "Details");
         assertFalse(wrapper.isSuccess());
         assertNull(wrapper.getData());

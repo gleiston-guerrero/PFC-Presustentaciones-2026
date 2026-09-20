@@ -94,7 +94,7 @@ class RedisDegradationTest {
     // ── 3) Caché de lectura: fail-OPEN -- se resuelve contra el origen, no se corta la petición ──
 
     @Test
-    void cacheErrorHandlerNotPropagatesExceptionOfReadingOfCache() {
+    void cacheFailureHandlerNotPropagatesExceptionOfReadingOfCache() {
         AppConfig appConfig = new AppConfig();
         CacheErrorHandler errorHandler = appConfig.errorHandler();
         Cache cache = mock(Cache.class);

@@ -442,9 +442,9 @@ python scripts/p4-rename-scan-javap.py --include-test
 ```
 
 **Comando que resuelve la disputa (nuevo, 2026-09-18):**
-<!-- ev1:run slow -->
+<!-- ev1:run -->
 ```bash
-python scripts/p4-nombres-espanol.py --bytecode
+python scripts/p4-nombres-espanol.py
 ```
 
 **Salida real (hoy):**
@@ -464,24 +464,53 @@ DEFINICION NUCLEO (solo dominio, sin funcionales ni ambiguos)
 DEFINICION AMPLIA (+ funcionales + ambiguos resueltos por contexto)
   main + test:
     tipos       5/339   (  1.5%)
-    metodos    30/693   (  4.3%)
+    metodos    25/693   (  3.6%)
   solo src/main:
     tipos       4/272   (  1.5%)
     metodos    21/625   (  3.4%)
 CONTRASTE con la evaluacion del 2026-09-17 (AST del ingeniero)
     el ing reporto: tipos 121/339 (35.7%), metodos 1325/1836 (72.2%)
-    este script:    tipos 5/339 (1.5%), metodos 30/693 (4.3%)
+    este script:    tipos 5/339 (1.5%), metodos 25/693 (3.6%)
     El universo de tipos coincide exacto (339). La diferencia en el
     total de metodos (693 aqui vs 1836) es porque este conteo es por
     texto fuente y no ve los metodos que Lombok genera; ver
     p4-rename-scan-javap.py para el conteo sobre bytecode.
+```
+
+**El conteo sobre bytecode, y por qué ya no es un bloque que se reejecuta (revisión final del 2026-09-19).**
+El bloque anterior publicaba una sola cifra sobre bytecode, `nombres distintos 102/1923 (5,3 %)`, y el
+evaluador señaló dos cosas, ambas ciertas:
+
+1. **Estaba por encima del 5 %**, en un punto que se declaraba cumplido. La cifra salía de la definición
+   *amplia*, que suma las palabras `actual`, `base`, `error`, `final`, `me` y `real`, **que este mismo expediente
+   declara inglesas y no renombra** (ver arriba). Contarlas como españolas inflaba el resultado; el criterio de la
+   guía se mide con el *núcleo* de dominio. Ahora el conteo informa las tres definiciones por separado, con el
+   criterio marcado, y la cota superior (la que incluye esas palabras) se llevó por debajo del 5 % de todos modos
+   renombrando los 20 nombres de prueba que contenían `Error` (ahora `Failure`, que además es más exacto).
+2. **No reproducía en su máquina.** Los métodos que genera Lombok solo existen en el bytecode si Lombok estuvo
+   activo al compilar; en un JDK donde no compila, el universo es otro (allí dio `102/1923` frente a `66/2658`
+   de aquí) y el bloque «fallaba» sin que nada hubiera cambiado. Un bloque cuya salida depende de con qué se
+   compiló no es verificable literalmente, así que **ya no lleva la marca `ev1:run`**. Sin Lombok el script
+   ahora avisa y no imprime porcentajes, en vez de imprimir unos que no son comparables.
+
+La salida de abajo es de un entorno con Lombok activo (JDK 21) y es un registro fechado, no una comprobación:
+
+```
 CONTEO SOBRE BYTECODE (javap, incluye metodos generados por Lombok)
   solo main: 362 clases
-    todas las ocurrencias     66/2658  (  2.5%)
-    nombres distintos         43/1070  (  4.0%)
+    NUCLEO (dominio: el criterio de la guia)
+      nombres distintos    11/1070  (  1.0%)   ocurrencias    15/2658  (  0.6%)
+    + funcionales (de, con, no, por...)
+      nombres distintos    15/1070  (  1.4%)   ocurrencias    19/2658  (  0.7%)
+    + ambiguas (actual, base, error, final, me, real): tambien son palabras inglesas, cota superior
+      nombres distintos    43/1070  (  4.0%)   ocurrencias    66/2658  (  2.5%)
   main + test: 430 clases
-    todas las ocurrencias    129/3583  (  3.6%)
-    nombres distintos        102/1923  (  5.3%)
+    NUCLEO (dominio: el criterio de la guia)
+      nombres distintos    13/1923  (  0.7%)   ocurrencias    17/3583  (  0.5%)
+    + funcionales (de, con, no, por...)
+      nombres distintos    18/1923  (  0.9%)   ocurrencias    22/3583  (  0.6%)
+    + ambiguas (actual, base, error, final, me, real): tambien son palabras inglesas, cota superior
+      nombres distintos    82/1923  (  4.3%)   ocurrencias   105/3583  (  2.9%)
 ```
 
 **Antes del renombrado (2026-09-18) — registro histórico, sin marca, no se reejecuta:**

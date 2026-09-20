@@ -42,7 +42,7 @@ class RoleControllerTest {
     private RoleController controller;
 
     @SuppressWarnings("unchecked")
-    private String errorOf(ResponseEntity<?> response) {
+    private String failureOf(ResponseEntity<?> response) {
         return ((Map<String, String>) response.getBody()).get("error");
     }
 
@@ -98,7 +98,7 @@ class RoleControllerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, sinCode.getStatusCode());
         assertEquals(HttpStatus.BAD_REQUEST, sinNombre.getStatusCode());
-        assertEquals("Código y nombre son obligatorios.", errorOf(sinCode));
+        assertEquals("Código y nombre son obligatorios.", failureOf(sinCode));
         verify(roleAppUserRepository, never()).save(any());
     }
 
@@ -110,7 +110,7 @@ class RoleControllerTest {
         ResponseEntity<?> response = controller.create(Map.of("codigo", "admin", "nombre", "Otro admin"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Ya existe un rol con ese código.", errorOf(response));
+        assertEquals("Ya existe un rol con ese código.", failureOf(response));
         verify(roleAppUserRepository, never()).save(any());
     }
 
@@ -150,7 +150,7 @@ class RoleControllerTest {
         ResponseEntity<?> response = controller.rename((short) 5, Map.of("nombre", "   "));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("El nombre no puede estar vacío.", errorOf(response));
+        assertEquals("El nombre no puede estar vacío.", failureOf(response));
         verify(roleAppUserRepository, never()).save(any());
     }
 
@@ -165,7 +165,7 @@ class RoleControllerTest {
             ResponseEntity<?> response = controller.delete((short) 1);
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-            assertTrue(errorOf(response).contains("roles base del sistema"));
+            assertTrue(failureOf(response).contains("roles base del sistema"));
         }
         verify(roleAppUserRepository, never()).delete(any());
     }
@@ -180,7 +180,7 @@ class RoleControllerTest {
         ResponseEntity<?> response = controller.delete((short) 5);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(errorOf(response).contains("hay 2 usuario(s) con este rol"));
+        assertTrue(failureOf(response).contains("hay 2 usuario(s) con este rol"));
         verify(roleAppUserRepository, never()).delete(any());
     }
 
@@ -215,6 +215,6 @@ class RoleControllerTest {
         ResponseEntity<?> response = controller.delete((short) 5);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(errorOf(response).contains("referencias asociadas"));
+        assertTrue(failureOf(response).contains("referencias asociadas"));
     }
 }

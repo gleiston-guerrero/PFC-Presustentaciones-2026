@@ -92,7 +92,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void createTranslatesErrorOfServiceTo400() {
+    void createTranslatesFailureOfServiceTo400() {
         Submission data = Submission.builder().build();
         when(submissionService.createSubmission(7L, data))
                 .thenThrow(new RuntimeException("El estudiante ya tiene una solicitud activa"));
@@ -148,7 +148,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void mySubmissionsReturnsListEmptyInTimeOfErrorIfFailsResolution() {
+    void mySubmissionsReturnsListEmptyInTimeOfFailureIfFailsResolution() {
         authenticate("fantasma@uteq.edu.ec");
         when(appUserRepository.findByEmail("fantasma@uteq.edu.ec")).thenReturn(Optional.empty());
 
@@ -305,7 +305,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void approveTranslatesErrorOfTransitionInvalidTo400() {
+    void approveTranslatesFailureOfTransitionInvalidTo400() {
         when(submissionService.approveSubmission(1L))
                 .thenThrow(new RuntimeException("La solicitud no está en estado ENVIADA"));
 
@@ -387,7 +387,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void reportDefensesTranslatesErrorOfProcedureTo400() {
+    void reportDefensesTranslatesFailureOfProcedureTo400() {
         when(submissionService.generateReportDefensesSP(""))
                 .thenThrow(new RuntimeException("cursor \"reporte_defensas_cursor\" does not exist"));
 
