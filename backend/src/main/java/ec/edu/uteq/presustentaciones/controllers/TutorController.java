@@ -4,6 +4,7 @@ import ec.edu.uteq.presustentaciones.dto.MyStudentTuteeDTO;
 import ec.edu.uteq.presustentaciones.entities.Tutor;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
+import ec.edu.uteq.presustentaciones.security.service.SubmissionAccessService;
 import ec.edu.uteq.presustentaciones.services.TutorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,15 +27,19 @@ public class TutorController {
 
     private final TutorService tutorService;
     private final AppUserRepository appUserRepository;
+    private final SubmissionAccessService submissionAccessService;
 
     /**
-     * Construye TutorController, inyectando tutorService, appUserRepository.
+     * Construye TutorController, inyectando tutorService, appUserRepository y submissionAccessService.
      * @param tutorService servicio de negocio de tutores, inyectado por constructor
      * @param appUserRepository repositorio de acceso a datos de usuarios, inyectado por constructor
+     * @param submissionAccessService servicio que decide si el usuario puede acceder a una solicitud, inyectado por constructor
      */
-    public TutorController(TutorService tutorService, AppUserRepository appUserRepository) {
+    public TutorController(TutorService tutorService, AppUserRepository appUserRepository,
+                           SubmissionAccessService submissionAccessService) {
         this.tutorService = tutorService;
         this.appUserRepository = appUserRepository;
+        this.submissionAccessService = submissionAccessService;
     }
 
     /**
@@ -80,6 +85,7 @@ public class TutorController {
      */
     @GetMapping("/solicitud/{submissionId}")
     public ResponseEntity<Tutor> bySubmission(@PathVariable("submissionId") Long submissionId) {
+        submissionAccessService.validateAccessById(submissionId, SubmissionAccessService.PANEL_VIEW_PERMISSIONS);
         return tutorService.searchBySubmission(submissionId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -91,6 +97,7 @@ public class TutorController {
      * @return 200 con la página de tutorías asignadas
      */
     @GetMapping
+    @PreAuthorize("@permissionService.hasPermission(authentication, 'TRIBUNAL_TUTOR_ASIGNAR')")
     public ResponseEntity<Page<Tutor>> list(Pageable pageable) {
         return ResponseEntity.ok(tutorService.listAll(pageable));
     }

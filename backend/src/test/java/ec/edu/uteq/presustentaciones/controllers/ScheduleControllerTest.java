@@ -1,7 +1,12 @@
 package ec.edu.uteq.presustentaciones.controllers;
 
+import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.entities.Schedule;
+import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
+import ec.edu.uteq.presustentaciones.security.service.SubmissionAccessService;
+import ec.edu.uteq.presustentaciones.services.PermissionService;
 import ec.edu.uteq.presustentaciones.services.ScheduleService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,6 +17,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,6 +45,9 @@ import static org.mockito.Mockito.*;
 class ScheduleControllerTest {
 
     @Mock private ScheduleService scheduleService;
+    @Mock private SubmissionAccessService submissionAccessService;
+    @Mock private AppUserRepository appUserRepository;
+    @Mock private PermissionService permissionService;
 
     @InjectMocks
     private ScheduleController controller;
@@ -127,6 +139,9 @@ class ScheduleControllerTest {
 
         assertSame(pagina, controller.list(pageable).getBody());
         assertSame(byStudent, controller.byStudent(7L));
+        authenticateAs("propio@uteq.edu.ec");
+        when(appUserRepository.findByEmail("propio@uteq.edu.ec"))
+                .thenReturn(Optional.of(AppUser.builder().id(50L).email("propio@uteq.edu.ec").build()));
         assertSame(byAppUser, controller.byAppUser(50L));
     }
 
@@ -149,5 +164,66 @@ class ScheduleControllerTest {
     void deleteReturns204() {
         assertEquals(HttpStatus.NO_CONTENT, controller.delete(3L).getStatusCode());
         verify(scheduleService).delete(3L);
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticateAs(String email, String... roles) {
+        var authorities = java.util.Arrays.stream(roles).map(SimpleGrantedAuthority::new).toList();
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(email, "n/a", authorities));
+    }
+
+    @Test
+    void byAppUserOfAnotherPersonIsDeniedAndDoesNotQueryTheService() {
+        authenticateAs("otro@uteq.edu.ec", "ROLE_ESTUDIANTE");
+        when(permissionService.hasPermission(any(), eq("CRONOGRAMA_GESTIONAR"))).thenReturn(false);
+        when(appUserRepository.findByEmail("otro@uteq.edu.ec"))
+                .thenReturn(Optional.of(AppUser.builder().id(99L).email("otro@uteq.edu.ec").build()));
+
+        assertThrows(AccessDeniedException.class, () -> controller.byAppUser(50L));
+        verify(scheduleService, never()).listByAppUser(any());
+    }
+
+    @Test
+    void byAppUserWithoutSessionIsDenied() {
+        assertThrows(AccessDeniedException.class, () -> controller.byAppUser(50L));
+        verify(scheduleService, never()).listByAppUser(any());
+    }
+
+    @Test
+    void byAppUserLetsWhoManagesTheScheduleSeeAnyone() {
+        authenticateAs("coordinador@uteq.edu.ec", "ROLE_COORDINADOR");
+        when(permissionService.hasPermission(any(), eq("CRONOGRAMA_GESTIONAR"))).thenReturn(true);
+        when(scheduleService.listByAppUser(50L)).thenReturn(List.of());
+
+        assertEquals(List.of(), controller.byAppUser(50L));
+    }
+
+    @Test
+    void bySubmissionOfUnrelatedAppUserIsDeniedAndDoesNotQueryTheService() {
+        doThrow(new AccessDeniedException("ajeno")).when(submissionAccessService)
+                .validateAccessById(eq(1L), any(String[].class));
+
+        assertThrows(AccessDeniedException.class, () -> controller.bySubmission(1L));
+        verify(scheduleService, never()).searchBySubmission(any());
+    }
+
+    @Test
+    void listAndByStudentRequireAPermissionOnTheEndpoint() throws NoSuchMethodException {
+        // Estos dos GET devolvian, sin ninguna comprobacion, la solicitud completa de cada
+        // estudiante; la anotacion es lo unico que lo impide.
+        var list = ScheduleController.class.getMethod("list", org.springframework.data.domain.Pageable.class)
+                .getAnnotation(org.springframework.security.access.prepost.PreAuthorize.class);
+        var byStudent = ScheduleController.class.getMethod("byStudent", Long.class)
+                .getAnnotation(org.springframework.security.access.prepost.PreAuthorize.class);
+
+        assertNotNull(list, "GET /api/cronogramas sin @PreAuthorize");
+        assertTrue(list.value().contains("CRONOGRAMA_GESTIONAR"));
+        assertNotNull(byStudent, "GET /api/cronogramas/estudiante/{id} sin @PreAuthorize");
+        assertTrue(byStudent.value().contains("CRONOGRAMA_GESTIONAR"));
     }
 }

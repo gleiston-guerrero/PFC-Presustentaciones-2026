@@ -3,6 +3,7 @@ package ec.edu.uteq.presustentaciones.controllers;
 import ec.edu.uteq.presustentaciones.entities.Teacher;
 import ec.edu.uteq.presustentaciones.entities.Panelist;
 import ec.edu.uteq.presustentaciones.entities.Tutor;
+import ec.edu.uteq.presustentaciones.security.service.SubmissionAccessService;
 import ec.edu.uteq.presustentaciones.services.PanelistService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,13 +27,16 @@ import org.springframework.data.domain.Pageable;
 public class PanelistController {
 
     private final PanelistService panelistService;
+    private final SubmissionAccessService submissionAccessService;
 
     /**
-     * Construye PanelistController, inyectando panelistService.
+     * Construye PanelistController, inyectando panelistService y submissionAccessService.
      * @param panelistService servicio de negocio de panelistas, inyectado por constructor
+     * @param submissionAccessService servicio que decide si el usuario puede acceder a una solicitud, inyectado por constructor
      */
-    public PanelistController(PanelistService panelistService) {
+    public PanelistController(PanelistService panelistService, SubmissionAccessService submissionAccessService) {
         this.panelistService = panelistService;
+        this.submissionAccessService = submissionAccessService;
     }
 
     // ── Panelists ───────────────────────────────────────────────────────────────
@@ -87,6 +91,7 @@ public class PanelistController {
      */
     @GetMapping("/solicitud/{submissionId}")
     public ResponseEntity<?> listBySubmission(@PathVariable("submissionId") Long submissionId) {
+        submissionAccessService.validateAccessById(submissionId, SubmissionAccessService.PANEL_VIEW_PERMISSIONS);
         return ResponseEntity.ok(ResponseWrapper.success(panelistService.listBySubmission(submissionId)));
     }
 
@@ -158,6 +163,7 @@ public class PanelistController {
      */
     @GetMapping("/tutor/solicitud/{submissionId}")
     public ResponseEntity<?> obtainTutor(@PathVariable("submissionId") Long submissionId) {
+        submissionAccessService.validateAccessById(submissionId, SubmissionAccessService.PANEL_VIEW_PERMISSIONS);
         return panelistService.obtainTutorOfSubmission(submissionId)
                 .map(t -> ResponseEntity.ok(ResponseWrapper.success(t)))
                 .orElse(ResponseEntity.notFound().build());
@@ -211,6 +217,7 @@ public class PanelistController {
      */
     @GetMapping("/info/{submissionId}/{appUserId}")
     public ResponseEntity<?> obtainInfoPanelist(@PathVariable("submissionId") Long submissionId, @PathVariable("appUserId") Long appUserId) {
+        submissionAccessService.validateAccessById(submissionId, SubmissionAccessService.PANEL_VIEW_PERMISSIONS);
         Optional<Panelist> panelistOpt = panelistService.obtainInfoPanelist(submissionId, appUserId);
         if (panelistOpt.isPresent()) {
             Panelist panelist = panelistOpt.get();

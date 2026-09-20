@@ -12,10 +12,10 @@ Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.bootstrap
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.bootstrap,AdminBootstrap,60,29,5,1,16,5,3,3,0,3
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.enums,StatusSubmission,75,0,8,0,12,0,7,0,3,0
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.security.service,CustomUserDetailsService,0,59,0,2,0,14,0,4,0,3
-Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.security.service,SubmissionAccessService,1,147,9,23,0,24,9,11,0,4
+Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.security.service,SubmissionAccessService,1,184,9,23,0,28,9,14,0,7
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.security.service,CurrentAppUserService,0,71,0,6,0,13,0,9,0,6
-Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,PanelistController,0,269,3,11,0,53,3,23,0,19
-Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,TutorController,0,83,0,0,0,21,0,8,0,8
+Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,PanelistController,0,287,3,11,0,57,3,23,0,19
+Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,TutorController,0,91,0,0,0,23,0,8,0,8
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,ResourceDegreeController,0,65,0,4,0,14,0,8,0,6
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,TeacherController,0,89,0,8,0,23,0,12,0,8
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,StudentController,51,6,0,0,11,1,5,1,5,1
@@ -39,7 +39,7 @@ Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controlle
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,EvaluationController,0,79,0,0,0,18,0,8,0,8
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,BackupController,8,196,4,4,1,40,4,18,0,18
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,RoomController,22,6,0,0,5,1,4,1,4,1
-Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,ScheduleController,0,106,0,2,0,17,0,11,0,10
+Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,ScheduleController,0,191,2,10,0,39,2,17,0,13
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,ReportController,0,1190,0,66,0,148,0,67,0,34
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,TutoringController,21,347,2,18,6,77,2,23,0,15
 Sistema Gestión Pre-Sustentaciones UTEQ,ec.edu.uteq.presustentaciones.controllers,RubricEvaluationController,81,9,2,0,23,1,7,1,6,1

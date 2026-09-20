@@ -53,6 +53,7 @@ SCHED = "backend/src/main/java/ec/edu/uteq/presustentaciones/repositories/Schedu
 JSON_LH = "docs/mediciones/perf/lighthouse/prod-runs/desktop-run1.json"
 EVID = "docs/mediciones/sus/re-aplicacion/evidencia/apps-script-historial-11-16.png"
 FIG = "Informe-Final/figuras/fig-lighthouse-scores.png"
+CTRLDIR = "backend/src/main/java/ec/edu/uteq/presustentaciones/controllers/"
 CTRL = "backend/src/main/java/ec/edu/uteq/presustentaciones/controllers/AppUserController.java"
 PERM = "@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')"
 T10 = "Informe-Final/secciones/10-evaluacion-empirica.tex"
@@ -64,14 +65,14 @@ TAG, BORRAR, VIEJA = "@TAG@", "@BORRAR@", "@VIEJA@"
 
 # (id, descripcion, archivo, viejo, nuevo, detectores, necesita el cuaderno)
 MUTACIONES = [
-    ("M01", "informe: cobertura de lineas 82.01 -> 85.01", "Informe-Final/secciones/01-resumenes.tex",
-     "código llega a 82.01", "código llega a 85.01", [CIFRAS], False),
-    ("M02", "informe: cobertura de ramas 73.49 -> 78.49", T10,
-     "73.49\\,\\% de ramas (1,483/2,018)", "78.49\\,\\% de ramas (1,483/2,018)", [CIFRAS], False),
-    ("M03", "informe: numero de pruebas 809 -> 860", "Informe-Final/secciones/08-diseno-arquitectura.tex",
-     "809 pruebas automatizadas reales", "860 pruebas automatizadas reales", [CIFRAS], False),
-    ("M04", "README: badge de cobertura 82.01 -> 88.01", "README.md",
-     "coverage-82.01%25_lines", "coverage-88.01%25_lines", [CIFRAS], False),
+    ("M01", "informe: cobertura de lineas 82.13 -> 85.13", "Informe-Final/secciones/01-resumenes.tex",
+     "código llega a 82.13", "código llega a 85.13", [CIFRAS], False),
+    ("M02", "informe: cobertura de ramas 73.52 -> 78.52", T10,
+     "73.52\\,\\% de ramas (1,491/2,028)", "78.52\\,\\% de ramas (1,491/2,028)", [CIFRAS], False),
+    ("M03", "informe: numero de pruebas 823 -> 860", "Informe-Final/secciones/08-diseno-arquitectura.tex",
+     "823 pruebas automatizadas reales", "860 pruebas automatizadas reales", [CIFRAS], False),
+    ("M04", "README: badge de cobertura 82.13 -> 88.13", "README.md",
+     "coverage-82.13%25_lines", "coverage-88.13%25_lines", [CIFRAS], False),
     ("M05", "informe: media del SUS 52.83 -> 55.83", T10,
      "media 52.83/100", "media 55.83/100", [DOC], False),
     ("M06", "informe: IC 95 % del SUS, limite superior 59.51 -> 61.51", T10,
@@ -109,15 +110,15 @@ MUTACIONES = [
      VIEJA, None, [DOC], False),
     ("M20", "se borra un archivo de evidencia citado", EVID, BORRAR, None, [DOC], False),
     ("M21", "se mueve la etiqueta v1.1.0 (anotada) a otro commit", None, TAG, None, [ETIQ], False),
-    ("M24", "VERIFICACION: fraccion de lineas vencida 4022/4904 -> 4019/4901", "VERIFICACION.md",
-     "LINE **82,01 %** (4022/4904)", "LINE **82,01 %** (4019/4901)", [CIFRAS], False),
+    ("M24", "VERIFICACION: fraccion de lineas vencida 4054/4936 -> 4051/4933", "VERIFICACION.md",
+     "LINE **82,13 %** (4054/4936)", "LINE **82,13 %** (4051/4933)", [CIFRAS], False),
     ("M25", "P3: un Javadoc apilado sobre otro (la prosa del primero se pierde)", SCHED,
      "    /**\n     * Busca el/los registro(s) con submission id.",
      "    /** prosa que javadoc descarta */\n    /**\n     * Busca el/los registro(s) con submission id.", [P3], False),
     ("M26", "P3: un comentario Javadoc metido dentro de una consulta JPQL", SCHED,
      "          AND c.dateStart < :fin\n", "          AND c.dateStart < :fin\n          /** basura */\n", [P3], False),
-    ("M27", "EV-1: una salida pegada en VERIFICACION.md queda obsoleta (Javadoc 778 -> 768)", "VERIFICACION.md",
-     "metodos de interfaz): 778", "metodos de interfaz): 768", [EV1], False),
+    ("M27", "EV-1: una salida pegada en VERIFICACION.md queda obsoleta (Javadoc 779 -> 769)", "VERIFICACION.md",
+     "metodos de interfaz): 779", "metodos de interfaz): 769", [EV1], False),
     ("M28", "EV-1: la tabla dice P3 Parcial y el resumen lo agrupa como Cumple", "VERIFICACION.md",
      "| P3 | ✅ Cumple |", "| P3 | 🟡 Parcial |", [EV1], False),
     ("M29", "EV-4: la tabla historica de CONTRIBUCIONES.md declara un commit de mas para un integrante", "CONTRIBUCIONES.md",
@@ -140,6 +141,18 @@ MUTACIONES = [
      "class PasswordPolicyValidatorTest {" + chr(10) + "    static class Oculta { @Test void neverRuns() { } }" + chr(10), [P2E], False),
     ("M36", "la figura de Lighthouse vuelve a titularse 'build de produccion' (el pie dice despliegue publico)", "scripts/gen-figuras.py",
      "(despliegue publico real)", "(build de produccion)", [DOC], False),
+    ("M37", "5b: se retira el @PreAuthorize de un GET que devuelve todas las tutorias", CTRLDIR + "TutorController.java",
+     '    @GetMapping\n    @PreAuthorize("@permissionService.hasPermission(authentication, \'TRIBUNAL_TUTOR_ASIGNAR\')")\n    public ResponseEntity<Page<Tutor>> list(',
+     '    @GetMapping\n    public ResponseEntity<Page<Tutor>> list(', [AUTZ], False),
+    ("M38", "5b: un GET por solicitud deja de validar quien pregunta (IDOR sobre el tribunal)", CTRLDIR + "PanelistController.java",
+     '    public ResponseEntity<?> listBySubmission(@PathVariable("submissionId") Long submissionId) {\n'
+     '        submissionAccessService.validateAccessById(submissionId, SubmissionAccessService.PANEL_VIEW_PERMISSIONS);\n',
+     '    public ResponseEntity<?> listBySubmission(@PathVariable("submissionId") Long submissionId) {\n', [AUTZ], False),
+    ("M39", "5b: el calendario de otro usuario deja de exigir ser el propio usuario", CTRLDIR + "ScheduleController.java",
+     "        validateOwnAccountOrManager(id);\n        return scheduleService.listByAppUser(id);",
+     "        return scheduleService.listByAppUser(id);", [AUTZ], False),
+    ("M40", "5a: un p crudo de Welch tecleado a mano en prosa (0,608 -> 0,008), sin la palabra Holm", SUSR,
+     "**t = 0,519, p = 0,608**", "**t = 0,519, p = 0,008**", [DOC], False),
     ("M22", "se retira el @PreAuthorize de un endpoint de escritura (POST)", CTRL,
      '    @PreAuthorize("' + PERM + '")\n    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")',
      '    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")', [AUTZ], False),

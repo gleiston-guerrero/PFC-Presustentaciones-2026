@@ -19,16 +19,16 @@ que además aplica la regla `jacoco:check` (≥70 % en líneas y en ramas).
 
 | Métrica | Cubierto | Total | Porcentaje |
 |---|---:|---:|---:|
-| **Líneas (LINE)** | 4022 | 4904 | **82.01 %** |
-| **Ramas (BRANCH)** | 1483 | 2018 | **73.49 %** |
+| **Líneas (LINE)** | 4054 | 4936 | **82.13 %** |
+| **Ramas (BRANCH)** | 1491 | 2028 | **73.52 %** |
 
 ```
-Tests run: 809, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 823, Failures: 0, Errors: 0, Skipped: 0
 jacoco:check (jacoco-check) --- All coverage checks have been met.
 BUILD SUCCESS
 ```
 
-- **Pruebas:** 809
+- **Pruebas:** 823
 - **Fallos:** 0
 - **Errores:** 0
 
@@ -75,3 +75,11 @@ La cobertura **no se movio** (`LINE` 4022/4904, `BRANCH` 1483/2018: el endpoint 
 otras clases); lo que cambia es el conteo de pruebas, y por eso se republica. Las tres pasan, y se comprobo
 que **pueden fallar**: al desactivar el rechazo de contrasenas comunes en `PasswordPolicyValidator`, la
 primera se cae. `scripts/p2-pruebas-ejecutadas.py` comprueba desde entonces que toda prueba anotada corre.
+
+## Regenerada de nuevo tras el punto 5b de la revisión final (2026-09-20)
+
+Se cerraron los huecos de autorización de los `GET` (ver `VERIFICACION.md`, P8) y se añadieron 14 pruebas:
+**809 -> 823 pruebas, 0 fallos**. Esta vez sí se movió la cobertura, porque hay código de producción nuevo
+(`SubmissionAccessService.validateAccessById`, la guarda de `ScheduleController`): de LINE 4022/4904 y
+BRANCH 1483/2018 a **LINE 4054/4936 (82.13 %) y BRANCH 1491/2028 (73.52 %)**. Los `jacoco.xml` y `jacoco.csv`
+de esta carpeta son los de esta corrida (1 sesión, `./mvnw clean test` sobre PostgreSQL y Redis reales).

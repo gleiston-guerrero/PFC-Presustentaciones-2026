@@ -2,6 +2,7 @@ package ec.edu.uteq.presustentaciones.security.service;
 
 import ec.edu.uteq.presustentaciones.entities.*;
 import ec.edu.uteq.presustentaciones.repositories.PanelistRepository;
+import ec.edu.uteq.presustentaciones.repositories.SubmissionRepository;
 import ec.edu.uteq.presustentaciones.repositories.TutorRepository;
 import ec.edu.uteq.presustentaciones.services.PermissionService;
 import org.junit.jupiter.api.AfterEach;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.when;
 class SubmissionAccessServiceTest {
 
     @Mock private PanelistRepository panelistRepository;
+    @Mock private SubmissionRepository submissionRepository;
     @Mock private TutorRepository tutorRepository;
     @Mock private PermissionService permissionService;
 
@@ -139,5 +141,50 @@ class SubmissionAccessServiceTest {
         when(tutorRepository.findBySubmissionId(7L)).thenReturn(Optional.of(tutor));
 
         assertDoesNotThrow(() -> submissionAccessService.validateAccess(submission, "ANTEPROYECTO_REVISAR"));
+    }
+
+    // ── validateAccessById: el acceso por id, que usan los GET de tribunal y tutor ─────────────
+
+    @Test
+    void validateAccessByIdOfSubmissionThatNotExistsDoesNotThrowOrRevealAnything() {
+        authenticateAs("cualquiera@uteq.edu.ec", "ROLE_ESTUDIANTE");
+        when(submissionRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertDoesNotThrow(() -> submissionAccessService.validateAccessById(999L,
+                SubmissionAccessService.PANEL_VIEW_PERMISSIONS));
+    }
+
+    @Test
+    void validateAccessByIdRejectsUnrelatedAppUser() {
+        // El caso que la revision final senalo: cualquier usuario autenticado podia consultar quien
+        // compone el tribunal de una solicitud ajena.
+        authenticateAs("estudiante.ajeno@uteq.edu.ec", "ROLE_ESTUDIANTE");
+        when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
+        when(permissionService.hasPermission(any(), any())).thenReturn(false);
+        when(panelistRepository.findBySubmissionId(7L)).thenReturn(List.of());
+        when(tutorRepository.findBySubmissionId(7L)).thenReturn(Optional.empty());
+
+        assertThrows(AccessDeniedException.class, () -> submissionAccessService.validateAccessById(7L,
+                SubmissionAccessService.PANEL_VIEW_PERMISSIONS));
+    }
+
+    @Test
+    void validateAccessByIdLetsTheOwnerStudentPass() {
+        authenticateAs("estudiante.dueno@uteq.edu.ec", "ROLE_ESTUDIANTE");
+        when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
+        when(permissionService.hasPermission(any(), any())).thenReturn(false);
+
+        assertDoesNotThrow(() -> submissionAccessService.validateAccessById(7L,
+                SubmissionAccessService.PANEL_VIEW_PERMISSIONS));
+    }
+
+    @Test
+    void validateAccessByIdLetsWhoAssignsThePanelPass() {
+        authenticateAs("coordinador@uteq.edu.ec", "ROLE_COORDINADOR");
+        when(submissionRepository.findById(7L)).thenReturn(Optional.of(submission));
+        when(permissionService.hasPermission(any(), eq("TRIBUNAL_TUTOR_ASIGNAR"))).thenReturn(true);
+
+        assertDoesNotThrow(() -> submissionAccessService.validateAccessById(7L,
+                SubmissionAccessService.PANEL_VIEW_PERMISSIONS));
     }
 }

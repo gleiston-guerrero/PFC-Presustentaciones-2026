@@ -4,6 +4,7 @@ import ec.edu.uteq.presustentaciones.entities.Panelist;
 import ec.edu.uteq.presustentaciones.entities.Submission;
 import ec.edu.uteq.presustentaciones.entities.Tutor;
 import ec.edu.uteq.presustentaciones.repositories.PanelistRepository;
+import ec.edu.uteq.presustentaciones.repositories.SubmissionRepository;
 import ec.edu.uteq.presustentaciones.repositories.TutorRepository;
 import ec.edu.uteq.presustentaciones.services.PermissionService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,16 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SubmissionAccessService {
 
+    /**
+     * Permisos que dejan CONSULTAR quién compone el tribunal y quién es el tutor de una solicitud,
+     * además de ADMIN, el propio estudiante, los panelistas y el tutor de esa solicitud: quien
+     * asigna el tribunal, quien revisa solicitudes o anteproyectos y quien califica.
+     */
+    public static final String[] PANEL_VIEW_PERMISSIONS = {
+            "TRIBUNAL_TUTOR_ASIGNAR", "SOLICITUDES_REVISAR", "ANTEPROYECTO_REVISAR", "EVALUACION_CALIFICAR"};
+
     private final PanelistRepository panelistRepository;
+    private final SubmissionRepository submissionRepository;
     private final TutorRepository tutorRepository;
     private final PermissionService permissionService;
 
@@ -79,5 +89,19 @@ public class SubmissionAccessService {
         }
 
         throw new AccessDeniedException("No tienes permiso para acceder a la información de esta solicitud");
+    }
+
+    /**
+     * Valida el acceso a una solicitud a partir de su id.
+     * @param submissionId id de la solicitud cuyo dato asociado se quiere leer
+     * @param codigosPermissionBypass permisos que, si el usuario los tiene, dejan pasar (ver
+     *                                {@link #PANEL_VIEW_PERMISSIONS})
+     * @throws AccessDeniedException en las mismas condiciones que {@link #validateAccess}
+     */
+    public void validateAccessById(Long submissionId, String... codigosPermissionBypass) {
+        // Una solicitud que no existe no tiene datos que proteger: quien llama sigue recibiendo el
+        // vacío o el 404 de siempre, y ninguna respuesta distingue "no existe" de "no es tuya".
+        submissionRepository.findById(submissionId)
+                .ifPresent(s -> validateAccess(s, codigosPermissionBypass));
     }
 }

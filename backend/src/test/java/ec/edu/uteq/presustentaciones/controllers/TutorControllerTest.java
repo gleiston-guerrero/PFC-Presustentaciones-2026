@@ -4,7 +4,9 @@ import ec.edu.uteq.presustentaciones.dto.MyStudentTuteeDTO;
 import ec.edu.uteq.presustentaciones.entities.Tutor;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
 import ec.edu.uteq.presustentaciones.repositories.AppUserRepository;
+import ec.edu.uteq.presustentaciones.security.service.SubmissionAccessService;
 import ec.edu.uteq.presustentaciones.services.TutorService;
+import org.springframework.security.access.AccessDeniedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,7 @@ class TutorControllerTest {
 
     @Mock private TutorService tutorService;
     @Mock private AppUserRepository appUserRepository;
+    @Mock private SubmissionAccessService submissionAccessService;
 
     @InjectMocks
     private TutorController controller;
@@ -153,5 +156,26 @@ class TutorControllerTest {
         @SuppressWarnings("unchecked")
         Map<String, String> error = (Map<String, String>) response.getBody();
         assertTrue(error.get("error").contains("sp_obtener_estadisticas_tutores"));
+    }
+
+    @Test
+    void bySubmissionOfUnrelatedAppUserIsDeniedAndDoesNotQueryTheService() {
+        doThrow(new AccessDeniedException("ajeno")).when(submissionAccessService)
+                .validateAccessById(1L, SubmissionAccessService.PANEL_VIEW_PERMISSIONS);
+
+        assertThrows(AccessDeniedException.class, () -> controller.bySubmission(1L));
+        verify(tutorService, never()).searchBySubmission(any());
+    }
+
+    @Test
+    void listRequiresThePermissionThatAssignsTutors() throws NoSuchMethodException {
+        // GET /api/tutores devolvia TODAS las tutorias a cualquier usuario autenticado; la anotacion
+        // es lo unico que lo impide, asi que se comprueba que siga ahi.
+        org.springframework.security.access.prepost.PreAuthorize anotacion = TutorController.class
+                .getMethod("list", org.springframework.data.domain.Pageable.class)
+                .getAnnotation(org.springframework.security.access.prepost.PreAuthorize.class);
+
+        assertNotNull(anotacion, "GET /api/tutores sin @PreAuthorize expone todas las tutorias");
+        assertTrue(anotacion.value().contains("TRIBUNAL_TUTOR_ASIGNAR"));
     }
 }

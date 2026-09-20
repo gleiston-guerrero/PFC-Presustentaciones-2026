@@ -392,6 +392,32 @@ def comprobar_holm_sus(est):
         ok(f"{citas} p ajustados del SUS citados en prosa coinciden, y ninguno "
            f"contradice la decision (ninguna se rechaza)")
 
+    # Los p CRUDOS en prosa ("t = 0,519, p = 0,608"): la revision final (punto 5a) vio que solo se
+    # comprobaban los ajustados y la tabla, de modo que un p crudo tecleado a mano en un parrafo
+    # (0,608 -> 0,008) no lo veia nadie. Se comprueba cada "p = 0,xxx" de un parrafo del SUS
+    # contra los p crudos y ajustados calculados, con o sin la palabra "Holm".
+    RE_PCRUDO = re.compile(r"(?<![\w<>])p\s*\$?\s*=\s*\$?\s*[−-]?(0[.,]\d{2,4})(?!\d)")
+    conocidos = esperados_p | {round(h["p_crudo"], 4) for h in holm} | {0.05, 0.10}
+    crudos, malos_crudos = 0, 0
+    for f in archivos_vigentes():
+        for parr in re.split(r"\n\s*\n", leer(f)):
+            if not re.search(r"SUS|formulario|papel|hojas|Welch", parr):
+                continue
+            if re.search(r"Permutaci|k6|Lighthouse|latencia|p95|p50", parr):
+                continue  # el contraste de rendimiento tiene sus propios p (P6)
+            for m in RE_PCRUDO.finditer(parr):
+                v = num(m.group(1))
+                crudos += 1
+                if not any(abs(v - p) < 5e-4 + 1e-9 for p in conocidos):
+                    fail(f"{f}: cita p = {m.group(1)} en prosa del SUS; el calculo da p crudos "
+                         f"{sorted(round(h['p_crudo'], 3) for h in holm)} y ajustados "
+                         f"{sorted(round(h['p_ajustado'], 3) for h in holm)}")
+                    malos_crudos += 1
+    if crudos < 2:
+        fail(f"solo se reconocieron {crudos} p crudos en prosa del SUS: la regla dejo de casar")
+    elif not malos_crudos:
+        ok(f"{crudos} p crudos citados en prosa del SUS coinciden con el calculo")
+
     # La conclusion de Welch tambien: si ninguna se rechaza, no puede decir lo contrario.
     afirma = re.compile(r"(?<!\w)(?:una|la|existe(?:n)?|hay)\s+diferencia\s+significativa|"
                         r"difieren\s+significativamente", re.I)

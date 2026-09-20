@@ -145,11 +145,11 @@ desplegada con Docker Compose y nginx.</p>
   <li>Trazabilidad de las cifras publicadas: todas proceden de una corrida versionada, y una
       comprobación automatizada rechaza cualquier cifra que el expediente no respalde (cobertura, SUS,
       valores p, Lighthouse, archivos de evidencia citados). El propio verificador se prueba con un
-      arnés de 33 mutaciones que inyecta defectos y exige que cada uno sea detectado.</li>
+      arnés de 40 mutaciones que inyecta defectos y exige que cada uno sea detectado.</li>
 </ul>
 
-<p><strong>Estado verificado de esta versión:</strong> 809 pruebas automatizadas (0 fallos, 0
-errores); cobertura de 82,01 % de líneas (4022/4904) y 73,49 % de ramas (1483/2018) medida con JaCoCo
+<p><strong>Estado verificado de esta versión:</strong> 823 pruebas automatizadas (0 fallos, 0
+errores); cobertura de 82,13 % de líneas (4054/4936) y 73,52 % de ramas (1491/2028) medida con JaCoCo
 sobre PostgreSQL y Redis reales; informe final de 70 páginas compilado sin errores ni referencias sin
 resolver; integración continua en verde en sus tres trabajos.</p>
 

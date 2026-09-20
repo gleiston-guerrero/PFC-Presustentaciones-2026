@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-v1.1.0-blue.svg)](https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026)
 [![CI](https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![JaCoCo Coverage](https://img.shields.io/badge/coverage-82.01%25_lines-brightgreen.svg)](docs/mediciones/jacoco/COVERAGE.md)
+[![JaCoCo Coverage](https://img.shields.io/badge/coverage-82.13%25_lines-brightgreen.svg)](docs/mediciones/jacoco/COVERAGE.md)
 [![OWASP Top 10](https://img.shields.io/badge/OWASP-5%2F6_controles_con_evidencia-yellow.svg)](docs/mediciones/sec/owasp/OWASP-AUDIT.md)
 
 Sistema web para la automatización, gestión y evaluación de pre-sustentaciones de trabajos de titulación de la **Universidad Técnica Estatal de Quevedo (UTEQ)**.
@@ -110,7 +110,7 @@ Ver [`docs/entorno/VIDEO-DEMO-SCRIPT.md`](docs/entorno/VIDEO-DEMO-SCRIPT.md) par
 siguió al grabarlo.
 
 `make all` está verificado con éxito de punta a punta (2026-08-31: 109/109 tests, k6, auditoría,
-trazabilidad y PDF final, exit 0; la suite creció desde entonces a 809 tests, ver
+trazabilidad y PDF final, exit 0; la suite creció desde entonces a 823 tests, ver
 [`COVERAGE.md`](docs/mediciones/jacoco/COVERAGE.md)) — detalle completo de la verificación y de un bug real de migración que encontró en el
 camino en [`docs/entorno/TROUBLESHOOTING.md`](docs/entorno/TROUBLESHOOTING.md).
 

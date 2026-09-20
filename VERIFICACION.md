@@ -28,13 +28,13 @@ que comprueba que cada bloque marcado `<!-- ev1:run -->` reproduce literalmente 
 | # | Estado | Qué se corrió hoy y qué dio |
 |---|---|---|
 | P1 | 🟡 Parcial | **Cifra de cierre (ronda del 18-sep):** `n=15 media=52.83 DE=12.06 IC95=[46.16,59.51]` — reproduce exacto desde el CSV sellado por un tercero. La ronda en papel (`n=4 media=48.75`) queda como registro histórico. Abierto: α = 0,599 y el origen de las 11 hojas retractadas |
-| P2 | ✅ Cumple | `./mvnw clean test`: **809 pruebas, 0 fallos** (todas las anotadas se ejecutan), `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,01 %** (4022/4904), BRANCH **73,49 %** (1483/2018) — corrida de cierre, regenerada el 2026-09-20 |
+| P2 | ✅ Cumple | `./mvnw clean test`: **823 pruebas, 0 fallos** (todas las anotadas se ejecutan), `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,13 %** (4054/4936), BRANCH **73,52 %** (1491/2028) — corrida de cierre, regenerada el 2026-09-20 |
 | P3 | ✅ Cumple | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, 0 errores**, `doclint` activo. Escáner propio: 777/778 (**99,9 %**). `@param` tautológicos: **35,2 % → 0,0 %**. Avisos con el tope levantado: **682 → 170**, y los 170 restantes son un artefacto de que javadoc no ve los constructores que genera Lombok (162 de 163 clases lo confirman) — ver la sección P3 |
-| P4 | ✅ Cumple | Renombrado completado: **0,0 %** de tipos y **0,2 %** de métodos sobre el universo completo de 1838 (antes 35,7 % y 39,1 %); 1,5 %/3,4 % bajo la definición más amplia. **Nombres de `@Test`: 0 de 809 con palabras en español** (eran 789; ver la sección P4) |
+| P4 | ✅ Cumple | Renombrado completado: **0,0 %** de tipos y **0,2 %** de métodos sobre el universo completo de 1856 (antes 35,7 % y 39,1 %); 1,5 %/3,4 % bajo la definición más amplia. **Nombres de `@Test`: 0 de 823 con palabras en español** (eran 789; ver la sección P4) |
 | P5 | ✅ Cumple | 6 corridas Lighthouse versionadas en `prod-runs/`; URL pública en la primera pantalla del README |
 | P6 | ✅ Cumple | `\label{tab:holm-bonferroni}` presente y citado con `\ref` en `10-evaluacion-empirica.tex:85` |
 | P7 | ✅ Cumple | **18 pruebas del chatbot, 0 fallos**, y la de integración usa el servicio **real**: se retiró el `@MockBean ChatbotService` que la revisión del 18-sep señaló. Verificado por mutación (romper el servicio hace fallar la prueba) |
-| P8 | ✅ Cumple | 102 endpoints de escritura; los 5 sin anotación son los exentos de pre-login (`login`, `refresh`, `logout`, `recuperar`, `reset`) |
+| P8 | ✅ Cumple | 102 endpoints de escritura; los 5 sin anotación son los exentos de pre-login (`login`, `refresh`, `logout`, `recuperar`, `reset`). **Desde la revisión final también los 111 GET**: los 28 que quedan sin `@PreAuthorize` validan el acceso, delegan en un servicio que lo valida (comprobado) o son catálogos; 9 métodos sin guarda eran huecos reales y se cerraron |
 | P9 | ✅ Cumple | Tag `v1.1.0` **sobre el commit de cierre** (desfase 0) y **v1.1.0 archivada en Zenodo dos veces**: el snapshot vigente es el del 2026-09-20, DOI `10.5281/zenodo.22854267`, commit `a60ae4c` (el primero, del 19-sep, `10.5281/zenodo.22839517`, quedó superado). `make verify` comprueba que el tag no se adelante al snapshot con nada que no sea el registro del DOI |
 | P10 | ✅ Cumple | Portada: 32 líneas, 0 referencias DOI, 0 notas de proceso, URL del repositorio presente |
 | P11 | ✅ Cumple | 31 controladores, 10 rutinas SQL distintas, cero clases con nombre pre-P4 en el informe activo |
@@ -188,17 +188,20 @@ Versionada en [`docs/mediciones/jacoco/2026-09-18-corrida-limpia-reproduccion/`]
 versionado. El valor de ramas coincide además, al dígito, con el que el propio ingeniero calculó sumando
 los contadores del XML (1483/2018 = 73,49 %).
 
-**Corrida de cierre definitiva (2026-09-19, la que se publica):**
+**Corrida de cierre definitiva (2026-09-20, la que se publica, tras la revisión final):**
 ```
-Tests run: 806, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 823, Failures: 0, Errors: 0, Skipped: 0
 jacoco:check (jacoco-check) --- All coverage checks have been met.
 BUILD SUCCESS
 sessioninfo en el XML: 1
-BRANCH: 1483/2018 (73.49%)
-LINE:   4022/4904 (82.01%)
+BRANCH: 1491/2028 (73.52%)
+LINE:   4054/4936 (82.13%)
 ```
+La corrida anterior de cierre (2026-09-19, 809 pruebas: LINE 4022/4904, BRANCH 1483/2018) quedó superada
+al cerrar el punto 5b de la revisión final (autorización de los `GET`): se añadieron 14 pruebas y 32 líneas
+instrumentadas de código de producción que ellas cubren.
 Versionada en [`docs/mediciones/jacoco/2026-09-19-cierre-definitivo/`](docs/mediciones/jacoco/2026-09-19-cierre-definitivo/).
-Las 7 líneas de diferencia con el 17 y el 18 de septiembre (4904 instrumentadas en vez de 4897) son
+Las 7 líneas de diferencia entre el 17-18 de septiembre y la corrida del 19 (4904 instrumentadas en vez de 4897) eran
 código que agregaron las correcciones posteriores al 18-sep, no un cambio de método de medición: 4 de
 las regresiones de contrato y 3 de los constructores explícitos que hubo que declarar al cerrar los
 avisos de Javadoc (ver P3).
@@ -251,7 +254,7 @@ pruebas que no corren es una cifra que miente, aunque nadie la hubiera inventado
   clases. Cambia el conteo de pruebas, y por eso se republicó la corrida canónica y todo lugar que decía 806.
 - `scripts/p2-pruebas-ejecutadas.py`, dentro de `make verify`, comprueba dos cosas: sin compilar, que ninguna
   clase estática anidada contenga `@Test` sin `@Nested`; y, tras la suite, que **cada método anotado aparezca entre
-  los casos que Surefire ejecutó** (hoy 809 y 809). Se probó por mutación: reintroducir una clase estática con
+  los casos que Surefire ejecutó** (hoy 823 y 823). Se probó por mutación: reintroducir una clase estática con
   un `@Test` hace salir 1.
 
 ---
@@ -271,16 +274,16 @@ python scripts/javadoc-scan-amplio.py
 
 **Salida real (hoy; `python scripts/ev1-verificacion.py --actualizar` la regenera):**
 ```
-Total metodos publicos detectados: 465
-Con Javadoc COMPLETO: 465 (100.0%)
+Total metodos publicos detectados: 466
+Con Javadoc COMPLETO: 466 (100.0%)
 Incompletos/sin doc: 0
-Meta 90%: 419 documentados (faltan 0 mas)
-Total (metodos public + constructores public + metodos de interfaz): 778
-Con Javadoc COMPLETO: 777 (99.9%)
+Meta 90%: 420 documentados (faltan 0 mas)
+Total (metodos public + constructores public + metodos de interfaz): 779
+Con Javadoc COMPLETO: 778 (99.9%)
   constructor: 25/25 (100.0%)
   interfaz: 287/288 (99.7%)
-  metodo: 465/465 (100.0%)
-Meta 90%: 701 documentados (faltan 0 mas)
+  metodo: 466/466 (100.0%)
+Meta 90%: 702 documentados (faltan 0 mas)
 ```
 
 Y `cd backend && ./mvnw javadoc:javadoc`, con `doclint` activo: **BUILD SUCCESS, 0 errores, 170 avisos**
@@ -412,7 +415,8 @@ mejorar un número, así que se declara en vez de maquillarse.
 | Avisos que señalan documentación ausente | ✅ **0** (eran 502) |
 
 Nota de trazabilidad: los 10 constructores explícitos son código, están cubiertos por las pruebas, y
-por eso la cobertura de cierre pasó de 82,03 % (4017/4897, corrida limpia del 2026-09-18) a **4022/4904 (82,01 %)** en la corrida de cierre.
+por eso la cobertura pasó de 82,03 % (4017/4897, corrida limpia del 2026-09-18) a 82,01 % (4022/4904, corrida del 2026-09-19).
+Desde el punto 5b de la revisión final la cifra es otra, **4054/4936 (82,13 %)**.
 
 ### Revisión del 2026-09-19 (tarde): el contenido era de plantilla
 
@@ -481,27 +485,27 @@ python scripts/p4-nombres-espanol.py
 ==========================================================================
 P4 -- Identificadores con palabra en espanol (metodo declarado)
 ==========================================================================
-Universo: 339 tipos y 1838 metodos en backend/src/{main,test}/java
+Universo: 339 tipos y 1856 metodos en backend/src/{main,test}/java
 Lexico: 155 terminos de dominio, 18 funcionales, 6 ambiguos
 DEFINICION NUCLEO (solo dominio, sin funcionales ni ambiguos)
   main + test:
     tipos       0/339   (  0.0%)
-    metodos     3/1838  (  0.2%)
+    metodos     3/1856  (  0.2%)
   solo src/main:
     tipos       0/272   (  0.0%)
-    metodos     1/913   (  0.1%)
+    metodos     1/915   (  0.1%)
 DEFINICION AMPLIA (+ funcionales + ambiguos resueltos por contexto)
   main + test:
     tipos       5/339   (  1.5%)
-    metodos    63/1838  (  3.4%)
+    metodos    63/1856  (  3.4%)
   solo src/main:
     tipos       4/272   (  1.5%)
-    metodos    24/913   (  2.6%)
+    metodos    24/915   (  2.6%)
 CONTRASTE con la evaluacion del 2026-09-17 (AST del ingeniero)
     el ing reporto: tipos 121/339 (35.7%), metodos 1325/1836 (72.2%)
-    este script:    tipos 5/339 (1.5%), metodos 63/1838 (3.4%)
+    este script:    tipos 5/339 (1.5%), metodos 63/1856 (3.4%)
     El universo de tipos coincide exacto (339). La diferencia en el
-    total de metodos (1838 aqui vs 1836 del ing el 17-sep) es ahora el mismo
+    total de metodos (1856 aqui vs 1836 del ing el 17-sep) es ahora el mismo
     universo: las declaraciones con o sin modificador (antes 693 por exigir public/
     private/protected). Sigue sin ver los metodos que Lombok genera; ver
     p4-rename-scan-javap.py para el conteo sobre bytecode.
@@ -573,8 +577,8 @@ no una medición del código. Con el léxico correcto se reprodujo su cifra al d
 |---|---|---|
 | Tipos, main+test | 121/339 (**35,7 %**) | **0/339 (0,0 %)** |
 | Tipos, `src/main` | 108/272 (**39,7 %**) | **0/272 (0,0 %)** |
-| Métodos, main+test | 271/693 (**39,1 %**) | **3/1838 (0,2 %)** |
-| Métodos, `src/main` | 232/625 (**37,1 %**) | **1/913 (0,1 %)** |
+| Métodos, main+test | 271/693 (**39,1 %**) | **3/1856 (0,2 %)** |
+| Métodos, `src/main` | 232/625 (**37,1 %**) | **1/915 (0,1 %)** |
 
 **Una corrección al instrumento que cambia el denominador de esa tabla (revisión final, 2026-09-20).** Las
 filas de métodos usaban un universo de **693** métodos (625 en `src/main`). El ing señaló, con razón, que la
@@ -583,8 +587,10 @@ los `@Test` de JUnit 5 son paquete-privados y los métodos de interfaz no llevan
 descartaba 1.145 de 1.838 métodos, justo los 809 `@Test` que se acababan de renombrar.** La cifra «0/693» era
 correcta para lo que veía y no decía nada de lo que había cambiado. Ahora los métodos se leen de sus
 declaraciones (recorriendo llaves y clases, con o sin modificador, incluidas las clases anónimas), y el universo
-es **1838, el mismo que cuenta el AST del ing**: 913 en `src/main` (465 públicos + 26 protegidos + 134 privados +
-288 de interfaz) y 925 en pruebas. Sobre ese universo completo el resultado sigue siendo holgado: 0,2 % con el
+era **1838, el mismo que cuenta el AST del ing**: 913 en `src/main` (465 públicos + 26 protegidos + 134 privados +
+288 de interfaz) y 925 en pruebas. **Hoy es 1856** (915 + 941): el punto 5b de la revisión final añadió 2 métodos
+de producción (`validateAccessById`, `validateOwnAccountOrManager`) y 16 de prueba (14 `@Test` y 2 auxiliares); el
+resultado no se movió. Sobre ese universo completo el resultado sigue siendo holgado: 0,2 % con el
 núcleo y 3,4 % con la definición más amplia. El script además **se niega a medir** si algún `@Test` queda fuera
 del universo (lo comprueba en cada corrida; con el defecto reintroducido sale 1: «809 anotados y solo 68 métodos
 de prueba detectados»).
@@ -668,7 +674,7 @@ corregirlo el endpoint paginado de auditoría devolvía 400.
 ```bash
 python scripts/p4-nombres-espanol.py --bytecode   # la medicion
 python scripts/p4-contrato-json.py                # que el contrato sigue intacto
-cd backend && ./mvnw clean test                   # 809/809
+cd backend && ./mvnw clean test                   # 823/823
 cd backend && ./mvnw javadoc:javadoc              # 0 errores, doclint activo
 ```
 
@@ -926,7 +932,7 @@ enrutador de intenciones por palabras clave— sigue declarada en el informe
 
 ---
 
-## P8 — Autorización en endpoints de escritura (peso 0,6)
+## P8 — Autorización en endpoints de escritura y lectura (peso 0,6)
 
 **Criterio:** todos los endpoints de escritura con anotación de autorización, incluido el del propio
 perfil, y la prueba de un 403 en el expediente.
@@ -947,6 +953,37 @@ Sin ninguna anotacion de autorizacion: 5
   AuthController.recover (PostMapping, L357) -- exento conocido (auth pre-login)
   AuthController.reset (PostMapping, L386) -- exento conocido (auth pre-login)
 OK: todos los endpoints sin @PreAuthorize son exentos conocidos y documentados.
+Total endpoints de lectura (GET): 111
+Sin @PreAuthorize: 28
+  AppUserController.obtainById (GET, L100) -- valida el acceso en el metodo
+  EvaluationPanelistController.obtain (GET, L58) -- delega en EvaluationPanelistService.java, que valida
+  EvaluationPanelistController.obtainPanel (GET, L82) -- delega en EvaluationPanelistService.java, que valida
+  PanelistController.listBySubmission (GET, L92) -- valida el acceso en el metodo
+  PanelistController.obtainTutor (GET, L164) -- valida el acceso en el metodo
+  PanelistController.obtainInfoPanelist (GET, L218) -- valida el acceso en el metodo
+  ProposalController.obtainBySubmission (GET, L60) -- delega en ProposalServiceImpl.java, que valida
+  ProposalController.viewPdf (GET, L72) -- delega en ProposalServiceImpl.java, que valida
+  ProposalController.verify (GET, L97) -- delega en ProposalServiceImpl.java, que valida
+  RoomController.list (GET, L27) -- catalogo (catalogo de salas)
+  RoomController.listPaged (GET, L37) -- catalogo (catalogo de salas)
+  RubricController.list (GET, L34) -- catalogo (catalogo de rubricas)
+  RubricController.obtain (GET, L42) -- catalogo (catalogo de rubricas)
+  RubricController.criteria (GET, L93) -- catalogo (criterios de la rubrica)
+  ScheduleController.availability (GET, L101) -- catalogo (franjas libres de un dia, sin datos de personas)
+  ScheduleController.verifyAvailability (GET, L117) -- catalogo (true/false de una sala, sin datos de personas)
+  ScheduleController.byAppUser (GET, L150) -- valida el acceso en el metodo
+  ScheduleController.bySubmission (GET, L161) -- valida el acceso en el metodo
+  SubmissionController.listMySubmissions (GET, L94) -- valida el acceso en el metodo
+  SubmissionController.obtain (GET, L292) -- valida el acceso en el metodo
+  SubmissionController.obtainTracking (GET, L333) -- valida el acceso en el metodo
+  TutorController.myStudents (GET, L54) -- valida el acceso en el metodo
+  TutorController.bySubmission (GET, L86) -- valida el acceso en el metodo
+  TutoringController.obtainTutoringsStudent (GET, L54) -- valida el acceso en el metodo
+  TutoringController.obtainTutoringsTeacher (GET, L71) -- valida el acceso en el metodo
+  TutoringController.obtainSummary (GET, L91) -- valida el acceso en el metodo
+  TutoringController.obtainPhases (GET, L110) -- valida el acceso en el metodo
+  TutoringController.obtainPdfPhase (GET, L242) -- valida el acceso en el metodo
+OK: todo GET sin @PreAuthorize valida el acceso, delega en un servicio que lo valida o es un catalogo.
 ```
 
 Y la prueba del 403 real, `AppUserControllerTest` (incluye `updatePerfilRechazaEditarElPerfilDeOtroAppUser`):
@@ -989,6 +1026,48 @@ real): antes del fix, inalcanzable; corregidas las 3 constantes/expresiones a
 `@permissionService.tienePermission(...)`, y `GET /api/v1/orientacion/temas` con un JWT real de
 estudiante ahora responde **200** (antes de corregir habría fallado con un error de evaluación SpEL en
 cada intento). Verificado que compila y la suite completa sigue en verde (806/806).
+
+### Revisión final del 2026-09-20 (punto 5b): la autorización de los `GET` también se verifica
+
+**Lo que se señaló:** el verificador solo miraba `POST`/`PUT`/`PATCH`/`DELETE`; *«quitar la autorización de un
+GET, fuera del alcance que ellos declaran»* sobrevivía a la prueba de mutaciones.
+
+**Verificado: era cierto, y el hueco no era solo de verificación.** Al ampliar el auditor a los 111 `GET`, 28 no
+llevan `@PreAuthorize` (eran 31 antes de esta ronda; se anotaron 3). Se revisó cada uno leyendo su cuerpo y el del
+servicio al que llama. 22 estaban bien (validan quién pregunta, o delegan en un servicio que lo valida, o son
+catálogos sin datos de personas). **9 métodos eran huecos reales**: cualquier usuario autenticado podía leer datos
+de solicitudes ajenas.
+
+| Endpoint | Qué exponía | Corrección |
+|---|---|---|
+| `GET /api/panelistas/solicitud/{id}`, `/tutor/solicitud/{id}`, `/info/{id}/{usuario}` | quién compone el tribunal y quién tutela una solicitud cualquiera | `SubmissionAccessService.validateAccessById`: ADMIN, estudiante dueño, panelista, tutor, o un permiso de tribunal/revisión/calificación |
+| `GET /api/tutores/solicitud/{id}` | el tutor asignado a una solicitud cualquiera | la misma guarda |
+| `GET /api/tutores` | **todas** las tutorías de la institución | `@PreAuthorize` con `TRIBUNAL_TUTOR_ASIGNAR` (el frontend no lo usa) |
+| `GET /api/cronogramas`, `/estudiante/{id}`, `/usuario/{id}`, `/solicitud/{id}` | la defensa programada, con la solicitud completa embebida, de cualquier estudiante | `list` y `byStudent` exigen permiso de cronograma o de reportes; `byAppUser` exige ser ese usuario (la identidad sale del token) o gestionar el cronograma; `bySubmission` usa la guarda de solicitud |
+
+Quedan sin cambios, y ahora
+**nombradas una por una** con su razón en el auditor, las franjas libres de un día y la disponibilidad de una sala:
+son agregados sin datos de personas.
+
+**Cómo se comprueba ahora** (`docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py`, ya dentro de
+`make verify`): todo `GET` sin `@PreAuthorize` tiene que cumplir **una de tres cosas** que el script comprueba, no
+que se declaran: validar el acceso en el propio método, delegar en un servicio (el script abre el servicio y exige
+que la marca de validación siga ahí) o figurar como catálogo con su razón. Un `GET` nuevo que no encaje en ninguna
+**hace fallar el verificador**. Salida real, arriba, en el bloque marcado.
+
+**Pruebas nuevas** (14; suite 809 → **823**, 0 fallos): denegación de un usuario ajeno y comprobación de que el
+servicio ni siquiera se consulta (`PanelistControllerTest`, `TutorControllerTest`, `ScheduleControllerTest`), la
+guarda misma con sus cuatro casos (solicitud inexistente, ajeno, dueño, quien asigna el tribunal;
+`SubmissionAccessServiceTest`), y dos comprobaciones por reflexión de que `GET /api/tutores` y `GET /api/cronogramas`
+siguen anotados.
+
+**Mutaciones** (3 nuevas, las 3 detectadas): M37 quita el `@PreAuthorize` de `GET /api/tutores`, M38 quita la guarda
+de un `GET` por solicitud, M39 quita la comprobación de identidad del calendario.
+
+**Límite, dicho sin adornos:** el auditor confía en las *marcas* (`validateAccess…`, `resolveAppUserId(`…), no
+ejecuta la guarda. Que una marca esté presente no prueba que la lógica que hay detrás sea correcta; eso lo prueban las
+pruebas unitarias de arriba, y solo para los endpoints que se tocaron. Un `GET` que valide con una marca ya
+aceptada pero mal razonada no lo vería el auditor.
 
 ---
 
@@ -1316,7 +1395,7 @@ del informe ×3, el alfa de Cronbach y dos conclusiones estadísticas). Arreglar
 reales que llevaban ahí desde antes:
 
 1. **`cifras-publicadas.py` nunca revisó una sola cifra del informe.** Su expresión regular para el
-   porcentaje no admitía la forma de LaTeX (`82.01\,\%`), así que cambiar 82.01 por 85.01 en el `.tex` no
+   porcentaje no admitía la forma de LaTeX (`82.01\,\%`, cifra de la corrida del 2026-09-19), así que cambiar 82.01 por 85.01 en el `.tex` no
    lo veía nadie. Corregida; al revisar por primera vez el informe apareció narrativa histórica con
    cifras sin fecha pegada, que ahora la lleva.
 2. **Una fracción vencida (`4019/4901`) seguía publicada en `VERIFICACION.md`** junto a «corrida de
@@ -1333,17 +1412,36 @@ reales que llevaban ahí desde antes:
 |---|---|---|
 | Lighthouse | `ev2-documental.py` | Las 6 corridas miden la URL pública (nunca `localhost`), todas la misma; el reporte, el informe y `make bench-lh` declaran esa misma; la figura del informe es la generada |
 | Evidencia citada | `ev2-documental.py` | Todo archivo del repositorio que un documento vigente cita existe |
-| SUS | `ev2-documental.py` | Media, DE, IC 95 % y α publicados == recalculados del CSV; p ajustados y decisión de Holm == calculados, y la frase junto al p no afirma lo contrario |
+| SUS | `ev2-documental.py` | Media, DE, IC 95 % y α publicados == recalculados del CSV; p ajustados y decisión de Holm == calculados, la frase junto al p no afirma lo contrario, y **todo `p = …` de un párrafo del SUS**, se nombre o no a Holm, es un p crudo o ajustado calculado |
 | Rendimiento (P6) | `ev2-documental.py --nb` | Los p ajustados de la familia de 3 pruebas, en informe y `k6/README.md`, == los que imprime el cuaderno al ejecutarse |
 | Cobertura y pruebas | `cifras-publicadas.py` | Porcentajes, conteos y fracciones publicados son los de cierre, o de una corrida que el expediente registra y que se nombra junto a la cifra |
 | Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
 | Bloques de este archivo | `ev1-verificacion.py` | Cada bloque marcado `ev1:run` reproduce su salida; la tabla coincide con el resumen |
 | Titularidad | `ev4-contribuciones.py --check` | Tramo **y** todo el historial: totales, reparto por persona, identidades sin dueño |
-| El propio verificador | `mutaciones-gate.py` | Inyecta 36 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 40 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
 
-**Resultado del arnés: 36 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
+**Resultado del arnés: 40 detectadas, 0 sobreviven** (37 en la última corrida completa sin `--nb`; las 3 de rendimiento, M13-M15, no cambiaron y se detectaron en la corrida con `--nb`). Cubre las seis del evaluador, más: fracción
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
+
+**Tres cierres de la revisión final (punto 5, 2026-09-20).** La revisión reportó que sobrevivían cuatro mutaciones y
+una anomalía menor; se atendieron así:
+
+- **5a — p crudo citado en prosa suelta: era la ceguera real, y se cerró.** El verificador comprobaba los p ajustados
+  (frases con «ajustado» o «tras Holm») y la tabla de Holm, pero no un `t = 0,519, p = 0,608` escrito a mano en un
+  párrafo. `ev2-documental.py` comprueba ahora cada `p = …` de un párrafo del SUS contra los p crudos y ajustados que
+  calcula `sus-estadistica.py`. Mutación **M40** (el p crudo de Welch, de 0,608 a 0,008, en `SUS-RESULTS.md`): detectada; y se comprobó
+  que con el detector anterior (`git show HEAD:scripts/ev2-documental.py`) esa misma mutación **sobrevivía** (sale 0).
+- **5b — un `GET` sin autorización:** ver P8; era además un hueco del producto, no solo del verificador.
+- **5c — «editando solo `SUS-RESULTS.md` apareció un fallo de credenciales en claro»: no se pudo reproducir.** Se
+  aplicaron a `SUS-RESULTS.md` las cuatro mutaciones que lo tocan (M07, M09, M12 y M40) y tras cada una se corrió
+  `scripts/ev2-credenciales.py`: **`[OK]` las cuatro veces**. El detector solo mira lo que `git ls-files` rastrea y
+  hoy solo encuentra dos coincidencias, ambas en `VERIFICACION.md` y ambas de la lista explícita `CITADAS`; en
+  `SUS-RESULTS.md` no encuentra ninguna. No se cambió el detector: **no se inventa un arreglo para un fallo que no se ve**.
+  La hipótesis menos improbable es que la revisión corrió dos verificaciones a la vez sobre el mismo árbol
+  mientras una de ellas tenía `VERIFICACION.md` a medio restaurar (la lista `CITADAS` está indexada por archivo y valor);
+  es una hipótesis, no un hallazgo. Si el evaluador conserva la salida exacta, con el comando y el archivo modificado
+  se reproduce en un minuto.
 
 **Límites, dichos sin adornos:**
 

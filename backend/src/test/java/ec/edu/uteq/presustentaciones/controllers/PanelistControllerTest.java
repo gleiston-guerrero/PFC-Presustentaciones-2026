@@ -6,7 +6,9 @@ import ec.edu.uteq.presustentaciones.entities.Panelist;
 import ec.edu.uteq.presustentaciones.entities.RolePanelist;
 import ec.edu.uteq.presustentaciones.entities.Tutor;
 import ec.edu.uteq.presustentaciones.entities.AppUser;
+import ec.edu.uteq.presustentaciones.security.service.SubmissionAccessService;
 import ec.edu.uteq.presustentaciones.services.PanelistService;
+import org.springframework.security.access.AccessDeniedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -40,6 +42,7 @@ import static org.mockito.Mockito.*;
 class PanelistControllerTest {
 
     @Mock private PanelistService panelistService;
+    @Mock private SubmissionAccessService submissionAccessService;
 
     @InjectMocks
     private PanelistController controller;
@@ -293,5 +296,34 @@ class PanelistControllerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("rol_jurado inexistente", wrapperOf(response).getMessage());
+    }
+
+    // ── Acceso a los GET por solicitud (revision final, punto 5b) ──────────────────────────────
+
+    @Test
+    void listBySubmissionOfUnrelatedAppUserIsDeniedAndDoesNotQueryTheService() {
+        doThrow(new AccessDeniedException("ajeno")).when(submissionAccessService)
+                .validateAccessById(1L, SubmissionAccessService.PANEL_VIEW_PERMISSIONS);
+
+        assertThrows(AccessDeniedException.class, () -> controller.listBySubmission(1L));
+        verify(panelistService, never()).listBySubmission(any());
+    }
+
+    @Test
+    void obtainTutorOfUnrelatedAppUserIsDeniedAndDoesNotQueryTheService() {
+        doThrow(new AccessDeniedException("ajeno")).when(submissionAccessService)
+                .validateAccessById(1L, SubmissionAccessService.PANEL_VIEW_PERMISSIONS);
+
+        assertThrows(AccessDeniedException.class, () -> controller.obtainTutor(1L));
+        verify(panelistService, never()).obtainTutorOfSubmission(any());
+    }
+
+    @Test
+    void obtainInfoPanelistOfUnrelatedAppUserIsDeniedAndDoesNotQueryTheService() {
+        doThrow(new AccessDeniedException("ajeno")).when(submissionAccessService)
+                .validateAccessById(1L, SubmissionAccessService.PANEL_VIEW_PERMISSIONS);
+
+        assertThrows(AccessDeniedException.class, () -> controller.obtainInfoPanelist(1L, 9L));
+        verify(panelistService, never()).obtainInfoPanelist(any(), any());
     }
 }
