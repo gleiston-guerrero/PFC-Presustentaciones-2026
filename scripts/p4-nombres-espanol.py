@@ -232,6 +232,18 @@ def main():
 
     amplio = NUCLEO | FUNCIONALES | set(AMBIGUOS)
 
+    # Guardia del universo (revision final del 19-sep): el instrumento llego a descartar 1.145 de
+    # 1.838 metodos --- entre ellos los 809 @Test --- y aun asi publicaba porcentajes. Todo metodo
+    # anotado @Test tiene que estar en el universo que se mide; si no, la cifra no vale y se para.
+    anotados = sum(len(re.findall(r"@(?:Test|ParameterizedTest|RepeatedTest)\b", p.read_text(encoding="utf-8", errors="replace")))
+                   for p in Path("backend/src/test/java").rglob("*.java")) if Path("backend/src/test/java").exists() else 0
+    en_pruebas = sum(1 for x in all_methods if "src\\test" in x[0] or "src/test" in x[0])
+    if en_pruebas < anotados:
+        print(f"[FAIL] el universo de metodos ({len(all_methods)}) no contiene todos los @Test: "
+              f"{anotados} anotados y solo {en_pruebas} metodos de prueba detectados. El instrumento "
+              f"esta descartando metodos (¿modificadores?); las cifras no valen.")
+        sys.exit(1)
+
     print("=" * 74)
     print("P4 -- Identificadores con palabra en espanol (metodo declarado)")
     print("=" * 74)
@@ -258,8 +270,9 @@ def main():
           f" metodos {len(hm)}/{len(all_methods)}"
           f" ({pct(len(hm), len(all_methods)):.1f}%)")
     print("    El universo de tipos coincide exacto (339). La diferencia en el")
-    print("    total de metodos (693 aqui vs 1836) es porque este conteo es por")
-    print("    texto fuente y no ve los metodos que Lombok genera; ver")
+    print(f"    total de metodos ({len(all_methods)} aqui vs 1836 del ing el 17-sep) es ahora el mismo")
+    print("    universo: las declaraciones con o sin modificador (antes 693 por exigir public/")
+    print("    private/protected). Sigue sin ver los metodos que Lombok genera; ver")
     print("    p4-rename-scan-javap.py para el conteo sobre bytecode.")
     print()
 

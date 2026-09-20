@@ -45,6 +45,7 @@ ETIQ = ("p9-etiqueta", [PY, "scripts/p9-etiqueta.py"])
 EV1 = ("ev1-verificacion", [PY, "scripts/ev1-verificacion.py", "--rapido"])
 EV4 = ("ev4-contribuciones", [PY, "scripts/ev4-contribuciones.py", "--check"])
 P4T = ("p4-tests-espanol", [PY, "scripts/p4-tests-espanol.py"])
+P4N = ("p4-nombres-espanol", [PY, "scripts/p4-nombres-espanol.py"])
 P3 = ("p3-param-tautologicos", [PY, "scripts/p3-param-tautologicos.py"])
 SCHED = "backend/src/main/java/ec/edu/uteq/presustentaciones/repositories/ScheduleRepository.java"
 
@@ -129,6 +130,9 @@ MUTACIONES = [
      "no participan"+chr(10)+"en esta ronda de recuperación", "reprobaron"+chr(10)+"la materia en esta ronda de recuperación", [DOC], False),
     ("M33", "P4: un metodo @Test vuelve a tener nombre en espanol", "backend/src/test/java/ec/edu/uteq/presustentaciones/controllers/AppUserControllerTest.java",
      "void listAllWithoutTokenReturns401(", "void listAllWithoutTokenDevuelve401(", [P4T], False),
+    ("M34", "P4: el medidor vuelve a exigir public/private/protected y descarta los @Test", "scripts/p4-rename-scan-fuente.py",
+     "    if len(partes) < 2:",
+     "    if len(partes) < 2 or not any(m in previo for m in ('public', 'private', 'protected')):", [P4N], False),
     ("M22", "se retira el @PreAuthorize de un endpoint de escritura (POST)", CTRL,
      '    @PreAuthorize("' + PERM + '")\n    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")',
      '    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")', [AUTZ], False),
@@ -159,7 +163,7 @@ def main():
     solo = set(args[args.index("--solo") + 1].split(",")) if "--solo" in args else None
 
     print("Linea base: los detectores tienen que pasar SIN mutar")
-    for d in (CIFRAS, DOC, AUTZ, SPEL, P3, P4T, EV1, EV4, ETIQ):
+    for d in (CIFRAS, DOC, AUTZ, SPEL, P3, P4T, P4N, EV1, EV4, ETIQ):
         rc = correr(d, nb)
         print(f"  [{'OK  ' if rc == 0 else 'FAIL'}] {d[0]}")
         if rc != 0 and d is not ETIQ:

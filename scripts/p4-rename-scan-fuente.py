@@ -10,6 +10,20 @@ metodos que Lombok genera en tiempo de compilacion (getters/setters/builder/equa
 toString), asi que el total de metodos queda muy por debajo del real -- usar el script javap
 para una cifra de metodos que incluya esos generados.
 
+CORRECCION DE LA REVISION FINAL DEL 19-SEP
+------------------------------------------
+La expresion que reconocia metodos (METHOD_RE) exigia `public`, `private` o `protected`. Los
+metodos de prueba de JUnit 5 son paquete-privados y los de una interfaz no llevan modificador,
+asi que el instrumento descartaba 1.145 de 1.838 metodos --- justo los 809 @Test que se acababan
+de renombrar --- y publicaba "693 metodos" (0,0 % / 4,3 %) sobre un universo que no era el del
+proyecto. La cifra era correcta para lo que el instrumento veia, pero el instrumento no veia lo
+que habia cambiado.
+
+Ahora los metodos se leen de sus DECLARACIONES (metodos_declarados): se recorre el texto sin
+comentarios ni cadenas, se sigue la profundidad de llaves, y en el cuerpo de cada clase o interfaz
+se reconoce como metodo todo encabezado `[modificadores] Tipo nombre(...)` con o sin modificador
+de visibilidad. Sigue sin ver los metodos que Lombok genera (para eso, p4-rename-scan-javap.py).
+
 Uso: python scripts/p4-rename-scan-fuente.py (desde la raiz del repo, o desde backend/)"""
 import re
 import sys
@@ -58,6 +72,123 @@ SPANISH_WORDS = [
 ]
 SPANISH_RE = re.compile("|".join(re.escape(w) for w in SPANISH_WORDS))
 
+PALABRAS_NO_METODO = {"if", "for", "while", "switch", "catch", "return", "new", "throw", "else", "do",
+                      "try", "synchronized", "assert", "super", "this", "yield", "case", "default"}
+MODIFICADORES = {"public", "protected", "private", "static", "final", "abstract", "synchronized",
+                 "native", "default", "strictfp", "sealed", "non-sealed"}
+RE_TIPO_DECL = re.compile(r"\b(?:class|interface|enum|record|@interface)\b")
+
+
+def _sin_comentarios_ni_cadenas(t):
+    """Reemplaza comentarios y literales por espacios (conserva saltos de linea y longitud)."""
+    out, i, n = [], 0, len(t)
+    while i < n:
+        c = t[i]
+        if t.startswith("//", i):
+            j = t.find("\n", i)
+            j = n if j < 0 else j
+            out.append(" " * (j - i)); i = j
+        elif t.startswith("/*", i):
+            j = t.find("*/", i + 2)
+            j = n if j < 0 else j + 2
+            out.append("".join(ch if ch == "\n" else " " for ch in t[i:j])); i = j
+        elif t.startswith('"""', i):
+            j = t.find('"""', i + 3)
+            j = n if j < 0 else j + 3
+            out.append("".join(ch if ch == "\n" else " " for ch in t[i:j])); i = j
+        elif c in "\"'":
+            j = i + 1
+            while j < n and t[j] != c:
+                j += 2 if t[j] == "\\" else 1
+            j = min(j + 1, n)
+            out.append(" " * (j - i)); i = j
+        else:
+            out.append(c); i += 1
+    return "".join(out)
+
+
+def _quitar_anotaciones(h):
+    """Quita @Nombre y @Nombre(...) (con parentesis balanceados) del inicio y del medio."""
+    res, i, n = [], 0, len(h)
+    while i < n:
+        if h[i] == "@" and not h.startswith("@interface", i):
+            j = i + 1
+            while j < n and (h[j].isalnum() or h[j] in "_."):
+                j += 1
+            k = j
+            while k < n and h[k].isspace():
+                k += 1
+            if k < n and h[k] == "(":
+                d = 0
+                while k < n:
+                    d += (h[k] == "(") - (h[k] == ")")
+                    k += 1
+                    if d == 0:
+                        break
+                j = k
+            i = j
+        else:
+            res.append(h[i]); i += 1
+    return "".join(res)
+
+
+def _nombre_de_metodo(encabezado):
+    """Nombre si `encabezado` (hasta `{` o `;`) es la declaracion de un metodo; si no, None."""
+    h = _quitar_anotaciones(encabezado).strip()
+    p = h.find("(")
+    if p < 0:
+        return None
+    previo = h[:p]
+    if "=" in previo or RE_TIPO_DECL.search(previo):
+        return None                                   # campo con inicializador, o una clase
+    previo = re.sub(r"<[^<>]*(?:<[^<>]*>[^<>]*)*>", " ", previo)   # genericos, incluidos los anidados
+    partes = [x for x in previo.split() if x not in MODIFICADORES]
+    if len(partes) < 2:
+        return None                                   # sin tipo de retorno: constructor o llamada
+    nombre = partes[-1]
+    if not re.fullmatch(r"\w+", nombre) or nombre in PALABRAS_NO_METODO:
+        return None
+    return nombre
+
+
+def metodos_declarados(texto):
+    """Nombres de los metodos DECLARADOS en el cuerpo de una clase/interfaz/enum/record,
+    con o sin modificador de visibilidad."""
+    t = _sin_comentarios_ni_cadenas(texto)
+    pila, ini, par, res = [], 0, 0, []       # pila de cuerpos: "cls" o "otro"
+    for i, c in enumerate(t):
+        if c == "(":
+            par += 1
+        elif c == ")":
+            par -= 1
+        elif par > 0:
+            continue                          # llaves dentro de parentesis (anotaciones, arrays)
+        elif c == "{":
+            enc = t[ini:i]
+            # Una clase anonima (`new Tipo(...) {`) tambien tiene metodos declarados.
+            anonima = bool(re.search(r"\bnew\b", enc)) and enc.rstrip().endswith(")")
+            if anonima or (RE_TIPO_DECL.search(_quitar_anotaciones(enc).split("(")[0]) and "=" not in enc.split("(")[0]):
+                pila.append("cls")
+            else:
+                if pila and pila[-1] == "cls":
+                    nom = _nombre_de_metodo(enc)
+                    if nom:
+                        res.append(nom)
+                pila.append("otro")
+            ini = i + 1
+        elif c == "}":
+            if pila:
+                pila.pop()
+            ini = i + 1
+        elif c == ";":
+            if pila and pila[-1] == "cls":
+                nom = _nombre_de_metodo(t[ini:i])
+                if nom:
+                    res.append(nom)
+            ini = i + 1
+    return res
+
+
 def scan():
     all_types, es_types = [], []
     all_methods, es_methods = [], []
@@ -71,8 +202,7 @@ def scan():
             all_types.append((str(f), name))
             if SPANISH_RE.search(name):
                 es_types.append((str(f), name))
-        for m in METHOD_RE.finditer(text):
-            name = m.group(1)
+        for name in metodos_declarados(text):
             all_methods.append((str(f), name))
             if SPANISH_RE.search(name):
                 es_methods.append((str(f), name))

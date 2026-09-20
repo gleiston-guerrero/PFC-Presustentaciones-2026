@@ -340,7 +340,7 @@ if [ "$RAPIDO" = "1" ]; then
 elif [ ! -s "$NB_JSON" ]; then
   fail "EV-2: sin la salida del cuaderno no se puede correr el arnes de mutaciones"
 else
-  # El verificador se prueba a si mismo: inyecta defectos (32 hoy) y exige que cada uno
+  # El verificador se prueba a si mismo: inyecta defectos (34 hoy) y exige que cada uno
   # haga salir a algun detector distinto de 0. Restaura byte a byte.
   if PYTHONIOENCODING=utf-8 python scripts/mutaciones-gate.py --nb "$NB_JSON" > "$TMPV/mutaciones.txt" 2>&1; then
     ok "EV-2: $(tail -1 "$TMPV/mutaciones.txt")"

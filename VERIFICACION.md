@@ -30,7 +30,7 @@ que comprueba que cada bloque marcado `<!-- ev1:run -->` reproduce literalmente 
 | P1 | 🟡 Parcial | **Cifra de cierre (ronda del 18-sep):** `n=15 media=52.83 DE=12.06 IC95=[46.16,59.51]` — reproduce exacto desde el CSV sellado por un tercero. La ronda en papel (`n=4 media=48.75`) queda como registro histórico. Abierto: α = 0,599 y el origen de las 11 hojas retractadas |
 | P2 | ✅ Cumple | `./mvnw clean test`: **806 pruebas, 0 fallos**, `jacoco:check` pasa, **1 sesión** en el XML, LINE **82,01 %** (4022/4904), BRANCH **73,49 %** (1483/2018) — corrida de cierre del 2026-09-19 |
 | P3 | ✅ Cumple | `./mvnw javadoc:javadoc`: **BUILD SUCCESS, 0 errores**, `doclint` activo. Escáner propio: 777/778 (**99,9 %**). `@param` tautológicos: **35,2 % → 0,0 %**. Avisos con el tope levantado: **682 → 170**, y los 170 restantes son un artefacto de que javadoc no ve los constructores que genera Lombok (162 de 163 clases lo confirman) — ver la sección P3 |
-| P4 | ✅ Cumple | Renombrado completado: **0,0 %** de tipos y métodos (antes 35,7 % y 39,1 %); 1,5 %/4,3 % bajo la definición más amplia. **Nombres de `@Test`: 0 de 809 con palabras en español** (eran 789; ver la sección P4) |
+| P4 | ✅ Cumple | Renombrado completado: **0,0 %** de tipos y **0,2 %** de métodos sobre el universo completo de 1838 (antes 35,7 % y 39,1 %); 1,5 %/3,4 % bajo la definición más amplia. **Nombres de `@Test`: 0 de 809 con palabras en español** (eran 789; ver la sección P4) |
 | P5 | ✅ Cumple | 6 corridas Lighthouse versionadas en `prod-runs/`; URL pública en la primera pantalla del README |
 | P6 | ✅ Cumple | `\label{tab:holm-bonferroni}` presente y citado con `\ref` en `10-evaluacion-empirica.tex:85` |
 | P7 | ✅ Cumple | **18 pruebas del chatbot, 0 fallos**, y la de integración usa el servicio **real**: se retiró el `@MockBean ChatbotService` que la revisión del 18-sep señaló. Verificado por mutación (romper el servicio hace fallar la prueba) |
@@ -452,28 +452,29 @@ python scripts/p4-nombres-espanol.py
 ==========================================================================
 P4 -- Identificadores con palabra en espanol (metodo declarado)
 ==========================================================================
-Universo: 339 tipos y 693 metodos en backend/src/{main,test}/java
+Universo: 339 tipos y 1838 metodos en backend/src/{main,test}/java
 Lexico: 155 terminos de dominio, 18 funcionales, 6 ambiguos
 DEFINICION NUCLEO (solo dominio, sin funcionales ni ambiguos)
   main + test:
     tipos       0/339   (  0.0%)
-    metodos     0/693   (  0.0%)
+    metodos     3/1838  (  0.2%)
   solo src/main:
     tipos       0/272   (  0.0%)
-    metodos     0/625   (  0.0%)
+    metodos     1/913   (  0.1%)
 DEFINICION AMPLIA (+ funcionales + ambiguos resueltos por contexto)
   main + test:
     tipos       5/339   (  1.5%)
-    metodos    25/693   (  3.6%)
+    metodos    63/1838  (  3.4%)
   solo src/main:
     tipos       4/272   (  1.5%)
-    metodos    21/625   (  3.4%)
+    metodos    24/913   (  2.6%)
 CONTRASTE con la evaluacion del 2026-09-17 (AST del ingeniero)
     el ing reporto: tipos 121/339 (35.7%), metodos 1325/1836 (72.2%)
-    este script:    tipos 5/339 (1.5%), metodos 25/693 (3.6%)
+    este script:    tipos 5/339 (1.5%), metodos 63/1838 (3.4%)
     El universo de tipos coincide exacto (339). La diferencia en el
-    total de metodos (693 aqui vs 1836) es porque este conteo es por
-    texto fuente y no ve los metodos que Lombok genera; ver
+    total de metodos (1838 aqui vs 1836 del ing el 17-sep) es ahora el mismo
+    universo: las declaraciones con o sin modificador (antes 693 por exigir public/
+    private/protected). Sigue sin ver los metodos que Lombok genera; ver
     p4-rename-scan-javap.py para el conteo sobre bytecode.
 ```
 
@@ -543,12 +544,25 @@ no una medición del código. Con el léxico correcto se reprodujo su cifra al d
 |---|---|---|
 | Tipos, main+test | 121/339 (**35,7 %**) | **0/339 (0,0 %)** |
 | Tipos, `src/main` | 108/272 (**39,7 %**) | **0/272 (0,0 %)** |
-| Métodos, main+test | 271/693 (**39,1 %**) | **0/693 (0,0 %)** |
-| Métodos, `src/main` | 232/625 (**37,1 %**) | **0/625 (0,0 %)** |
+| Métodos, main+test | 271/693 (**39,1 %**) | **3/1838 (0,2 %)** |
+| Métodos, `src/main` | 232/625 (**37,1 %**) | **1/913 (0,1 %)** |
+
+**Una corrección al instrumento que cambia el denominador de esa tabla (revisión final, 2026-09-20).** Las
+filas de métodos usaban un universo de **693** métodos (625 en `src/main`). El ing señaló, con razón, que la
+expresión que los reconocía (`scripts/p4-rename-scan-fuente.py:22`) exigía `public`, `private` o `protected`, y
+los `@Test` de JUnit 5 son paquete-privados y los métodos de interfaz no llevan modificador: **el instrumento
+descartaba 1.145 de 1.838 métodos, justo los 809 `@Test` que se acababan de renombrar.** La cifra «0/693» era
+correcta para lo que veía y no decía nada de lo que había cambiado. Ahora los métodos se leen de sus
+declaraciones (recorriendo llaves y clases, con o sin modificador, incluidas las clases anónimas), y el universo
+es **1838, el mismo que cuenta el AST del ing**: 913 en `src/main` (465 públicos + 26 protegidos + 134 privados +
+288 de interfaz) y 925 en pruebas. Sobre ese universo completo el resultado sigue siendo holgado: 0,2 % con el
+núcleo y 3,4 % con la definición más amplia. El script además **se niega a medir** si algún `@Test` queda fuera
+del universo (lo comprueba en cada corrida; con el defecto reintroducido sale 1: «809 anotados y solo 68 métodos
+de prueba detectados»).
 
 Bajo la definición **más amplia posible** (sumando palabras funcionales y cognados inglés/español):
-1,5 % de tipos y 4,3 % de métodos — también por debajo del 5 %. Sobre bytecode y solo `src/main`:
-4,0 % de nombres distintos.
+1,5 % de tipos y 3,4 % de métodos — también por debajo del 5 %. Sobre bytecode y solo `src/main`:
+4,0 % de nombres distintos (cota superior, con las palabras inglesas incluidas).
 
 **Lo que no se renombró, y por qué.** Quedan `error`, `base`, `final`, `real` y `me` (`errorHandler`,
 `deleteBase`, `EvaluationFinal`, `mimeReal`, `MeController`). Son palabras **inglesas**, idénticas a su
@@ -1289,9 +1303,9 @@ reales que llevaban ahí desde antes:
 | Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
 | Bloques de este archivo | `ev1-verificacion.py` | Cada bloque marcado `ev1:run` reproduce su salida; la tabla coincide con el resumen |
 | Titularidad | `ev4-contribuciones.py --check` | Tramo **y** todo el historial: totales, reparto por persona, identidades sin dueño |
-| El propio verificador | `mutaciones-gate.py` | Inyecta 32 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 34 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
 
-**Resultado del arnés: 32 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
+**Resultado del arnés: 34 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
 
@@ -1455,7 +1469,7 @@ dependen del origen de las 11 hojas del SUS y de una conversación con el docent
 ingeniero** (se reprodujo su cifra al dígito y se retractó la del equipo, que era un artefacto de un diccionario
 demasiado estrecho), luego se hizo el renombrado de identificadores, y el 2026-09-20 se tradujeron también los
 789 nombres de `@Test` que la brecha declarada dejaba en español. Hoy: **0,0 %** de tipos y métodos bajo la
-definición del ing, 1,5 %/4,3 % bajo la lectura más amplia, y 0 de 809 nombres de prueba con palabras del
+definición del ing, 1,5 %/3,4 % bajo la lectura más amplia, y 0 de 809 nombres de prueba con palabras del
 diccionario español. Detalle en
 [`docs/observaciones/P4-RESOLUCION-DISPUTA.md`](docs/observaciones/P4-RESOLUCION-DISPUTA.md).
 
