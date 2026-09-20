@@ -17,9 +17,13 @@ USO
 Despues hay que comitear: el chequeo espera que la cifra sea la del commit que
 contiene el archivo (ver la seccion "El archivo se invalida a si mismo").
 """
+import importlib.util
 import io
 import re
 import subprocess
+import sys
+
+sys.dont_write_bytecode = True
 
 gen = subprocess.run(
     ["python", "scripts/ev4-contribuciones.py"],
@@ -32,6 +36,15 @@ salida = gen.stdout
 total = re.search(r"^Commits al comitear: (\d+)$", salida, re.M).group(1)
 en_head = re.search(r"^Commits: (\d+)$", salida, re.M).group(1)
 autores = re.search(r"^Autores: (.+)$", salida, re.M).group(1)
+
+_spec = importlib.util.spec_from_file_location("ev4", "scripts/ev4-contribuciones.py")
+ev4 = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(ev4)
+# Reparto de TODO el historial, contado hasta el commit que traera este archivo (HEAD + 1,
+# de Álava con la identidad institucional): la misma regla que el total del tramo.
+_por, hist_total, _sin = ev4.historia("HEAD", sumar=1)
+assert not _sin, f"identidades de Git sin persona asignada (edita PERSONAS en ev4-contribuciones.py): {_sin}"
+hist_tabla = ev4.tabla_historia(_por)
 
 BASE = "f3d1ff4"
 correos = subprocess.run(["git", "log", "--format=%ae", f"{BASE}..HEAD"],
@@ -185,19 +198,18 @@ reparte con la herramienta.
 
 ## Contribución histórica al proyecto completo
 
-`git shortlog -sne --all`, con las identidades múltiples de la misma persona agrupadas (la tabla de
-correspondencia identidad↔persona está en [`CONTRIBUTORS.md`](CONTRIBUTORS.md)):
+Reparto de **todo** el historial de `main`, por persona, con las identidades múltiples de la misma
+persona agrupadas (la correspondencia identidad↔persona está en `PERSONAS`, en
+[`scripts/ev4-contribuciones.py`](scripts/ev4-contribuciones.py), y en [`CONTRIBUTORS.md`](CONTRIBUTORS.md)).
+Sale de `git log`, no se escribe: los números crecen con cada commit y una tabla a mano se queda vieja.
 
-| Integrante | Identidades de Git | Commits |
-|---|---|---|
-| Álava Alvarado, Jean Pierre | `Jean30042 <jeanalavaalavarado@gmail.com>`, `jalavaa-dev <jalavaa@uteq.edu.ec>` | 174 |
-| Zamora Arias, Carla Esthefania | `carla22072004 <czamoraa5@uteq.edu.ec>`, `Carla Esthefania Zamora Arias <czamoraa5@uteq.edu.ec>` | 137 |
-| Barreto Rosado, Heider Dominick | `dominick1245 <dominickelyolo@gmail.com>`, `dominick1245 <144386724+dominick1245@users.noreply.github.com>` | 45 |
-| Moncayo Loor, Xavier Alejandro | `XAML25 <xavierloor52@gmail.com>` | 13 |
+{hist_tabla}
 
-403 commits únicos en `HEAD`. La diferencia con la suma de la columna sale de que `git shortlog --all`
-cuenta también commits que solo existen en ramas o reflog no fusionados a `main`, no de contarlos dos
-veces en el mismo historial.
+**Total en la historia de `main`: {hist_total} commits.** La suma de la columna es exactamente ese total: cada
+commit pertenece a una sola persona, y `scripts/ev4-contribuciones.py --check` para si aparece una identidad
+de Git que no está asignada a nadie. (Una versión anterior de este archivo decía «403 commits únicos» y
+sumaba 369 en la tabla, explicando la diferencia con `git shortlog --all`; era una explicación para dos
+números que no coincidían, y desapareció junto con el desajuste.)
 
 ## Firmas
 

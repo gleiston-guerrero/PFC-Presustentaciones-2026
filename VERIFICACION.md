@@ -19,10 +19,11 @@ Commit de referencia de esta corrida: verificar con `git rev-parse HEAD`. Entorn
 
 ---
 
-## Re-verificación completa del 2026-09-18
+## Estado actual, re-verificado el 2026-09-19
 
-Los 12 puntos se volvieron a correr contra el repositorio de hoy, en una sesión distinta y tras otros
-commits, para comprobar que ninguna afirmación de este archivo quedó desactualizada. Resultado:
+Los 12 puntos se volvieron a correr contra el repositorio de hoy. Esta tabla y el «Resumen de honestidad»
+de más abajo tienen que decir lo mismo, y `make verify` lo comprueba (`scripts/ev1-verificacion.py`), igual
+que comprueba que cada bloque marcado `<!-- ev1:run -->` reproduce literalmente su salida. Resultado:
 
 | # | Estado | Qué se corrió hoy y qué dio |
 |---|---|---|
@@ -40,16 +41,19 @@ commits, para comprobar que ninguna afirmación de este archivo quedó desactual
 | P12 | 🟡 Parcial | Ningún commit vacío nuevo desde `f3d1ff4`; la conversación con el docente sigue sin ocurrir |
 
 Todo lo anterior sale de correr `make verify` más `./mvnw clean test` y `./mvnw javadoc:javadoc` con
-Postgres y Redis reales levantados. **Dos cambios respecto de la versión anterior de este archivo:**
-P4 bajó de 🟡 a 🔴 (por honestidad, no por un criterio nuevo), y P2 quedó confirmado por una segunda
-corrida limpia independiente que da exactamente las mismas cifras.
+Postgres y Redis reales levantados.
 
-**Nota de P9, que es la más importante de todas:** el tag `v1.1.0` sigue apuntando a `8b1c1d2`. Todo lo
-que está en esta tabla —incluidos `VERIFICACION.md`, `make verify` y `CONTRIBUCIONES.md`, los tres
-entregables obligatorios cuya ausencia topa la nota al 40 %— vive en commits **posteriores** a ese tag.
-Bajo la regla de la guía (*"lo que no esté dentro de la etiqueta no existe"*), nada de esto es visible
-para una revisión que lea `v1.1.0`.
+**Qué cambió respecto de la versión anterior de este archivo (2026-09-18):** P4 pasó de 🔴 a ✅ (el
+renombrado se hizo de verdad; ver su sección), P3 y P9 dejaron de tener reservas propias del expediente
+(contenido del Javadoc y metadatos del registro de Zenodo, ambos corregidos y comprobados), y las salidas
+de los bloques reproducibles dejaron de escribirse a mano.
 
+**Nota de P9, que sigue siendo la más importante de todas:** los tres entregables obligatorios
+—`VERIFICACION.md`, `make verify` y `CONTRIBUCIONES.md`, cuya ausencia topa la nota al 40 %— tienen que
+estar **dentro de la etiqueta** (*«lo que no esté dentro de la etiqueta no existe»*). Por eso la etiqueta
+`v1.1.0` se mueve como último paso de cada ronda, y `make verify` **falla** —ya no avisa— si no está en
+`HEAD` (`python scripts/p9-etiqueta.py`). Aquí no se escribe a qué commit apunta: ese dato cambia cada
+vez que se mueve, y una cifra que hay que reescribir a mano es una cifra que envejece.
 ---
 
 ## P1 — SUS (peso 1,7)
@@ -63,22 +67,36 @@ Brooke, consentimiento de cada participante, y recálculo según Brooke.
 > papel. Un verificador que comprueba una cifra distinta de la que se publica no verifica nada.
 
 **Comando:**
+<!-- ev1:run -->
 ```bash
 python scripts/sus-estadistica.py
 ```
 
 **Salida real (2026-09-19):**
 ```
-  cierre (18-sep): n=15 media=52.83 DE=12.06 IC95=[46.16,59.51]
-  papel, solo fecha verificable: n=4 media=48.75 DE=1.44 IC95=[46.45,51.05]
-
-  #  contraste                                       p crudo  umbral  p ajust.  decision
-  1  papel(4, fecha verificable) vs formulario(15)   0.2204   0.025   0.4408    no rechaza
-  2  papel(15) vs formulario(15)                     0.6077   0.05    0.6077    no rechaza
-
+SUS -- familia de contrastes con correccion de Holm-Bonferroni
+==========================================================================
+Dos contrastes de la misma medicion contra dos referencias son una
+familia: sin corregir, el 5 % declarado no es el riesgo real.
+  Welch papel(15) vs formulario: t = +0.519
+  Welch papel(4)  vs formulario: t = -1.278
+  #  contraste                                       p crudo    umbral    p ajust.   decision
+  1  papel(4, fecha verificable) vs formulario(15)   0.2204     0.025     0.4408     no rechaza
+  2  papel(15) vs formulario(15)                     0.6077     0.05      0.6077     no rechaza
+  Ninguno se rechaza: las mediciones siguen siendo indistinguibles.
+  La correccion no cambia la conclusion -- se aplica porque corresponde,
+  no porque mueva el resultado a favor.
+Consistencia interna (alfa de Cronbach)
+==========================================================================
   Formulario 18-sep (n=15), polaridad corregida: alfa = 0.599
-  Formulario 18-sep, SIN invertir los pares:      alfa = 0.267
-  Papel, las 15 hojas, polaridad corregida:       alfa = 0.619
+  Formulario 18-sep, SIN invertir los pares:              alfa = 0.267
+  Papel, las 15 hojas, polaridad corregida:               alfa = 0.619
+  Referencia: en aplicaciones del SUS con muestras grandes se reporta
+  habitualmente 0,85-0,92 (Bangor et al. 2008, Sauro 2011).
+  El valor obtenido queda por DEBAJO de ese rango. Se reporta como
+  limitacion, no se omite: con n=15 el intervalo de alfa es muy ancho,
+  y una consistencia interna baja debilita la interpretacion del
+  puntaje como una sola dimension de usabilidad.
 ```
 
 `make verify` no se limita a imprimir esto: **asegura** que la media del CSV sellado sea 52,83 y que
@@ -216,13 +234,32 @@ falso — el commit que la guía revisó (`f3d1ff4`, 13-sep) es anterior al comm
 **Criterio:** 90% o más de los métodos públicos con Javadoc completo y `mvn javadoc:javadoc` sin error.
 
 **Comandos:**
+<!-- ev1:run -->
 ```bash
-python scripts/javadoc-scan.py            # metodos concretos con cuerpo (metodologia angosta)
-python scripts/javadoc-scan-amplio.py     # + constructores + metodos de interfaz (metodologia del ing)
-cd backend && ./mvnw -q javadoc:javadoc   # doclint reactivado, ya no desactivado
+python scripts/javadoc-scan.py
+python scripts/javadoc-scan-amplio.py
 ```
 
-**Salida real (2026-09-17, doclint ya reactivado):**
+**Salida real (hoy; `python scripts/ev1-verificacion.py --actualizar` la regenera):**
+```
+Total metodos publicos detectados: 465
+Con Javadoc COMPLETO: 465 (100.0%)
+Incompletos/sin doc: 0
+Meta 90%: 419 documentados (faltan 0 mas)
+Total (metodos public + constructores public + metodos de interfaz): 778
+Con Javadoc COMPLETO: 777 (99.9%)
+  constructor: 25/25 (100.0%)
+  interfaz: 287/288 (99.7%)
+  metodo: 465/465 (100.0%)
+Meta 90%: 701 documentados (faltan 0 mas)
+```
+
+Y `cd backend && ./mvnw javadoc:javadoc`, con `doclint` activo: **BUILD SUCCESS, 0 errores, 170 avisos**
+(los 170, más abajo). `make verify` lo corre de verdad, borrando antes `target/site/apidocs` para que el
+plugin no diga «up to date» sin haber mirado nada.
+
+**Salida de la primera corrida (2026-09-17, antes de las correcciones) — registro histórico, sin marca, no se
+reejecuta:**
 ```
 $ python scripts/javadoc-scan.py
 Total metodos publicos detectados: 465
@@ -405,11 +442,49 @@ python scripts/p4-rename-scan-javap.py --include-test
 ```
 
 **Comando que resuelve la disputa (nuevo, 2026-09-18):**
+<!-- ev1:run -->
 ```bash
 python scripts/p4-nombres-espanol.py --bytecode
 ```
 
-**Salida real (2026-09-18):**
+**Salida real (hoy):**
+```
+==========================================================================
+P4 -- Identificadores con palabra en espanol (metodo declarado)
+==========================================================================
+Universo: 339 tipos y 693 metodos en backend/src/{main,test}/java
+Lexico: 155 terminos de dominio, 18 funcionales, 6 ambiguos
+DEFINICION NUCLEO (solo dominio, sin funcionales ni ambiguos)
+  main + test:
+    tipos       0/339   (  0.0%)
+    metodos     0/693   (  0.0%)
+  solo src/main:
+    tipos       0/272   (  0.0%)
+    metodos     0/625   (  0.0%)
+DEFINICION AMPLIA (+ funcionales + ambiguos resueltos por contexto)
+  main + test:
+    tipos       5/339   (  1.5%)
+    metodos    30/693   (  4.3%)
+  solo src/main:
+    tipos       4/272   (  1.5%)
+    metodos    21/625   (  3.4%)
+CONTRASTE con la evaluacion del 2026-09-17 (AST del ingeniero)
+    el ing reporto: tipos 121/339 (35.7%), metodos 1325/1836 (72.2%)
+    este script:    tipos 5/339 (1.5%), metodos 30/693 (4.3%)
+    El universo de tipos coincide exacto (339). La diferencia en el
+    total de metodos (693 aqui vs 1836) es porque este conteo es por
+    texto fuente y no ve los metodos que Lombok genera; ver
+    p4-rename-scan-javap.py para el conteo sobre bytecode.
+CONTEO SOBRE BYTECODE (javap, incluye metodos generados por Lombok)
+  solo main: 362 clases
+    todas las ocurrencias     66/2658  (  2.5%)
+    nombres distintos         43/1070  (  4.0%)
+  main + test: 430 clases
+    todas las ocurrencias    514/3583  ( 14.3%)
+    nombres distintos        482/1923  ( 25.1%)
+```
+
+**Antes del renombrado (2026-09-18) — registro histórico, sin marca, no se reejecuta:**
 ```
 DEFINICION NUCLEO (solo dominio, sin funcionales ni ambiguos)
   main + test:     tipos   121/339   ( 35.7%)   metodos  271/693   ( 39.1%)
@@ -653,6 +728,7 @@ declarado como incumplido y medido con método público.
 versionados y su URL objetivo declarada.
 
 **Comando:**
+<!-- ev1:run -->
 ```bash
 python -c "
 import json
@@ -667,9 +743,9 @@ for f in ['desktop-run1','desktop-run2','desktop-run3','mobile-run1','mobile-run
 desktop-run1 url= https://steadfast-success-production-2b60.up.railway.app/ performance= 94
 desktop-run2 url= https://steadfast-success-production-2b60.up.railway.app/ performance= 94
 desktop-run3 url= https://steadfast-success-production-2b60.up.railway.app/ performance= 94
-mobile-run1  url= https://steadfast-success-production-2b60.up.railway.app/ performance= 81
-mobile-run2  url= https://steadfast-success-production-2b60.up.railway.app/ performance= 81
-mobile-run3  url= https://steadfast-success-production-2b60.up.railway.app/ performance= 81
+mobile-run1 url= https://steadfast-success-production-2b60.up.railway.app/ performance= 81
+mobile-run2 url= https://steadfast-success-production-2b60.up.railway.app/ performance= 81
+mobile-run3 url= https://steadfast-success-production-2b60.up.railway.app/ performance= 81
 ```
 
 **Veredicto: ✅ Cumple, defecto corregido.** 6 corridas reales (3+3) contra la URL pública declarada,
@@ -712,20 +788,21 @@ siguen siendo...". PDF recompilado sin advertencias de referencias indefinidas.
 **Criterio:** pruebas automatizadas que ejerciten el endpoint del chatbot y pasen en el flujo de
 integración continua.
 
-**Comando:**
+**Comando** (los informes salen de `cd backend && ./mvnw -q test -Dtest=ChatbotServiceTest,ChatbotControllerTest,ChatbotControllerIntegrationTest`,
+o de la suite completa que corre `make verify`):
+<!-- ev1:run needs=backend/target/surefire-reports -->
 ```bash
-cd backend && ./mvnw -q test -Dtest=ChatbotServiceTest,ChatbotControllerTest,ChatbotControllerIntegrationTest
-cat target/surefire-reports/*Chatbot*.txt
+grep -h -E "^(Test set|Tests run)" backend/target/surefire-reports/*Chatbot*.txt | sed -E 's/, Time elapsed.*//'
 ```
 
-**Salida real (2026-09-17):**
+**Salida real (hoy; 5 + 2 + 11 = 18 pruebas):**
 ```
-Test set: ec.edu.uteq.presustentaciones.services.ChatbotServiceTest
-Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+Test set: ec.edu.uteq.presustentaciones.controllers.ChatbotControllerIntegrationTest
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
 Test set: ec.edu.uteq.presustentaciones.controllers.ChatbotControllerTest
 Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
-Test set: ec.edu.uteq.presustentaciones.controllers.ChatbotControllerIntegrationTest
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+Test set: ec.edu.uteq.presustentaciones.services.ChatbotServiceTest
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
 ```
 
 > **Corregido el 2026-09-19.** La revisión del 18-sep observó que *«en la prueba MockMvc el servicio
@@ -761,20 +838,33 @@ enrutador de intenciones por palabras clave— sigue declarada en el informe
 perfil, y la prueba de un 403 en el expediente.
 
 **Comando:**
+<!-- ev1:run -->
 ```bash
 python docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py
-cd backend && ./mvnw -q test -Dtest=AppUserControllerTest
 ```
 
-**Salida real (2026-09-17):**
+**Salida real (hoy):**
 ```
 Total endpoints de escritura (POST/PUT/PATCH/DELETE): 102
 Sin ninguna anotacion de autorizacion: 5
-  AuthController.login/refresh/logout/recuperar/reset -- exentos conocidos (auth pre-login)
+  AuthController.login (PostMapping, L71) -- exento conocido (auth pre-login)
+  AuthController.refresh (PostMapping, L130) -- exento conocido (auth pre-login)
+  AuthController.logout (PostMapping, L196) -- exento conocido (auth pre-login)
+  AuthController.recover (PostMapping, L357) -- exento conocido (auth pre-login)
+  AuthController.reset (PostMapping, L386) -- exento conocido (auth pre-login)
 OK: todos los endpoints sin @PreAuthorize son exentos conocidos y documentados.
+```
 
-Tests run: 23, Failures: 0, Errors: 0 (AppUserControllerTest, incluye
-updatePerfilRechazaEditarElPerfilDeOtroAppUser -> 403 real)
+Y la prueba del 403 real, `AppUserControllerTest` (incluye `updatePerfilRechazaEditarElPerfilDeOtroAppUser`):
+<!-- ev1:run needs=backend/target/surefire-reports -->
+```bash
+grep -h -E "^(Test set|Tests run)" backend/target/surefire-reports/*AppUserControllerTest.txt | sed -E 's/, Time elapsed.*//'
+```
+
+**Salida real (hoy):**
+```
+Test set: ec.edu.uteq.presustentaciones.controllers.AppUserControllerTest
+Tests run: 23, Failures: 0, Errors: 0, Skipped: 0
 ```
 
 **Veredicto: ✅ Cumple, y se encontraron y corrigieron 2 bugs reales investigando el detalle.** 102
@@ -814,20 +904,25 @@ cada intento). Verificado que compila y la suite completa sigue en verde (806/80
 `CITATION.cff`.
 
 **Comando:**
+<!-- ev1:run -->
 ```bash
 git tag -l -n1 v1.1.0
-git rev-list -n1 v1.1.0
+git cat-file -t v1.1.0
 grep '^version' CITATION.cff
-grep 'Tag Git' Informe-Final/secciones/00-portada.tex
+grep -n 'v1.1.0' Informe-Final/secciones/00-portada.tex
 ```
 
-**Salida real (2026-09-17):**
+**Salida real (hoy):**
 ```
-v1.1.0          Cierre real del examen suspenso (2026-09-17)
-8b1c1d294331e0257d1f19028135f62d15385d16
+v1.1.0          v1.1.0 — cierre del examen suspenso (2026-09-19)
+tag
 version: "1.1.0"
-{\large \textbf{REPOSITORIO:} ...} ... \texttt{v1.1.0} ...
+16:{\large Informe Final --- Tag \texttt{v1.1.0}}\\[0.8cm]
 ```
+
+(El hash al que apunta la etiqueta no se pega aquí: cambia cada vez que se mueve, y una cifra que hay
+que reescribir a mano es una cifra que envejece. `python scripts/p9-etiqueta.py` comprueba que la
+etiqueta sea anotada y esté en `HEAD`.)
 
 > **Cerrado el 2026-09-19.** La revisión del 18-sep dejó P9 así: *«El DOI de concepto resuelve, pero su
 > última versión es la v1.0.1; la v1.1.0 no está archivada (lo declaran)»*. Ya está archivada.
@@ -898,23 +993,35 @@ en `main` desde hace casi un día, pero fuera de la etiqueta que se evalúa.
 **Criterio:** una carátula que solo contenga los datos de identificación y la URL del repositorio.
 
 **Comando:**
+<!-- ev1:run -->
 ```bash
-git show HEAD:Informe-Final/secciones/00-portada.tex
+cat Informe-Final/secciones/00-portada.tex
 ```
 
-**Salida real (2026-09-18), 32 líneas — se reproducen las 8 primeras y las 5 últimas:**
-```latex
+**Salida real (hoy), el archivo completo:**
+```
 \begin{titlepage}
 \centering
 \vspace*{0.4cm}
 {\LARGE \textbf{UNIVERSIDAD TÉCNICA ESTATAL DE QUEVEDO}}\\[0.3cm]
 {\large Facultad de Ciencias de la Computación}\\[0.2cm]
 {\large Carrera de Ingeniería de Software (Rediseño)}\\[0.5cm]
-
 {\large \textbf{ASIGNATURA: Aplicaciones Web}}\\[0.3cm]
-   [...]
+{\large Quinto Nivel --- Período Académico 2026-2027 PPA}\\[0.7cm]
+{\Large \textbf{SISTEMA DE GESTIÓN DE PRE-SUSTENTACIONES UTEQ:}}\\[0.2cm]
+{\Large \textbf{DISEÑO, IMPLEMENTACIÓN Y EVALUACIÓN EMPÍRICA}}\\[0.3cm]
+{\large \textbf{DE UNA PLATAFORMA WEB PARA LA AUTOMATIZACIÓN DEL PROCESO}}\\[0.1cm]
+{\large \textbf{DE PRE-SUSTENTACIÓN DE TRABAJOS DE TITULACIÓN}}\\[0.6cm]
+{\large Informe Final --- Tag \texttt{v1.1.0}}\\[0.8cm]
+\vfill
+{\large \textbf{AUTORES:}}\\[0.4cm]
+{\large Alava Alvarado, Jean Pierre \quad --- \quad ORCID: \href{https://orcid.org/0009-0001-2878-2919}{0009-0001-2878-2919}}\\[0.15cm]
+{\large Moncayo Loor, Xavier Alejandro \quad --- \quad ORCID: no registrado}\\[0.15cm]
+{\large Zamora Arias, Carla Esthefania \quad --- \quad ORCID: \href{https://orcid.org/0009-0000-7556-0457}{0009-0000-7556-0457}}\\[0.15cm]
+{\large Barreto Rosado, Heider Dominick \quad --- \quad ORCID: \href{https://orcid.org/0009-0004-5561-1391}{0009-0004-5561-1391}}\\[0.6cm]
+{\large \textbf{DOCENTE-DIRECTOR:}}\\[0.3cm]
+{\large Ing. Guerrero Ulloa Gleiston Cíceron, Mg.}\\[0.6cm]
 {\large \textbf{FECHA:} Septiembre de 2026}\\[0.4cm]
-
 {\large \textbf{REPOSITORIO:} \url{https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026}}
 \vspace*{0.3cm}
 \end{titlepage}
@@ -960,13 +1067,14 @@ y que la página 2 pasa directo al Resumen.
 el expediente.
 
 **Comando:**
+<!-- ev1:run -->
 ```bash
 find backend/src/main/java -iname "*Controller.java" | wc -l
 grep -rhoE "CREATE (OR REPLACE )?(PROCEDURE|FUNCTION) [a-zA-Z0-9_.]+" backend/src/main/resources/db/migration/V*.sql | awk '{print $NF}' | sed 's/.*\.//' | sort -u | wc -l
-grep -rnoE "\b(Usuario|Solicitud|Acta|Jurado|Tutoria|Cronograma|Estudiante|Evaluacion|RecursoTitulacion)(Controller|Service|ServiceImpl|Repository)\b" Informe-Final/secciones/*.tex docs/requisitos/SRS-v1.0.1.tex
+grep -rnoE "\b(Usuario|Solicitud|Acta|Jurado|Tutoria|Cronograma|Estudiante|Evaluacion|RecursoTitulacion)(Controller|Service|ServiceImpl|Repository)\b" Informe-Final/secciones/*.tex docs/requisitos/SRS-v1.0.1.tex || echo "(sin coincidencias -- cero clases con nombre pre-P4 citadas en el informe activo)"
 ```
 
-**Salida real (2026-09-17):**
+**Salida real (hoy):**
 ```
 31
 10
@@ -1021,25 +1129,24 @@ tres detalles nuevos, verificados uno por uno:
 **Criterio:** una nota escrita en el repositorio que explique qué ocurrió, y la conversación con el
 docente antes del cierre, con el equipo completo.
 
-**Comando:**
+**Comando** (un solo `git diff-tree` por commit; el ciclo anterior hacía dos `git show` y era el doble de
+lento, con el mismo resultado):
+<!-- ev1:run slow -->
 ```bash
-git log --pretty=format:"%H" | while read h; do
-  changed=$(git show --stat --format="" "$h" | tail -1)
-  parents=$(git show -s --format="%P" "$h" | wc -w)
-  [ "$parents" = "1" ] && ! echo "$changed" | grep -q "file" && echo "VACIO: $h"
+git rev-list --min-parents=1 --max-parents=1 HEAD | while read h; do
+  [ -z "$(git diff-tree --no-commit-id -r --name-only "$h")" ] && echo "VACIO: $h"
 done
 ```
 
-**Salida real (2026-09-18):**
+**Salida real (hoy):**
 ```
 VACIO: 3e7069c5ea40c596908dc7ef0661fea55c627ed9
 VACIO: 4b5aa34b493fff3e6356a8128ff7438897301acf
 VACIO: 1139344d3a3eb0db76c384147b54e55a79f2fa5a
 VACIO: de0eeef0d177d4344ad8dc74a9055d9c470c621e
-total commits: 403
 ```
 
-4 commits vacíos en 403, todos anteriores al commit que revisó la guía (`f3d1ff4`): tres del 2026-09-02
+4 commits vacíos en todo el historial, todos anteriores al commit que revisó la guía (`f3d1ff4`): tres del 2026-09-02
 y uno del 2026-09-09. **Ninguno nuevo** — `make verify` lo comprueba en cada corrida contando los
 vacíos en el rango `f3d1ff4..HEAD`.
 
@@ -1135,9 +1242,11 @@ reales que llevaban ahí desde antes:
 | Rendimiento (P6) | `ev2-documental.py --nb` | Los p ajustados de la familia de 3 pruebas, en informe y `k6/README.md`, == los que imprime el cuaderno al ejecutarse |
 | Cobertura y pruebas | `cifras-publicadas.py` | Porcentajes, conteos y fracciones publicados son los de cierre, o de una corrida que el expediente registra y que se nombra junto a la cifra |
 | Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
-| El propio verificador | `mutaciones-gate.py` | Inyecta 26 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+| Bloques de este archivo | `ev1-verificacion.py` | Cada bloque marcado `ev1:run` reproduce su salida; la tabla coincide con el resumen |
+| Titularidad | `ev4-contribuciones.py --check` | Tramo **y** todo el historial: totales, reparto por persona, identidades sin dueño |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 29 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
 
-**Resultado del arnés: 26 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
+**Resultado del arnés: 29 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
 
@@ -1151,6 +1260,68 @@ tres defectos de Javadoc de P3.
 - No se comprueba que el texto que rodea a una cifra *diga lo correcto*, solo que la cifra coincida.
 - La mutación de la etiqueta exige que `make verify` se corra **con la etiqueta en `HEAD`**: mover la
   etiqueta es siempre el último paso.
+
+---
+
+## EV-1 y EV-4 — Salidas pegadas a mano y conteos que se contradicen (revisión final del 2026-09-19)
+
+**EV-1, lo que se señaló:** *«Reproduje ocho bloques literalmente; tres no reproducen por cifras
+obsoletas (Javadoc 734/768 frente a 777/778, "403 commits" frente a 436, "3 pruebas" frente a 5). La tabla
+resumen se contradice a sí misma en dos filas.»*
+
+**Verificado: los tres, y las dos filas.** Cada uno tenía la misma causa —una salida escrita a mano que
+envejeció cuando alguien tocó el código— y en dos casos ni siquiera era la salida del comando de encima:
+
+| Lo que se señaló | Qué había | Qué era |
+|---|---|---|
+| Javadoc 734/768 | Salida del escáner del 17-sep (`768`, `536`, 69,8 %) bajo el comando de hoy | Cifra vencida; el escáner da hoy **777/778** |
+| «403 commits» | La línea `total commits: 403` **no la imprimía el comando** de encima | Tecleada; el historial tiene más y crece con cada commit |
+| «3 pruebas» | `ChatbotControllerIntegrationTest: Tests run: 3` | Eran 3 hasta que se retiró el `@MockBean` del chatbot (P7); ahora son **5** (y 18 en total) |
+| Fila **P4** de la tabla | `✅ Cumple en src/main`, mientras la nota de debajo decía «P4 bajó de 🟡 a 🔴» | La nota era de la ronda anterior |
+| Nota de **P9** | «el tag sigue apuntando a `8b1c1d2`», bajo una fila que decía «desfase 0» | La nota era de antes de mover la etiqueta |
+
+**Cómo se arregla para que no vuelva a pasar** (`scripts/ev1-verificacion.py`, dentro de `make verify`):
+
+1. **Un bloque de comandos precedido por `<!-- ev1:run -->` se ejecuta, y la salida que sigue tiene que ser
+   idéntica** a lo que imprime. Hay 11 bloques marcados (SUS, Javadoc, P4, Lighthouse, chatbot, autorización
+   ×2, etiqueta, carátula, cifras únicas, historial). `--actualizar` reescribe las salidas desde la corrida
+   real: ya nadie las teclea. Los bloques *sin* marca son salidas históricas fechadas (una corrida de Maven,
+   la medición «antes») y se rotulan como tales.
+2. **La tabla del principio y el «Resumen de honestidad» tienen que decir lo mismo**, punto por punto.
+3. Lo volátil no se pega: el hash al que apunta la etiqueta cambia cada vez que se mueve, así que ya no
+   aparece; lo comprueba `scripts/p9-etiqueta.py`.
+
+**Un error mío al construirlo, que conviene dejar dicho:** la primera versión ejecutaba los comandos con el
+`bash` de PATH, que en Windows es el de WSL; devolvió un error de WSL y `--actualizar` **lo escribió en las
+11 salidas**. Se restauró y ahora se busca el bash de Git explícitamente, y el script se niega a comparar o
+escribir si la salida es un error de WSL. Se descubrió porque los 11 bloques «fallaron» a la vez con el mismo
+mensaje, no por una revisión.
+
+**EV-4, lo que se señaló:** *«Tres de las cuatro filas no llevan firma, por no participar»* y, en las
+correcciones finales, *«los conteos de `CONTRIBUCIONES.md` se contradicen consigo mismos»*.
+
+**Los conteos: verificado y corregido.** El archivo decía a la vez «**121** commits» en el tramo y «**403**
+commits únicos» en el historial, cuya tabla sumaba **369**, con una explicación (`git shortlog --all`) para
+dos números que no coincidían. El total del tramo ya se generaba y se comprobaba; el del historial completo
+seguía tecleado. Ahora sale de `git log` con la misma regla (contado hasta el commit que contiene el
+archivo) y el chequeo falla si una identidad de Git no pertenece a nadie o si la suma no da el total:
+
+| Integrante | Antes (tecleado) | Al 2026-09-19 (de `git log`; crece con cada commit) |
+|---|---:|---:|
+| Álava Alvarado | 174 | 258 |
+| Zamora Arias | 137 | 128 |
+| Barreto Rosado | 45 | 45 |
+| Moncayo Loor | 13 | 13 |
+| **Total** | «403» (la tabla sumaba 369) | **444** (la tabla suma 444) |
+
+**Las firmas: no se pueden cerrar desde el repositorio, y no se finge.** Tres de las cuatro filas quedan sin
+firma porque esos integrantes no participan en la ronda, y una firma solo puede ponerla quien firma. El
+documento lo dice —«las tres filas sin firma son una afirmación del autor, no de los firmantes»— y no
+atribuye a nadie una declaración que no hizo. Lo que sí queda resuelto es que la ausencia de firma es
+explícita y explicada; si el docente necesita esas firmas, hay que pedírselas a ellos.
+
+**Sigue abierto, declarado:** los 92 commits con correo personal de esta ronda no se pueden reescribir sin
+cambiar todos los hashes que este expediente cita como evidencia (ver `CONTRIBUCIONES.md`).
 
 ---
 
@@ -1195,30 +1366,37 @@ una forma distinta cada uno.
 
 ## Resumen de honestidad de este archivo
 
-**Actualizado el 2026-09-18, tras resolver la disputa numérica de P4.** De los 12 puntos:
+**Actualizado el 2026-09-19.** De los 12 puntos, agrupados como en la tabla del principio (el formato de
+estas tres líneas lo lee `scripts/ev1-verificacion.py`, que falla si un punto cambia de categoría en una
+tabla y no en la otra):
 
-- **9 ✅ Cumple** — P2, P3, P5, P6, P7, P8, P9, P10, P11, cada uno con al menos un defecto menor
-  declarado. Con P4 son 10.
-- **2 🟡 Parcial** — P1 y P12, con una brecha real sin cerrar cada uno, y ninguna de las dos se cierra
-  con más documentación: dependen de las hojas físicas del SUS y de una conversación con el docente.
-- **1 ✅ Cumple con brecha declarada** — **P4**. Pasó por 🟡 → 🔴 → ✅ en dos días, y vale la pena el
-  detalle porque el punto intermedio fue una corrección a la baja por honestidad: primero se resolvió
-  la "disputa numérica abierta" **a favor del ingeniero** (se reprodujo su cifra al dígito y se
-  retractó la del equipo, que era un artefacto de un diccionario demasiado estrecho), y recién
-  entonces se pudo hacer el renombrado de verdad. Hoy: **0,0 %** de tipos y métodos bajo esa misma
-  definición, 1,5 %/4,3 % bajo la lectura más amplia. **La brecha que queda está declarada, no
-  maquillada:** 436 de 807 nombres de método `@Test` siguen en español, porque son frases descriptivas
-  completas y traducirlas mecánicamente produce el mismo Spanglish que esta evaluación reprocha.
-  Detalle en [`docs/observaciones/P4-RESOLUCION-DISPUTA.md`](docs/observaciones/P4-RESOLUCION-DISPUTA.md).
+- **✅ Cumple** — P2, P3, P5, P6, P7, P8, P9, P10, P11, cada uno con reservas o brechas declaradas en su sección.
+- **✅ Cumple con brecha declarada** — P4.
+- **🟡 Parcial** — P1, P12.
 
-Ningún punto se declaró "resuelto" para inflar este resumen, y el único punto que cambió de categoría
-en la última ronda lo hizo para empeorar. Varios de los que ya estaban cerrados en `OBSERVACIONES.md`
-antes de esta evaluación quedan aquí con matices que esa bitácora, por ser narrativa y cronológica, no
-siempre deja igual de visibles a primera vista.
+**P1 y P12** tienen una brecha real sin cerrar, y ninguna de las dos se cierra con más documentación:
+dependen del origen de las 11 hojas del SUS y de una conversación con el docente y el equipo completo.
+
+**P4** pasó por 🟡 → 🔴 → ✅ y vale la pena el detalle, porque el punto intermedio fue una corrección a la
+baja por honestidad: primero se resolvió la «disputa numérica abierta» **a favor del ingeniero** (se
+reprodujo su cifra al dígito y se retractó la del equipo, que era un artefacto de un diccionario demasiado
+estrecho), y recién entonces se hizo el renombrado de verdad. Hoy: **0,0 %** de tipos y métodos bajo esa
+misma definición, 1,5 %/4,3 % bajo la lectura más amplia. **La brecha que queda está declarada, no
+maquillada:** 436 de 807 nombres de método `@Test` siguen en español, porque son frases descriptivas
+completas y traducirlas mecánicamente produce el mismo Spanglish que la evaluación reprocha. Detalle en
+[`docs/observaciones/P4-RESOLUCION-DISPUTA.md`](docs/observaciones/P4-RESOLUCION-DISPUTA.md).
+
+Ningún punto se declaró «resuelto» para inflar este resumen. Varios de los que ya estaban cerrados en
+`OBSERVACIONES.md` quedan aquí con matices que esa bitácora, por ser narrativa y cronológica, no deja
+igual de visibles a primera vista.
 
 ---
 
 ## Verificación adicional: el resto de la evaluación integral (secciones 1-3, 5-9)
+
+> **Registro histórico del 2026-09-17/18: no describe el estado actual.** Los commits, el tag `8b1c1d2` y
+> los «37 commits de desfase» que aparecen aquí son de ese día. Lo que era cierto entonces se conserva sin
+> reescribir (reescribirlo sería falsear el historial); el estado de hoy está en la tabla del principio.
 
 La evaluación integral del ing no es solo la tabla P1-P12 (sección 4, ya cubierta arriba punto por
 punto) — tiene ocho secciones más. Verificado cada una contra el estado real del repositorio hoy
@@ -1276,8 +1454,8 @@ tag no se había movido todavía.
 9. **Alcance:** describe lo que el ing sí y no ejecutó (con y sin base de datos/Docker) — informativo,
    nada que verificar contra el repositorio.
 
-**Recomendación derivada de este hallazgo estructural:** con P1-P12 ya atendidos en esta ronda (P1 y P4
-con límites reales que no se pueden cerrar del todo; P12 pendiente del docente), corresponde mover el
-tag ahora — es exactamente el "cierre real de toda la ronda" que `OBS-44` dejó pendiente. Mientras el
-tag siga en `8b1c1d2`, cualquier nueva revisión seguirá viendo el estado de hace **37 commits**, sin
-los tres entregables obligatorios y sin ninguna de las correcciones de P1-P12 de esta ronda.
+**Recomendación derivada de este hallazgo estructural (2026-09-18) — cumplida el 2026-09-19:** la
+etiqueta se movió al commit de cierre, y desde entonces se mueve como último paso de cada ronda. Ya no es
+una recomendación que dependa de que alguien se acuerde: `make verify` falla si la etiqueta no está en
+`HEAD` (`scripts/p9-etiqueta.py`), y el registro de Zenodo se comprueba contra su API pública
+(`scripts/p9-zenodo-registro.py`).

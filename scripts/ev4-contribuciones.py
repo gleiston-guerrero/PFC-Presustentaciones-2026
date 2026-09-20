@@ -26,6 +26,7 @@ En modo --check compara lo que CONTRIBUCIONES.md afirma contra lo que git dice:
 el total de commits del tramo, el conjunto de autores, y los commits atribuidos
 a cada punto. Sale con 1 a la primera discrepancia.
 """
+import collections
 import re
 import subprocess
 import sys
@@ -88,6 +89,51 @@ def resumen_archivos(shas, tope=4):
     return utiles[:tope], len(frec)
 
 
+# Quien es quien. Cada identidad de Git del historial tiene que pertenecer a una persona:
+# si aparece una que no, el reparto no sumaria el total y se para en vez de inventar.
+PERSONAS = (
+    ("Álava Alvarado, Jean Pierre",
+     {"jalavaa@uteq.edu.ec", "jeanalavaalavarado@gmail.com"}),
+    ("Zamora Arias, Carla Esthefania", {"czamoraa5@uteq.edu.ec"}),
+    ("Barreto Rosado, Heider Dominick",
+     {"dominickelyolo@gmail.com", "144386724+dominick1245@users.noreply.github.com"}),
+    ("Moncayo Loor, Xavier Alejandro", {"xavierloor52@gmail.com"}),
+)
+COMITEA = "Jean30042 <jalavaa@uteq.edu.ec>"     # quien comitea este archivo
+
+
+def historia(ref, sumar=0):
+    """Commits de TODO el historial hasta `ref`, por persona y por identidad.
+
+    `sumar`: commits que aun no existen y que el archivo cuenta (el que lo trae).
+    Devuelve ({persona: Counter(identidad -> n)}, total, identidades_sin_persona).
+    """
+    por = {p: collections.Counter() for p, _ in PERSONAS}
+    sin, total = set(), 0
+    for linea in git("log", "--format=%an%x1f%ae", ref).splitlines():
+        if not linea.strip():
+            continue
+        an, ae = linea.split("\x1f")
+        total += 1
+        dueno = next((p for p, cs in PERSONAS if ae in cs), None)
+        if dueno is None:
+            sin.add(f"{an} <{ae}>")
+        else:
+            por[dueno][f"{an} <{ae}>"] += 1
+    if sumar:
+        por[PERSONAS[0][0]][COMITEA] += sumar
+        total += sumar
+    return por, total, sin
+
+
+def tabla_historia(por):
+    filas = ["| Integrante | Identidades de Git (commits de cada una) | Commits |", "|---|---|---:|"]
+    for persona, _ in PERSONAS:
+        ids = ", ".join(f"`{i}` ({n})" for i, n in sorted(por[persona].items(), key=lambda x: -x[1]))
+        filas.append(f"| {persona} | {ids or '—'} | {sum(por[persona].values())} |")
+    return "\n".join(filas)
+
+
 def generar():
     cs = commits()
     mapa, sueltos = por_punto(cs)
@@ -141,7 +187,7 @@ def check():
     # y no depende de cuantos commits vengan despues.
     m = re.search(r"\*\*Total:\s*(\d+)\s+commits", txt)
     esperado = len(cs)
-    sucio = subprocess.run(["git", "diff", "--quiet", "--", ARCHIVO],
+    sucio = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", ARCHIVO],
                            capture_output=True).returncode != 0
     if not sucio:
         # Ya comiteado: la cifra es la del tramo hasta el commit que lo toco.
@@ -157,6 +203,32 @@ def check():
         estado = "pendiente de comitear" if sucio else "ya comiteado"
         fallos.append(f"declara {m.group(1)} commits; corresponden {esperado} "
                       f"({estado}); HEAD va por {len(cs)}")
+
+    # 1b) El reparto de TODO el historial, que es otra cifra distinta de la del tramo y que
+    # contradecia a la primera (403 en el texto, 436 en el repositorio): se calcula igual,
+    # hasta el commit que contiene el archivo.
+    try:
+        ref = ultimo_ref = git("log", "-1", "--format=%H", "--", ARCHIVO).strip()
+        sumar = 0
+        if sucio or not ref:
+            ref, sumar = "HEAD", 1
+        por, total_h, sin = historia(ref, sumar)
+        if sin:
+            fallos.append("identidades de Git sin persona asignada (edita PERSONAS): " + ", ".join(sorted(sin)))
+        mt = re.search(r"\*\*Total en la historia de `main`:\s*(\d+)\s+commits", txt)
+        if not mt:
+            fallos.append("no declara el total de commits de todo el historial")
+        elif int(mt.group(1)) != total_h:
+            fallos.append(f"declara {mt.group(1)} commits en toda la historia; corresponden {total_h}")
+        for persona, _ in PERSONAS:
+            mf = re.search(r"^\|\s*" + re.escape(persona) + r"\s*\|[^|]*\|\s*(\d+)\s*\|", txt, re.M)
+            esperado_p = sum(por[persona].values())
+            if not mf:
+                fallos.append(f"la tabla historica no lista a {persona}")
+            elif int(mf.group(1)) != esperado_p:
+                fallos.append(f"{persona}: declara {mf.group(1)} commits, git da {esperado_p}")
+    except SystemExit as e:
+        fallos.append(f"no se pudo calcular el historial: {e}")
 
     # 2) Los autores del tramo.
     for a in autores:

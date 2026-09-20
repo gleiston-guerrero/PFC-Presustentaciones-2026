@@ -42,6 +42,8 @@ AUTZ = ("audit-endpoints-autorizacion",
         [PY, "docs/mediciones/sec/owasp/scripts/audit-endpoints-autorizacion.py"])
 SPEL = ("p8-spel-vivo", [PY, "scripts/p8-spel-vivo.py"])
 ETIQ = ("p9-etiqueta", [PY, "scripts/p9-etiqueta.py"])
+EV1 = ("ev1-verificacion", [PY, "scripts/ev1-verificacion.py", "--rapido"])
+EV4 = ("ev4-contribuciones", [PY, "scripts/ev4-contribuciones.py", "--check"])
 P3 = ("p3-param-tautologicos", [PY, "scripts/p3-param-tautologicos.py"])
 SCHED = "backend/src/main/java/ec/edu/uteq/presustentaciones/repositories/ScheduleRepository.java"
 
@@ -111,6 +113,13 @@ MUTACIONES = [
      "    /** prosa que javadoc descarta */\n    /**\n     * Busca el/los registro(s) con submission id.", [P3], False),
     ("M26", "P3: un comentario Javadoc metido dentro de una consulta JPQL", SCHED,
      "          AND c.dateStart < :fin\n", "          AND c.dateStart < :fin\n          /** basura */\n", [P3], False),
+    ("M27", "EV-1: una salida pegada en VERIFICACION.md queda obsoleta (Javadoc 778 -> 768)", "VERIFICACION.md",
+     "metodos de interfaz): 778", "metodos de interfaz): 768", [EV1], False),
+    ("M28", "EV-1: la tabla dice P3 Parcial y el resumen lo agrupa como Cumple", "VERIFICACION.md",
+     "| P3 | ✅ Cumple |", "| P3 | 🟡 Parcial |", [EV1], False),
+    ("M29", "EV-4: la tabla historica de CONTRIBUCIONES.md declara un commit de mas para un integrante", "CONTRIBUCIONES.md",
+     "| Moncayo Loor, Xavier Alejandro | `XAML25 <xavierloor52@gmail.com>` (13) | 13 |",
+     "| Moncayo Loor, Xavier Alejandro | `XAML25 <xavierloor52@gmail.com>` (13) | 14 |", [EV4], False),
     ("M22", "se retira el @PreAuthorize de un endpoint de escritura (POST)", CTRL,
      '    @PreAuthorize("' + PERM + '")\n    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")',
      '    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")', [AUTZ], False),
@@ -141,7 +150,7 @@ def main():
     solo = set(args[args.index("--solo") + 1].split(",")) if "--solo" in args else None
 
     print("Linea base: los detectores tienen que pasar SIN mutar")
-    for d in (CIFRAS, DOC, AUTZ, SPEL, P3, ETIQ):
+    for d in (CIFRAS, DOC, AUTZ, SPEL, P3, EV1, EV4, ETIQ):
         rc = correr(d, nb)
         print(f"  [{'OK  ' if rc == 0 else 'FAIL'}] {d[0]}")
         if rc != 0 and d is not ETIQ:

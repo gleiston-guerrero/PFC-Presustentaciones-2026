@@ -334,13 +334,26 @@ if [ "$RAPIDO" = "1" ]; then
 elif [ ! -s "$NB_JSON" ]; then
   fail "EV-2: sin la salida del cuaderno no se puede correr el arnes de mutaciones"
 else
-  # El verificador se prueba a si mismo: inyecta defectos y exige que cada uno
+  # El verificador se prueba a si mismo: inyecta defectos (29 hoy) y exige que cada uno
   # haga salir a algun detector distinto de 0. Restaura byte a byte.
   if PYTHONIOENCODING=utf-8 python scripts/mutaciones-gate.py --nb "$NB_JSON" > "$TMPV/mutaciones.txt" 2>&1; then
     ok "EV-2: $(tail -1 "$TMPV/mutaciones.txt")"
   else
     cat "$TMPV/mutaciones.txt"; fail "EV-2: sobrevive alguna mutacion -- el verificador no ve un defecto que deberia ver"
   fi
+fi
+echo
+
+echo "=== EV-1 -- Los bloques de VERIFICACION.md se reproducen literalmente ==="
+# La revision final reprodujo ocho bloques y tres no cuadraban por cifras obsoletas
+# (Javadoc 734/768, "403 commits", "3 pruebas"): eran salidas pegadas a mano. Ahora cada
+# bloque marcado <!-- ev1:run --> se ejecuta y su salida tiene que ser LA MISMA, y la
+# tabla del principio tiene que coincidir con el resumen del final.
+if [ "$RAPIDO" = "1" ]; then ARG_EV1="--rapido"; else ARG_EV1=""; fi
+if PYTHONIOENCODING=utf-8 python scripts/ev1-verificacion.py $ARG_EV1; then
+  ok "EV-1: cada bloque marcado de VERIFICACION.md reproduce literalmente y la tabla coincide con el resumen"
+else
+  fail "EV-1: una salida documentada ya no es la que imprime su comando, o la tabla contradice al resumen (python scripts/ev1-verificacion.py --actualizar regenera las salidas)"
 fi
 echo
 
