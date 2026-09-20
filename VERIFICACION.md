@@ -814,6 +814,13 @@ declarado como incumplido y medido con método público.
 **Criterio:** tres corridas por perfil (móvil y escritorio) contra el despliegue público, con los JSON
 versionados y su URL objetivo declarada.
 
+> **Reserva cosmética cerrada (revisión final, 2026-09-20).** El evaluador confirmó la figura (94/81, misma URL,
+> mismas cifras que los seis JSON) y dejó una reserva: *«el título interno del PNG aún dice "build de
+> producción" donde el pie dice "despliegue público real"»*. Era cierto: `scripts/gen-figuras.py` titulaba la
+> figura con el texto de cuando las corridas eran contra un build local. Ahora dice «despliegue público real»,
+> la imagen se regeneró desde los JSON y se copió al informe (recompilado), y `ev2-documental.py` falla si el
+> título vuelve a contradecir al pie (mutación M36, detectada).
+
 **Comando:**
 <!-- ev1:run -->
 ```bash
@@ -1332,9 +1339,9 @@ reales que llevaban ahí desde antes:
 | Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
 | Bloques de este archivo | `ev1-verificacion.py` | Cada bloque marcado `ev1:run` reproduce su salida; la tabla coincide con el resumen |
 | Titularidad | `ev4-contribuciones.py --check` | Tramo **y** todo el historial: totales, reparto por persona, identidades sin dueño |
-| El propio verificador | `mutaciones-gate.py` | Inyecta 35 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 36 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
 
-**Resultado del arnés: 35 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
+**Resultado del arnés: 36 detectadas, 0 sobreviven.** Cubre las seis del evaluador, más: fracción
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
 

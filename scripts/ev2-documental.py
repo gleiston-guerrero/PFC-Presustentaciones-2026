@@ -154,6 +154,18 @@ def comprobar_lighthouse():
         fail(f"{inf} difiere de la generada ({gen}): el informe dibuja otra medicion "
              f"(make docs regenera y copia; luego make pdf)")
 
+    # El TITULO dentro de la imagen tiene que decir lo mismo que el pie del informe. La revision
+    # final lo senalo como reserva cosmetica: el PNG decia "build de produccion" y el pie
+    # "despliegue publico real". Las corridas son contra la URL publica, no contra un build local.
+    titulo = re.search(r'ax\.set_title\("(Lighthouse[^"]*)"\)', leer("scripts/gen-figuras.py"))
+    if not titulo:
+        fail("no se encontro el titulo de la figura de Lighthouse en scripts/gen-figuras.py")
+    elif "despliegue" not in titulo.group(1).lower() or "build" in titulo.group(1).lower():
+        fail(f"el titulo de la figura de Lighthouse ('{titulo.group(1)}') no dice que las corridas son "
+             f"contra el despliegue publico, que es lo que declara el pie del informe")
+    else:
+        ok("el titulo de la figura de Lighthouse coincide con el pie del informe (despliegue publico)")
+
     mk = leer("Makefile")
     m = re.search(r"^LH_URL\s*\?=\s*(\S+)", mk, re.M)
     if not m or host not in m.group(1):

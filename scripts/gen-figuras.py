@@ -128,7 +128,10 @@ def fig_lighthouse_scores():
     ax.set_xticks(list(x))
     ax.set_xticklabels(cats)
     ax.set_ylabel("Puntaje (0-100)")
-    ax.set_title("Lighthouse -- promedio por categoria y perfil (build de produccion)")
+    # El titulo dice lo mismo que el pie del informe: las corridas son contra el despliegue publico
+    # (prod-runs/), no contra un build servido en localhost. Decia "build de produccion" y el evaluador
+    # lo senalo como reserva cosmetica: titulo y pie no coincidian.
+    ax.set_title("Lighthouse -- promedio por categoria y perfil (despliegue publico real)")
     for barras in ax.containers:
         ax.bar_label(barras, fmt="%.0f", padding=2)
     ax.set_ylim(0, 112)

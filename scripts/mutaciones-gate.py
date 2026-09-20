@@ -138,6 +138,8 @@ MUTACIONES = [
      "backend/src/test/java/ec/edu/uteq/presustentaciones/security/PasswordPolicyValidatorTest.java",
      "class PasswordPolicyValidatorTest {" + chr(10),
      "class PasswordPolicyValidatorTest {" + chr(10) + "    static class Oculta { @Test void neverRuns() { } }" + chr(10), [P2E], False),
+    ("M36", "la figura de Lighthouse vuelve a titularse 'build de produccion' (el pie dice despliegue publico)", "scripts/gen-figuras.py",
+     "(despliegue publico real)", "(build de produccion)", [DOC], False),
     ("M22", "se retira el @PreAuthorize de un endpoint de escritura (POST)", CTRL,
      '    @PreAuthorize("' + PERM + '")\n    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")',
      '    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")', [AUTZ], False),
