@@ -37,10 +37,11 @@ tiene el mismo md5 (`c4ff8a45…`) y el mismo tamaño (33 938 890 bytes) que el 
 solo archivo en el registro, y los metadatos (`Version v1.1.0`, fecha `2026-09-21`, DOI de concepto intacto)
 son los esperados.
 
-> **Reserva abierta en el registro.** La descripción publicada aún dice «arnés de 40 mutaciones»: se arrastró
-> la de la versión anterior al crear esta. El código archivado tiene **54**. Los archivos de un registro
-> publicado no se pueden reemplazar, pero la descripción sí se edita, y esa corrección queda pendiente sobre
-> el propio registro `22883939`. Se deja dicho aquí en vez de esperar a que lo encuentre la revisión.
+**Una corrección sobre el propio registro.** Al crearlo, la descripción se arrastró de la versión anterior y
+decía «arnés de 40 mutaciones» cuando el código archivado tiene **54**. Los archivos de un registro publicado
+no se pueden reemplazar, pero la descripción sí se edita: se corrigió el 2026-09-21 y se comprobó contra la
+API pública, que hoy devuelve «arnés de 54 mutaciones». Queda anotado porque la cifra estuvo mal publicada
+durante un rato, no porque siga estándolo.
 
 **Por qué el tag queda por delante del commit archivado, y por qué no es una contradicción.** El DOI
 no existe hasta que se publica, así que los commits que lo registran —este archivo, `CITATION.cff`,
