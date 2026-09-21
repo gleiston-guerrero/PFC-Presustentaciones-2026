@@ -145,7 +145,9 @@ desplegada con Docker Compose y nginx.</p>
   <li>Trazabilidad de las cifras publicadas: todas proceden de una corrida versionada, y una
       comprobación automatizada rechaza cualquier cifra que el expediente no respalde (cobertura, SUS,
       valores p, Lighthouse, archivos de evidencia citados). El propio verificador se prueba con un
-      arnés de 40 mutaciones que inyecta defectos y exige que cada uno sea detectado.</li>
+      arnés de 54 mutaciones que inyecta defectos y exige que cada uno sea detectado. Las cifras que
+      publica el expediente, las figuras del informe y la procedencia de las respuestas del SUS se
+      comprueban contra los datos versionados, no contra el texto que las describe.</li>
 </ul>
 
 <p><strong>Estado verificado de esta versión:</strong> 823 pruebas automatizadas (0 fallos, 0
