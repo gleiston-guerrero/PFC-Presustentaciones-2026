@@ -162,6 +162,10 @@ MUTACIONES = [
      "spring.datasource.password=${DB_PASSWORD}",
      "spring.datasource.password=" + "postgre" + "Admin19",  # armada: el arnes no debe llevarla escrita
      [CRED], False),
+    ("M43", "hash citado que es el objeto de una etiqueta vieja, no un commit (el caso b1efc83)", "VERIFICACION.md",
+     "el commit anterior (`87f67c2`)", "el commit anterior (`b1efc83`)", [DOC], False),
+    ("M44", "hash citado que no existe en el repositorio", "VERIFICACION.md",
+     "el commit anterior (`87f67c2`)", "el commit anterior (`deadbe1`)", [DOC], False),
     ("M22", "se retira el @PreAuthorize de un endpoint de escritura (POST)", CTRL,
      '    @PreAuthorize("' + PERM + '")\n    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")',
      '    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")', [AUTZ], False),

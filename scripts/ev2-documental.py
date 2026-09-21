@@ -223,6 +223,60 @@ def comprobar_evidencia():
         ok(f"{citas} citas a archivos del repositorio, todas existen")
 
 
+# ------------------------------------------------------------- hashes de commit
+RE_HASH = re.compile(r"(?<![0-9A-Za-z_/.=#-])([0-9a-f]{7,10}|[0-9a-f]{40})(?![0-9A-Za-z_])")
+
+
+def _git(*a):
+    return subprocess.run(["git", *a], capture_output=True, text=True,
+                          encoding="utf-8", errors="replace").stdout.strip()
+
+
+def comprobar_hashes():
+    """Todo hash de commit citado en un documento vigente existe, ES un commit y es alcanzable.
+
+    La revision final (2026-09-21) encontro `b1efc83`, citado como "commit anterior confirmado
+    como ancestro -- sigue alcanzable", que no existe en un clon limpio. Era el hash del OBJETO
+    DE ETIQUETA que la etiqueta tuvo antes de moverse: `git cat-file -t` lo da como `tag`, no
+    como `commit`, y ninguna referencia lo alcanza. En la maquina de quien lo escribio existia
+    (el objeto sigue en la base de objetos local), asi que un `git cat-file -e` no lo habria
+    visto: por eso se exige el tipo y la alcanzabilidad desde las referencias que ve un clon
+    (ramas, ramas remotas y etiquetas).
+
+    Se saltan las lineas que hablan de md5/sha256/checksum: sus 8 caracteres hexadecimales no
+    son de un commit.
+    """
+    print("--- Hashes citados: cada commit citado existe y es alcanzable ---")
+    citas, malas, vistos = 0, [], {}
+    for f in archivos_vigentes(exts=(".md", ".tex", ".cff")):
+        for n, linea in enumerate(leer(f).splitlines(), 1):
+            if re.search(r"md5|sha-?256|checksum", linea, re.I):
+                continue
+            for m in RE_HASH.finditer(linea):
+                h = m.group(1)
+                if not re.search(r"[a-f]", h) or not re.search(r"\d", h):
+                    continue
+                citas += 1
+                if h not in vistos:
+                    tipo = _git("cat-file", "-t", h)
+                    if tipo != "commit":
+                        vistos[h] = f"no es un commit (tipo: {tipo or 'no existe'})"
+                    elif not _git("for-each-ref", "--contains", h, "refs/heads", "refs/remotes",
+                                  "refs/tags", "--count=1"):
+                        vistos[h] = "es un commit pero ninguna rama ni etiqueta lo alcanza"
+                    else:
+                        vistos[h] = None
+                if vistos[h]:
+                    malas.append((f, n, h, vistos[h]))
+    if citas < 100:
+        fail(f"solo se reconocieron {citas} hashes de commit: la regla dejo de casar")
+    elif malas:
+        for f, n, h, why in malas:
+            fail(f"{f}:{n} cita `{h}`, y {why}: un clon limpio no lo tiene")
+    else:
+        ok(f"{citas} hashes de commit citados ({len(vistos)} distintos): todos existen y son alcanzables")
+
+
 # ----------------------------------------------------------------------- SUS
 def _resumen(xs):
     from scipy import stats
@@ -546,6 +600,7 @@ def main():
     args = sys.argv[1:]
     comprobar_lighthouse()
     comprobar_evidencia()
+    comprobar_hashes()
     comprobar_sus()
     comprobar_juicios()
     if "--nb" in args:
