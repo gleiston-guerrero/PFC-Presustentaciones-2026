@@ -55,6 +55,9 @@ SCHED = "backend/src/main/java/ec/edu/uteq/presustentaciones/repositories/Schedu
 JSON_LH = "docs/mediciones/perf/lighthouse/prod-runs/desktop-run1.json"
 EVID = "docs/mediciones/sus/re-aplicacion/evidencia/apps-script-historial-11-16.png"
 FIG = "Informe-Final/figuras/fig-lighthouse-scores.png"
+FIG_DOCS = "docs/mediciones/perf/figuras/fig-lighthouse-scores.png"
+MOD_FIG = "scripts/figuras_datos.py"
+GEN_FIG = "scripts/gen-figuras.py"
 CTRLDIR = "backend/src/main/java/ec/edu/uteq/presustentaciones/controllers/"
 CTRL = "backend/src/main/java/ec/edu/uteq/presustentaciones/controllers/AppUserController.java"
 PERM = "@permissionService.hasPermission(authentication, 'USUARIOS_GESTIONAR')"
@@ -64,6 +67,11 @@ HOST = "https://steadfast-success-production-2b60.up.railway.app/"
 
 # Mutaciones con operacion especial en lugar de reemplazo de texto.
 TAG, BORRAR, VIEJA = "@TAG@", "@BORRAR@", "@VIEJA@"
+# VIEJAS: la MISMA version vieja en varias rutas a la vez (el ataque de la revision del
+# 21-sep: cambiar las dos copias del PNG, no una). REGEN: cambia un fuente y regenera la
+# figura, que es la unica forma de ejercitar el chequeo semantico del titulo -- si la
+# imagen no se regenera, lo que falla es la igualdad con el fuente, no el titulo.
+VIEJAS, REGEN = "@VIEJAS@", "@REGEN@"
 
 # (id, descripcion, archivo, viejo, nuevo, detectores, necesita el cuaderno)
 MUTACIONES = [
@@ -141,8 +149,14 @@ MUTACIONES = [
      "backend/src/test/java/ec/edu/uteq/presustentaciones/security/PasswordPolicyValidatorTest.java",
      "class PasswordPolicyValidatorTest {" + chr(10),
      "class PasswordPolicyValidatorTest {" + chr(10) + "    static class Oculta { @Test void neverRuns() { } }" + chr(10), [P2E], False),
-    ("M36", "la figura de Lighthouse vuelve a titularse 'build de produccion' (el pie dice despliegue publico)", "scripts/gen-figuras.py",
+    ("M36", "el titulo de la figura cambia en el fuente y la imagen publicada no se regenera", MOD_FIG,
      "(despliegue publico real)", "(build de produccion)", [DOC], False),
+    ("M48", "4: las DOS copias del PNG pasan a ser la version vieja (el ataque de la revision)",
+     (FIG, FIG_DOCS), VIEJAS, None, [DOC], False),
+    ("M49", "4: cambia una medicion de Lighthouse y la figura publicada ya no la dibuja", JSON_LH,
+     '"score": 0.94', '"score": 0.99', [DOC], False),
+    ("M50", "4: la figura se vuelve a titular 'build de produccion' Y se regenera (el defecto del 19-sep)",
+     (FIG, FIG_DOCS), REGEN, ("(despliegue publico real)", "(build de produccion)"), [DOC], False),
     ("M37", "5b: se retira el @PreAuthorize de un GET que devuelve todas las tutorias", CTRLDIR + "TutorController.java",
      '    @GetMapping\n    @PreAuthorize("@permissionService.hasPermission(authentication, \'TRIBUNAL_TUTOR_ASIGNAR\')")\n    public ResponseEntity<Page<Tutor>> list(',
      '    @GetMapping\n    public ResponseEntity<Page<Tutor>> list(', [AUTZ], False),
@@ -243,6 +257,37 @@ def main():
                     resultados.append((mid, desc, "ARNES", "no hay una version vieja distinta"))
                     continue
                 open(ruta, "wb").write(vieja)
+            elif viejo == VIEJAS:
+                # La misma imagen vieja en las dos copias: asi las dos siguen siendo
+                # identicas entre si y comparar una con otra no ve nada.
+                original = {r: open(r, "rb").read() for r in ruta}
+                vieja = subprocess.run(["git", "show", "a0dead6:" + ruta[0]],
+                                       capture_output=True).stdout
+                if not vieja or vieja in original.values():
+                    resultados.append((mid, desc, "ARNES", "no hay una version vieja distinta"))
+                    continue
+                for r in ruta:
+                    open(r, "wb").write(vieja)
+            elif viejo == REGEN:
+                buscar, reemplazar = nuevo
+                original = {r: open(r, "rb").read() for r in ruta}
+                original[MOD_FIG] = open(MOD_FIG, "rb").read()
+                txt = original[MOD_FIG].decode("utf-8")
+                if buscar not in txt:
+                    resultados.append((mid, desc, "ARNES", f"'{buscar}' ya no esta en {MOD_FIG}"))
+                    continue
+                open(MOD_FIG, "wb").write(txt.replace(buscar, reemplazar, 1).encode("utf-8"))
+                gen = subprocess.run([PY, "-B", GEN_FIG], capture_output=True, text=True,
+                                     encoding="utf-8", errors="replace", env=ENV)
+                if gen.returncode != 0:
+                    resultados.append((mid, desc, "ARNES", "no se pudo regenerar la figura"))
+                    continue
+                # make docs regenera en docs/ y copia al informe: la mutacion hace lo mismo,
+                # porque si solo cambiara una copia lo que fallaria seria la comparacion
+                # entre las dos y no el titulo.
+                for r in ruta:
+                    if r != FIG_DOCS:
+                        open(r, "wb").write(open(FIG_DOCS, "rb").read())
             else:
                 original = open(ruta, "rb").read()
                 txt = original.decode("utf-8")
@@ -259,6 +304,9 @@ def main():
         finally:
             if previo is not None:
                 subprocess.run(["git", "update-ref", "refs/tags/v1.1.0", previo], capture_output=True)
+            elif isinstance(original, dict):
+                for r, bytes_ok in original.items():
+                    open(r, "wb").write(bytes_ok)
             elif original is not None:
                 open(ruta, "wb").write(original)
 

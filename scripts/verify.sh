@@ -303,8 +303,11 @@ sys.exit(malo)
 # pie que decia "despliegue publico": la figura se regenero en docs/ y nadie la
 # copio a Informe-Final/. Comprobar los numeros publicados no lo detectaba porque
 # el defecto estaba en la IMAGEN, no en el texto.
+# La revision del 21-sep mostro que este cmp no alcanza: cambiar LAS DOS copias por una
+# version vieja lo deja pasar. Que la imagen sea la que generan los JSON lo comprueba
+# EV-2 leyendo la procedencia incrustada en el PNG; aqui solo se dice lo que se prueba.
 if cmp -s docs/mediciones/perf/figuras/fig-lighthouse-scores.png Informe-Final/figuras/fig-lighthouse-scores.png; then
-  ok "P5: la figura del informe es la generada desde los JSON (misma imagen)"
+  ok "P5: las dos copias de la figura son el mismo archivo (su procedencia la revisa EV-2)"
 else
   fail "P5: Informe-Final/figuras/fig-lighthouse-scores.png difiere de la generada (make docs regenera y copia; luego make pdf)"
 fi
@@ -347,7 +350,7 @@ if [ "$RAPIDO" = "1" ]; then
 elif [ ! -s "$NB_JSON" ]; then
   fail "EV-2: sin la salida del cuaderno no se puede correr el arnes de mutaciones"
 else
-  # El verificador se prueba a si mismo: inyecta defectos (36 hoy) y exige que cada uno
+  # El verificador se prueba a si mismo: inyecta defectos (50 hoy) y exige que cada uno
   # haga salir a algun detector distinto de 0. Restaura byte a byte.
   if PYTHONIOENCODING=utf-8 python scripts/mutaciones-gate.py --nb "$NB_JSON" > "$TMPV/mutaciones.txt" 2>&1; then
     ok "EV-2: $(tail -1 "$TMPV/mutaciones.txt")"

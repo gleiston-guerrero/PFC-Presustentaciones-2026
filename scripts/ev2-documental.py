@@ -22,7 +22,12 @@ QUE COMPRUEBA
 -------------
   lighthouse  las corridas versionadas se hicieron contra la URL publica (nunca
               localhost) y todas contra la misma; el reporte y el informe
-              declaran esa misma URL.
+              declaran esa misma URL; y el titulo que lleva DENTRO la imagen
+              publicada dice lo mismo que el pie del informe.
+  figuras     las tres figuras del informe llevan su procedencia incrustada en el
+              PNG (titulo dibujado, entradas, huella de las entradas y cifras
+              dibujadas) y coincide con volver a derivarla de los datos
+              versionados; y las dos copias de cada una son el mismo archivo.
   evidencia   todo archivo del repositorio que un documento vigente cita existe.
   sus         media, DE, IC 95 % y alfa publicados == recalculados del CSV.
               p ajustados y decision de Holm publicados == recalculados; y el
@@ -63,6 +68,12 @@ import sys
 # Importar cifras-publicadas.py dejaria un .pyc en scripts/__pycache__ y el chequeo de
 # higiene de verify.sh lo marcaria como suciedad que este mismo script produjo.
 sys.dont_write_bytecode = True
+
+# El calculo de las cifras de las figuras es el mismo que usa el generador: vive en un
+# solo lugar a proposito (ver el encabezado de figuras_datos.py). La ruta se pone a mano
+# para no depender de desde donde se invoque este script.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import figuras_datos as figdat  # noqa: E402
 
 CSV_FORM = "docs/mediciones/sus/re-aplicacion/sus-respuestas-formulario.csv"
 CSV_PAPEL = "docs/mediciones/sus/sus-respuestas.csv"
@@ -143,28 +154,21 @@ def comprobar_lighthouse():
         else:
             ok(f"{doc} declara ese mismo servidor")
 
-    # La revision del 19-sep encontro el informe dibujando 68/61 (localhost) bajo un
-    # pie que decia "despliegue publico": la figura se regenero en docs/ y nadie la
-    # copio. El defecto estaba en la IMAGEN, asi que ningun texto lo delataba.
-    gen = "docs/mediciones/perf/figuras/fig-lighthouse-scores.png"
+    # El TITULO tiene que decir lo mismo que el pie del informe, y se lee DE LA IMAGEN.
+    # Antes se leia el fuente de scripts/gen-figuras.py: la revision del 21-sep cambio las
+    # DOS copias del PNG por una version vieja y esto seguia pasando en verde, porque el
+    # generador no habia cambiado. La comparacion de las dos copias entre si y la
+    # procedencia incrustada estan en comprobar_figuras().
     inf = "Informe-Final/figuras/fig-lighthouse-scores.png"
-    if open(gen, "rb").read() == open(inf, "rb").read():
-        ok("la figura de Lighthouse del informe es la generada desde los JSON")
-    else:
-        fail(f"{inf} difiere de la generada ({gen}): el informe dibuja otra medicion "
-             f"(make docs regenera y copia; luego make pdf)")
-
-    # El TITULO dentro de la imagen tiene que decir lo mismo que el pie del informe. La revision
-    # final lo senalo como reserva cosmetica: el PNG decia "build de produccion" y el pie
-    # "despliegue publico real". Las corridas son contra la URL publica, no contra un build local.
-    titulo = re.search(r'ax\.set_title\("(Lighthouse[^"]*)"\)', leer("scripts/gen-figuras.py"))
+    titulo = (figdat.leer_texto_png(inf) or {}).get("Title", "")
     if not titulo:
-        fail("no se encontro el titulo de la figura de Lighthouse en scripts/gen-figuras.py")
-    elif "despliegue" not in titulo.group(1).lower() or "build" in titulo.group(1).lower():
-        fail(f"el titulo de la figura de Lighthouse ('{titulo.group(1)}') no dice que las corridas son "
+        fail(f"{inf} no lleva el titulo incrustado: no se puede comprobar la imagen, solo "
+             f"el generador (regenera con make docs)")
+    elif "despliegue" not in titulo.lower() or "build" in titulo.lower():
+        fail(f"el titulo dentro de la imagen ('{titulo}') no dice que las corridas son "
              f"contra el despliegue publico, que es lo que declara el pie del informe")
     else:
-        ok("el titulo de la figura de Lighthouse coincide con el pie del informe (despliegue publico)")
+        ok("el titulo dentro de la imagen coincide con el pie del informe (despliegue publico)")
 
     mk = leer("Makefile")
     m = re.search(r"^LH_URL\s*\?=\s*(\S+)", mk, re.M)
@@ -173,6 +177,60 @@ def comprobar_lighthouse():
              f"no es el servidor que miden los JSON")
     else:
         ok("make bench-lh mide por defecto el mismo servidor")
+
+
+# ------------------------------------------------------------------- figuras
+def comprobar_figuras():
+    """Cada figura publicada lleva su procedencia DENTRO del PNG, y coincide.
+
+    Hallazgo de la revision del 2026-09-21: el chequeo del titulo leia el fuente del
+    generador, asi que el evaluador cambio las DOS copias del PNG por una version
+    vieja y `make verify` respondio [OK] -- y encima afirmo que "la figura del
+    informe es la generada desde los JSON" mientras el informe dibujaba los 68/61 de
+    localhost.
+
+    Comparar las dos copias entre si (lo que ya habia) no ve nada cuando se cambian
+    las dos. Comparar los bytes contra una regeneracion tampoco sirve: matplotlib
+    incrusta su version en el PNG, asi que fallaria en la maquina del evaluador, que
+    es la misma clase de defecto que el bloque de bytecode con Lombok. Lo que se
+    compara es la procedencia incrustada (titulo, entradas, huella de las entradas y
+    cifras dibujadas) contra la que sale de volver a derivarla de los datos
+    versionados, con el mismo calculo que usa el generador (scripts/figuras_datos.py).
+    """
+    print("--- Figuras: la procedencia va dentro de la imagen ---")
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for nombre, calcular in figdat.FIGURAS:
+        gen = "docs/mediciones/perf/figuras/" + nombre
+        inf = "Informe-Final/figuras/" + nombre
+        if not (os.path.exists(gen) and os.path.exists(inf)):
+            fail(f"falta una de las dos copias de {nombre} ({gen}, {inf})")
+            continue
+        if open(gen, "rb").read() != open(inf, "rb").read():
+            fail(f"{inf} difiere de la generada ({gen}): el informe dibuja otra "
+                 f"medicion (make docs regenera y copia; luego make pdf)")
+            continue
+        datos = calcular(raiz)
+        if datos is None:
+            fail(f"{nombre}: no se pudieron derivar las cifras de sus entradas")
+            continue
+        esperado = figdat.metadatos(datos)
+        real = figdat.leer_texto_png(inf) or {}
+        if not any(c in real for c in esperado):
+            # Caso del ataque de la revision: una imagen vieja, de antes de que el
+            # generador incrustara la procedencia. Un solo FAIL, no uno por clave.
+            fail(f"{inf}: la imagen no lleva procedencia incrustada, asi que no es la que "
+                 f"genera make docs hoy (se esperaba la huella {esperado['Huella']} de "
+                 f"{len(datos['fuentes'])} entradas): es una version vieja o hecha por fuera")
+            continue
+        distintos = [c for c in esperado if real.get(c) != esperado[c]]
+        for c in distintos:
+            fail(f"{inf}: la procedencia incrustada no coincide con las entradas "
+                 f"versionadas -- {c}: la imagen dice {real.get(c) or '(ausente)'!r} y "
+                 f"los datos dan {esperado[c]!r} (regenera con make docs)")
+        if not distintos:
+            ok(f"{nombre}: la imagen lleva su procedencia y coincide con sus "
+               f"{len(datos['fuentes'])} entradas (huella {esperado['Huella']}, "
+               f"{esperado['Datos']})")
 
 
 # ----------------------------------------------------------------- evidencia
@@ -599,6 +657,7 @@ def comprobar_juicios():
 def main():
     args = sys.argv[1:]
     comprobar_lighthouse()
+    comprobar_figuras()
     comprobar_evidencia()
     comprobar_hashes()
     comprobar_sus()

@@ -836,8 +836,41 @@ versionados y su URL objetivo declarada.
 > mismas cifras que los seis JSON) y dejó una reserva: *«el título interno del PNG aún dice "build de
 > producción" donde el pie dice "despliegue público real"»*. Era cierto: `scripts/gen-figuras.py` titulaba la
 > figura con el texto de cuando las corridas eran contra un build local. Ahora dice «despliegue público real»,
-> la imagen se regeneró desde los JSON y se copió al informe (recompilado), y `ev2-documental.py` falla si el
-> título vuelve a contradecir al pie (mutación M36, detectada).
+> la imagen se regeneró desde los JSON y se copió al informe (recompilado).
+
+> **Corrección: lo que se afirmó aquí el 20-sep era falso (revisión del 2026-09-21).** Este pasaje decía que
+> `ev2-documental.py` «falla si el título vuelve a contradecir al pie (mutación M36, detectada)». No era cierto:
+> el chequeo leía el **título en el fuente** de `scripts/gen-figuras.py`, no el de la imagen. El evaluador lo
+> demostró cambiando **las dos** copias del PNG por una versión vieja: `make verify` pasó en verde y encima
+> afirmó *«la figura del informe es la generada desde los JSON»* mientras el informe dibujaba los 68/61 de
+> `localhost`. Reproducido aquí con las dos versiones viejas del archivo (la de 68/61 y la de «build de
+> producción»): las dos pasaban con salida 0.
+>
+> **Por qué las dos salidas obvias no servían.** Comparar las dos copias entre sí ya estaba, y no ve nada cuando
+> se cambian las dos. Comparar los bytes contra una regeneración tampoco: matplotlib incrusta su propia versión
+> dentro del PNG (chunk `tEXt` `Software`), así que los bytes cambian de una máquina a otra y el gate fallaría en
+> la del evaluador — la misma clase de defecto que el bloque de bytecode que depende de Lombok.
+>
+> **Lo que se hizo.** El generador incrusta la **procedencia dentro del PNG** (chunks `tEXt`: título dibujado,
+> archivos de entrada, huella `sha256` de esas entradas y cifras dibujadas) y `ev2-documental.py` la lee **de la
+> imagen** y la vuelve a derivar de los datos versionados, con el mismo cálculo que usa el generador
+> (`scripts/figuras_datos.py`, que existe para que ese cálculo no viva duplicado). Cubre las **tres** figuras del
+> informe, no solo la de Lighthouse: las otras dos tenían la misma ceguera. Los píxeles no cambiaron —solo se
+> añadieron los metadatos—, comprobado comparando el `sha256` de los chunks `IDAT` antes y después.
+>
+> | Mutación | Qué inyecta | Qué la ve |
+> |---|---|---|
+> | M19 | **una** copia del PNG es una versión vieja | las dos copias dejan de ser el mismo archivo |
+> | M36 | el título cambia en el fuente y la imagen **no** se regenera | el título incrustado ya no es el que se dibujaría hoy |
+> | M48 | **las dos** copias pasan a ser la versión vieja (el ataque del evaluador) | la imagen no lleva procedencia incrustada |
+> | M49 | cambia una medición (`score` de un JSON de Lighthouse) y la figura publicada ya no la dibuja | la huella y las cifras incrustadas ya no coinciden con las entradas |
+> | M50 | la figura se vuelve a titular «build de producción» **y se regenera** (el defecto del 19-sep) | el título que lleva la imagen no dice lo que declara el pie |
+>
+> Las cinco se detectan; con el chequeo anterior, M48, M49 y M50 pasaban en verde.
+>
+> **Límite declarado.** Esto prueba que la imagen la produjo este generador a partir de estas entradas, no que
+> los píxeles dibujen eso: un PNG hecho a mano con los metadatos correctos pasaría. Cierra el defecto real —una
+> figura vieja publicada sin que nadie se entere— y no pretende cerrar la fabricación deliberada de una imagen.
 
 **Comando:**
 <!-- ev1:run -->
@@ -1423,7 +1456,8 @@ reales que llevaban ahí desde antes:
 
 | Comprobación | Script | Qué contrasta |
 |---|---|---|
-| Lighthouse | `ev2-documental.py` | Las 6 corridas miden la URL pública (nunca `localhost`), todas la misma; el reporte, el informe y `make bench-lh` declaran esa misma; la figura del informe es la generada |
+| Lighthouse | `ev2-documental.py` | Las 6 corridas miden la URL pública (nunca `localhost`), todas la misma; el reporte, el informe y `make bench-lh` declaran esa misma; el título que lleva **dentro** la imagen dice lo mismo que el pie |
+| Figuras del informe | `ev2-documental.py` | Las tres llevan su procedencia incrustada en el PNG (título, entradas, huella de las entradas, cifras dibujadas), coincide con volver a derivarla de los datos versionados, y las dos copias de cada una son el mismo archivo |
 | Evidencia citada | `ev2-documental.py` | Todo archivo del repositorio que un documento vigente cita existe |
 | Hashes citados | `ev2-documental.py` | Todo hash de commit citado en un documento vigente existe, **es un commit** (no el objeto de una etiqueta) y lo alcanza alguna rama o etiqueta: lo que ve un clon limpio |
 | SUS | `ev2-documental.py` | Media, DE, IC 95 % y α publicados == recalculados del CSV; p ajustados y decisión de Holm == calculados, la frase junto al p no afirma lo contrario, y **todo `p = …` de un párrafo del SUS**, se nombre o no a Holm, es un p crudo o ajustado calculado |
@@ -1432,9 +1466,9 @@ reales que llevaban ahí desde antes:
 | Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
 | Bloques de este archivo | `ev1-verificacion.py` | Cada bloque marcado `ev1:run` reproduce su salida; la tabla coincide con el resumen |
 | Titularidad | `ev4-contribuciones.py --check` | Tramo **y** todo el historial: totales, reparto por persona, identidades sin dueño |
-| El propio verificador | `mutaciones-gate.py` | Inyecta 40 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 50 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
 
-**Resultado del arnés: 40 detectadas, 0 sobreviven** (37 en la última corrida completa sin `--nb`; las 3 de rendimiento, M13-M15, no cambiaron y se detectaron en la corrida con `--nb`). Cubre las seis del evaluador, más: fracción
+**Resultado del arnés: 50 detectadas, 0 sobreviven** (47 en la última corrida completa sin `--nb`; las 3 de rendimiento, M13-M15, no cambiaron y se detectaron en la corrida con `--nb`). Cubre las seis del evaluador, más: fracción
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
 
