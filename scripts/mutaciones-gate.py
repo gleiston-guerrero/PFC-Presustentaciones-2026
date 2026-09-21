@@ -159,7 +159,9 @@ MUTACIONES = [
      '        if en_prosa and m.group(1).lower() in CLAVES_ESPANOLAS and not m.group("entre"):',
      "        if False:", [CREDA], False),
     ("M42", "5c: una contrasena literal vuelve a escribirse en backend/INSTRUCCIONES.md", "backend/INSTRUCCIONES.md",
-     "spring.datasource.password=${DB_PASSWORD}", "spring.datasource.password=postgreAdmin19", [CRED], False),
+     "spring.datasource.password=${DB_PASSWORD}",
+     "spring.datasource.password=" + "postgre" + "Admin19",  # armada: el arnes no debe llevarla escrita
+     [CRED], False),
     ("M22", "se retira el @PreAuthorize de un endpoint de escritura (POST)", CTRL,
      '    @PreAuthorize("' + PERM + '")\n    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")',
      '    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")', [AUTZ], False),
