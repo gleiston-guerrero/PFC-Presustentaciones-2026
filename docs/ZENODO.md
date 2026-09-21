@@ -3,8 +3,8 @@
 **Proyecto:** Sistema de Gestión de Pre-Sustentaciones UTEQ  
 **DOI que se cita (de concepto, resuelve siempre a la versión más reciente):**
 [10.5281/zenodo.21988563](https://doi.org/10.5281/zenodo.21988563)  
-**Última versión archivada:** `v1.1.0` → [10.5281/zenodo.22854267](https://doi.org/10.5281/zenodo.22854267)
-(2026-09-20; segundo snapshot, con el contenido final)  
+**Última versión archivada:** `v1.1.0` → [10.5281/zenodo.22865913](https://doi.org/10.5281/zenodo.22865913)
+(2026-09-21; tercer snapshot, con el contenido final)  
 **Estado de `v1.1.0`:** ✅ **Archivada el 2026-09-19.** La evaluación integral del 17-sep señaló que
 «el DOI declarado archiva la v1.0.1», y la del 18-sep que «la v1.1.0 no está archivada». Ya lo está:
 el registro encadena `v1.0.0 → v1.0.1 → v1.1.0` bajo el mismo DOI de concepto.
@@ -13,27 +13,30 @@ el registro encadena `v1.0.0 → v1.0.1 → v1.1.0` bajo el mismo DOI de concept
 
 | | |
 |---|---|
-| DOI de esta versión | [10.5281/zenodo.22854267](https://doi.org/10.5281/zenodo.22854267) |
-| Registro | <https://zenodo.org/records/22854267> |
-| **Commit archivado** | **`a60ae4c`** |
-| Archivo | `PFC-Presustentaciones-2026-v1.1.0.tar.gz`, 1162 archivos, md5 `8d8cdedc11d49ae3d9de3871c9491146` |
+| DOI de esta versión | [10.5281/zenodo.22865913](https://doi.org/10.5281/zenodo.22865913) |
+| Registro | <https://zenodo.org/records/22865913> |
+| **Commit archivado** | **`6515713`** |
+| Archivo | `PFC-Presustentaciones-2026-v1.1.0.tar.gz`, 1164 archivos, md5 `34391b961410980c40c488323800958f` |
 | Generado con | `sh scripts/zenodo-paquete.sh v1.1.0` (`git archive` sobre el tag, no sobre el directorio de trabajo) |
 
-**Es la segunda vez que se archiva `v1.1.0`.** La primera (2026-09-19, registro `22839517`, commit `35d8199`) es
-anterior a las correcciones de la revisión final: desde entonces cambiaron el informe, el Javadoc, los nombres de
-las pruebas y los verificadores, es decir, algo más que el registro del DOI. La etiqueta no se renombró (la revisión
-evalúa `v1.1.0`) y se archivó de nuevo el contenido final bajo el mismo nombre. El registro anterior sigue siendo
-el *primer snapshot*, **superado**; el DOI de concepto resuelve ya al nuevo. El md5 del archivo publicado se
-comprobó contra el del paquete generado localmente: idéntico.
+**Es la tercera vez que se archiva `v1.1.0`.** La primera (2026-09-19, registro `22839517`, commit `35d8199`) es
+anterior a las correcciones de la revisión final; la segunda (2026-09-20, registro `22854267`, commit `a60ae4c`)
+es anterior al punto 5 de la última revisión (autorización de los `GET`, p crudo del SUS en prosa, 809 → 823
+pruebas, 40 mutaciones), es decir, algo más que el registro de un DOI. La etiqueta no se renombró (la revisión
+evalúa `v1.1.0`) y se archivó de nuevo el contenido final bajo el mismo nombre. Los dos registros anteriores
+quedan como snapshots **superados**; el DOI de concepto resuelve ya al nuevo. Comprobado el 2026-09-21 contra la
+API pública: el archivo publicado tiene el mismo md5 (`34391b96…`) y el mismo tamaño (33 923 113 bytes) que el
+paquete generado localmente, y los metadatos (`Version v1.1.0`, repositorio `gleiston-guerrero`, `tree/v1.1.0`,
+dataset enlazado, descripción con 823 pruebas y 40 mutaciones) son los esperados.
 
 **Por qué el tag queda por delante del commit archivado, y por qué no es una contradicción.** El DOI
 no existe hasta que se publica, así que los commits que lo registran —este archivo, `CITATION.cff`,
 `VERIFICACION.md`— son necesariamente posteriores al snapshot. Es un problema de orden, no de
-contenido: **lo único que separa `a60ae4c` del commit etiquetado es el registro de ese mismo DOI.**
+contenido: **lo único que separa `6515713` del commit etiquetado es el registro de ese mismo DOI.**
 Comprobable en un comando:
 
 ```bash
-git diff --stat a60ae4c..v1.1.0
+git diff --stat 6515713..v1.1.0
 ```
 
 `make verify` lo comprueba en cada corrida (`scripts/p9-snapshot-zenodo.py`): si entre el commit
@@ -80,7 +83,7 @@ v1.1.0*.
 python scripts/p9-zenodo-registro.py
 ```
 
-Lee `https://zenodo.org/api/records/22854267` y falla mientras alguno de los tres ejes siga mal (además
+Lee `https://zenodo.org/api/records/22865913` y falla mientras alguno de los tres ejes siga mal (además
 de exigir `Version = v1.1.0` y que la descripción no lleve texto de instrucción pegado). Corre dentro de
 `make verify`. Los datos esperados salen de `CITATION.cff` y de `ZENODO-DATASET.md`, no de constantes.
 
@@ -121,14 +124,15 @@ DOI siga siendo verificable sin depender de que nadie recuerde el hash de memori
 
 | Versión | Tag Git | DOI de la versión | Publicado | Notas |
 |---|---|---|---|---|
-| **v1.1.0** (cierre del examen suspenso, contenido final) | `v1.1.0` | [10.5281/zenodo.22854267](https://doi.org/10.5281/zenodo.22854267) | 20 sep 2026 | Snapshot del commit `a60ae4c`. Cierra EV-2, EV-4, P1, P3, P4, P7, P8, P9, P10, P11 y las credenciales en claro de las evaluaciones del 17 y 18 de septiembre. |
+| **v1.1.0** (cierre del examen suspenso, contenido final) | `v1.1.0` | [10.5281/zenodo.22865913](https://doi.org/10.5281/zenodo.22865913) | 21 sep 2026 | Snapshot del commit `6515713`. Cierra además el punto 5 de la última revisión (autorización de los `GET`, p crudo del SUS, P12 documentado). |
+| v1.1.0 (segundo snapshot, superado) | `v1.1.0` | [10.5281/zenodo.22854267](https://doi.org/10.5281/zenodo.22854267) | 20 sep 2026 | Snapshot del commit `a60ae4c`. Cierra EV-2, EV-4, P1, P3, P4, P7, P8, P9, P10, P11 y las credenciales en claro de las evaluaciones del 17 y 18 de septiembre. Sigue publicado; lo sustituye el de arriba. |
 | v1.1.0 (primer snapshot, superado) | `v1.1.0` | [10.5281/zenodo.22839517](https://doi.org/10.5281/zenodo.22839517) | 19 sep 2026 | Snapshot del commit `35d8199`, anterior a las correcciones de la revisión final. Sigue publicado; lo sustituye el de arriba. |
 | **v1.0.1** (informe/portada) | `v1.0.1` | [10.5281/zenodo.22445216](https://doi.org/10.5281/zenodo.22445216) | 6 sep 2026 | Cierre real de la Entrega Final: correcciones de las Entregas 1A/1B/3 aplicadas (cobertura 63,17 %, CSP endurecida, catálogo de SP completo, evidencia OWASP real) — ver `docs/observaciones/OBSERVACIONES.md`. |
 | **v1.0.0** (movido, examen final) | `v1.0.0` | — (no vuelve a archivarse; ver `v1.0.0-zenodo-archive`) | movido 11 sep 2026 | Apunta hoy al commit de cierre real que se defiende en el examen final, no al release de agosto. |
 | v1.0.0 (original) | `v1.0.0-zenodo-archive` | [10.5281/zenodo.21988564](https://doi.org/10.5281/zenodo.21988564) | 18 ago 2026 | El commit exacto que el DOI de agosto archivó, preservado bajo este nombre tras mover `v1.0.0`. |
 
 - **Enlace permanente a la última versión:** [`https://doi.org/10.5281/zenodo.21988563`](https://doi.org/10.5281/zenodo.21988563) (DOI de concepto — usar este enlace cuando se quiera citar "el software" en general, no una corrida específica).
-- **Registro de la versión actual:** `https://zenodo.org/records/22854267`
+- **Registro de la versión actual:** `https://zenodo.org/records/22865913`
 - **Badge oficial (cita siempre la última versión):**
   [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21988563.svg)](https://doi.org/10.5281/zenodo.21988563)
 
