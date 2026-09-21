@@ -1447,15 +1447,15 @@ una anomalía menor; se atendieron así:
   calcula `sus-estadistica.py`. Mutación **M40** (el p crudo de Welch, de 0,608 a 0,008, en `SUS-RESULTS.md`): detectada; y se comprobó
   que con el detector anterior (`git show HEAD:scripts/ev2-documental.py`) esa misma mutación **sobrevivía** (sale 0).
 - **Hash citado que no existía (revisión de 2026-09-21).** `VERIFICACION.md` afirmaba que el commit anterior a mover la
-  etiqueta, `b1efc83`, «sigue alcanzable». El evaluador no lo encontró en su clon, y tenía razón: `b1efc83` era el hash del
-  **objeto de etiqueta** que `v1.1.0` tuvo antes de moverse (`git cat-file -t b1efc83` da `tag`, y apuntaba al commit
+  etiqueta, `b1efc8…` (siete caracteres, los seis primeros aquí), «sigue alcanzable». El evaluador no lo encontró en su clon, y tenía razón: `b1efc83` era el hash del
+  **objeto de etiqueta** que `v1.1.0` tuvo antes de moverse (`git cat-file -t` sobre ese hash da `tag`, y apuntaba al commit
   `87f67c2`). En esta máquina existía, porque el objeto suelto sigue en la base local, y por eso nadie lo vio: un
   `git cat-file -e` da éxito. Corregido a `87f67c2`, que es un commit, es ancestro de `main` y está en el remoto.
   Para que no vuelva, `ev2-documental.py` comprueba ahora los **274 hashes citados en documentos vigentes (161
   distintos)**: cada uno tiene que ser de tipo `commit` y estar alcanzable desde ramas, ramas remotas o etiquetas (se
   saltan las líneas de md5/sha256, cuyos 8 caracteres hexadecimales no son de un commit). Mutaciones **M43** (el hash
   del objeto de etiqueta, el caso real) y **M44** (un hash inventado), las dos detectadas. Con la regla puesta, el único
-  hallazgo de todo el repositorio fue `b1efc83`.
+  hallazgo de todo el repositorio fue ese hash. (Aquí se cita truncado a propósito: completo, el detector marcaría esta misma explicación.)
 - **5b — un `GET` sin autorización:** ver P8; era además un hueco del producto, no solo del verificador.
 - **5c — el detector de credenciales se disparaba con prosa: primero se dijo «no se reproduce», y era un error de esa
   respuesta.** La primera vez se probaron cuatro ediciones de `SUS-RESULTS.md` (M07, M09, M12, M40), ninguna con la
