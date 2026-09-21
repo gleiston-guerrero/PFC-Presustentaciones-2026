@@ -55,6 +55,7 @@ Sale con 1 si algun documento contradice a su dato.
 """
 import csv
 import glob
+import hashlib
 import importlib.util
 import io
 import json
@@ -64,6 +65,7 @@ import re
 import statistics
 import subprocess
 import sys
+import tempfile
 
 # Importar cifras-publicadas.py dejaria un .pyc en scripts/__pycache__ y el chequeo de
 # higiene de verify.sh lo marcaria como suciedad que este mismo script produjo.
@@ -77,6 +79,11 @@ import figuras_datos as figdat  # noqa: E402
 
 CSV_FORM = "docs/mediciones/sus/re-aplicacion/sus-respuestas-formulario.csv"
 CSV_PAPEL = "docs/mediciones/sus/sus-respuestas.csv"
+# Las dos exportaciones del mismo formulario, por caminos distintos: la hoja de
+# respuestas (18-sep) y la descarga directa desde el formulario (21-sep).
+CSV_CRUDO = "docs/mediciones/sus/re-aplicacion/respuestas-formulario-2026-09-18.csv"
+CSV_DESCARGA = "docs/mediciones/sus/re-aplicacion/respuestas-descarga-formulario-2026-09-21.csv"
+README_SUS = "docs/mediciones/sus/re-aplicacion/README.md"
 PROD_RUNS = "docs/mediciones/perf/lighthouse/prod-runs"
 REPORTE_LH = "docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md"
 INFORME_10 = "Informe-Final/secciones/10-evaluacion-empirica.tex"
@@ -231,6 +238,103 @@ def comprobar_figuras():
             ok(f"{nombre}: la imagen lleva su procedencia y coincide con sus "
                f"{len(datos['fuentes'])} entradas (huella {esperado['Huella']}, "
                f"{esperado['Datos']})")
+
+
+# ------------------------------------------------------- procedencia del SUS
+def _fecha_iso(texto):
+    """Fecha en ISO desde cualquiera de los dos formatos de exportacion."""
+    m = re.search(r"(\d{4})/(\d{2})/(\d{2})", texto)          # 2026/09/18
+    if m:
+        return "%s-%s-%s" % m.groups()
+    m = re.search(r"(\d{2})/(\d{2})/(\d{4})", texto)          # 18/09/2026
+    if m:
+        return "%s-%s-%s" % (m.group(3), m.group(2), m.group(1))
+    return None
+
+
+def _filas_exportacion(ruta):
+    """(fecha, hora, consentimiento, rol, previo, q1..q10) de una exportacion.
+
+    Las dos exportaciones traen el mismo dato con distinto formato: la descarga
+    directa envuelve la linea entera entre comillas y escribe la fecha al reves.
+    Se comparan los DATOS, no los bytes: el CSV que genera el formulario no es
+    estable byte a byte entre descargas, y exigir bytes iguales haria fallar al
+    verificador por como Google dibuja el archivo, no por lo que dice.
+    """
+    crudas = []
+    for fila in csv.reader(io.open(ruta, encoding="utf-8-sig", newline="")):
+        if not fila or not any(c.strip() for c in fila):
+            continue
+        crudas.append(next(csv.reader([fila[0]])) if len(fila) == 1 else fila)
+    datos = []
+    for fila in crudas[1:]:
+        hora = re.search(r"\d{1,2}:\d{2}:\d{2}", fila[0])
+        fecha = _fecha_iso(fila[0])
+        if not hora or not fecha or len(fila) < 14:
+            return None
+        datos.append((fecha, hora.group(0), fila[1].strip(), fila[2].strip(),
+                      fila[3].strip(), tuple(c.strip() for c in fila[4:14])))
+    return datos
+
+
+def comprobar_sus_procedencia():
+    """Las cifras del SUS salen de la exportacion del formulario, y se puede probar.
+
+    La revision del 21-sep dejo P1 en 70 %: *«las respuestas y el recalculo cuadran,
+    pero su procedencia se apoya en capturas y no en una exportacion del servidor»*.
+    La exportacion estaba versionada desde el 18-sep, pero ningun chequeo ataba las
+    cifras publicadas a ella: todos leian la tabla ya procesada. Esto cierra ese
+    tramo, que es el unico que se puede cerrar con codigo.
+    """
+    print("--- SUS: la tabla publicada sale de la exportacion del formulario ---")
+    for ruta in (CSV_CRUDO, CSV_DESCARGA, CSV_FORM):
+        if not os.path.exists(ruta):
+            fail(f"falta {ruta}: no se puede comprobar la procedencia del SUS")
+            return
+
+    # 1. La tabla publicada se vuelve a derivar de la exportacion cruda.
+    with tempfile.TemporaryDirectory() as tmp:
+        derivado = os.path.join(tmp, "derivado.csv")
+        r = subprocess.run([sys.executable, "-B", "scripts/sus-ingesta.py", CSV_CRUDO,
+                            "--salida", derivado], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace")
+        if r.returncode != 0:
+            fail(f"sus-ingesta.py no pudo releer {CSV_CRUDO}: {r.stderr.strip()[:160]}")
+        else:
+            a = leer(derivado).replace("\r\n", "\n")
+            b = leer(CSV_FORM).replace("\r\n", "\n")
+            if a != b:
+                fail(f"{CSV_FORM} no es lo que produce sus-ingesta.py desde {CSV_CRUDO}: "
+                     f"la tabla publicada no se deriva de la exportacion (rehazla con "
+                     f"python scripts/sus-ingesta.py {CSV_CRUDO})")
+            else:
+                ok(f"la tabla publicada se rederiva exacta de {os.path.basename(CSV_CRUDO)}")
+
+    # 2. Las dos exportaciones, por caminos distintos, dicen lo mismo.
+    hoja, descarga = _filas_exportacion(CSV_CRUDO), _filas_exportacion(CSV_DESCARGA)
+    if hoja is None or descarga is None:
+        fail("alguna exportacion del SUS no tiene el formato esperado (fecha, hora y 10 items)")
+    elif len(hoja) != len(descarga):
+        fail(f"las dos exportaciones no traen el mismo numero de respuestas: "
+             f"{len(hoja)} en la hoja y {len(descarga)} en la descarga directa")
+    else:
+        distintas = [i for i, (x, y) in enumerate(zip(hoja, descarga), start=1) if x != y]
+        if distintas:
+            fail(f"las dos exportaciones del formulario discrepan en la(s) fila(s) "
+                 f"{distintas}: el mismo formulario deberia dar el mismo dato")
+        else:
+            ok(f"las {len(hoja)} respuestas coinciden en las dos exportaciones "
+               f"(hoja de respuestas y descarga directa)")
+
+    # 3. La huella publicada es la del archivo: asi el evaluador, que tiene acceso de
+    #    editor al formulario, exporta por su cuenta y compara sin creerle a nadie.
+    huella = hashlib.sha256(io.open(CSV_CRUDO, "rb").read().replace(b"\r\n", b"\n")).hexdigest()
+    if huella not in leer(README_SUS):
+        fail(f"{README_SUS} no publica la huella sha256 de {os.path.basename(CSV_CRUDO)} "
+             f"({huella[:16]}...): sin ella el evaluador no puede contrastar su propia "
+             f"exportacion contra la versionada")
+    else:
+        ok(f"{os.path.basename(README_SUS)} publica la huella de la exportacion ({huella[:16]}...)")
 
 
 # ----------------------------------------------------------------- evidencia
@@ -658,6 +762,7 @@ def main():
     args = sys.argv[1:]
     comprobar_lighthouse()
     comprobar_figuras()
+    comprobar_sus_procedencia()
     comprobar_evidencia()
     comprobar_hashes()
     comprobar_sus()

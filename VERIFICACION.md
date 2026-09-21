@@ -66,6 +66,34 @@ Brooke, consentimiento de cada participante, y recálculo según Brooke.
 > informe ya reportaba la ronda del 18-sep mientras este archivo seguía recalculando las 4 hojas de
 > papel. Un verificador que comprueba una cifra distinta de la que se publica no verifica nada.
 
+> **La procedencia ahora se comprueba, no se afirma (2026-09-21).** La revisión final dejó P1 en el
+> 70 %: *«las respuestas y el recálculo cuadran, pero su procedencia se apoya en capturas y no en una
+> exportación del servidor»*. Al revisarlo apareció que el reproche era más exacto de lo que parecía: la
+> exportación **sí** estaba versionada desde el 18-sep, pero **ningún chequeo la usaba**. Todos —este
+> bloque incluido— leían la tabla ya procesada, así que una tabla escrita a mano habría pasado igual.
+>
+> Lo que se añadió a `ev2-documental.py`, y que corre dentro de `make verify`:
+>
+> | Comprueba | Cómo | Mutación |
+> |---|---|---|
+> | La tabla publicada **se rederiva** de la exportación del tercero | Reejecuta `sus-ingesta.py` sobre el CSV exportado y exige salida idéntica | **M52** |
+> | La exportación cruda no se ha retocado | La tabla deja de derivarse en cuanto se cambia una respuesta | **M53** |
+> | La huella publicada es la del archivo | `sha256` del CSV (saltos normalizados) contra el que publica el README | **M54** |
+> | Las **dos** exportaciones dicen lo mismo | Hoja de respuestas (18-sep) y descarga directa del formulario (21-sep), fila por fila | M52-M54 |
+>
+> Hay dos exportaciones del mismo formulario por caminos distintos, y coinciden en las 15 respuestas
+> (fecha, hora, consentimiento, rol y los diez ítems). La segunda se contrasta **por datos y no por
+> bytes**: el CSV que genera el formulario no sale idéntico byte a byte entre descargas —cambian
+> detalles de formato sin cambiar ninguna respuesta—, y exigir bytes iguales haría fallar al verificador
+> por cómo Google dibuja el archivo, no por lo que dice.
+>
+> **Lo que cierra y lo que no.** Cierra que las cifras publicadas (n=15, media 52,83) salen de la
+> exportación del tercero sin pasar por ninguna edición nuestra, y que cualquiera con acceso al
+> formulario puede comprobarlo por su cuenta: el evaluador ya tiene acceso de editor, y en
+> `docs/mediciones/sus/re-aplicacion/README.md` está la huella y el comando para contrastarla contra su
+> propia exportación, sin depender de ninguna captura. **No** prueba quién respondió; eso no lo cierra
+> el repositorio.
+
 **Comando:**
 <!-- ev1:run -->
 ```bash
@@ -1487,6 +1515,7 @@ reales que llevaban ahí desde antes:
 |---|---|---|
 | Lighthouse | `ev2-documental.py` | Las 6 corridas miden la URL pública (nunca `localhost`), todas la misma; el reporte, el informe y `make bench-lh` declaran esa misma; el título que lleva **dentro** la imagen dice lo mismo que el pie |
 | Figuras del informe | `ev2-documental.py` | Las tres llevan su procedencia incrustada en el PNG (título, entradas, huella de las entradas, cifras dibujadas), coincide con volver a derivarla de los datos versionados, y las dos copias de cada una son el mismo archivo |
+| Procedencia del SUS | `ev2-documental.py` | La tabla publicada se rederiva de la exportación del formulario, las dos exportaciones independientes traen el mismo dato, y la huella que publica el README es la del archivo |
 | Evidencia citada | `ev2-documental.py` | Todo archivo del repositorio que un documento vigente cita existe |
 | Hashes citados | `ev2-documental.py` | Todo hash de commit citado en un documento vigente existe, **es un commit** (no el objeto de una etiqueta) y lo alcanza alguna rama o etiqueta: lo que ve un clon limpio |
 | SUS | `ev2-documental.py` | Media, DE, IC 95 % y α publicados == recalculados del CSV; p ajustados y decisión de Holm == calculados, la frase junto al p no afirma lo contrario, y **todo `p = …` de un párrafo del SUS**, se nombre o no a Holm, es un p crudo o ajustado calculado |
@@ -1495,9 +1524,9 @@ reales que llevaban ahí desde antes:
 | Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
 | Bloques de este archivo | `ev1-verificacion.py` | Cada bloque marcado `ev1:run` reproduce su salida; la tabla coincide con el resumen |
 | Titularidad | `ev4-contribuciones.py --check` | Tramo **y** todo el historial: totales, reparto por persona, identidades sin dueño |
-| El propio verificador | `mutaciones-gate.py` | Inyecta 51 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 54 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
 
-**Resultado del arnés: 51 detectadas, 0 sobreviven** (48 sin `--nb`: las 3 de rendimiento, M13-M15, necesitan la salida del cuaderno; y **M51** se declara omitida si no hay clases compiladas, porque entonces el bloque que la mata tampoco corre — una mutación que nadie mira no es una que sobrevive, pero tampoco una detectada). Cubre las seis del evaluador, más: fracción
+**Resultado del arnés: 54 detectadas, 0 sobreviven** (51 sin `--nb`: las 3 de rendimiento, M13-M15, necesitan la salida del cuaderno; y **M51** se declara omitida si no hay clases compiladas, porque entonces el bloque que la mata tampoco corre — una mutación que nadie mira no es una que sobrevive, pero tampoco una detectada). Cubre las seis del evaluador, más: fracción
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
 

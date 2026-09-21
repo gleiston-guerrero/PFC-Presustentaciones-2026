@@ -149,6 +149,42 @@ El script valida que cada ítem esté entre 1 y 5, recalcula el puntaje con la f
 versiona, y emite el CSV derivado más la media, la desviación y el IC del 95 %. No inventa ninguna
 fecha: la que reporta es la que trae el archivo del tercero.
 
+## Cómo comprobar la procedencia sin creerle a nadie (2026-09-21)
+
+La revisión del 21-sep dejó P1 en el 70 % porque *«la procedencia se apoya en capturas y no en una
+exportación del servidor»*. La exportación estaba versionada desde el 18-sep, pero nada ataba las cifras
+publicadas a ella. Ahora hay dos exportaciones del mismo formulario, por caminos distintos, y `make verify`
+comprueba que la tabla publicada sale de ellas.
+
+| Archivo | Cómo se obtuvo | sha256 |
+|---|---|---|
+| `respuestas-formulario-2026-09-18.csv` | Hoja de respuestas → Archivo → Descargar → CSV | `bf1cf916f52a6ec3c7b3bfc02b4767529534a1f4216cfed563e594cbdcef31ec` (saltos normalizados a LF) |
+| `respuestas-descarga-formulario-2026-09-21.csv` | Formulario → Respuestas → ⋮ → Descargar respuestas (.csv) | se contrasta por **datos**, no por bytes (ver abajo) |
+
+**Quien tenga acceso al formulario puede comprobarlo por su cuenta**, que es el punto: el evaluador ya
+tiene acceso de editor (`evidencia/acceso-editor-concedido-gguerrero.png`). Basta con exportar la hoja de
+respuestas y comparar la huella con la de la primera fila:
+
+```bash
+python -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read().replace(b'\r\n',b'\n')).hexdigest())" <su-descarga>.csv
+```
+
+Se normalizan los saltos de línea antes de la huella porque Windows y Git los reescriben al sacar el
+archivo, y eso cambiaría el hash sin cambiar un solo dato. Google entrega el CSV con saltos CRLF: si se
+le calcula la huella tal cual se descarga, sin normalizar, da
+`4d1aa7c88842e1e605fc4f9cba2d0b6bda1f16ffe5a35cb9107a91dba956fbb1`, que es también la del archivo
+versionado en un árbol de trabajo de Windows.
+
+La segunda exportación se contrasta **por datos y no por bytes** a propósito: el CSV que genera el
+formulario no sale idéntico byte a byte entre descargas —cambia detalles de formato sin cambiar ninguna
+respuesta—, así que exigir bytes iguales haría fallar al verificador por cómo Google dibuja el archivo y
+no por lo que dice. Lo que se compara es fecha, hora, consentimiento, rol y los diez ítems de las quince
+respuestas, que coinciden en las dos.
+
+**Lo que esto prueba y lo que no.** Prueba que las cifras publicadas (n=15, media 52,83) salen de la
+exportación del tercero sin pasar por ninguna edición nuestra, y que dos caminos de exportación
+independientes traen el mismo dato. No prueba quién respondió: eso no lo puede cerrar el repositorio.
+
 ## Qué se versiona, y qué no
 
 | Archivo | Se versiona | Se edita a mano |

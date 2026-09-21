@@ -48,6 +48,11 @@ EV1 = ("ev1-verificacion", [PY, "scripts/ev1-verificacion.py", "--rapido"])
 # cifra: con --rapido el bloque se salta y la mutacion sobreviviria por no mirarla.
 EV1_LENTO = ("ev1-verificacion-lento", [PY, "scripts/ev1-verificacion.py"])
 CLASES = "backend/target/classes"
+
+SUS_DIR = "docs/mediciones/sus/re-aplicacion/"
+CSV_SUS_TABLA = SUS_DIR + "sus-respuestas-formulario.csv"      # la tabla publicada
+CSV_SUS_CRUDO = SUS_DIR + "respuestas-formulario-2026-09-18.csv"   # la exportacion del tercero
+README_SUS = SUS_DIR + "README.md"
 EV4 = ("ev4-contribuciones", [PY, "scripts/ev4-contribuciones.py", "--check"])
 P4T = ("p4-tests-espanol", [PY, "scripts/p4-tests-espanol.py"])
 P4N = ("p4-nombres-espanol", [PY, "scripts/p4-nombres-espanol.py"])
@@ -164,6 +169,14 @@ MUTACIONES = [
      (FIG, FIG_DOCS), REGEN, ("(despliegue publico real)", "(build de produccion)"), [DOC], False),
     ("M51", "5: la cifra de bytecode publicada deja de ser la que imprime javap (4.2% -> 4.9%)",
      "VERIFICACION.md", "82/1939  (  4.2%)", "82/1939  (  4.9%)", [EV1_LENTO], False),
+    ("M52", "P1: la tabla del SUS se edita a mano y deja de salir de la exportacion del formulario",
+     CSV_SUS_TABLA, "1,Estudiante,No,18/09/2026 11:36:04,si,4,3,4,3,4,5,3,5,3,5,42.5",
+     "1,Estudiante,No,18/09/2026 11:36:04,si,5,3,4,3,4,5,3,5,3,5,42.5", [DOC], False),
+    ("M53", "P1: se retoca una respuesta en la exportacion cruda, que es la evidencia del tercero",
+     CSV_SUS_CRUDO, ",Estudiante,No,4,3,4,3,4,5,3,5,3,5", ",Estudiante,No,5,3,4,3,4,5,3,5,3,5",
+     [DOC], False),
+    ("M54", "P1: la huella publicada de la exportacion deja de ser la del archivo",
+     README_SUS, "bf1cf916f52a6ec3", "bf1cf916f52a6ec4", [DOC], False),
     ("M37", "5b: se retira el @PreAuthorize de un GET que devuelve todas las tutorias", CTRLDIR + "TutorController.java",
      '    @GetMapping\n    @PreAuthorize("@permissionService.hasPermission(authentication, \'TRIBUNAL_TUTOR_ASIGNAR\')")\n    public ResponseEntity<Page<Tutor>> list(',
      '    @GetMapping\n    public ResponseEntity<Page<Tutor>> list(', [AUTZ], False),
