@@ -230,6 +230,18 @@ falso — el commit que la guía revisó (`f3d1ff4`, 13-sep) es anterior al comm
 (`2b9ba89`, 15-sep), verificado con `git merge-base --is-ancestor`. Corregido en el informe y en
 `OBSERVACIONES.md` (OBS-28).
 
+### Cómo reproducir la suite (y por qué un `./mvnw test` a secas falla)
+
+Las pruebas de integración usan PostgreSQL y Redis reales, así que **necesitan Docker levantado** y las credenciales
+de `.env`. Lo más corto es `make test` o `make verify`, que las cargan solos. Con Maven directo hay que exportar
+`DB_USERNAME` y `DB_PASSWORD` antes de `./mvnw clean test`: sin ellos caen a los valores por defecto de
+`application.properties`, que no coinciden con la base que crea Docker Compose, y fallan las pruebas que tocan la
+base con un error de autenticación (15 de 823 en una corrida de comprobación), sin que sea un defecto del código.
+Además la versión de Lombok del proyecto **no es compatible con JDK 25** (el evaluador lo comprobó en su máquina);
+se desarrolla y se mide con JDK 21. Sin Docker, `make verify-rapido` corre todo lo
+que no lo necesita y deja lo demás en `[WARN]`, no verificado. Las dos mutaciones que solo mata la suite contra
+Postgres real no se pueden demostrar sin Docker; no es una omisión del arnés sino su límite.
+
 ### Revisión final del 2026-09-19: 809 pruebas anotadas, 806 ejecutadas
 
 **Lo que se señaló:** *«Explicar la brecha entre los 809 `@Test` que cuenta el AST y las 806 pruebas de la

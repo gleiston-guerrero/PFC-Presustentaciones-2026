@@ -147,6 +147,10 @@ defecto real, no corregido retroactivamente. La identidad institucional `jalavaa
 en el repositorio antes de esta ronda (identidad `jalavaa-dev`, ver la tabla histórica más abajo), así
 que la correspondencia persona↔identidad es verificable con `git shortlog -sne --all`.
 
+**Por qué ocurrió (declarado por el autor de esos commits):** se trabajó con la cuenta personal porque todavía no
+estaba claro que los commits debían salir con la cuenta institucional. Es la misma persona en las dos
+identidades; no hay otra autoría detrás del correo personal.
+
 ## Titularidad por punto
 
 Salida literal de `python scripts/ev4-contribuciones.py`:
