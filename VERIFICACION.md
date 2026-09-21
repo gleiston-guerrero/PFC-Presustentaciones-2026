@@ -1437,7 +1437,7 @@ reales que llevaban ahí desde antes:
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
 
-**Tres cierres de la revisión final (punto 5, 2026-09-20).** La revisión reportó que sobrevivían cuatro mutaciones y
+**Tres cierres de la revisión final (punto 5, 2026-09-20) y uno posterior.** La revisión reportó que sobrevivían cuatro mutaciones y
 una anomalía menor; se atendieron así:
 
 - **5a — p crudo citado en prosa suelta: era la ceguera real, y se cerró.** El verificador comprobaba los p ajustados
@@ -1446,15 +1446,20 @@ una anomalía menor; se atendieron así:
   calcula `sus-estadistica.py`. Mutación **M40** (el p crudo de Welch, de 0,608 a 0,008, en `SUS-RESULTS.md`): detectada; y se comprobó
   que con el detector anterior (`git show HEAD:scripts/ev2-documental.py`) esa misma mutación **sobrevivía** (sale 0).
 - **5b — un `GET` sin autorización:** ver P8; era además un hueco del producto, no solo del verificador.
-- **5c — «editando solo `SUS-RESULTS.md` apareció un fallo de credenciales en claro»: no se pudo reproducir.** Se
-  aplicaron a `SUS-RESULTS.md` las cuatro mutaciones que lo tocan (M07, M09, M12 y M40) y tras cada una se corrió
-  `scripts/ev2-credenciales.py`: **`[OK]` las cuatro veces**. El detector solo mira lo que `git ls-files` rastrea y
-  hoy solo encuentra dos coincidencias, ambas en `VERIFICACION.md` y ambas de la lista explícita `CITADAS`; en
-  `SUS-RESULTS.md` no encuentra ninguna. No se cambió el detector: **no se inventa un arreglo para un fallo que no se ve**.
-  La hipótesis menos improbable es que la revisión corrió dos verificaciones a la vez sobre el mismo árbol
-  mientras una de ellas tenía `VERIFICACION.md` a medio restaurar (la lista `CITADAS` está indexada por archivo y valor);
-  es una hipótesis, no un hallazgo. Si el evaluador conserva la salida exacta, con el comando y el archivo modificado
-  se reproduce en un minuto.
+- **5c — el detector de credenciales se disparaba con prosa: primero se dijo «no se reproduce», y era un error de esa
+  respuesta.** La primera vez se probaron cuatro ediciones de `SUS-RESULTS.md` (M07, M09, M12, M40), ninguna con la
+  palabra «clave», y se concluyó que no había nada que arreglar. La revisión siguiente lo precisó: *«la palabra
+  española "clave" dispara un falso positivo en cualquier prosa. Menor y no tocado»*. Tenía razón. `ev2-credenciales.py`
+  marcaba `la clave: 823pruebas`, `clave: p=0.608/0.220` y `Contraseña: 2026-09-20`, así que añadir una frase así a un
+  `.md` o `.tex` bastaba para que `make verify` saliera 1 con «credenciales en claro». Reproducido sobre el archivo
+  real: se añadió una frase con «clave» a `SUS-RESULTS.md` y el detector de antes salía **1**; el nuevo sale **0**.
+  Arreglo: las claves en español (`clave`, `contraseña`) solo cuentan en archivos de código o configuración, o en prosa
+  con el valor **entrecomillado** (un ejemplo literal, no una frase); las claves en inglés (`password`, `secret`) cuentan
+  en todas partes, porque el hallazgo original estaba en un `.md`; y una fecha o una cifra con separadores nunca es una
+  contraseña. `python scripts/ev2-credenciales.py --autoprueba` fija 13 casos en los dos sentidos y corre dentro de
+  `make verify`. Mutaciones: **M41** (se desactiva el filtro de prosa) y **M42** (se reescribe una contraseña literal en
+  `backend/INSTRUCCIONES.md`), las dos detectadas. Límite: un valor de solo dígitos sin separadores (`12345678`) sigue
+  contando como contraseña posible; la regla no lo exime a propósito.
 
 **Límites, dichos sin adornos:**
 
