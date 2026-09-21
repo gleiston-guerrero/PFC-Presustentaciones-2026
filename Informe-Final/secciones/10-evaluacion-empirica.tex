@@ -429,7 +429,7 @@ ejercitar) y \texttt{BackupController} (40 líneas) eran los que más pesaban si
 dedicado. Se agregaron \texttt{AppUserControllerTest} (23 pruebas, cubre el control de propiedad real vía
 \texttt{esAppUserActual}/\texttt{esAppUserActualOAdmin}, no sólo el permiso \texttt{USUARIOS\_GESTIONAR})
 y \texttt{BackupControllerTest} (19 pruebas, los 17 endpoints protegidos por \texttt{BACKUPS\_GESTIONAR}
-a nivel de clase), llegando a \textbf{79.01\,\% de líneas (990/1,253) y 80.34\,\% de ramas (286/356)} ---
+a nivel de clase), llegando el 2026-09-13 a \textbf{79.01\,\% de líneas (990/1,253) y 80.34\,\% de ramas (286/356)} ---
 con margen real sobre el umbral de 70\,\% en vez de al filo.
 
 El umbral del 70\,\% aplica también de forma \emph{global} (líneas y ramas, no solo en controladores);
@@ -441,7 +441,7 @@ vez de adivinarlas a mano), \texttt{BackupService} y \texttt{WalPitrService} (16
 la lógica de respaldos y WAL más grande del backend sin ningún test), \texttt{BackupScheduler} (30
 ramas), y \texttt{JwtTokenProvider} (36.8\,\% de ramas: la lógica de refresh tokens y blacklist en Redis
 no tenía ningún test, cubierta ahora con un \texttt{StringRedisTemplate} simulado, incluido el camino
-fail-closed de RNF-04 cuando Redis no responde). Esa primera pasada dejó 71.90\,\% de ramas --- por
+fail-closed de RNF-04 cuando Redis no responde). Esa primera pasada (entre el 13-09 y el 15-09) dejó 71.90\,\% de ramas --- por
 encima del umbral pero al filo para el gusto del equipo, así que se hizo una segunda pasada sobre lo
 que quedaba: \texttt{StatusLiveController} y \texttt{ProposalController} (0\,\% cada uno,
 sin ningún test), y \texttt{EmailService}/\texttt{AuditService} (0\,\% cada uno). Resultado:

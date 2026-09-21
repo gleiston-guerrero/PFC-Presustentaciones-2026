@@ -186,7 +186,7 @@ LINE: 4017/4897 (82.03%)
 Versionada en [`docs/mediciones/jacoco/2026-09-18-corrida-limpia-reproduccion/`](docs/mediciones/jacoco/2026-09-18-corrida-limpia-reproduccion/).
 **Cifra por cifra idéntica** a la del 17-sep: la cobertura reportada no depende de qué corrida se haya
 versionado. El valor de ramas coincide además, al dígito, con el que el propio ingeniero calculó sumando
-los contadores del XML (1483/2018 = 73,49 %).
+los contadores del XML (1483/2018 = 73,49 %, corrida del 2026-09-17).
 
 **Corrida de cierre definitiva (2026-09-20, la que se publica, tras la revisión final):**
 ```
@@ -223,7 +223,7 @@ como snapshot anterior, pero la cifra que aplica ahora sale de una corrida limpi
 `test` de `backend/pom.xml`, la misma fase que corre `./mvnw test` en CI: el build ahora falla de verdad
 si la cobertura cae del umbral; (3) **verificado con precisión exacta, no corregido** — sin los métodos
 `equals`/`hashCode` de Lombok (concentrados en `security/dto/*`, un paquete que la exclusión de JaCoCo
-no cubre), la cobertura de ramas baja de 73.49% a **71.09%** (2.40 puntos de diferencia, coincide con la
+no cubre), la cobertura de ramas (corrida del 2026-09-17) baja de 73.49% a **71.09%** (2.40 puntos de diferencia, coincide con la
 cifra del ing) — sigue pasando el umbral, con margen más ajustado. **Corrección adicional real:** el
 párrafo del informe que decía "el 82.10% ya estaba ahí cuando se escribió la guía" era cronológicamente
 falso — el commit que la guía revisó (`f3d1ff4`, 13-sep) es anterior al commit que agregó esa cifra
@@ -244,8 +244,8 @@ Postgres real no se pueden demostrar sin Docker; no es una omisión del arnés s
 
 ### Revisión final del 2026-09-19: 809 pruebas anotadas, 806 ejecutadas
 
-**Lo que se señaló:** *«Explicar la brecha entre los 809 `@Test` que cuenta el AST y las 806 pruebas de la
-corrida de cierre.»*
+**Lo que se señaló:** *«Explicar la brecha entre los 809 `@Test` que cuenta el AST y las 806 pruebas»* (revisión del 2026-09-19; era la suite de entonces, no la de hoy, que tiene 823 pruebas)
+*«de la corrida de cierre.»*
 
 **Verificado: no era un desajuste de conteo, era un defecto.** Comparando, clase por clase, los métodos
 `@Test` del código fuente con los casos que Surefire ejecutó, faltaban exactamente tres, los tres en
@@ -258,8 +258,8 @@ pruebas que no corren es una cifra que miente, aunque nadie la hubiera inventado
 
 **Qué se hizo:**
 
-- Las tres pasaron a su propio archivo, `RegisterPasswordPolicyIntegrationTest`, y **ahora se ejecutan**:
-  **806 → 809 pruebas, 0 fallos, 0 errores**. Se corrió la suite completa contra PostgreSQL y Redis reales.
+- Las tres pasaron a su propio archivo, `RegisterPasswordPolicyIntegrationTest`, y **desde esa revisión se ejecutan**:
+  **806 → 809 pruebas, 0 fallos, 0 errores** (2026-09-19). Se corrió la suite completa contra PostgreSQL y Redis reales.
 - Como nunca se habían ejecutado, no había garantía de que **pudieran** fallar. Se comprobó por mutación: al
   desactivar en `PasswordPolicyValidator` el rechazo de contraseñas comunes, la primera de las tres se cae.
 - **La cobertura no se movió** (LINE 4022/4904, BRANCH 1483/2018): el endpoint de registro ya lo ejercitaban otras
@@ -1456,6 +1456,22 @@ una anomalía menor; se atendieron así:
   saltan las líneas de md5/sha256, cuyos 8 caracteres hexadecimales no son de un commit). Mutaciones **M43** (el hash
   del objeto de etiqueta, el caso real) y **M44** (un hash inventado), las dos detectadas. Con la regla puesta, el único
   hallazgo de todo el repositorio fue ese hash. (Aquí se cita truncado a propósito: completo, el detector marcaría esta misma explicación.)
+- **Comparador de cifras que admitía «la cifra de ayer» (revisión de 2026-09-21).** El evaluador cambió `823` por `809`
+  en un documento vigente y `cifras-publicadas.py` **pasó en verde**; con `860` sí fallaba. Lo reproduje en
+  `08-diseno-arquitectura.tex` y en `13-trabajo-futuro.tex`. La causa: una cifra que el expediente registró alguna
+  vez se aceptaba si el *bloque entero* llevaba una fecha en cualquier sitio, aunque estuviera lejos del número. Ahora
+  la procedencia tiene que estar **junto a la cifra** (300 caracteres), y hay una segunda regla: una cifra fechada
+  con la **fecha de la corrida de cierre vigente** (la más reciente que registra su `RESUMEN.md`) tiene que ser la de
+  cierre; la fecha pegada no ampara un dato falso sobre la corrida vigente. Al endurecerlo, 13 pasajes históricos
+  legítimos (cifras de corridas de septiembre narradas en el informe y en este archivo) quedaron sin fecha junto a la
+  cifra; se les puso, con datos comprobados en las carpetas de corridas, en vez de aflojar la regla. Mutaciones
+  **M45** (la del evaluador), **M46** (cifra vencida junto a la fecha de cierre) y **M47** (`hoy 82.13 %` cambiado a
+  `hoy 82.01 %`, con una fecha vieja de otra cifra al lado): las tres detectadas, y las tres **pasaban en verde** con el
+  comparador anterior (comprobado con `git show HEAD:scripts/cifras-publicadas.py`). M47 destapó un hueco que el
+  evaluador no había nombrado: una fecha cercana amparaba también las afirmaciones en presente («hoy…»); ahora una cifra
+  precedida de «hoy», «actualmente» o «ahora» tiene que ser la de cierre, sin excusa de fecha. Límite, dicho sin adornos: quien escriba una
+  cifra vieja **con una fecha vieja verídica al lado** la hace pasar; eso es historia narrada, y el comparador no puede
+  distinguirla de la que sí lo es, pero ya no puede hacerlo sin escribir una fecha que se ve.
 - **5b — un `GET` sin autorización:** ver P8; era además un hueco del producto, no solo del verificador.
 - **5c — el detector de credenciales se disparaba con prosa: primero se dijo «no se reproduce», y era un error de esa
   respuesta.** La primera vez se probaron cuatro ediciones de `SUS-RESULTS.md` (M07, M09, M12, M40), ninguna con la

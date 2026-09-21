@@ -97,6 +97,14 @@ RE_VIGENTE = re.compile(
     r"|la que aplica|cifra de cierre vigente|badge|shields\.io",
     re.I)
 
+# Marcas de tiempo presente ("hoy 82.13 %", "actualmente 823 pruebas"): una cifra que las lleva justo
+# delante afirma ser la de AHORA, y una fecha cercana (de otra cifra del mismo parrafo, como el
+# "63.17 % en el cierre del 2026-09-05, hoy 82.13 %") no puede ampararla.
+RE_ACTUAL = re.compile(r"\b(?:hoy|actualmente|ahora|actual(?:es)?|today|currently|now)\b", re.I)
+
+# Distancia (en caracteres) a la que la procedencia cuenta como "junto a la cifra".
+CERCA = 300
+
 RE_TITULO_MD = re.compile(r"^#{1,6}\s")
 RE_TITULO_TEX = re.compile(r"^\\(?:sub)*section\*?\{")
 
@@ -118,6 +126,21 @@ def canonica():
         if m:
             pruebas = m.group(1)
     return cob, pruebas
+
+
+def fecha_de_cierre():
+    """La fecha MAS RECIENTE que el resumen de la corrida canonica registra.
+
+    Una cifra fechada con ESA fecha afirma ser la de la corrida de cierre, y entonces tiene
+    que serlo: "JaCoCo, 2026-09-20, 809 tests" lleva fecha y procedencia, pero contradice la
+    corrida de cierre (que da otra cifra). La fecha adjunta no puede amparar un dato falso
+    sobre la corrida vigente. Las fechas anteriores no cuentan: el mismo dia pudo haber mas
+    de una corrida o cifras de cierre superadas, y esas SI son historia legitima.
+    """
+    if not os.path.isfile(RESUMEN):
+        return None
+    fechas = re.findall(r"\d{4}-\d{2}-\d{2}", io.open(RESUMEN, encoding="utf-8").read())
+    return max(fechas) if fechas else None
 
 
 def vigente(ruta):
@@ -257,6 +280,7 @@ def revisar(archivos, cob, pruebas):
     validos = {linea_pct, rama_pct}
 
     pct_conocidos, cnt_conocidos = conocidos()
+    f_cierre = fecha_de_cierre()
     malas, conteos = [], []
     for f in archivos:
         try:
@@ -276,17 +300,17 @@ def revisar(archivos, cob, pruebas):
                     continue
                 if val in validos:
                     continue
-                # Si el texto dice que es la cifra vigente, la fecha no la salva.
+                # Una cifra que el expediente registro alguna vez (de una corrida vieja)
+                # solo se acepta si dice de que corrida es JUNTO a la cifra. Antes bastaba
+                # con que el bloque entero llevara una fecha, en cualquier sitio: revertir un
+                # documento vigente a una cifra caduca pero un dia cierta pasaba en verde
+                # (revision final, 2026-09-21). Se mira el entorno inmediato de ESA cifra.
                 if val in pct_conocidos:
-                    if tiene_fecha and not RE_VIGENTE.search(ctx):
-                        continue
-                    # Un parrafo que declara la cifra de cierre y ademas narra las
-                    # corridas anteriores (como el de cobertura del informe) no puede
-                    # eximirlas a todas por llevar una fecha: se mira el entorno
-                    # inmediato de ESA cifra.
-                    cerca = bloque[max(0, m.start() - 200): m.end() + 200]
+                    cerca = bloque[max(0, m.start() - CERCA): m.end() + CERCA]
                     pegado = bloque[max(0, m.start() - 80): m.end() + 80]
-                    if RE_PROCEDENCIA.search(cerca) and not RE_VIGENTE.search(pegado):
+                    if (RE_PROCEDENCIA.search(cerca) and not RE_VIGENTE.search(pegado)
+                            and not (f_cierre and f_cierre in pegado)
+                            and not RE_ACTUAL.search(bloque[max(0, m.start() - 40): m.start()])):
                         continue
                 malas.append((rel, val + " %", " ".join(ctx.split())[:140]))
             if pruebas:
@@ -297,14 +321,16 @@ def revisar(archivos, cob, pruebas):
                     # de ese orden de magnitud: 140 o 106 son las pruebas de un modulo.
                     if not 500 <= int(m.group(1)) <= 1200:
                         continue
-                    if tiene_fecha and m.group(1) in cnt_conocidos:
-                        continue
-                    # Un conteo historico que ningun archivo registra (el de una
-                    # corrida vieja) se acepta si dice de que dia es JUNTO a la cifra.
-                    # Una fecha en algun otro punto del bloque no basta: es como se
-                    # colaba "860 pruebas" en una tabla que ademas hablaba del 18-sep.
-                    cerca = bloque[max(0, m.start() - 120): m.end() + 120]
-                    if RE_PROCEDENCIA.search(cerca) and not RE_VIGENTE.search(cerca):
+                    # Un conteo historico, lo registre o no algun archivo, se acepta si dice
+                    # de que dia es JUNTO a la cifra. Una fecha en algun otro punto del
+                    # bloque no basta: es como se colaba "860 pruebas" en una tabla que
+                    # ademas hablaba del 18-sep, y como pasaba "809" por "823" en un
+                    # parrafo fechado mas arriba.
+                    cerca = bloque[max(0, m.start() - CERCA): m.end() + CERCA]
+                    pegado = bloque[max(0, m.start() - 80): m.end() + 80]
+                    if (RE_PROCEDENCIA.search(cerca) and not RE_VIGENTE.search(pegado)
+                            and not (f_cierre and f_cierre in pegado)
+                            and not RE_ACTUAL.search(bloque[max(0, m.start() - 40): m.start()])):
                         continue
                     conteos.append(
                         (rel, m.group(1) + " pruebas", " ".join(ctx.split())[:140]))
