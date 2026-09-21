@@ -1465,8 +1465,8 @@ una anomalía menor; se atendieron así:
   cierre; la fecha pegada no ampara un dato falso sobre la corrida vigente. Al endurecerlo, 13 pasajes históricos
   legítimos (cifras de corridas de septiembre narradas en el informe y en este archivo) quedaron sin fecha junto a la
   cifra; se les puso, con datos comprobados en las carpetas de corridas, en vez de aflojar la regla. Mutaciones
-  **M45** (la del evaluador), **M46** (cifra vencida junto a la fecha de cierre) y **M47** (`hoy 82.13 %` cambiado a
-  `hoy 82.01 %`, con una fecha vieja de otra cifra al lado): las tres detectadas, y las tres **pasaban en verde** con el
+  **M45** (la del evaluador), **M46** (cifra vencida junto a la fecha de cierre) y **M47** (el «hoy» del informe, cambiado a la
+  cobertura de ayer, con una fecha vieja de otra cifra al lado): las tres detectadas, y las tres **pasaban en verde** con el
   comparador anterior (comprobado con `git show HEAD:scripts/cifras-publicadas.py`). M47 destapó un hueco que el
   evaluador no había nombrado: una fecha cercana amparaba también las afirmaciones en presente («hoy…»); ahora una cifra
   precedida de «hoy», «actualmente» o «ahora» tiene que ser la de cierre, sin excusa de fecha. Límite, dicho sin adornos: quien escriba una
