@@ -48,6 +48,8 @@ P4T = ("p4-tests-espanol", [PY, "scripts/p4-tests-espanol.py"])
 P4N = ("p4-nombres-espanol", [PY, "scripts/p4-nombres-espanol.py"])
 P2E = ("p2-pruebas-ejecutadas", [PY, "scripts/p2-pruebas-ejecutadas.py"])
 P3 = ("p3-param-tautologicos", [PY, "scripts/p3-param-tautologicos.py"])
+CRED = ("ev2-credenciales", [PY, "scripts/ev2-credenciales.py"])
+CREDA = ("ev2-credenciales-autoprueba", [PY, "scripts/ev2-credenciales.py", "--autoprueba"])
 SCHED = "backend/src/main/java/ec/edu/uteq/presustentaciones/repositories/ScheduleRepository.java"
 
 JSON_LH = "docs/mediciones/perf/lighthouse/prod-runs/desktop-run1.json"
@@ -153,6 +155,11 @@ MUTACIONES = [
      "        return scheduleService.listByAppUser(id);", [AUTZ], False),
     ("M40", "5a: un p crudo de Welch tecleado a mano en prosa (0,608 -> 0,008), sin la palabra Holm", SUSR,
      "**t = 0,519, p = 0,608**", "**t = 0,519, p = 0,008**", [DOC], False),
+    ("M41", "5c: el detector de credenciales vuelve a disparar con la palabra 'clave' en prosa", "scripts/ev2-credenciales.py",
+     '        if en_prosa and m.group(1).lower() in CLAVES_ESPANOLAS and not m.group("entre"):',
+     "        if False:", [CREDA], False),
+    ("M42", "5c: una contrasena literal vuelve a escribirse en backend/INSTRUCCIONES.md", "backend/INSTRUCCIONES.md",
+     "spring.datasource.password=${DB_PASSWORD}", "spring.datasource.password=postgreAdmin19", [CRED], False),
     ("M22", "se retira el @PreAuthorize de un endpoint de escritura (POST)", CTRL,
      '    @PreAuthorize("' + PERM + '")\n    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")',
      '    @Operation(summary = "Crear nuevo usuario (solo ADMIN)")', [AUTZ], False),
@@ -183,7 +190,7 @@ def main():
     solo = set(args[args.index("--solo") + 1].split(",")) if "--solo" in args else None
 
     print("Linea base: los detectores tienen que pasar SIN mutar")
-    for d in (CIFRAS, DOC, AUTZ, SPEL, P3, P4T, P4N, P2E, EV1, EV4, ETIQ):
+    for d in (CIFRAS, DOC, AUTZ, SPEL, P3, P4T, P4N, P2E, CRED, CREDA, EV1, EV4, ETIQ):
         rc = correr(d, nb)
         print(f"  [{'OK  ' if rc == 0 else 'FAIL'}] {d[0]}")
         if rc != 0 and d is not ETIQ:

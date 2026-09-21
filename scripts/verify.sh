@@ -493,6 +493,13 @@ if PYTHONIOENCODING=utf-8 python scripts/ev2-credenciales.py; then
 else
   fail "Seguridad: hay credenciales en claro en archivos versionados -- ver arriba"
 fi
+# El detector no puede dispararse con prosa: 'clave'/'contrasena' son palabras comunes del espanol
+# (revision final, 2026-09-21). Esta tabla de casos lo fija en los dos sentidos.
+if PYTHONIOENCODING=utf-8 python scripts/ev2-credenciales.py --autoprueba >/dev/null; then
+  ok "Seguridad: el detector de credenciales no dispara con prosa y si con credenciales reales (autoprueba)"
+else
+  fail "Seguridad: la autoprueba del detector de credenciales falla -- python scripts/ev2-credenciales.py --autoprueba"
+fi
 if PYTHONIOENCODING=utf-8 python scripts/ev4-contribuciones.py --check; then
   ok "EV-4: CONTRIBUCIONES.md cuadra con el historial"
 else
