@@ -35,7 +35,7 @@ que comprueba que cada bloque marcado `<!-- ev1:run -->` reproduce literalmente 
 | P6 | ✅ Cumple | `\label{tab:holm-bonferroni}` presente y citado con `\ref` en `10-evaluacion-empirica.tex:85` |
 | P7 | ✅ Cumple | **18 pruebas del chatbot, 0 fallos**, y la de integración usa el servicio **real**: se retiró el `@MockBean ChatbotService` que la revisión del 18-sep señaló. Verificado por mutación (romper el servicio hace fallar la prueba) |
 | P8 | ✅ Cumple | 102 endpoints de escritura; los 5 sin anotación son los exentos de pre-login (`login`, `refresh`, `logout`, `recuperar`, `reset`). **Desde la revisión final también los 111 GET**: los 28 que quedan sin `@PreAuthorize` validan el acceso, delegan en un servicio que lo valida (comprobado) o son catálogos; 9 métodos sin guarda eran huecos reales y se cerraron |
-| P9 | ✅ Cumple | Tag `v1.1.0` **sobre el commit de cierre** (desfase 0) y **v1.1.0 archivada en Zenodo tres veces**: el snapshot vigente es el del 2026-09-21, DOI `10.5281/zenodo.22865913`, commit `6515713` (el primero, del 19-sep, `10.5281/zenodo.22839517`, y el segundo, del 20-sep, `10.5281/zenodo.22854267`, quedaron superados). `make verify` comprueba que el tag no se adelante al snapshot con nada que no sea el registro del DOI |
+| P9 | ✅ Cumple | Tag `v1.1.0` **sobre el commit de cierre** (desfase 0) y **v1.1.0 archivada en Zenodo cuatro veces**: el snapshot vigente es el del 2026-09-21, DOI `10.5281/zenodo.22883939`, commit `37e6006` (los tres anteriores —`22839517` del 19-sep, `22854267` del 20-sep y `22865913` del 21-sep— quedaron superados, cada uno por la corrección que no contenía). `make verify` comprueba que el tag no se adelante al snapshot con nada que no sea el registro del DOI |
 | P10 | ✅ Cumple | Portada: 32 líneas, 0 referencias DOI, 0 notas de proceso, URL del repositorio presente |
 | P11 | ✅ Cumple | 31 controladores, 10 rutinas SQL distintas, cero clases con nombre pre-P4 en el informe activo |
 | P12 | 🟡 Parcial | Ningún commit vacío nuevo desde `f3d1ff4`; la conversación con el docente sigue sin ocurrir |
@@ -1207,8 +1207,9 @@ etiqueta sea anotada y esté en `HEAD`.)
 | | |
 |---|---|
 | Tag `v1.1.0` | Sobre el commit de cierre, **desfase 0** respecto de `HEAD` al etiquetar |
-| DOI de esta versión | [`10.5281/zenodo.22865913`](https://doi.org/10.5281/zenodo.22865913) (2026-09-21) |
-| Commit archivado | `6515713`; el tag se movió después solo para registrar este DOI |
+| DOI de esta versión | [`10.5281/zenodo.22883939`](https://doi.org/10.5281/zenodo.22883939) (2026-09-21) |
+| Commit archivado | `37e6006`; el tag se movió después solo para registrar este DOI |
+| Tercer snapshot (superado) | `10.5281/zenodo.22865913`, commit `6515713`, 2026-09-21 |
 | Segundo snapshot (superado) | `10.5281/zenodo.22854267`, commit `a60ae4c`, 2026-09-20 |
 | Primer snapshot (superado) | `10.5281/zenodo.22839517`, commit `35d8199`, 2026-09-19 |
 | Cadena de versiones | `v1.0.0 → v1.0.1 → v1.1.0` bajo el DOI de concepto `10.5281/zenodo.21988563` |

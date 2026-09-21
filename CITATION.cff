@@ -41,8 +41,11 @@ identifiers:
     value: "10.5281/zenodo.21988563"
     description: "DOI de concepto: resuelve siempre a la version mas reciente publicada"
   - type: doi
-    value: "10.5281/zenodo.22865913"
+    value: "10.5281/zenodo.22883939"
     description: "Snapshot de la version v1.1.0, contenido final (2026-09-21)"
+  - type: doi
+    value: "10.5281/zenodo.22865913"
+    description: "Tercer snapshot de v1.1.0 (2026-09-21), superado por el anterior"
   - type: doi
     value: "10.5281/zenodo.22854267"
     description: "Segundo snapshot de v1.1.0 (2026-09-20), superado por el anterior"
@@ -55,7 +58,8 @@ identifiers:
   - type: doi
     value: "10.5281/zenodo.21988564"
     description: "Snapshot de la version v1.0.0 (2026-08-17)"
-# v1.1.0 ARCHIVADA por tercera vez el 2026-09-21 en 10.5281/zenodo.22865913 (la primera, del 2026-09-19,
+# v1.1.0 ARCHIVADA por cuarta vez el 2026-09-21 en 10.5281/zenodo.22883939 (la tercera, del mismo dia,
+# esta en 10.5281/zenodo.22865913; la primera, del 2026-09-19,
 # esta en 10.5281/zenodo.22839517 y la segunda, del 2026-09-20, en 10.5281/zenodo.22854267; ambas superadas). Hasta el 19-sep este archivo
 # declaraba que aun no tenia snapshot propio, en vez de fabricar un DOI que nadie pudiera
 # verificar; ahora existe y se cita. El snapshot vigente corresponde al commit 6515713,
