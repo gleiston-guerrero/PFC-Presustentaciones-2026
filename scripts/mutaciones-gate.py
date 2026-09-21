@@ -43,6 +43,11 @@ AUTZ = ("audit-endpoints-autorizacion",
 SPEL = ("p8-spel-vivo", [PY, "scripts/p8-spel-vivo.py"])
 ETIQ = ("p9-etiqueta", [PY, "scripts/p9-etiqueta.py"])
 EV1 = ("ev1-verificacion", [PY, "scripts/ev1-verificacion.py", "--rapido"])
+# Sin --rapido corre tambien los bloques `slow`, entre ellos el conteo sobre bytecode
+# (430 llamadas a javap, unos dos minutos). Solo lo usa M51, que es la mutacion de esa
+# cifra: con --rapido el bloque se salta y la mutacion sobreviviria por no mirarla.
+EV1_LENTO = ("ev1-verificacion-lento", [PY, "scripts/ev1-verificacion.py"])
+CLASES = "backend/target/classes"
 EV4 = ("ev4-contribuciones", [PY, "scripts/ev4-contribuciones.py", "--check"])
 P4T = ("p4-tests-espanol", [PY, "scripts/p4-tests-espanol.py"])
 P4N = ("p4-nombres-espanol", [PY, "scripts/p4-nombres-espanol.py"])
@@ -157,6 +162,8 @@ MUTACIONES = [
      '"score": 0.94', '"score": 0.99', [DOC], False),
     ("M50", "4: la figura se vuelve a titular 'build de produccion' Y se regenera (el defecto del 19-sep)",
      (FIG, FIG_DOCS), REGEN, ("(despliegue publico real)", "(build de produccion)"), [DOC], False),
+    ("M51", "5: la cifra de bytecode publicada deja de ser la que imprime javap (4.2% -> 4.9%)",
+     "VERIFICACION.md", "82/1939  (  4.2%)", "82/1939  (  4.9%)", [EV1_LENTO], False),
     ("M37", "5b: se retira el @PreAuthorize de un GET que devuelve todas las tutorias", CTRLDIR + "TutorController.java",
      '    @GetMapping\n    @PreAuthorize("@permissionService.hasPermission(authentication, \'TRIBUNAL_TUTOR_ASIGNAR\')")\n    public ResponseEntity<Page<Tutor>> list(',
      '    @GetMapping\n    public ResponseEntity<Page<Tutor>> list(', [AUTZ], False),
@@ -216,7 +223,10 @@ def main():
     solo = set(args[args.index("--solo") + 1].split(",")) if "--solo" in args else None
 
     print("Linea base: los detectores tienen que pasar SIN mutar")
-    for d in (CIFRAS, DOC, AUTZ, SPEL, P3, P4T, P4N, P2E, CRED, CREDA, EV1, EV4, ETIQ):
+    base = [CIFRAS, DOC, AUTZ, SPEL, P3, P4T, P4N, P2E, CRED, CREDA, EV1, EV4, ETIQ]
+    if os.path.isdir(CLASES):
+        base.append(EV1_LENTO)
+    for d in base:
         rc = correr(d, nb)
         print(f"  [{'OK  ' if rc == 0 else 'FAIL'}] {d[0]}")
         if rc != 0 and d is not ETIQ:
@@ -232,6 +242,11 @@ def main():
             continue
         if necesita_nb and not nb:
             resultados.append((mid, desc, "OMITIDA", "necesita --nb"))
+            continue
+        if EV1_LENTO in dets and not os.path.isdir(CLASES):
+            # El bloque que mata esta mutacion se omite si no hay clases compiladas
+            # (es su marca `needs=`): sin ellas la mutacion no sobrevive, no se mira.
+            resultados.append((mid, desc, "OMITIDA", "sin " + CLASES))
             continue
         original, previo = None, None
         try:

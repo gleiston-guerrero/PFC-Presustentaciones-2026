@@ -523,7 +523,7 @@ CONTRASTE con la evaluacion del 2026-09-17 (AST del ingeniero)
     p4-rename-scan-javap.py para el conteo sobre bytecode.
 ```
 
-**El conteo sobre bytecode, y por qué ya no es un bloque que se reejecuta (revisión final del 2026-09-19).**
+**El conteo sobre bytecode, y por qué dejó de reejecutarse (revisión final del 2026-09-19).**
 El bloque anterior publicaba una sola cifra sobre bytecode, `nombres distintos 102/1923 (5,3 %)`, y el
 evaluador señaló dos cosas, ambas ciertas:
 
@@ -534,29 +534,58 @@ evaluador señaló dos cosas, ambas ciertas:
    criterio marcado, y la cota superior (la que incluye esas palabras) se llevó por debajo del 5 % de todos modos
    renombrando los 20 nombres de prueba que contenían `Error` (ahora `Failure`, que además es más exacto).
 2. **No reproducía en su máquina.** Los métodos que genera Lombok solo existen en el bytecode si Lombok estuvo
-   activo al compilar; en un JDK donde no compila, el universo es otro (allí dio `102/1923` frente a `66/2658`
-   de aquí) y el bloque «fallaba» sin que nada hubiera cambiado. Un bloque cuya salida depende de con qué se
-   compiló no es verificable literalmente, así que **ya no lleva la marca `ev1:run`**. Sin Lombok el script
-   ahora avisa y no imprime porcentajes, en vez de imprimir unos que no son comparables.
+   activo al compilar; en un JDK donde no compila, el universo es otro (el 19-sep, allí dio `102/1923` frente a
+   `66/2658` de aquí) y el bloque «fallaba» sin que nada hubiera cambiado. Se le quitó entonces la marca
+   `ev1:run`, y sin Lombok el script avisa y no imprime porcentajes en vez de imprimir unos que no son
+   comparables.
 
-La salida de abajo es de un entorno con Lombok activo (JDK 21) y es un registro fechado, no una comprobación:
+> **La cifra vuelve al conjunto verificable (revisión del 2026-09-21).** El evaluador dejó dicho que con eso
+> *«la cifra de bytecode salió del conjunto verificable y ya no la comprueba nadie»*. Tenía razón, y al volver a
+> marcarla apareció la consecuencia: **las cifras publicadas estaban vencidas**. Decían `13/1923` y `82/1923
+> (4,3 %)`; hoy el mismo comando da `13/1939` y `82/1939 (4,2 %)`. No es que algo empeorara — el universo creció
+> porque el punto 5b añadió `validateAccessById` y sus pruebas (+2 nombres en `main`, +16 en `main + test`), y
+> nadie volvió a publicar el conteo. Es justo el defecto que el evaluador anticipó: una cifra que nadie comprueba
+> se queda atrás en silencio.
+>
+> La marca es `ev1:run slow needs=backend/target/classes`, y así queda condicionada en vez de suprimida:
+>
+> - **`needs=backend/target/classes`** — si no hay clases compiladas, el bloque se **omite** (el verificador
+>   imprime cuántos omitió), que es lo que pasará en una máquina donde Lombok no compile: ahí la compilación
+>   falla y no hay clases. Es el mismo mecanismo que ya usan los dos bloques que necesitan los informes de
+>   Surefire.
+> - **`slow`** — son 430 llamadas a `javap`: EV-1 completo pasó de segundos a **3 m 36 s** por este bloque, así
+>   que `make verify-rapido` lo salta y la corrida completa lo ejecuta. En esa corrida las clases están **recién
+>   compiladas**, porque P2 corre `mvnw clean test` antes de que EV-1 lea este archivo: la cifra que se compara
+>   sale del árbol actual, no de un compilado viejo.
+> - Si hubiera clases compiladas **sin** Lombok, el script no imprime porcentajes y el bloque falla a propósito,
+>   diciendo que hay que recompilar con JDK 21. Ese árbol es un build a medias, no un entorno distinto.
+>
+> **Límite declarado.** Donde no se pueda compilar, esta cifra se omite y no se verifica: el expediente lo dice
+> en vez de publicar un número que nadie contrastó. La mutación **M51** lo prueba en los dos sentidos.
 
+**Comando** (con las clases compiladas: `cd backend && ./mvnw -q test-compile`):
+<!-- ev1:run slow needs=backend/target/classes -->
+```bash
+python scripts/p4-nombres-espanol.py --bytecode | sed -n '/^CONTEO SOBRE BYTECODE/,$p'
+```
+
+**Salida real (2026-09-21):**
 ```
 CONTEO SOBRE BYTECODE (javap, incluye metodos generados por Lombok)
   solo main: 362 clases
     NUCLEO (dominio: el criterio de la guia)
-      nombres distintos    11/1070  (  1.0%)   ocurrencias    15/2658  (  0.6%)
+      nombres distintos    11/1072  (  1.0%)   ocurrencias    15/2660  (  0.6%)
     + funcionales (de, con, no, por...)
-      nombres distintos    15/1070  (  1.4%)   ocurrencias    19/2658  (  0.7%)
+      nombres distintos    15/1072  (  1.4%)   ocurrencias    19/2660  (  0.7%)
     + ambiguas (actual, base, error, final, me, real): tambien son palabras inglesas, cota superior
-      nombres distintos    43/1070  (  4.0%)   ocurrencias    66/2658  (  2.5%)
+      nombres distintos    43/1072  (  4.0%)   ocurrencias    66/2660  (  2.5%)
   main + test: 430 clases
     NUCLEO (dominio: el criterio de la guia)
-      nombres distintos    13/1923  (  0.7%)   ocurrencias    17/3583  (  0.5%)
+      nombres distintos    13/1939  (  0.7%)   ocurrencias    17/3601  (  0.5%)
     + funcionales (de, con, no, por...)
-      nombres distintos    18/1923  (  0.9%)   ocurrencias    22/3583  (  0.6%)
+      nombres distintos    18/1939  (  0.9%)   ocurrencias    22/3601  (  0.6%)
     + ambiguas (actual, base, error, final, me, real): tambien son palabras inglesas, cota superior
-      nombres distintos    82/1923  (  4.3%)   ocurrencias   105/3583  (  2.9%)
+      nombres distintos    82/1939  (  4.2%)   ocurrencias   105/3601  (  2.9%)
 ```
 
 **Antes del renombrado (2026-09-18) — registro histórico, sin marca, no se reejecuta:**
@@ -1466,9 +1495,9 @@ reales que llevaban ahí desde antes:
 | Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
 | Bloques de este archivo | `ev1-verificacion.py` | Cada bloque marcado `ev1:run` reproduce su salida; la tabla coincide con el resumen |
 | Titularidad | `ev4-contribuciones.py --check` | Tramo **y** todo el historial: totales, reparto por persona, identidades sin dueño |
-| El propio verificador | `mutaciones-gate.py` | Inyecta 50 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 51 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
 
-**Resultado del arnés: 50 detectadas, 0 sobreviven** (47 en la última corrida completa sin `--nb`; las 3 de rendimiento, M13-M15, no cambiaron y se detectaron en la corrida con `--nb`). Cubre las seis del evaluador, más: fracción
+**Resultado del arnés: 51 detectadas, 0 sobreviven** (48 sin `--nb`: las 3 de rendimiento, M13-M15, necesitan la salida del cuaderno; y **M51** se declara omitida si no hay clases compiladas, porque entonces el bloque que la mata tampoco corre — una mutación que nadie mira no es una que sobrevive, pero tampoco una detectada). Cubre las seis del evaluador, más: fracción
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
 
@@ -1555,10 +1584,12 @@ envejeció cuando alguien tocó el código— y en dos casos ni siquiera era la 
 **Cómo se arregla para que no vuelva a pasar** (`scripts/ev1-verificacion.py`, dentro de `make verify`):
 
 1. **Un bloque de comandos precedido por `<!-- ev1:run -->` se ejecuta, y la salida que sigue tiene que ser
-   idéntica** a lo que imprime. Hay 11 bloques marcados (SUS, Javadoc, P4, Lighthouse, chatbot, autorización
-   ×2, etiqueta, carátula, cifras únicas, historial). `--actualizar` reescribe las salidas desde la corrida
-   real: ya nadie las teclea. Los bloques *sin* marca son salidas históricas fechadas (una corrida de Maven,
-   la medición «antes») y se rotulan como tales.
+   idéntica** a lo que imprime. Hay 12 bloques marcados (SUS, Javadoc, P4 ×2 —fuente y bytecode—, Lighthouse,
+   chatbot, autorización ×2, etiqueta, carátula, cifras únicas, historial). `--actualizar` reescribe las
+   salidas desde la corrida real: ya nadie las teclea. Los bloques *sin* marca son salidas históricas fechadas
+   (una corrida de Maven, la medición «antes») y se rotulan como tales. Tres llevan condición: dos necesitan
+   los informes de Surefire y el del bytecode necesita las clases compiladas; si falta, el bloque se omite y
+   el verificador dice cuántos omitió, en vez de fallar por algo que el entorno no puede producir.
 2. **La tabla del principio y el «Resumen de honestidad» tienen que decir lo mismo**, punto por punto.
 3. Lo volátil no se pega: el hash al que apunta la etiqueta cambia cada vez que se mueve, así que ya no
    aparece; lo comprueba `scripts/p9-etiqueta.py`.
