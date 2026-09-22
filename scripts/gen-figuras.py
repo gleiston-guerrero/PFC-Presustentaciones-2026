@@ -32,10 +32,15 @@ OUT_DIR = os.path.join(REPO_ROOT, "docs", "mediciones", "perf", "figuras")
 
 
 def guardar(fig, nombre, datos):
-    """Escribe el PNG con su procedencia incrustada y cierra la figura."""
+    """Escribe el PNG con su procedencia incrustada y cierra la figura.
+
+    Despues de escribirlo se le sella la huella de sus propios pixeles: sin eso,
+    copiarle los metadatos a una imagen vieja bastaba para pasar el chequeo.
+    """
     out = os.path.join(OUT_DIR, nombre)
     fig.savefig(out, dpi=150, metadata=figdat.metadatos(datos))
     plt.close(fig)
+    figdat.sellar_pixeles(out)
     print(f"[ok] {out}")
 
 

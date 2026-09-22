@@ -36,6 +36,7 @@ import hashlib
 import json
 import os
 import statistics
+import zlib
 
 CATEGORIAS_LH = ("performance", "accessibility", "best-practices", "seo")
 
@@ -186,6 +187,61 @@ def metadatos(datos):
         "Datos": datos["datos"],
         "Generador": GENERADOR,
     }
+
+
+def _chunks_png(datos):
+    """Recorre un PNG y devuelve [(tipo, inicio, fin_con_crc)] desde la firma."""
+    if datos[:8] != b"\x89PNG\r\n\x1a\n":
+        return None
+    fuera, i = [], 8
+    while i + 8 <= len(datos):
+        largo = int.from_bytes(datos[i:i + 4], "big")
+        tipo = datos[i + 4:i + 8]
+        fuera.append((tipo, i, i + 12 + largo))
+        if tipo == b"IEND":
+            break
+        i += 12 + largo
+    return fuera
+
+
+def huella_pixeles(ruta):
+    """sha256 (12 hex) de los datos de imagen (chunks IDAT) de un PNG.
+
+    Es lo que se ve, no lo que el archivo dice de si mismo. La revision del
+    2026-09-22 senalo que comprobar solo los metadatos deja pasar "una imagen
+    antigua con los metadatos nuevos": esta huella se incrusta en la propia imagen
+    al generarla, asi que una imagen a la que se le copien los metadatos de otra
+    delata que sus pixeles no son los que su procedencia declara.
+    """
+    with open(ruta, "rb") as f:
+        datos = f.read()
+    trozos = _chunks_png(datos)
+    if trozos is None:
+        return None
+    h = hashlib.sha256()
+    for tipo, ini, fin in trozos:
+        if tipo == b"IDAT":
+            h.update(datos[ini + 8:fin - 4])
+    return h.hexdigest()[:12]
+
+
+def sellar_pixeles(ruta):
+    """Incrusta en el PNG la huella de sus propios pixeles, como chunk tEXt.
+
+    Se hace despues de escribir el archivo porque la huella no existe hasta que la
+    imagen esta rasterizada. Devuelve la huella incrustada.
+    """
+    huella = huella_pixeles(ruta)
+    with open(ruta, "rb") as f:
+        datos = f.read()
+    trozos = _chunks_png(datos)
+    cuerpo = b"Pixeles\x00" + huella.encode("ascii")
+    chunk = (len(cuerpo).to_bytes(4, "big") + b"tEXt" + cuerpo
+             + zlib.crc32(b"tEXt" + cuerpo).to_bytes(4, "big"))
+    ini_iend = next(ini for tipo, ini, _ in trozos if tipo == b"IEND")
+    with open(ruta, "wb") as f:
+        f.write(datos[:ini_iend] + chunk + datos[ini_iend:])
+    return huella
 
 
 def leer_texto_png(ruta):

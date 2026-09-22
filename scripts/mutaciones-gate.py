@@ -82,6 +82,10 @@ TAG, BORRAR, VIEJA = "@TAG@", "@BORRAR@", "@VIEJA@"
 # figura, que es la unica forma de ejercitar el chequeo semantico del titulo -- si la
 # imagen no se regenera, lo que falla es la igualdad con el fuente, no el titulo.
 VIEJAS, REGEN = "@VIEJAS@", "@REGEN@"
+# FORJA: una imagen VIEJA a la que se le copian los metadatos de la nueva. Es el
+# hueco que senalo la revision del 22-sep ("la comprobacion lee los metadatos del
+# PNG, no los pixeles"): sin el sello de pixeles, esto pasaba en verde.
+FORJA = "@FORJA@"
 
 # (id, descripcion, archivo, viejo, nuevo, detectores, necesita el cuaderno)
 MUTACIONES = [
@@ -177,6 +181,10 @@ MUTACIONES = [
      [DOC], False),
     ("M54", "P1: la huella publicada de la exportacion deja de ser la del archivo",
      README_SUS, "bf1cf916f52a6ec3", "bf1cf916f52a6ec4", [DOC], False),
+    ("M55", "una imagen VIEJA con los metadatos de la nueva copiados encima (el hueco del 22-sep)",
+     (FIG, FIG_DOCS), FORJA, None, [DOC], False),
+    ("M56", "CITATION.cff publica una fecha que no es la del commit etiquetado",
+     "CITATION.cff", 'date-released: "2026-09-21"', 'date-released: "2026-09-19"', [DOC], False),
     ("M37", "5b: se retira el @PreAuthorize de un GET que devuelve todas las tutorias", CTRLDIR + "TutorController.java",
      '    @GetMapping\n    @PreAuthorize("@permissionService.hasPermission(authentication, \'TRIBUNAL_TUTOR_ASIGNAR\')")\n    public ResponseEntity<Page<Tutor>> list(',
      '    @GetMapping\n    public ResponseEntity<Page<Tutor>> list(', [AUTZ], False),
@@ -296,6 +304,28 @@ def main():
                     continue
                 for r in ruta:
                     open(r, "wb").write(vieja)
+            elif viejo == FORJA:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("figdat", MOD_FIG)
+                fd = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(fd)
+                original = {r: open(r, "rb").read() for r in ruta}
+                actual = original[ruta[0]]
+                vieja = subprocess.run(["git", "show", "a0dead6:" + ruta[0]],
+                                       capture_output=True).stdout
+                if not vieja or vieja == actual:
+                    resultados.append((mid, desc, "ARNES", "no hay una version vieja distinta"))
+                    continue
+                texto = b"".join(actual[i:f] for t, i, f in fd._chunks_png(actual) if t == b"tEXt")
+                forjada = bytearray(vieja[:8])
+                for t, i, f in fd._chunks_png(vieja):
+                    if t == b"tEXt":
+                        continue          # se tiran los suyos y se ponen los de la nueva
+                    if t == b"IEND":
+                        forjada += texto
+                    forjada += vieja[i:f]
+                for r in ruta:
+                    open(r, "wb").write(bytes(forjada))
             elif viejo == REGEN:
                 buscar, reemplazar = nuevo
                 original = {r: open(r, "rb").read() for r in ruta}

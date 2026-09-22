@@ -79,10 +79,13 @@ import figuras_datos as figdat  # noqa: E402
 
 CSV_FORM = "docs/mediciones/sus/re-aplicacion/sus-respuestas-formulario.csv"
 CSV_PAPEL = "docs/mediciones/sus/sus-respuestas.csv"
-# Las dos exportaciones del mismo formulario, por caminos distintos: la hoja de
-# respuestas (18-sep) y la descarga directa desde el formulario (21-sep).
+# La exportacion del formulario (18-sep) y una copia de contraste de las mismas
+# respuestas (21-sep). La copia paso por una hoja de calculo -- lleva cada fila
+# envuelta en comillas, que es lo que deja ese reguardado -- asi que NO es una
+# segunda exportacion independiente, aunque el expediente lo dijo asi hasta que la
+# revision del 22-sep lo corrigio. Sirve para notar que la exportacion no se toque.
 CSV_CRUDO = "docs/mediciones/sus/re-aplicacion/respuestas-formulario-2026-09-18.csv"
-CSV_DESCARGA = "docs/mediciones/sus/re-aplicacion/respuestas-descarga-formulario-2026-09-21.csv"
+CSV_DESCARGA = "docs/mediciones/sus/re-aplicacion/respuestas-copia-reguardada-2026-09-21.csv"
 README_SUS = "docs/mediciones/sus/re-aplicacion/README.md"
 PROD_RUNS = "docs/mediciones/perf/lighthouse/prod-runs"
 REPORTE_LH = "docs/mediciones/perf/lighthouse/LIGHTHOUSE-REPORT.md"
@@ -229,6 +232,17 @@ def comprobar_figuras():
                  f"genera make docs hoy (se esperaba la huella {esperado['Huella']} de "
                  f"{len(datos['fuentes'])} entradas): es una version vieja o hecha por fuera")
             continue
+        # La huella de los pixeles se compara contra los pixeles que el archivo trae
+        # ahora: es lo que impide que copiarle los metadatos a una imagen vieja pase.
+        sellada, ahora = real.get("Pixeles"), figdat.huella_pixeles(inf)
+        if not sellada:
+            fail(f"{inf}: la imagen no lleva sellada la huella de sus pixeles "
+                 f"(regenera con make docs): sin ella solo se comprueba lo que el "
+                 f"archivo dice de si mismo, no lo que dibuja")
+        elif sellada != ahora:
+            fail(f"{inf}: los pixeles no son los que declara su procedencia "
+                 f"(sellado {sellada}, la imagen dibuja {ahora}): a esta imagen le "
+                 f"pusieron los metadatos de otra")
         distintos = [c for c in esperado if real.get(c) != esperado[c]]
         for c in distintos:
             fail(f"{inf}: la procedencia incrustada no coincide con las entradas "
@@ -238,6 +252,36 @@ def comprobar_figuras():
             ok(f"{nombre}: la imagen lleva su procedencia y coincide con sus "
                f"{len(datos['fuentes'])} entradas (huella {esperado['Huella']}, "
                f"{esperado['Datos']})")
+
+
+# ------------------------------------------------- fecha publicada de la version
+def comprobar_fecha_citation():
+    """`date-released` tiene que ser la fecha del commit que la etiqueta senala.
+
+    Hallazgo de la revision del 2026-09-22: CITATION.cff declaraba 2026-09-19 y la
+    etiqueta era del 21. Es la fecha con la que se cita la version, asi que no puede
+    quedarse en el dia en que la version empezo a existir mientras el contenido
+    etiquetado es de otro.
+    """
+    print("--- CITATION.cff: la fecha publicada es la del commit etiquetado ---")
+    m = re.search(r'^date-released:\s*"?(\d{4}-\d{2}-\d{2})"?', leer("CITATION.cff"), re.M)
+    if not m:
+        fail("CITATION.cff no declara date-released")
+        return
+    r = subprocess.run(["git", "log", "-1", "--format=%cd", "--date=short", "v1.1.0^{commit}"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode != 0 or not r.stdout.strip():
+        # Sin la etiqueta no hay contra que comparar (clon sin tags): se omite en vez
+        # de fallar por algo que el entorno no trae.
+        print("  [--]   la etiqueta v1.1.0 no esta en este clon: fecha no comprobada")
+        return
+    fecha_tag = r.stdout.strip()
+    if m.group(1) != fecha_tag:
+        fail(f"CITATION.cff publica date-released {m.group(1)} y el commit que la etiqueta "
+             f"v1.1.0 senala es del {fecha_tag}: se cita la version con una fecha que no es "
+             f"la del contenido etiquetado")
+    else:
+        ok(f"date-released ({fecha_tag}) es la fecha del commit etiquetado")
 
 
 # ------------------------------------------------------- procedencia del SUS
@@ -255,11 +299,10 @@ def _fecha_iso(texto):
 def _filas_exportacion(ruta):
     """(fecha, hora, consentimiento, rol, previo, q1..q10) de una exportacion.
 
-    Las dos exportaciones traen el mismo dato con distinto formato: la descarga
-    directa envuelve la linea entera entre comillas y escribe la fecha al reves.
-    Se comparan los DATOS, no los bytes: el CSV que genera el formulario no es
-    estable byte a byte entre descargas, y exigir bytes iguales haria fallar al
-    verificador por como Google dibuja el archivo, no por lo que dice.
+    Los dos archivos traen el mismo dato con distinto formato: la copia reguardada
+    envuelve la linea entera entre comillas y escribe la fecha al reves, que es lo
+    que deja una hoja de calculo. Se comparan los DATOS, no los bytes, porque el
+    formato lo impone ese reguardado y no dice nada del contenido.
     """
     crudas = []
     for fila in csv.reader(io.open(ruta, encoding="utf-8-sig", newline="")):
@@ -315,16 +358,16 @@ def comprobar_sus_procedencia():
     if hoja is None or descarga is None:
         fail("alguna exportacion del SUS no tiene el formato esperado (fecha, hora y 10 items)")
     elif len(hoja) != len(descarga):
-        fail(f"las dos exportaciones no traen el mismo numero de respuestas: "
-             f"{len(hoja)} en la hoja y {len(descarga)} en la descarga directa")
+        fail(f"la exportacion y su copia de contraste no traen el mismo numero de "
+             f"respuestas: {len(hoja)} en la exportacion y {len(descarga)} en la copia")
     else:
         distintas = [i for i, (x, y) in enumerate(zip(hoja, descarga), start=1) if x != y]
         if distintas:
-            fail(f"las dos exportaciones del formulario discrepan en la(s) fila(s) "
-                 f"{distintas}: el mismo formulario deberia dar el mismo dato")
+            fail(f"la exportacion y su copia de contraste discrepan en la(s) fila(s) "
+                 f"{distintas}: las dos salen del mismo formulario")
         else:
-            ok(f"las {len(hoja)} respuestas coinciden en las dos exportaciones "
-               f"(hoja de respuestas y descarga directa)")
+            ok(f"las {len(hoja)} respuestas coinciden entre la exportacion y su copia "
+               f"de contraste")
 
     # 3. La huella publicada es la del archivo: asi el evaluador, que tiene acceso de
     #    editor al formulario, exporta por su cuenta y compara sin creerle a nadie.
@@ -763,6 +806,7 @@ def main():
     comprobar_lighthouse()
     comprobar_figuras()
     comprobar_sus_procedencia()
+    comprobar_fecha_citation()
     comprobar_evidencia()
     comprobar_hashes()
     comprobar_sus()

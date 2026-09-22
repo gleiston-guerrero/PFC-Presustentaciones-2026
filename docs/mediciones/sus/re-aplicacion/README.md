@@ -153,13 +153,12 @@ fecha: la que reporta es la que trae el archivo del tercero.
 
 La revisión del 21-sep dejó P1 en el 70 % porque *«la procedencia se apoya en capturas y no en una
 exportación del servidor»*. La exportación estaba versionada desde el 18-sep, pero nada ataba las cifras
-publicadas a ella. Ahora hay dos exportaciones del mismo formulario, por caminos distintos, y `make verify`
-comprueba que la tabla publicada sale de ellas.
+publicadas a ella. Ahora `make verify` comprueba que la tabla publicada sale de ella.
 
-| Archivo | Cómo se obtuvo | sha256 |
+| Archivo | Qué es | sha256 |
 |---|---|---|
-| `respuestas-formulario-2026-09-18.csv` | Hoja de respuestas → Archivo → Descargar → CSV | `bf1cf916f52a6ec3c7b3bfc02b4767529534a1f4216cfed563e594cbdcef31ec` (saltos normalizados a LF) |
-| `respuestas-descarga-formulario-2026-09-21.csv` | Formulario → Respuestas → ⋮ → Descargar respuestas (.csv) | se contrasta por **datos**, no por bytes (ver abajo) |
+| `respuestas-formulario-2026-09-18.csv` | La exportación: hoja de respuestas → Archivo → Descargar → CSV | `bf1cf916f52a6ec3c7b3bfc02b4767529534a1f4216cfed563e594cbdcef31ec` (saltos normalizados a LF) |
+| `respuestas-copia-reguardada-2026-09-21.csv` | Una copia de las mismas respuestas que pasó por una hoja de cálculo (ver la corrección de abajo) | se contrasta por **datos**, no por bytes |
 
 **Quien tenga acceso al formulario puede comprobarlo por su cuenta**, que es el punto: el evaluador ya
 tiene acceso de editor (`evidencia/acceso-editor-concedido-gguerrero.png`). Basta con exportar la hoja de
@@ -175,15 +174,30 @@ le calcula la huella tal cual se descarga, sin normalizar, da
 `4d1aa7c88842e1e605fc4f9cba2d0b6bda1f16ffe5a35cb9107a91dba956fbb1`, que es también la del archivo
 versionado en un árbol de trabajo de Windows.
 
-La segunda exportación se contrasta **por datos y no por bytes** a propósito: el CSV que genera el
-formulario no sale idéntico byte a byte entre descargas —cambia detalles de formato sin cambiar ninguna
-respuesta—, así que exigir bytes iguales haría fallar al verificador por cómo Google dibuja el archivo y
-no por lo que dice. Lo que se compara es fecha, hora, consentimiento, rol y los diez ítems de las quince
-respuestas, que coinciden en las dos.
+### Corrección (2026-09-22): el segundo archivo no es una exportación
+
+La revisión del 22-sep señaló que *«el expediente describe como "descarga directa" un CSV que pasó por una
+hoja de cálculo»*. **Tiene razón, y la explicación que se publicó aquí el 21-sep era falsa.**
+
+Lo que se había escrito era que «el CSV que genera el formulario no sale idéntico byte a byte entre
+descargas». No es cierto: el archivo tiene cada fila **entera envuelta en comillas, con las internas
+duplicadas**, que es lo que queda cuando un CSV se abre en una hoja de cálculo y se vuelve a guardar —
+toda la fila cae en una sola celda. Una exportación de Google Forms no tiene esa forma; la del 18-sep, que
+sí lo es, se ve como un CSV normal. Eso explica también la diferencia de formato de hora (`a. m.` /
+`p. m.`) entre las dos descargas del 21-sep: no era Google dibujando distinto, era la hoja de cálculo.
+
+Se construyó una explicación razonable sobre una premisa equivocada y se publicó. El archivo se renombró a
+`respuestas-copia-reguardada-2026-09-21.csv`, que es lo que de verdad es.
+
+**Qué vale y qué no.** Sus quince filas coinciden con la exportación en fecha, hora, consentimiento, rol y
+los diez ítems, así que sirve como copia de contraste: si alguien editara la exportación versionada, esta
+copia dejaría de cuadrar. Lo que **no** es —y así se había dicho mal— es una segunda exportación
+independiente del servidor. Para ese papel solo cuenta `respuestas-formulario-2026-09-18.csv`.
 
 **Lo que esto prueba y lo que no.** Prueba que las cifras publicadas (n=15, media 52,83) salen de la
-exportación del tercero sin pasar por ninguna edición nuestra, y que dos caminos de exportación
-independientes traen el mismo dato. No prueba quién respondió: eso no lo puede cerrar el repositorio.
+exportación del tercero sin pasar por ninguna edición nuestra. No prueba quién respondió: eso no lo puede
+cerrar el repositorio, y la propia revisión lo deja en manos del docente, que con su acceso de editor puede
+comprobar que el formulario tiene esas quince respuestas del 18-sep entre las 11:36 y las 16:56.
 
 ## Qué se versiona, y qué no
 

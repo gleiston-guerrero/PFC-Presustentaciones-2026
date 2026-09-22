@@ -79,13 +79,20 @@ Brooke, consentimiento de cada participante, y recálculo según Brooke.
 > | La tabla publicada **se rederiva** de la exportación del tercero | Reejecuta `sus-ingesta.py` sobre el CSV exportado y exige salida idéntica | **M52** |
 > | La exportación cruda no se ha retocado | La tabla deja de derivarse en cuanto se cambia una respuesta | **M53** |
 > | La huella publicada es la del archivo | `sha256` del CSV (saltos normalizados) contra el que publica el README | **M54** |
-> | Las **dos** exportaciones dicen lo mismo | Hoja de respuestas (18-sep) y descarga directa del formulario (21-sep), fila por fila | M52-M54 |
+> | La copia de contraste dice lo mismo | La exportación (18-sep) y la copia reguardada (21-sep), fila por fila | M52-M54 |
 >
-> Hay dos exportaciones del mismo formulario por caminos distintos, y coinciden en las 15 respuestas
-> (fecha, hora, consentimiento, rol y los diez ítems). La segunda se contrasta **por datos y no por
-> bytes**: el CSV que genera el formulario no sale idéntico byte a byte entre descargas —cambian
-> detalles de formato sin cambiar ninguna respuesta—, y exigir bytes iguales haría fallar al verificador
-> por cómo Google dibuja el archivo, no por lo que dice.
+> **Corrección del 2026-09-22: lo que se publicó aquí el 21-sep era falso.** Se dijo que había «dos
+> exportaciones del mismo formulario por caminos distintos» y que «el CSV que genera el formulario no sale
+> idéntico byte a byte entre descargas». La revisión del 22-sep lo desmontó: *«el expediente describe como
+> "descarga directa" un CSV que pasó por una hoja de cálculo»*. Comprobado — ese archivo lleva cada fila
+> entera envuelta en comillas con las internas duplicadas, que es lo que queda cuando un CSV se abre en una
+> hoja de cálculo y se vuelve a guardar; la exportación real del 18-sep no tiene esa forma. Eso explica
+> además la diferencia de formato de hora entre las dos descargas, que se había atribuido a Google.
+>
+> El archivo se renombró a `respuestas-copia-reguardada-2026-09-21.csv`. Sus quince filas coinciden con la
+> exportación, así que vale como copia de contraste —si alguien editara la exportación versionada, dejaría
+> de cuadrar—, pero **no** es una segunda exportación independiente. Para ese papel solo cuenta
+> `respuestas-formulario-2026-09-18.csv`.
 >
 > **Lo que cierra y lo que no.** Cierra que las cifras publicadas (n=15, media 52,83) salen de la
 > exportación del tercero sin pasar por ninguna edición nuestra, y que cualquiera con acceso al
@@ -925,9 +932,21 @@ versionados y su URL objetivo declarada.
 >
 > Las cinco se detectan; con el chequeo anterior, M48, M49 y M50 pasaban en verde.
 >
-> **Límite declarado.** Esto prueba que la imagen la produjo este generador a partir de estas entradas, no que
-> los píxeles dibujen eso: un PNG hecho a mano con los metadatos correctos pasaría. Cierra el defecto real —una
-> figura vieja publicada sin que nadie se entere— y no pretende cerrar la fabricación deliberada de una imagen.
+> **El límite que quedaba, cerrado el 2026-09-22.** Aquí se declaró que «un PNG hecho a mano con los metadatos
+> correctos pasaría», y la revisión del 22-sep lo recogió como defecto real: *«la comprobación lee los metadatos
+> del PNG, no los píxeles: una imagen antigua con los metadatos nuevos pasa»*. Ya no. Al generar cada figura se
+> le **sella dentro la huella `sha256` de sus propios píxeles** (los chunks `IDAT`), y el verificador la
+> recalcula del archivo y la compara con la sellada. Copiarle los metadatos a otra imagen ya no basta: sus
+> píxeles no son los que su procedencia declara.
+>
+> Se reprodujo el ataque exacto —la figura de 68/61 con los chunks `tEXt` de la actual copiados encima— y ahora
+> falla. Sobre esa misma imagen forjada, la comprobación de procedencia seguía diciendo `[OK]`, que es la prueba
+> de que antes pasaba. Es la mutación **M55**. Sellar no cambió un solo píxel: la huella de los `IDAT` antes y
+> después de regenerar es la misma (`28a9a5b00d77`).
+>
+> **Lo que sigue sin cerrar.** Quien regenere la figura desde datos falsificados obtiene un archivo coherente
+> consigo mismo. Eso ya no es una figura vencida colándose: es fabricar la medición, y contra eso el expediente
+> ofrece los JSON crudos versionados, no esta comprobación.
 
 **Comando:**
 <!-- ev1:run -->
@@ -1515,8 +1534,9 @@ reales que llevaban ahí desde antes:
 | Comprobación | Script | Qué contrasta |
 |---|---|---|
 | Lighthouse | `ev2-documental.py` | Las 6 corridas miden la URL pública (nunca `localhost`), todas la misma; el reporte, el informe y `make bench-lh` declaran esa misma; el título que lleva **dentro** la imagen dice lo mismo que el pie |
-| Figuras del informe | `ev2-documental.py` | Las tres llevan su procedencia incrustada en el PNG (título, entradas, huella de las entradas, cifras dibujadas), coincide con volver a derivarla de los datos versionados, y las dos copias de cada una son el mismo archivo |
-| Procedencia del SUS | `ev2-documental.py` | La tabla publicada se rederiva de la exportación del formulario, las dos exportaciones independientes traen el mismo dato, y la huella que publica el README es la del archivo |
+| Figuras del informe | `ev2-documental.py` | Las tres llevan su procedencia incrustada en el PNG (título, entradas, huella de las entradas, cifras dibujadas) **y la huella de sus propios píxeles**, todo coincide con volver a derivarlo de los datos versionados, y las dos copias de cada una son el mismo archivo |
+| Procedencia del SUS | `ev2-documental.py` | La tabla publicada se rederiva de la exportación del formulario, la copia de contraste trae el mismo dato, y la huella que publica el README es la del archivo |
+| Fecha de la versión | `ev2-documental.py` | `date-released` de `CITATION.cff` es la fecha del commit que la etiqueta señala |
 | Evidencia citada | `ev2-documental.py` | Todo archivo del repositorio que un documento vigente cita existe |
 | Hashes citados | `ev2-documental.py` | Todo hash de commit citado en un documento vigente existe, **es un commit** (no el objeto de una etiqueta) y lo alcanza alguna rama o etiqueta: lo que ve un clon limpio |
 | SUS | `ev2-documental.py` | Media, DE, IC 95 % y α publicados == recalculados del CSV; p ajustados y decisión de Holm == calculados, la frase junto al p no afirma lo contrario, y **todo `p = …` de un párrafo del SUS**, se nombre o no a Holm, es un p crudo o ajustado calculado |
@@ -1525,9 +1545,9 @@ reales que llevaban ahí desde antes:
 | Etiqueta | `p9-etiqueta.py` | Anotada y **en `HEAD`**: ya **falla** en vez de avisar (solo avisa con `--rapido`, para trabajar en local) |
 | Bloques de este archivo | `ev1-verificacion.py` | Cada bloque marcado `ev1:run` reproduce su salida; la tabla coincide con el resumen |
 | Titularidad | `ev4-contribuciones.py --check` | Tramo **y** todo el historial: totales, reparto por persona, identidades sin dueño |
-| El propio verificador | `mutaciones-gate.py` | Inyecta 54 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
+| El propio verificador | `mutaciones-gate.py` | Inyecta 56 defectos y exige que cada uno haga salir a algún detector distinto de 0 |
 
-**Resultado del arnés: 54 detectadas, 0 sobreviven** (51 sin `--nb`: las 3 de rendimiento, M13-M15, necesitan la salida del cuaderno; y **M51** se declara omitida si no hay clases compiladas, porque entonces el bloque que la mata tampoco corre — una mutación que nadie mira no es una que sobrevive, pero tampoco una detectada). Cubre las seis del evaluador, más: fracción
+**Resultado del arnés: 56 detectadas, 0 sobreviven** (53 sin `--nb`: las 3 de rendimiento, M13-M15, necesitan la salida del cuaderno; y **M51** se declara omitida si no hay clases compiladas, porque entonces el bloque que la mata tampoco corre — una mutación que nadie mira no es una que sobrevive, pero tampoco una detectada). Cubre las seis del evaluador, más: fracción
 vencida, JSON de contrato, `@PreAuthorize` retirado de un `POST`, SpEL hacia un bean inexistente, y los
 tres defectos de Javadoc de P3.
 

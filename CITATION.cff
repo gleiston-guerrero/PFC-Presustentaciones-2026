@@ -26,7 +26,10 @@ authors:
     orcid: "https://orcid.org/0009-0004-5561-1391"
 title: "Sistema de Gestión de Pre-Sustentaciones de Titulación UTEQ"
 version: "1.1.0"
-date-released: "2026-09-19"
+# La fecha de publicacion es la del commit que la etiqueta v1.1.0 senala y la del
+# registro de Zenodo que lo archiva, no la del primer dia en que existio la version.
+# La revision del 22-sep encontro que decia 2026-09-19 mientras la etiqueta era del 21.
+date-released: "2026-09-21"
 url: "https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026"
 repository-code: "https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026"
 # DOI DE CONCEPTO, no de version. Zenodo asigna dos clases de DOI: uno por cada version
