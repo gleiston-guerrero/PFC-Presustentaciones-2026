@@ -26,9 +26,11 @@ authors:
     orcid: "https://orcid.org/0009-0004-5561-1391"
 title: "Sistema de Gestión de Pre-Sustentaciones de Titulación UTEQ"
 version: "1.1.0"
-# La fecha de publicacion es la del commit que la etiqueta v1.1.0 senala y la del
-# registro de Zenodo que lo archiva, no la del primer dia en que existio la version.
-# La revision del 22-sep encontro que decia 2026-09-19 mientras la etiqueta era del 21.
+# La fecha de publicacion es la del commit que la etiqueta v1.1.0 senala, no la del
+# primer dia en que existio la version: la revision del 22-sep encontro que decia
+# 2026-09-19 mientras la etiqueta era del 21. El registro de Zenodo que la archiva
+# aparece fechado un dia despues (2026-09-22) porque Zenodo sella en UTC y el commit
+# se hizo a las 22:56 hora local (UTC-5); es el mismo acto, no dos fechas distintas.
 date-released: "2026-09-21"
 url: "https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026"
 repository-code: "https://github.com/gleiston-guerrero/PFC-Presustentaciones-2026"
@@ -44,8 +46,11 @@ identifiers:
     value: "10.5281/zenodo.21988563"
     description: "DOI de concepto: resuelve siempre a la version mas reciente publicada"
   - type: doi
+    value: "10.5281/zenodo.22887077"
+    description: "Snapshot de la version v1.1.0, contenido final (2026-09-22)"
+  - type: doi
     value: "10.5281/zenodo.22883939"
-    description: "Snapshot de la version v1.1.0, contenido final (2026-09-21)"
+    description: "Cuarto snapshot de v1.1.0 (2026-09-21), superado por el anterior"
   - type: doi
     value: "10.5281/zenodo.22865913"
     description: "Tercer snapshot de v1.1.0 (2026-09-21), superado por el anterior"
@@ -61,7 +66,8 @@ identifiers:
   - type: doi
     value: "10.5281/zenodo.21988564"
     description: "Snapshot de la version v1.0.0 (2026-08-17)"
-# v1.1.0 ARCHIVADA por cuarta vez el 2026-09-21 en 10.5281/zenodo.22883939 (la tercera, del mismo dia,
+# v1.1.0 ARCHIVADA por quinta vez el 2026-09-22 en 10.5281/zenodo.22887077 (la cuarta, del 2026-09-21,
+# esta en 10.5281/zenodo.22883939; la tercera, del mismo dia,
 # esta en 10.5281/zenodo.22865913; la primera, del 2026-09-19,
 # esta en 10.5281/zenodo.22839517 y la segunda, del 2026-09-20, en 10.5281/zenodo.22854267; ambas superadas). Hasta el 19-sep este archivo
 # declaraba que aun no tenia snapshot propio, en vez de fabricar un DOI que nadie pudiera
